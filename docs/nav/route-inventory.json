@@ -3829,7 +3829,7 @@
         "group": "Settings",
         "label": "Enterprise Data Console",
         "icon": "Settings",
-        "order": 109
+        "order": 112
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -3856,7 +3856,7 @@
         "group": "Settings",
         "label": "Observability",
         "icon": "Settings",
-        "order": 110
+        "order": 113
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -3883,7 +3883,7 @@
         "group": "WHS & Compliance",
         "label": "NSGTO Std 2 Evidence Pack",
         "icon": "ShieldCheck",
-        "order": 75
+        "order": 78
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -3910,7 +3910,7 @@
         "group": "WHS & Compliance",
         "label": "Fair Work Inspector Report",
         "icon": "ShieldCheck",
-        "order": 74
+        "order": 77
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -3964,7 +3964,7 @@
         "group": "AI & Automation",
         "label": "AI Plugins",
         "icon": "Sparkles",
-        "order": 99
+        "order": 102
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -3991,7 +3991,7 @@
         "group": "Analytics & Reporting",
         "label": "Analytics",
         "icon": "BarChart3",
-        "order": 34
+        "order": 37
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -4018,7 +4018,7 @@
         "group": "Analytics & Reporting",
         "label": "Completions",
         "icon": "BarChart3",
-        "order": 41
+        "order": 44
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -4045,7 +4045,7 @@
         "group": "Analytics & Reporting",
         "label": "Placements",
         "icon": "BarChart3",
-        "order": 40
+        "order": 43
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -4072,7 +4072,7 @@
         "group": "Analytics & Reporting",
         "label": "Training Hours",
         "icon": "BarChart3",
-        "order": 42
+        "order": 45
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -4099,7 +4099,7 @@
         "group": "My Workforce",
         "label": "Workers on Site",
         "icon": "Building2",
-        "order": 119
+        "order": 122
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -4747,7 +4747,7 @@
         "group": "Financial",
         "label": "Awards",
         "icon": "DollarSign",
-        "order": 53
+        "order": 56
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -4909,7 +4909,7 @@
         "group": "Communication",
         "label": "Calendar",
         "icon": "MessageSquare",
-        "order": 81
+        "order": 84
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -4936,7 +4936,7 @@
         "group": "Financial",
         "label": "Charge Rates",
         "icon": "DollarSign",
-        "order": 55
+        "order": 58
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5044,7 +5044,7 @@
         "group": "Financial",
         "label": "Import Rate Card from R8",
         "icon": "DollarSign",
-        "order": 56
+        "order": 59
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5071,7 +5071,7 @@
         "group": "Financial",
         "label": "Claims",
         "icon": "DollarSign",
-        "order": 57
+        "order": 60
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5368,7 +5368,7 @@
         "group": "Communication",
         "label": "Communications",
         "icon": "MessageSquare",
-        "order": 79
+        "order": 82
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5530,7 +5530,7 @@
         "group": "VET & Training",
         "label": "Competency Progress",
         "icon": "BookOpen",
-        "order": 98
+        "order": 101
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5611,7 +5611,7 @@
         "group": "WHS & Compliance",
         "label": "Compliance",
         "icon": "ShieldCheck",
-        "order": 67
+        "order": 70
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5692,7 +5692,7 @@
         "group": "WHS & Compliance",
         "label": "BOOT Assessments",
         "icon": "ShieldCheck",
-        "order": 73
+        "order": 76
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5800,7 +5800,7 @@
         "group": "WHS & Compliance",
         "label": "GTO Dashboard",
         "icon": "ShieldCheck",
-        "order": 69
+        "order": 72
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5881,7 +5881,7 @@
         "group": "WHS & Compliance",
         "label": "Insurance Tracker",
         "icon": "ShieldCheck",
-        "order": 71
+        "order": 74
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -5989,7 +5989,7 @@
         "group": "WHS & Compliance",
         "label": "USI Verification",
         "icon": "ShieldCheck",
-        "order": 70
+        "order": 73
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6340,7 +6340,7 @@
         "group": "Documents",
         "label": "Contracts",
         "icon": "FileText",
-        "order": 83
+        "order": 86
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6475,7 +6475,7 @@
         "group": "Documents",
         "label": "E-Signatures",
         "icon": "FileText",
-        "order": 84
+        "order": 87
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6556,7 +6556,7 @@
         "group": "Dashboard",
         "label": "Dashboard",
         "icon": "LayoutDashboard",
-        "order": 122
+        "order": 125
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6583,7 +6583,7 @@
         "group": "Analytics & Reporting",
         "label": "Dashboards",
         "icon": "BarChart3",
-        "order": 39
+        "order": 42
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6637,7 +6637,7 @@
         "group": "Sales Pipeline",
         "label": "Deals",
         "icon": "TrendingUp",
-        "order": 33
+        "order": 36
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -6691,7 +6691,7 @@
         "group": "Documents",
         "label": "Documents",
         "icon": "FileText",
-        "order": 82
+        "order": 85
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7204,7 +7204,7 @@
         "group": "Field Officer Contacts",
         "label": "Field Officer Contacts",
         "icon": "MapPin",
-        "order": 131
+        "order": 134
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7231,7 +7231,7 @@
         "group": "Field Officers",
         "label": "Actions",
         "icon": "MapPin",
-        "order": 88
+        "order": 91
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7312,7 +7312,7 @@
         "group": "Field Officers",
         "label": "Link Login Accounts",
         "icon": "MapPin",
-        "order": 93
+        "order": 96
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7339,7 +7339,7 @@
         "group": "Field Officers",
         "label": "Case Notes",
         "icon": "MapPin",
-        "order": 89
+        "order": 92
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7420,7 +7420,7 @@
         "group": "Field Officers",
         "label": "All Caseloads",
         "icon": "MapPin",
-        "order": 87
+        "order": 90
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7447,7 +7447,7 @@
         "group": "Field Officers",
         "label": "Competency",
         "icon": "MapPin",
-        "order": 90
+        "order": 93
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7609,7 +7609,7 @@
         "group": "Field Officers",
         "label": "Incidents",
         "icon": "MapPin",
-        "order": 91
+        "order": 94
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7717,7 +7717,7 @@
         "group": "Field Officers",
         "label": "Site Visits",
         "icon": "MapPin",
-        "order": 92
+        "order": 95
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7744,7 +7744,7 @@
         "group": "Financial",
         "label": "Financial",
         "icon": "DollarSign",
-        "order": 123
+        "order": 126
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7771,7 +7771,7 @@
         "group": "Financial",
         "label": "Budget",
         "icon": "DollarSign",
-        "order": 44
+        "order": 47
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7798,7 +7798,7 @@
         "group": "Financial",
         "label": "Expenses",
         "icon": "DollarSign",
-        "order": 45
+        "order": 48
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7825,7 +7825,7 @@
         "group": "Reports & Billing",
         "label": "Invoicing",
         "icon": "BarChart3",
-        "order": 122
+        "order": 125
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -7933,7 +7933,7 @@
         "group": "Financial",
         "label": "Reconciliation",
         "icon": "DollarSign",
-        "order": 47
+        "order": 50
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8014,7 +8014,7 @@
         "group": "Financial",
         "label": "Placement Financials",
         "icon": "DollarSign",
-        "order": 43
+        "order": 46
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8122,7 +8122,7 @@
         "group": "Financial",
         "label": "Funding Sources",
         "icon": "DollarSign",
-        "order": 59
+        "order": 62
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8230,7 +8230,7 @@
         "group": "Financial",
         "label": "Incentive Calendar",
         "icon": "DollarSign",
-        "order": 58
+        "order": 61
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8257,7 +8257,7 @@
         "group": "WHS & Compliance",
         "label": "GTO Compliance",
         "icon": "ShieldCheck",
-        "order": 68
+        "order": 71
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8500,7 +8500,7 @@
         "group": "WHS & Compliance",
         "label": "Stand-Downs",
         "icon": "ShieldCheck",
-        "order": 72
+        "order": 75
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8581,7 +8581,7 @@
         "group": "Reports & Billing",
         "label": "Monthly Reports",
         "icon": "BarChart3",
-        "order": 121
+        "order": 124
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -8905,7 +8905,7 @@
         "group": "WHS & Compliance",
         "label": "Pre-Placement",
         "icon": "ShieldCheck",
-        "order": 61
+        "order": 64
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9040,7 +9040,7 @@
         "group": "People",
         "label": "HR Hub",
         "icon": "Users",
-        "order": 23
+        "order": 26
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9067,7 +9067,7 @@
         "group": "People",
         "label": "Disciplinary Management",
         "icon": "Users",
-        "order": 24
+        "order": 27
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9121,7 +9121,7 @@
         "group": "People",
         "label": "Probation Completion",
         "icon": "Users",
-        "order": 25
+        "order": 28
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9175,7 +9175,7 @@
         "group": "People",
         "label": "Termination Process",
         "icon": "Users",
-        "order": 26
+        "order": 29
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9310,7 +9310,7 @@
         "group": "Analytics & Reporting",
         "label": "Insights",
         "icon": "BarChart3",
-        "order": 38
+        "order": 41
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9391,7 +9391,7 @@
         "group": "Sales Pipeline",
         "label": "Leads",
         "icon": "TrendingUp",
-        "order": 27
+        "order": 30
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9549,13 +9549,13 @@
         "feature_flags": []
       },
       "nav": {
-        "surface": "none",
-        "group": null,
-        "label": null,
-        "icon": null,
-        "order": null
+        "surface": "sidebar",
+        "group": "People",
+        "label": "Leave Management",
+        "icon": "Users",
+        "order": 24
       },
-      "reachable_via": "top_level",
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9603,13 +9603,13 @@
         "feature_flags": []
       },
       "nav": {
-        "surface": "none",
-        "group": null,
-        "label": null,
-        "icon": null,
-        "order": null
+        "surface": "sidebar",
+        "group": "People",
+        "label": "Leave Calendar",
+        "icon": "Users",
+        "order": 25
       },
-      "reachable_via": "in_page_nav",
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9634,7 +9634,7 @@
         "group": "Leave",
         "label": "Leave",
         "icon": "CalendarOff",
-        "order": 129
+        "order": 132
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9657,13 +9657,13 @@
         "feature_flags": []
       },
       "nav": {
-        "surface": "none",
-        "group": null,
-        "label": null,
-        "icon": null,
-        "order": null
+        "surface": "sidebar",
+        "group": "People",
+        "label": "Mentor Management",
+        "icon": "Users",
+        "order": 23
       },
-      "reachable_via": "top_level",
+      "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
@@ -9877,7 +9877,7 @@
         "group": "Sales Pipeline",
         "label": "Opportunities",
         "icon": "TrendingUp",
-        "order": 28
+        "order": 31
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -9985,7 +9985,7 @@
         "group": "Financial",
         "label": "Payroll",
         "icon": "DollarSign",
-        "order": 49
+        "order": 52
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10012,7 +10012,7 @@
         "group": "Financial",
         "label": "Award Rates",
         "icon": "DollarSign",
-        "order": 50
+        "order": 53
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10093,7 +10093,7 @@
         "group": "Financial",
         "label": "Missing Timesheets",
         "icon": "DollarSign",
-        "order": 52
+        "order": 55
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10201,7 +10201,7 @@
         "group": "Timesheets",
         "label": "Timesheet History",
         "icon": "Clock",
-        "order": 117
+        "order": 120
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10228,7 +10228,7 @@
         "group": "My Workforce",
         "label": "People",
         "icon": "Building2",
-        "order": 120
+        "order": 123
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10579,7 +10579,7 @@
         "group": "Sales Pipeline",
         "label": "Pipeline",
         "icon": "TrendingUp",
-        "order": 29
+        "order": 32
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10633,7 +10633,7 @@
         "group": "Sales Pipeline",
         "label": "Revenue Forecast",
         "icon": "TrendingUp",
-        "order": 31
+        "order": 34
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10714,7 +10714,7 @@
         "group": "Sales Pipeline",
         "label": "Pipeline Velocity",
         "icon": "TrendingUp",
-        "order": 32
+        "order": 35
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10741,7 +10741,7 @@
         "group": "My Workforce",
         "label": "Placements",
         "icon": "Building2",
-        "order": 120
+        "order": 123
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10849,7 +10849,7 @@
         "group": "Portal",
         "label": "Portal",
         "icon": "Globe",
-        "order": 126
+        "order": 129
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10903,7 +10903,7 @@
         "group": "Training",
         "label": "My Progress Reports",
         "icon": "GraduationCap",
-        "order": 117
+        "order": 120
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10930,7 +10930,7 @@
         "group": "Field Officers",
         "label": "My Caseload",
         "icon": "MapPin",
-        "order": 86
+        "order": 89
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10957,7 +10957,7 @@
         "group": "Portal Home",
         "label": "Portal Home",
         "icon": "LayoutDashboard",
-        "order": 130
+        "order": 133
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -10984,7 +10984,7 @@
         "group": "My Documents",
         "label": "My Documents",
         "icon": "FileText",
-        "order": 118
+        "order": 121
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11038,7 +11038,7 @@
         "group": "My Documents",
         "label": "Manuals & Policies",
         "icon": "FileText",
-        "order": 119
+        "order": 122
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11092,7 +11092,7 @@
         "group": "Portal Home",
         "label": "Portal Home",
         "icon": "LayoutDashboard",
-        "order": 128
+        "order": 131
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11173,7 +11173,7 @@
         "group": "WHS & Compliance",
         "label": "Progress Reviews",
         "icon": "ShieldCheck",
-        "order": 121
+        "order": 124
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11200,7 +11200,7 @@
         "group": "WHS & Compliance",
         "label": "Reviews",
         "icon": "ShieldCheck",
-        "order": 77
+        "order": 80
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11281,7 +11281,7 @@
         "group": "WHS & Compliance",
         "label": "Review Templates",
         "icon": "ShieldCheck",
-        "order": 78
+        "order": 81
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11362,7 +11362,7 @@
         "group": "Financial",
         "label": "Quotes",
         "icon": "DollarSign",
-        "order": 54
+        "order": 57
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11497,7 +11497,7 @@
         "group": "Analytics & Reporting",
         "label": "Reports",
         "icon": "BarChart3",
-        "order": 35
+        "order": 38
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11578,7 +11578,7 @@
         "group": "Analytics & Reporting",
         "label": "Report Deliveries",
         "icon": "BarChart3",
-        "order": 37
+        "order": 40
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11605,7 +11605,7 @@
         "group": "Analytics & Reporting",
         "label": "Scheduled Reports",
         "icon": "BarChart3",
-        "order": 36
+        "order": 39
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11713,7 +11713,7 @@
         "group": "Sales Pipeline",
         "label": "Pipeline Flow",
         "icon": "TrendingUp",
-        "order": 30
+        "order": 33
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11740,7 +11740,7 @@
         "group": "Settings",
         "label": "Settings",
         "icon": "Settings",
-        "order": 127
+        "order": 130
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11848,7 +11848,7 @@
         "group": "Settings",
         "label": "Branding",
         "icon": "Settings",
-        "order": 101
+        "order": 104
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -11983,7 +11983,7 @@
         "group": "Settings",
         "label": "Custom Pages",
         "icon": "Settings",
-        "order": 112
+        "order": 115
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12091,7 +12091,7 @@
         "group": "Settings",
         "label": "Data Import & Bulk Update",
         "icon": "Settings",
-        "order": 108
+        "order": 111
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12172,7 +12172,7 @@
         "group": "Settings",
         "label": "Document Categories",
         "icon": "Settings",
-        "order": 104
+        "order": 107
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12199,7 +12199,7 @@
         "group": "Settings",
         "label": "Email Accounts",
         "icon": "Settings",
-        "order": 114
+        "order": 117
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12226,7 +12226,7 @@
         "group": "Settings",
         "label": "Feature Flags",
         "icon": "Settings",
-        "order": 107
+        "order": 110
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12415,7 +12415,7 @@
         "group": "Settings",
         "label": "Integrations",
         "icon": "Settings",
-        "order": 113
+        "order": 116
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12469,7 +12469,7 @@
         "group": "Settings",
         "label": "Messaging",
         "icon": "Settings",
-        "order": 102
+        "order": 105
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12496,7 +12496,7 @@
         "group": "Settings",
         "label": "Module Visibility",
         "icon": "Settings",
-        "order": 106
+        "order": 109
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12523,7 +12523,7 @@
         "group": "Settings",
         "label": "Org Documents",
         "icon": "Settings",
-        "order": 103
+        "order": 106
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12658,7 +12658,7 @@
         "group": "Settings",
         "label": "Payroll Remittance Identity",
         "icon": "Settings",
-        "order": 115
+        "order": 118
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12901,7 +12901,7 @@
         "group": "Settings",
         "label": "Role Overrides",
         "icon": "Settings",
-        "order": 105
+        "order": 108
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -12928,7 +12928,7 @@
         "group": "Settings",
         "label": "Schema Builder",
         "icon": "Settings",
-        "order": 111
+        "order": 114
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13090,7 +13090,7 @@
         "group": "Communication",
         "label": "Tasks",
         "icon": "MessageSquare",
-        "order": 80
+        "order": 83
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13198,7 +13198,7 @@
         "group": "Documents",
         "label": "Timesheets",
         "icon": "FileText",
-        "order": 83
+        "order": 86
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13279,7 +13279,7 @@
         "group": "Timesheets",
         "label": "Submit Timesheet",
         "icon": "Clock",
-        "order": 116
+        "order": 119
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13306,7 +13306,7 @@
         "group": "VET & Training",
         "label": "Training",
         "icon": "BookOpen",
-        "order": 99
+        "order": 102
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13549,7 +13549,7 @@
         "group": "VET & Training",
         "label": "VET & Training",
         "icon": "BookOpen",
-        "order": 125
+        "order": 128
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13576,7 +13576,7 @@
         "group": "VET & Training",
         "label": "Assessments",
         "icon": "BookOpen",
-        "order": 94
+        "order": 97
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13684,7 +13684,7 @@
         "group": "VET & Training",
         "label": "Qualifications",
         "icon": "BookOpen",
-        "order": 95
+        "order": 98
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13846,7 +13846,7 @@
         "group": "VET & Training",
         "label": "Training Packages",
         "icon": "BookOpen",
-        "order": 96
+        "order": 99
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -13954,7 +13954,7 @@
         "group": "VET & Training",
         "label": "Units",
         "icon": "BookOpen",
-        "order": 97
+        "order": 100
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14062,7 +14062,7 @@
         "group": "WHS & Compliance",
         "label": "WHS & Compliance",
         "icon": "ShieldCheck",
-        "order": 124
+        "order": 127
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14089,7 +14089,7 @@
         "group": "WHS & Compliance",
         "label": "Host Employers",
         "icon": "ShieldCheck",
-        "order": 60
+        "order": 63
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14116,7 +14116,7 @@
         "group": "WHS & Compliance",
         "label": "WHS Incidents",
         "icon": "ShieldCheck",
-        "order": 120
+        "order": 123
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14170,7 +14170,7 @@
         "group": "WHS & Compliance",
         "label": "Inspections",
         "icon": "ShieldCheck",
-        "order": 63
+        "order": 66
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14251,7 +14251,7 @@
         "group": "WHS & Compliance",
         "label": "WHS Reports",
         "icon": "ShieldCheck",
-        "order": 64
+        "order": 67
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14386,7 +14386,7 @@
         "group": "WHS & Compliance",
         "label": "Risk Assessments",
         "icon": "ShieldCheck",
-        "order": 120
+        "order": 123
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14413,7 +14413,7 @@
         "group": "WHS & Compliance",
         "label": "WHS Training",
         "icon": "ShieldCheck",
-        "order": 65
+        "order": 68
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14467,7 +14467,7 @@
         "group": "WHS & Compliance",
         "label": "Workflow",
         "icon": "ShieldCheck",
-        "order": 66
+        "order": 69
       },
       "reachable_via": "sidebar",
       "portal": null,
@@ -14494,7 +14494,7 @@
         "group": "AI & Automation",
         "label": "Workflows",
         "icon": "Sparkles",
-        "order": 100
+        "order": 103
       },
       "reachable_via": "sidebar",
       "portal": null,
