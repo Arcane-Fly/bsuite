@@ -1,3 +1,16 @@
+---
+kind: record
+authority: none
+---
+
+> **This is a spent prompt, kept as a record.** It is the brief that was handed to a
+> thread on the date in its filename — not a description of how the system works now, and
+> not a claim that the work it asks for is finished. Frozen (`F`) because a record of what
+> was asked must not drift; per the operator ruling of 2026-08-26, `F` governs the
+> document's mutability and is not a statement about the current truth of the work.
+> The classification standard requires `kind: record` to carry `authority: none`: a dated
+> record is history, not a live document.
+
 # Continuation Prompt — BSuite Remaining Work (kick off a new thread)
 
 > Paste the block below into a fresh thread. It is self-contained; it points at the curated roadmap and the live truth sources, and it encodes the operating gates so the new thread runs verifier-gated to completion.
