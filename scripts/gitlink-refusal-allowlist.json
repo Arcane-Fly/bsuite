@@ -4,20 +4,15 @@
     "",
     "A refusal is normally a real finding and must fail. But a STANDING refusal that",
     "cannot be resolved from here turns advance-submodule-pointers permanently red,",
-    "and a workflow that has been red for weeks is one nobody reads — which is how a",
+    "and a workflow that has been red for weeks is one nobody reads \u2014 which is how a",
     "genuinely NEW refusal (an app whose development was force-pushed, say) arrives",
     "looking exactly like the old one.",
     "",
     "An entry here is reported and does NOT fail. Anything not here still fails.",
     "An entry that has STOPPED being refused also fails, so a dead entry cannot sit",
-    "here silently pre-authorising the next divergence in that app."
+    "here silently pre-authorising the next divergence in that app.",
+    "",
+    "2026-08-28: the R80.4 entry was removed. Its stated review condition - \"when R80.4's ruleset allows a merge commit, or its development is recreated from main\" - was met: R80.4 was reconciled with a merge commit (R80.4#266), so the app is no longer refused. The gate itself demanded the removal, which is the entry's own design: a dead entry must not sit here pre-authorising the next divergence."
   ],
-  "refusals": [
-    {
-      "app": "R80.4",
-      "reason": "development carries a DUPLICATE of main's dependabot commit as a separate object: 1 commit ahead, 0 files different. The parent pins R80.4's origin/main exactly, which is where the promotion invariant wants a parent pointer, so advancing would trade a correct pointer for a non-descendant one and gain no content. The reconcile needs a merge commit, which R80.4's repository ruleset forbids — operator-side to resolve.",
-      "added": "2026-08-27",
-      "review": "when R80.4's ruleset allows a merge commit, or its development is recreated from main"
-    }
-  ]
+  "refusals": []
 }
