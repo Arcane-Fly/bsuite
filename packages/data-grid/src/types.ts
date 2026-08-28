@@ -125,4 +125,40 @@ export interface DataGridProps<TRow = unknown> {
   /** Max entries retained in the undo stack. Default 200. */
   undoLimit?: number;
   emptyState?: ReactNode;
+  /**
+   * Open the record behind a row.
+   *
+   * Operator, 2026-08-28: "each row clickable and live". A listing whose rows
+   * do not open the record is a report, not a list — the reader has to go find
+   * the thing they were just looking at.
+   *
+   * Fires on a plain single click on a NON-editing cell. It deliberately does
+   * NOT fire while a cell is being edited, nor on a range-select drag, nor on
+   * a modified click (ctrl/cmd/shift) — those already mean "select cells", and
+   * stealing them would break the spreadsheet behaviour this grid exists for.
+   */
+  onRowClick?: (row: TRow, index: number) => void;
+  /**
+   * Which columns are shown, by column id. Absent id = visible.
+   *
+   * Controlled when `onColumnVisibilityChange` is supplied, so a page can
+   * persist the reader's choice; uncontrolled otherwise.
+   */
+  columnVisibility?: Record<string, boolean>;
+  onColumnVisibilityChange?: (next: Record<string, boolean>) => void;
+  /**
+   * Free-text filter across every visible column's FORMATTED value.
+   *
+   * Formatted, not raw: the reader filters what they can see. A date shown as
+   * `23/08/2026` must match "23/08", which its ISO storage value would not.
+   */
+  globalFilter?: string;
+  /**
+   * Row height in px. Supply `onRowHeightChange` to let the reader adjust it.
+   *
+   * Operator, 2026-08-28: "row height adjustible so nothing vertically
+   * truncated". A fixed 32px row silently clips a cell whose content wraps,
+   * and the reader has no way to see what was cut.
+   */
+  onRowHeightChange?: (next: number) => void;
 }
