@@ -224,7 +224,7 @@ cascade, then set the flags. Setting the flag first is decorative; widening a ga
 
 ## 8. Related documents
 
-- [`20260814-notes-backlog-verification-register-v1.00D.md`](20260814-notes-backlog-verification-register-v1.00D.md) — the measured state of every defect in the operator's notes
+- [`20260814-notes-backlog-verification-register-v1.00F.md`](20260814-notes-backlog-verification-register-v1.00F.md) — the measured state of every defect in the operator's notes
 - [`20260814-portals-operator-rulings-v1.00A.md`](20260814-portals-operator-rulings-v1.00A.md) — D-93 to D-98
 - [`20260813-operator-directive-notes-backlog-remediation-v1.00D.md`](20260813-operator-directive-notes-backlog-remediation-v1.00D.md) — D-59 to D-92
 - [`plans/20260814-portals-and-surface-class-remediation-v1.00D.md`](plans/20260814-portals-and-surface-class-remediation-v1.00D.md) — the seven-phase programme

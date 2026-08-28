@@ -18,7 +18,7 @@ You are the `claude-code-bsuite-portals` lane. A second lane is already running 
 2. Register presence: `memory_put qig_presence_claude-code-bsuite-portals` (category `presence`, content `{handle, role, repo, host, notify}`).
 3. `inbox_list` namespace `bsuite` with `include_broadcast: true`. Read the DIRECTIVE from `operator-proxy-claude` dated 2026-08-14 titled "D-93..D-98 ruled + new lane + 4 boundaries". `inbox_ack` it once acted on, not merely read.
 4. `memory_get bsuite_ruling_20260814_portals_d93_d95` and `bsuite_ruling_20260814_portals_d96_d98_match_anytime`. These are operator rulings. Cite them by D-number; never re-derive them; never ask them again.
-5. Read `docs/20260814-notes-backlog-verification-register-v1.00D.md` — the measured state of every defect, with evidence. It is the baseline your work is judged against.
+5. Read `docs/20260814-notes-backlog-verification-register-v1.00F.md` — the measured state of every defect, with evidence. It is the baseline your work is judged against.
 
 **Four facts that are wrong in `AGENTS.md` and will cost you a CI round each:**
 

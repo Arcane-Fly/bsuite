@@ -69,7 +69,7 @@ Two self-inflicted defects while producing it, both worth the space:
         verify-class-a-preservation.mjs
     docs/20260813-operator-directive-notes-backlog-remediation-v1.00D.md
         theme-conformance.yml, inline-eslint-rule-parity.yml, publish-eslint-config.yml
-    docs/20260814-notes-backlog-verification-register-v1.00D.md
+    docs/20260814-notes-backlog-verification-register-v1.00F.md
         theme-conformance.yml
     docs/20260817-built-unlanded-and-unwired-register-v1.00W.md
         check-hook-suppression-ratchet.mjs, audit-routes.sh, check-placement-rate-provenance.mjs, cron-job-health-audit.yml, hook-suppression-ratchet.yml
@@ -136,7 +136,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `docs/20260802-d2c-theme-compliance-audit-v1.00A.md` | BINDABLE |  | audit-d2c-theme.sh, publish-eslint-config.yml |
 | `docs/20260810-plan-dashboard-retirement-v1.00F.md` | BINDABLE |  | verify-class-a-preservation.mjs |
 | `docs/20260813-operator-directive-notes-backlog-remediation-v1.00D.md` | BINDABLE |  | theme-conformance.yml, inline-eslint-rule-parity.yml, publish-eslint-config.yml |
-| `docs/20260814-notes-backlog-verification-register-v1.00D.md` | BINDABLE |  | theme-conformance.yml |
+| `docs/20260814-notes-backlog-verification-register-v1.00F.md` | BINDABLE |  | theme-conformance.yml |
 | `docs/20260817-built-unlanded-and-unwired-register-v1.00W.md` | BINDABLE |  | check-hook-suppression-ratchet.mjs, audit-routes.sh, check-placement-rate-provenance.mjs |
 | `docs/20260817-coverage-gap-closure-v1.00W.md` | BINDABLE |  | check-colour-ban-reaches-converters.mjs, check-recovered-doc-verdicts.mjs, audit-d2c-theme.sh |
 | `docs/20260817-estate-completion-ledger-v1.00W.md` | BINDABLE |  | db-lint.yml |
