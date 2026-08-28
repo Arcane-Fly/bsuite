@@ -506,7 +506,7 @@ since corrected — is a judgement about document CONTENT, and nothing here read
 | `R80.4/docs/00-roadmap/20260820-r8-state-of-play-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/00-roadmap/20260822-rates-permission-and-delegation-model-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/20260807-award-modelling-next-stage-brief-v1.00W.md` | UNBOUND |  | — |
-| `R80.4/docs/handoff/20260804-r804-to-pi-v1.00W.md` | UNBOUND |  | — |
+| `R80.4/docs/handoff/20260804-r804-to-pi-v1.00F.md` | UNBOUND |  | — |
 | `R80.4/docs/methodology/20260802-award-pattern-matrix-reference-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/methodology/20260802-clause-tracing-methodology-guide-v1.00A.md` | UNBOUND |  | — |
 | `R80.4/docs/methodology/20260802-data-units-reference-v1.00A.md` | UNBOUND |  | — |
