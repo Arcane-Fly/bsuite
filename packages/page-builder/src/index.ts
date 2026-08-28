@@ -64,3 +64,16 @@ export type {
   UsePageGridLayoutResult,
   WidgetMeta,
 } from './types.js';
+export {
+  BORDER_TONES,
+  BORDER_STYLES,
+  DEFAULT_CARD_STYLE,
+  RADIUS_RANGE,
+  BORDER_WIDTH_RANGE,
+  PADDING_RANGE,
+  normaliseCardStyle,
+  isDefaultCardStyle,
+  toCssVars as cardStyleToCssVars,
+  describeCardStyle,
+} from './cardStyle.js';
+export type { CardStyle, BorderTone, BorderStyle, Elevation } from './cardStyle.js';
