@@ -6,6 +6,23 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.6.3] — 2026-08-29 — Republish so the tarball carries the REVOKE
+
+No source change. `1.6.2` was published **before** the 2026-08-28 REVOKE was appended
+to `supabase/migrations/20260505000000_field_sort_order_and_reorder_rpc.sql`, so the
+tarball on npm and the source in this repo disagreed on that one file — the published
+copy created the SECURITY DEFINER `reorder_entity_fields` RPC while leaving the default
+`GRANT EXECUTE ... TO PUBLIC` that PostgreSQL attaches on creation.
+
+Found by `scripts/check-published-matches-source.mjs`, which unpacks each published
+tarball and diffs it against source: 15 packages examined, this was the only file
+differing anywhere in the estate.
+
+**No live exposure.** The only deployable copy of this migration is
+`business-suite-unified/supabase/migrations/`, which already carries the REVOKE; no
+migration path applies package-shipped SQL out of `node_modules`. This closes the gap
+between the artifact and its source before that stops being true.
+
 ## [1.6.2] — 2026-08-27 — Tidy stopped stacking cards on top of each other
 
 Operator report **D-6**: *"Schema builder makes no sense. I have no idea how to
