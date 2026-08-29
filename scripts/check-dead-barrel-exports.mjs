@@ -56,12 +56,38 @@ export function barrelExportNames(src) {
   return [...new Set(names)]
 }
 
+/**
+ * Collapse `import { ... } from '...'` blocks onto one line.
+ *
+ * WHY THIS EXISTS. `importRe` below is deliberately line-bounded (`[^\\n]*`) so
+ * that a bare mention of a name on some unrelated line cannot read as an import.
+ * But that also means a MULTI-LINE import block hides every symbol inside it:
+ *
+ *     import {
+ *       EmptyState,          <- no `import` and no `from` on this line
+ *     } from '@/components/uplift'
+ *
+ * so `EmptyState` never matched, and the barrel export it came from counted as
+ * DEAD. The gate's number was therefore a function of import FORMATTING, not of
+ * deadness — and it moved when prettier reflowed a line nobody had touched.
+ *
+ * Found 2026-08-30: converting one page collapsed one such block and crm7's dead
+ * count FELL by 1 while that edit had REMOVED two imports, which should only
+ * ever raise it. An inverted move is what exposed it.
+ *
+ * Collapsing rather than widening the regex keeps the line-bounded guarantee:
+ * the symbol still has to sit inside a real import statement.
+ */
+export function collapseMultilineImports(text) {
+  return text.replace(/\bimport\s*(?:type\s+)?\{[^}]*\}\s*from/g, (m) => m.replace(/\s+/g, ' '))
+}
+
 export function isUsed(name, files, ownDir) {
   const importRe = new RegExp(`\\b(?:import|from|require)\\b[^\\n]*\\b${name}\\b`)
   const jsxRe = new RegExp(`<${name}[\\s/>]`)
   for (const [path, text] of files) {
     if (path.startsWith(ownDir)) continue
-    if (importRe.test(text) || jsxRe.test(text)) return true
+    if (importRe.test(collapseMultilineImports(text)) || jsxRe.test(text)) return true
   }
   return false
 }
@@ -107,6 +133,13 @@ function selfTest() {
     ['alias resolves to exported name', barrelExportNames('export { a as B }').join() === 'B'],
     ['type export counted', barrelExportNames('export type { T }').join() === 'T'],
     ['export * names nothing', barrelExportNames("export * from './x'").length === 0],
+    // The multi-line blind spot. Both FAIL without collapseMultilineImports.
+    ['multi-line import is a use',
+      isUsed('Foo', [['/x/a.ts', 'import {\n  Foo,\n  Bar,\n} from "y"']], '/b') === true],
+    ['multi-line TYPE import is a use — types never appear in JSX, so nothing else catches them',
+      isUsed('T', [['/x/a.ts', 'import {\n  type T,\n} from "y"']], '/b') === true],
+    ['a bare mention on its own line is still NOT a use',
+      isUsed('Foo', [['/x/a.ts', 'const s = 1\nFoo\n']], '/b') === false],
   ]
   let bad = 0
   for (const [name, ok] of checks) { if (!ok) { console.error(`  SELF-TEST FAIL: ${name}`); bad++ } }
