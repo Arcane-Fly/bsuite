@@ -23,7 +23,7 @@
 - Run the realtime assistant `uv run main` or `uv run main --prompts "Hello, how are you?|What time is it?|Open Hacker News"`
 
 ## Assistant Tools
-> See [TOOLS.md](TOOLS.md) for a detailed list of available tools and their descriptions.
+> See `TOOLS.md` *(never recovered — the tool list is inlined in the individual recovered documents)* for a detailed list of available tools and their descriptions.
 
 ## Personalization
 

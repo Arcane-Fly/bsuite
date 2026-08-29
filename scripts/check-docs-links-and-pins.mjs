@@ -113,8 +113,22 @@ for (const file of files) {
   const findings = []
 
   // 1. dangling markdown links to .md files
+  //
+  // isRetracted() is deliberately NOT consulted here, and that is the whole
+  // point of this comment.
+  //
+  // It exists to stop a PROSE claim being flagged when the phrase only
+  // survives inside the blockquote that records why the claim was wrong.
+  // Sound for prose. Wrong for links: whether a file exists on disk is not a
+  // claim that can be retracted. A dangling link inside a correction banner
+  // is still a dangling link.
+  //
+  // Measured 2026-08-29: this gate printed CHECKS-FAILED: 0 while 49 relative
+  // .md links were dangling — every one of them inside a `>` block, because
+  // that is where nearly every document keeps its "**Sibling docs:**" header.
+  // 31 pointed at R80.3, archived and de-registered from .gitmodules months
+  // earlier. A gate reporting zero was blind, not clean.
   lines.forEach((ln, i) => {
-    if (isRetracted(lines, i)) return
     for (const m of ln.matchAll(/\]\(([^)#\s]+\.md)\)/g)) {
       const target = m[1]
       if (/^https?:/.test(target)) continue

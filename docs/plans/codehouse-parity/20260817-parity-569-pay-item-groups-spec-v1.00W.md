@@ -39,7 +39,7 @@
 | 31 | C | Reimbursement pay items | CRM7-owned `pay_item_groups` has `reimbursement` category + `is_reimbursement` UI/payroll schema support | 🟢 dev-merged |
 | 32 | C | Pay Item Category Priority (`sort_priority`) | `pay_item_groups.sort_priority` and payroll category priority schema landed in PR-F | 🟢 dev-merged |
 
-**Evidence source:** [AnyTime Admin Guide WF1_Pay_027](https://help.codehouseworkforce.com.au) pp.39–58; [OTS Set Up WF1_OTS_001](https://help.codehouseworkforce.com.au) pp.1–18; [parity-matrix.md rows 21–29, 31–32](../../../competitor/parity-matrix.md); [bsuite-inventory.md §C](../../../competitor/bsuite-inventory.md).
+**Evidence source:** [AnyTime Admin Guide WF1_Pay_027](https://help.codehouseworkforce.com.au) pp.39–58; [OTS Set Up WF1_OTS_001](https://help.codehouseworkforce.com.au) pp.1–18; `parity-matrix.md` rows 21–29, 31–32 (competitor research, not in this repo); `bsuite-inventory.md` §C (competitor research, not in this repo).
 
 ### Not covered by this spec
 
@@ -847,8 +847,8 @@ The following documents require updates when each implementation PR merges:
 
 | Document | Section | Change required |
 |---|---|---|
-| [`competitor/bsuite-inventory.md`](../../../competitor/bsuite-inventory.md) | §C (Pay items, work types) | Change status to ✅ for rows 21–29, 31–32; update "named pay-item group entity absent" item 7 |
-| [`competitor/parity-matrix.md`](../../../competitor/parity-matrix.md) | Rows 21–29, 31–32 | Update status column from 🔴/🟡 to ✅; update "Current BSuite state" cell for each row |
+| `bsuite-inventory.md` — `competitor/bsuite-inventory.md` (competitor research, not in this repo) | §C (Pay items, work types) | Change status to ✅ for rows 21–29, 31–32; update "named pay-item group entity absent" item 7 |
+| `parity-matrix.md` — `competitor/parity-matrix.md` (competitor research, not in this repo) | Rows 21–29, 31–32 | Update status column from 🔴/🟡 to ✅; update "Current BSuite state" cell for each row |
 | ~~`crm7/OUTSTANDING.md`~~ | N/A — removed 2026-05-19 (bsuite#488); the parent `docs/OUTSTANDING.md` row below covers it |
 | [`docs/OUTSTANDING.md`](../../OUTSTANDING.md) | Domain C outstanding | Tick off domain C gaps (SSoT for all submodules per bsuite#488) |
 | [`packages/charge-calc/README.md`](../../../packages/charge-calc/README.md) | Named group types | Add: `pay_item_groups` table is now the canonical source for group IDs; enum aliases remain for backward compat |
@@ -972,8 +972,8 @@ Operator-runnable steps to verify each PR ships correctly.
 | pgTAP — PostgreSQL unit testing | [https://pgtap.org](https://pgtap.org) |
 | Playwright test | [https://playwright.dev/docs/intro](https://playwright.dev/docs/intro) |
 | AUTH_CANONICAL.md (internal) | [`AUTH_CANONICAL.md`](../../../AUTH_CANONICAL.md) |
-| parity-matrix.md (internal) | [`competitor/parity-matrix.md`](../../../competitor/parity-matrix.md) |
-| bsuite-inventory.md §C (internal) | [`competitor/bsuite-inventory.md`](../../../competitor/bsuite-inventory.md) |
+| parity-matrix.md (internal) | `parity-matrix.md` — `competitor/parity-matrix.md` (competitor research, not in this repo) |
+| bsuite-inventory.md §C (internal) | `bsuite-inventory.md` — `competitor/bsuite-inventory.md` (competitor research, not in this repo) |
 | WCAG 2.2 SC 2.1.1 Keyboard | [https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html](https://www.w3.org/WAI/WCAG22/Understanding/keyboard.html) |
 
 ---
