@@ -16,9 +16,16 @@ const people: Person[] = [
   { id: '3', name: 'Alan Turing', age: 41 },
 ];
 
+/*
+ * `editable: true` is REQUIRED as of 2.0.0 — a column is read-only unless it
+ * says otherwise. These fixtures are used by the editing tests below, so they
+ * declare it rather than relying on a default. That is the point of the change:
+ * an editable cell is now something a page ASKS for, never something it gets by
+ * forgetting.
+ */
 const columns: DataGridColumn<Person>[] = [
-  { id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text' },
-  { id: 'age', header: 'Age', accessor: (r) => r.age, dataType: 'number' },
+  { id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text', editable: true },
+  { id: 'age', header: 'Age', accessor: (r) => r.age, dataType: 'number', editable: true },
 ];
 
 beforeEach(() => {
@@ -312,5 +319,61 @@ describe('DataGrid controlled sorting', () => {
     );
     // Source order, because nothing asked for a sort.
     expect(namesInOrder()).toEqual(['Ada', 'Grace', 'Alan']);
+  });
+});
+
+describe('DataGrid read-only by default (2.0.0)', () => {
+  /*
+   * THE DEFAULT IS THE POINT. Until 2.0.0 a column that simply did not mention
+   * `editable` was fully editable — typing, paste and the fill handle all
+   * worked. Every list converted onto this grid became a spreadsheet by
+   * omission, and nothing announced it: the page renders, the data is right,
+   * and a reader can quietly overwrite a record from a screen only ever meant
+   * to display one.
+   *
+   * ~184 list surfaces remain to convert. A default that must be remembered
+   * 184 times is a defect waiting on the one time it is not.
+   */
+  const readOnlyCols: DataGridColumn<Person>[] = [
+    // deliberately silent on `editable`
+    { id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text' },
+  ];
+
+  it('a column that does not mention editable REFUSES to edit', async () => {
+    const onCellsEdited = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataGrid<Person>
+        columns={readOnlyCols}
+        data={[{ id: '1', name: 'Ada Lovelace', age: 36 }]}
+        getRowId={(r) => r.id}
+        onCellsEdited={onCellsEdited}
+        onError={() => {}}
+      />,
+    );
+    await user.click(screen.getByText('Ada Lovelace'));
+    await user.keyboard('X');
+    await user.keyboard('{Enter}');
+    expect(onCellsEdited).not.toHaveBeenCalled();
+    // and the displayed value is untouched
+    expect(screen.getByText('Ada Lovelace')).toBeInTheDocument();
+  });
+
+  it('editable: true still edits — the opt-in works', async () => {
+    const onCellsEdited = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataGrid<Person>
+        columns={[{ ...readOnlyCols[0], editable: true }]}
+        data={[{ id: '1', name: 'Ada Lovelace', age: 36 }]}
+        getRowId={(r) => r.id}
+        onCellsEdited={onCellsEdited}
+        onError={() => {}}
+      />,
+    );
+    await user.click(screen.getByText('Ada Lovelace'));
+    await user.keyboard('X');
+    await user.keyboard('{Enter}');
+    expect(onCellsEdited).toHaveBeenCalled();
   });
 });
