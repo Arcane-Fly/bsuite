@@ -324,6 +324,38 @@ jobs:
           echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID} — check SUPABASE_DB_PASSWORD and project region."
           exit 1
 
+      # A version already in schema_migrations under a DIFFERENT name is SKIPPED,
+      # not applied, and the run still reports success. Measured 2026-08-29:
+      # 20260829030000_admin_users_exists_where_the_policies_live.sql collided
+      # with `drop_adobe_sign_residue`, a migration long deleted from the repo
+      # whose ledger row outlived it. The applier printed
+      # "Done: 0 applied, 5 already recorded." and went green.
+      #
+      # Every file-to-file collision gate passed it, because a version taken by
+      # a file that no longer exists is invisible to all of them. The phantom
+      # detector below caught it, but only AFTER an apply that claimed success.
+      # This turns that silent skip into a loud refusal, before anything runs.
+      - name: Refuse a version the ledger already holds under another name
+        if: steps.resolve-dir.outputs.has_migrations == 'true'
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ steps.project.outputs.project_id }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        shell: bash
+        run: |
+          set -uo pipefail
+          node "$GITHUB_WORKSPACE/scripts/check-migration-version-already-in-ledger.mjs" --self-test || {
+            echo "::error::the collision checker's own self-test failed — its verdict would mean nothing"
+            exit 1
+          }
+          LEDGER=$(node "$GITHUB_WORKSPACE/scripts/check-migration-version-already-in-ledger.mjs" --print-query \
+            | psql "postgresql://postgres.${PROJECT_ID}@${DB_HOST}:6543/postgres" -tAX -f - 2>/dev/null)
+          if [ -z "$LEDGER" ]; then
+            echo "::error::could not read schema_migrations — refusing to apply on an unchecked ledger"
+            exit 1
+          fi
+          printf '%s' "$LEDGER" | node "$GITHUB_WORKSPACE/scripts/check-migration-version-already-in-ledger.mjs"
+
       - name: Apply transactional migrations (.sql, via psql)
         if: steps.resolve-dir.outputs.has_migrations == 'true'
         working-directory: ${{ steps.resolve-dir.outputs.workdir }}
