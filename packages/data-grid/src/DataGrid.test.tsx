@@ -218,3 +218,99 @@ describe('DataGrid grouping', () => {
     expect(screen.getByText('Alan Turing')).toBeInTheDocument();
   });
 });
+
+describe('DataGrid controlled sorting', () => {
+  /*
+   * EXISTS BECAUSE crm7's ReportTable PERSISTS the reader's chosen sort as a
+   * view preference. Converting it onto a grid whose sort is internal state
+   * would drop that on every reload: the list still renders, the sort silently
+   * is not the one they chose, and nothing fails. That is the regression shape
+   * this package keeps having to design out.
+   */
+  const rows: Person[] = [
+    { id: '1', name: 'Ada Lovelace', age: 36 },
+    { id: '2', name: 'Grace Hopper', age: 85 },
+    { id: '3', name: 'Alan Turing', age: 41 },
+  ];
+  const cols: DataGridColumn<Person>[] = [
+    { id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text', sortable: true },
+    { id: 'age', header: 'Age', accessor: (r) => r.age, dataType: 'number', sortable: true },
+  ];
+
+  const namesInOrder = () =>
+    screen
+      .getAllByRole('row')
+      .map((r) => r.textContent ?? '')
+      .filter((t) => t.includes('Lovelace') || t.includes('Hopper') || t.includes('Turing'))
+      .map((t) => (t.includes('Lovelace') ? 'Ada' : t.includes('Hopper') ? 'Grace' : 'Alan'));
+
+  it('SEEDS the grid from the persisted sort — descending by age puts Grace first', () => {
+    render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        sortBy={[{ id: 'age', desc: true }]}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    // 85, 41, 36 — not source order, which would start with Ada.
+    expect(namesInOrder()[0]).toBe('Grace');
+  });
+
+  it('a DIFFERENT persisted sort produces a different order — the seed is read, not ignored', () => {
+    render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        sortBy={[{ id: 'age', desc: false }]}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    /*
+     * Assert the FULL order, not just the first name.
+     *
+     * Ada is first in source order too, so `[0] === 'Ada'` passed even with the
+     * seed disabled — it tested nothing. The control caught that. Ascending by
+     * age is Ada(36), Alan(41), Grace(85); source order is Ada, Grace, Alan.
+     * Only the full sequence tells those apart.
+     */
+    expect(namesInOrder()).toEqual(['Ada', 'Alan', 'Grace']);
+  });
+
+  it('REPORTS the sort back so a host can persist what the reader clicked', async () => {
+    const onSortByChange = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        onSortByChange={onSortByChange}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    await user.click(screen.getByText('Age'));
+    expect(onSortByChange).toHaveBeenCalled();
+    const reported = onSortByChange.mock.calls[onSortByChange.mock.calls.length - 1][0];
+    expect(reported[0].id).toBe('age');
+  });
+
+  it('stays UNCONTROLLED when no sort is given — previous behaviour is untouched', () => {
+    render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    // Source order, because nothing asked for a sort.
+    expect(namesInOrder()).toEqual(['Ada', 'Grace', 'Alan']);
+  });
+});

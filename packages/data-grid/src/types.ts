@@ -201,6 +201,19 @@ export interface DataGridProps<TRow = unknown> {
    * not a mutation: `onRowClick` still receives the original record and the
    * original data index, so a grouped grid opens the same record a flat one does.
    */
+  /**
+   * Seed and observe the sort, so a host can PERSIST it.
+   *
+   * EXISTS BECAUSE crm7's `ReportTable` saves the reader's chosen sort as a view
+   * preference. The grid's own sort is internal state, so converting that surface
+   * without this would have dropped the saved sort on every reload — the list
+   * still renders, the sort silently is not the one they chose, and nothing
+   * fails. That is the regression shape this package keeps having to design out.
+   *
+   * Uncontrolled when omitted: the grid keeps its own sort, exactly as before.
+   */
+  sortBy?: { id: string; desc: boolean }[] | null;
+  onSortByChange?: (next: { id: string; desc: boolean }[]) => void;
   groupBy?: string | null;
   /** Fires when the reader collapses or expands a group. */
   onGroupExpandedChange?: (expanded: Record<string, boolean>) => void;
