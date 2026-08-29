@@ -44,3 +44,6 @@ export type { BSuiteAppKey, BSuiteTenantAppKey, AppMetadata } from './apps.js';
 
 export { buildLaunchUrl, buildAppLaunchUrl } from './launchUrl.js';
 export { sanitizeReturnPath } from './sanitizeReturnPath.js';
+
+export { speedInsightsRoute } from './speedInsightsRoute.js';
+export { useSpeedInsightsRoute } from './useSpeedInsightsRoute.js';
