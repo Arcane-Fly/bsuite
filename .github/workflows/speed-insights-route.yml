@@ -1,0 +1,87 @@
+# .github/workflows/speed-insights-route.yml
+#
+# Every react SpeedInsights mount passes a route
+# ==============================================
+# Operator, 2026-08-29: "paths appear to be measured but not routes" and "the
+# app itself feels slow even though it has a good score."
+#
+# Those were one defect. `<SpeedInsights />` from
+# `@vercel/speed-insights/react` was mounted with no `route` prop in five of
+# six apps. The library's own type declares `route?: string | null`; omit it
+# and every datapoint falls back to `window.location.pathname`. One page's
+# Core Web Vitals then split across hundreds of record-id buckets, each too
+# small to reach the p75 Vercel scores on — so the busy pages dropped OUT of
+# the report for want of samples, and the surviving score was computed over
+# the static paths that had enough.
+#
+# It is silent. Nothing warns, the component renders, and the dashboard fills
+# with plausible numbers. It was invisible until someone said the app felt
+# slower than its score.
+#
+# ONLY THE /react ENTRYPOINT. `@vercel/speed-insights/next` reads the route
+# pattern from the Next router and must NOT pass `route` — conduit uses that
+# one and is correct as-is. A gate demanding the prop everywhere would be
+# wrong about conduit and would then be "fixed" by breaking it.
+#
+# WHY IT RUNS ON SUBMODULE POINTER CHANGES. The apps are submodules, so a
+# pointer bump is the only change to this repo that moves the inputs, and a
+# `paths:` filter over `**/*.tsx` cannot see one — the parent tracks a
+# gitlink, not the files beneath it.
+#
+# WIRED ONLY ONCE GREEN. This gate existed for a day before this workflow did,
+# deliberately: it was red until nav-core 1.2.0 shipped and the five apps
+# consumed it. A gate that is red on the day it lands teaches everyone to
+# ignore it, and this estate already has three of those.
+
+name: Speed Insights route
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main, master, development]
+    paths:
+      - '**/*.tsx'
+      - 'scripts/check-speed-insights-route.mjs'
+      - '.github/workflows/speed-insights-route.yml'
+      # The submodule gitlinks. See the header.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'braden'
+      - 'throughput'
+      - 'R80.4'
+
+jobs:
+  speed-insights-route:
+    name: Speed Insights measures routes, not paths
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      # Every app is a PRIVATE submodule; the default GITHUB_TOKEN cannot
+      # clone them and fails with a bare "Repository not found".
+      - name: Checkout (with submodules — the apps live there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      # An absent app tree has no mounts, and "no mounts" and "no offenders"
+      # are the same green. The checker refuses on zero mounts for that
+      # reason; this names the real cause one step earlier.
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh crm7 business-suite-unified conduit braden throughput
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '24.14.0' }
+
+      # Two of the six self-test cases assert the gate FIRES, and one asserts
+      # it does NOT fire on the /next entrypoint — the exclusion that keeps
+      # conduit from being "fixed" into breakage.
+      - name: Self-test the checker before trusting it
+        run: node scripts/check-speed-insights-route.mjs --self-test
+
+      - name: Every react mount passes a route
+        run: node scripts/check-speed-insights-route.mjs
