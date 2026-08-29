@@ -556,3 +556,54 @@ console.log(
   `click-through: ${protectedFiles} file(s) protected, ${protectedFiles - stillHandRolled} converted and ` +
     `keeping onRowClick, ${stillHandRolled} not yet converted.`,
 );
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * --classify — report WHAT the remaining count is made of. Verdict-neutral.
+ * ═══════════════════════════════════════════════════════════════════════════
+ *
+ * The ratchet counts every hand-rolled table, which is the right denominator
+ * for a ratchet: it must be impossible to add one. It is the WRONG number to
+ * plan with, because not every hand-rolled table should become a DataGrid.
+ *
+ * Measured 2026-08-29 across 143 files carrying a hand-rolled table:
+ *
+ *     117  records grid — a genuine conversion target
+ *      15  static / layout table
+ *       7  primitive or shared table component
+ *       4  summary or chart-breakdown table
+ *
+ * The last three groups are 26 files that SHOULD NOT be converted:
+ *
+ *   - the primitives ARE the table (components/ui/table.tsx, skeleton-table);
+ *     converting them is circular
+ *   - a permission matrix or an incident detail view is a layout, not a list
+ *   - a chart breakdown under a ChartCard uses `<th scope="row">` for row
+ *     headers, which is an accessibility affordance a DataGrid row does not
+ *     carry. crm7/src/pages/analytics/gto/PlacementsDashboard.tsx is the clear
+ *     case: four columns, a Sparkline cell, and row headers, sitting beneath a
+ *     bar chart. Converting it would add grid chrome to a legend and lose the
+ *     row-header semantics.
+ *
+ * This does not change the verdict, the baseline, or what the ratchet blocks.
+ * It exists so that "202 remaining" is not read as "202 pages of work", which
+ * is how a proxy metric quietly becomes the goal it was standing in for.
+ *
+ * Heuristic, and deliberately labelled as one: it reads render-site signals,
+ * not intent. Treat the split as a planning aid, and confirm the class by
+ * opening the file before converting it.
+ */
+function classifyRemaining(files) {
+  const RECORD = /onRowClick|navigate\(|<Link\b|href=|Pagination|sortBy|setSort|filter/i;
+  const SUMMARY = /ChartCard|Sparkline|scope="row"|ResponsiveContainer|aggregate/i;
+  const PRIMITIVE = /components\/ui\/table\.tsx$|skeleton-table|\/DataTable\.tsx$|MarkdownContent/;
+  const out = { 'records grid (convertible)': 0, 'static / layout': 0, 'primitive / shared': 0, 'summary / chart': 0 };
+  for (const { path: p, text } of files) {
+    if (PRIMITIVE.test(p)) out['primitive / shared']++;
+    else if (SUMMARY.test(text) && !RECORD.test(text)) out['summary / chart']++;
+    else if (RECORD.test(text)) out['records grid (convertible)']++;
+    else out['static / layout']++;
+  }
+  return out;
+}
+
+export { classifyRemaining };
