@@ -9,8 +9,37 @@ evidence:
 
 # role_capabilities — 1,296 rows, 918 human edits, zero consumers
 
-**Status:** DRAFT — needs an owner and a ruling. Measured 2026-08-24 against
-production `tuybltdrdefjblnplpqo`. Every number here is live, not inferred.
+**Status:** F (Frozen — superseded, and the defect it records is fixed). Measured
+2026-08-24 against production `tuybltdrdefjblnplpqo`. Every number here is live,
+not inferred, and every one of them reproduced on re-measurement.
+
+> ## CLOSED 2026-08-29 — re-measured against the same production project
+>
+> | | 2026-08-24 | 2026-08-29 |
+> |---|---:|---:|
+> | functions reading `role_capabilities` | **0** | **5** |
+> | policies reading it | **0** | **4** |
+> | rows | 1,296 | 1,404 |
+>
+> The table is no longer a zero-consumer artifact. Nine live readers exist where
+> there were none, so the 918 human edits this document was written about now
+> reach something.
+>
+> **This document was already superseded on its CAUSE** by
+> `20260824-role-capabilities-merged-not-applied-root-cause`, which says so
+> itself: the measurements here "reproduce exactly and are not disputed" — it
+> was the conclusion drawn from them that was incomplete. The reader was not
+> missing; it had been authored and never applied.
+>
+> Both limbs of the operator bar are therefore met: superseded (limb a, stated
+> by the superseding document rather than inferred), and the cited gates run
+> clean (limb b) — `check-table-reach` exit 0, `check-zero-consumers` exit 0
+> with "no new zero-consumer artifacts".
+>
+> **What this marker does NOT claim:** that every capability edit now behaves as
+> its author intended. It claims the table is read. Whether the 556 explicit
+> denials produce the effect those three tenants expected is a separate
+> question this document never answered and this marker does not answer either.
 
 ---
 

@@ -11,8 +11,32 @@ evidence:
 
 # role_capabilities gates nothing because its reader was never applied
 
+**Status:** F (Frozen — the fix this document prescribes is applied and verified).
+
+> ## CLOSED 2026-08-29 — verified against production `tuybltdrdefjblnplpqo`
+>
+> This document's diagnosis was that the reader existed as a migration and had
+> never been applied. All three facts it turns on now check out live:
+>
+> | check | result |
+> |---|---|
+> | `20260905000000_user_has_capability_fail_closed` recorded in `schema_migrations` | **yes** |
+> | `public.user_has_capability` exists | **yes** |
+> | its body reads `role_capabilities` | **yes** |
+>
+> And the consequence is visible at the table: 5 functions and 4 policies now
+> read `role_capabilities`, against zero when this was written.
+>
+> Limb (a) — it described a non-best-practice (a permission gate whose reader
+> was authored but never applied) and best practice is implemented. Limb (b) —
+> `check-table-reach` and `check-zero-consumers` both exit 0.
+>
+> Recorded here rather than in a new note: this document is the diagnosis, and
+> splitting a diagnosis from its resolution is how the next reader re-derives
+> both.
+
 **Measured 2026-08-24 against production `tuybltdrdefjblnplpqo`.** Supersedes the
-*cause* stated in `docs/20260824-role-capabilities-zero-consumer-finding-v1.00D.md`;
+*cause* stated in `docs/20260824-role-capabilities-zero-consumer-finding-v1.00F.md`;
 its *measurements* reproduce exactly and are not disputed.
 
 ## The correction
