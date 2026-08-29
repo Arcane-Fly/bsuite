@@ -333,6 +333,6 @@ guard in `scripts/guard-registry.mjs`. Change the rules there, not by closing is
 
 ## 9. Roadmap
 
-The unified BSuite roadmap lives at [`docs/00-master-roadmap.md`](./00-master-roadmap.md). All project planning is centralized there. Per-project roadmaps have been archived to `docs/archive/<project>/` and replaced with stubs pointing to the master roadmap.
+The unified BSuite roadmap lives at [`docs/00-roadmap/`](./00-roadmap/README.md). All project planning is centralized there. Per-project roadmaps have been archived to `docs/archive/<project>/` and replaced with stubs pointing to the master roadmap.
 
 Plans and design documents are stored in `docs/plans/` with the standard naming convention (`YYYYMMDD-name-type-vMAJOR.MINOR[STATUS].md`).
