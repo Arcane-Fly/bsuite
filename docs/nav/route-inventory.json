@@ -14528,7 +14528,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "R80.4/src/main.tsx:311",
+      "evidence": "R80.4/src/main.tsx:312",
       "note": "catch-all: any path outside CALCULATOR_PATHS and the two auth paths"
     },
     {
@@ -14555,7 +14555,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "R80.4/src/main.tsx:311",
+      "evidence": "R80.4/src/main.tsx:312",
       "note": null
     },
     {
@@ -14582,7 +14582,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "R80.4/src/main.tsx:309",
+      "evidence": "R80.4/src/main.tsx:310",
       "note": null
     },
     {
@@ -14609,7 +14609,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "R80.4/src/main.tsx:310",
+      "evidence": "R80.4/src/main.tsx:311",
       "note": null
     },
     {
@@ -14636,7 +14636,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "R80.4/src/main.tsx:311",
+      "evidence": "R80.4/src/main.tsx:312",
       "note": "alias of / — both members of CALCULATOR_PATHS"
     },
     {
@@ -14663,7 +14663,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:181",
+      "evidence": "throughput/src/App.tsx:199",
       "note": null
     },
     {
@@ -14690,7 +14690,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "throughput/src/App.tsx:216",
+      "evidence": "throughput/src/App.tsx:234",
       "note": "→ /"
     },
     {
@@ -14717,7 +14717,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:192",
+      "evidence": "throughput/src/App.tsx:210",
       "note": null
     },
     {
@@ -14744,7 +14744,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:161",
+      "evidence": "throughput/src/App.tsx:179",
       "note": null
     },
     {
@@ -14771,7 +14771,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:173",
+      "evidence": "throughput/src/App.tsx:191",
       "note": null
     },
     {
@@ -14798,7 +14798,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:208",
+      "evidence": "throughput/src/App.tsx:226",
       "note": null
     },
     {
@@ -14825,7 +14825,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:209",
+      "evidence": "throughput/src/App.tsx:227",
       "note": null
     },
     {
@@ -14852,7 +14852,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:211",
+      "evidence": "throughput/src/App.tsx:229",
       "note": null
     },
     {
@@ -14879,7 +14879,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:210",
+      "evidence": "throughput/src/App.tsx:228",
       "note": null
     },
     {
@@ -14906,7 +14906,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:207",
+      "evidence": "throughput/src/App.tsx:225",
       "note": null
     },
     {
@@ -14933,7 +14933,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:191",
+      "evidence": "throughput/src/App.tsx:209",
       "note": null
     },
     {
@@ -14960,7 +14960,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:164",
+      "evidence": "throughput/src/App.tsx:182",
       "note": null
     },
     {
@@ -14987,7 +14987,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:206",
+      "evidence": "throughput/src/App.tsx:224",
       "note": null
     },
     {
@@ -15014,7 +15014,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:193",
+      "evidence": "throughput/src/App.tsx:211",
       "note": null
     },
     {
@@ -15041,7 +15041,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:178",
+      "evidence": "throughput/src/App.tsx:196",
       "note": null
     },
     {
@@ -15068,7 +15068,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:194",
+      "evidence": "throughput/src/App.tsx:212",
       "note": null
     },
     {
@@ -15095,7 +15095,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:195",
+      "evidence": "throughput/src/App.tsx:213",
       "note": null
     },
     {
@@ -15122,7 +15122,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "throughput/src/App.tsx:190",
+      "evidence": "throughput/src/App.tsx:208",
       "note": null
     }
   ]
