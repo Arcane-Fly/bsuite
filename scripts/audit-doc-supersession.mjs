@@ -22,6 +22,25 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
 
+if (process.argv.includes('--self-test')) {
+  const PROSE = /[Ss]upersedes?\s+(?:it|this)?[^\n]{0,120}?([0-9]{8}-[A-Za-z0-9.-]+\.md)/
+  const checks = [
+    ['lowercase filename matches', PROSE.test('supersedes 20260817-a-b-v1.00.md')],
+    // These three FAIL against the shipped `[a-z0-9.-]+` class. Every real
+    // estate document is one of these shapes.
+    ['UPPERCASE W marker matches', PROSE.test('supersedes 20260817-a-b-v1.00W.md')],
+    ['UPPERCASE F marker matches', PROSE.test('supersedes 20260814-a-b-v2.00F.md')],
+    ['UPPERCASE D marker matches', PROSE.test('supersedes 20260822-a-b-v1.00D.md')],
+    // still bounded: a claim and a filename on DIFFERENT lines is not a claim
+    ['newline still separates', !PROSE.test('supersedes the register\n20260817-a-b-v1.00W.md')],
+  ]
+  let bad = 0
+  for (const [n, ok] of checks) if (!ok) { console.error(`  SELF-TEST FAIL: ${n}`); bad++ }
+  console.log(`  self-test: ${bad ? `${bad} FAILED` : `${checks.length}/${checks.length} pass`}`)
+  process.exit(bad ? 1 : 0)
+}
+
+
 const roots = ['docs']
 try {
   const out = execFileSync('git', ['config', '--file', '.gitmodules', '--get-regexp', 'path'], { encoding: 'utf8' })
@@ -71,7 +90,19 @@ for (const d of docs) {
   }
 
   /* stated: prose naming another doc as superseded */
-  for (const m of s.matchAll(/[Ss]upersedes?\s+(?:it|this)?[^\n]{0,120}?([0-9]{8}-[a-z0-9.-]+\.md)/g)) {
+  /*
+   * The filename class MUST accept uppercase. Every estate doc carries its
+   * completion marker as an UPPERCASE letter in the filename — `-v1.00W.md`,
+   * `-v2.00F.md`, `-v1.00D.md` — and the class here was `[a-z0-9.-]+`, so this
+   * matcher could not match a single real document name.
+   *
+   * Measured 2026-08-30 across all six docs roots: the shipped pattern found
+   * ZERO prose supersession claims; case-insensitive finds TWENTY-EIGHT. The
+   * gate was not reporting "nothing supersedes anything" — it was structurally
+   * incapable of reporting anything at all, and 403 estate docs carry such a
+   * marker. A gate reporting zero can be blind rather than clean.
+   */
+  for (const m of s.matchAll(/[Ss]upersedes?\s+(?:it|this)?[^\n]{0,120}?([0-9]{8}-[A-Za-z0-9.-]+\.md)/g)) {
     const t = docs.find((x) => path.basename(x) === m[1])
     if (t && t !== d) add(t, { signal: 'stated', by: d })
   }
