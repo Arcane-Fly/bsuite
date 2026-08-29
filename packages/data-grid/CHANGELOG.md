@@ -7,6 +7,36 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [1.3.0] — 2026-08-30 — Controlled sorting, so a host can persist it
+
+### Added
+
+- **`sortBy` / `onSortByChange`** — seed the grid's sort and observe changes, so a host can
+  persist the reader's choice. **Uncontrolled when omitted**: the grid keeps its own sort,
+  exactly as before.
+
+### Why
+
+crm7's `ReportTable` saves the chosen sort as a view preference. The grid's sort was
+internal state, so converting that surface without this would have dropped the saved sort
+on every reload — **the list still renders, the sort silently is not the one they chose,
+and nothing fails.** That is the regression shape this package keeps having to design out,
+and it is the same reason 1.2.0 added grouping.
+
+### Detail worth knowing
+
+The seeding effect compares by **value**, not identity. Comparing by identity would re-seed
+on every render for any caller that builds the array inline — which is most of them — and
+that would fight the reader's own clicks on the header.
+
+### Verification
+
+14/14 tests, of which **2 fail with the seed disabled** — checked by disabling it.
+
+One of those two originally passed *with the seed disabled*, because it asserted only the
+first row and the fixture's first row was the same in source order. It tested nothing. The
+control caught it and the assertion now checks the **full** sequence.
+
 ## [1.2.0] — 2026-08-30 — Grouping, so the report surfaces can convert
 
 ### Added

@@ -93,6 +93,8 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     undoLimit = DEFAULT_UNDO_LIMIT,
     emptyState,
     onRowClick,
+    sortBy,
+    onSortByChange,
     groupBy = null,
     groupExpanded,
     onGroupExpandedChange,
@@ -119,7 +121,24 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     [columns],
   );
 
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>(sortBy ?? []);
+
+  /*
+   * CONTROLLED WHEN GIVEN, uncontrolled when not. A host that persists the sort
+   * seeds it here; a host that does not keeps the previous behaviour exactly.
+   *
+   * The effect syncs only when the prop actually differs, compared by VALUE.
+   * Comparing by identity would re-seed on every render for any caller that
+   * builds the array inline — which is most of them — and that would fight the
+   * reader's own clicks on the header.
+   */
+  useEffect(() => {
+    if (!sortBy) return;
+    const same =
+      sortBy.length === sorting.length &&
+      sortBy.every((s2, i) => s2.id === sorting[i]?.id && s2.desc === sorting[i]?.desc);
+    if (!same) setSorting(sortBy);
+  }, [sortBy, sorting]);
   const [columnOrder, setColumnOrder] = useState<string[]>(() => columns.map((c) => c.id));
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
   /*
@@ -178,7 +197,11 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
       setExpanded(next);
       if (onGroupExpandedChange && typeof next === 'object') onGroupExpandedChange(next);
     },
-    onSortingChange: setSorting,
+    onSortingChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(sorting) : updater;
+      setSorting(next);
+      onSortByChange?.(next.map((s2) => ({ id: s2.id, desc: s2.desc })));
+    },
     onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
     onColumnVisibilityChange: (updater) =>
