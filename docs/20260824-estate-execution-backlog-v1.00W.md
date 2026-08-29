@@ -211,7 +211,7 @@ tightened below by what has landed since.
 
 | Order | Spec | Status right now | Blocked? |
 |---|---|---|---|
-| **T** | `20260822-border-elevation-token-system-spec-v1.00D.md` — tokens, elevation, focus | **Start here, but re-measure §5.2 first.** Purely additive; defines tokens, deletes no components. Its two brand decisions (§6.8, §6.11) are independent of B-1. | Two brand calls, both in §6 |
+| **T** | `20260822-border-elevation-token-system-spec-v1.00F.md` — tokens, elevation, focus | **Start here, but re-measure §5.2 first.** Purely additive; defines tokens, deletes no components. Its two brand decisions (§6.8, §6.11) are independent of B-1. | Two brand calls, both in §6 |
 | **C** | `20260822-data-surface-consolidation-decision-v1.00D.md` — six surfaces to one | **Hard-blocked on B-1.** Deletes four grid components; if T is mid-flight those deletions conflict on every restyled file. Phases 1–2 must finish before 3–5 begin. | **B-1**, then B-2 |
 | **S** | `20260822-schema-builder-ux-remediation-spec-v1.00D.md` — schema builder | **Last — and its status doc is stale.** ~10 of its P0/P1 items have already shipped (§5.3). Its relationship repair and C's Phase 3 are both FK-metadata models and must not be designed in parallel. | S§15.1 ruled **with** C's R-36 |
 
