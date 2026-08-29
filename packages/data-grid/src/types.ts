@@ -190,6 +190,23 @@ export interface DataGridProps<TRow = unknown> {
   undoLimit?: number;
   emptyState?: ReactNode;
   /**
+   * Group rows by this column id, or `null` for a flat grid.
+   *
+   * EXISTS BECAUSE the report surfaces cannot convert without it. crm7's
+   * `ReportTable` lets a reader choose a groupBy column and PERSISTS it as a view
+   * preference; converting that page to a grid with no grouping would have deleted
+   * a feature people use, which is a regression wearing a migration's clothes.
+   *
+   * Controlled by the host so the choice can be persisted. Grouping is a VIEW,
+   * not a mutation: `onRowClick` still receives the original record and the
+   * original data index, so a grouped grid opens the same record a flat one does.
+   */
+  groupBy?: string | null;
+  /** Fires when the reader collapses or expands a group. */
+  onGroupExpandedChange?: (expanded: Record<string, boolean>) => void;
+  /** Initial collapsed/expanded state per group id. Absent means all expanded. */
+  groupExpanded?: Record<string, boolean>;
+  /**
    * Open the record behind a row.
    *
    * Operator, 2026-08-28: "each row clickable and live". A listing whose rows
