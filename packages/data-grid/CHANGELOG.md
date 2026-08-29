@@ -7,6 +7,39 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.0.0] — 2026-08-30 — Read-only by default
+
+### Changed — BREAKING
+
+- **A column is read-only unless it declares `editable: true`.**
+
+Until now the test was `editable === false`, so a column that simply did not mention
+`editable` was **fully editable** — typing, paste and the fill handle all worked.
+
+Every list converted onto this grid became a spreadsheet **by omission**, and nothing
+announced it: the page renders, the data is right, and a reader can quietly overwrite a
+record from a screen only ever meant to display one. There is no error, no visual
+difference, and no failing test — the defect is invisible until someone types.
+
+The estate has roughly **184 list surfaces still to convert**. A default that has to be
+remembered 184 times is a defect waiting on the one time it is not. This is a default in the
+wrong place, not a mistake to repeat at every call site.
+
+### Migration
+
+Add `editable: true` to any column you intend to be editable. Nothing else changes.
+
+**Measured before flipping:** all **18** existing render sites across the estate already
+declare `editable` on every column, so **no consumer depended on the old default**. The only
+code that did was this package's own editing tests, which now declare `editable: true` —
+which is honest, since they exist to test editing.
+
+### Verification
+
+116 tests. Two new ones pin the default in both directions: a column that does not mention
+`editable` **refuses** the edit and never calls `onCellsEdited`; `editable: true` still
+edits. The first fails under the old default — checked by restoring it.
+
 ## [1.3.0] — 2026-08-30 — Controlled sorting, so a host can persist it
 
 ### Added

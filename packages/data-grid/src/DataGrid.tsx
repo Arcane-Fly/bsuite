@@ -599,7 +599,22 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
   function canEditColumn(columnId: string): boolean {
     const config = columnConfigById.get(columnId);
     if (!config) return false;
-    if (config.editable === false) return false;
+    /*
+     * READ-ONLY BY DEFAULT. A column is editable only when it SAYS SO.
+     *
+     * Until 2.0.0 the test was `config.editable === false`, so a column that
+     * simply did not mention `editable` was fully editable — typing, paste and
+     * the fill handle all worked. Every list converted onto this grid became a
+     * spreadsheet by omission, and nothing failed to announce it: the page
+     * renders, the data is right, and a reader can quietly overwrite a record
+     * from a screen that was only ever meant to display one.
+     *
+     * The estate has ~184 list surfaces still to convert. A default that has to
+     * be remembered 184 times is a defect waiting on the one time it is not.
+     * Measured before flipping: all 18 existing render sites already declare
+     * `editable` on every column, so nothing depended on the old default.
+     */
+    if (config.editable !== true) return false;
     if (config.link && !config.renderEditor) {
       onError({
         message:
