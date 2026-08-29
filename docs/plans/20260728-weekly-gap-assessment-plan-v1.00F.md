@@ -9,7 +9,7 @@ owner: bsuite
 > **Recovery note (2026-07-28):** this file was authored untracked and destroyed by a concurrent
 > agent's git operation before it was ever committed. Restored from the surviving task briefs in
 > `.superpowers/sdd/20260728-weekly-gap-assessment-plan-v1.00F/` and the controller ledger.
-> Findings live in [20260728-weekly-gap-register-v1.00F.md](20260728-weekly-gap-register-v1.00F.md).
+> Findings live in [20260728-weekly-gap-register-v1.00F.md](../20260728-weekly-gap-register-v1.00F.md).
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
 > that day (`5e000c35`, operator directive); R80.4 took its place and serves `r8.crm7.app`.

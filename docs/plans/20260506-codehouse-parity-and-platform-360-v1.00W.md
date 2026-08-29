@@ -161,7 +161,7 @@ Spec: [`20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md
 
 ### New entry in `docs/20260227-bsuite-master-roadmap-v5.00W.md` (Cross-Project Initiatives section)
 
-> **Codehouse Parity & Platform 360 (2026-05-06)** — A cross-app workstream tracking 35 Codehouse Workforce-One parity gaps and a Platform-360 capability spec (every feature × every portal × every role × every data-flow). Index plan: [`docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md`](./plans/20260506-codehouse-parity-and-platform-360-v1.00W.md). Domains tracked in the parity matrix (external). Six workstreams: WS-A through WS-F. Permissions remain `AUTH_CANONICAL.md` + Supabase RLS + BSuite SSO — **no new RBAC/ABAC framework**.
+> **Codehouse Parity & Platform 360 (2026-05-06)** — A cross-app workstream tracking 35 Codehouse Workforce-One parity gaps and a Platform-360 capability spec (every feature × every portal × every role × every data-flow). Index plan: [`docs/plans/20260506-codehouse-parity-and-platform-360-v1.00W.md`](./20260506-codehouse-parity-and-platform-360-v1.00W.md). Domains tracked in the parity matrix (external). Six workstreams: WS-A through WS-F. Permissions remain `AUTH_CANONICAL.md` + Supabase RLS + BSuite SSO — **no new RBAC/ABAC framework**.
 
 ### New phase block in `docs/20260501-merged-execution-backlog-v1.00W.md`
 
