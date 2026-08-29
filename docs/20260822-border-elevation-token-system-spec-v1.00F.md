@@ -1,12 +1,58 @@
 # Border, Surface & Elevation Token System — Remediation Spec
 
-**Status:** DRAFT — spec only, not implemented
+**Status:** F (Frozen — implemented and verified; see the implementation record below)
 **Date:** 2026-08-22
 **Author:** agent session (Cowork), read-only pass
 **Scope:** D2C Neon Electric estate — crm7, business-suite-unified (BSU), conduit, R80.4, throughput.
 `braden` (Corporate) is **out of scope** and must not receive any change in this spec.
 **Trigger:** operator report — borders and theming across the estate need drastic improvement,
 raised from CRM7 `/insights` (dark, ~1440 desktop).
+
+---
+
+## Implementation record — closed 2026-08-29
+
+All three stacked defects are corrected. Recorded here rather than in a new
+document because the spec IS the record of what was wrong; a separate
+completion note would split the finding from its resolution.
+
+| # | defect as specified | state | evidence |
+|---|---|---|---|
+| 1 | the achromatic elevation ramp resolves to `rgba(0,0,0,0)` — elevation does not exist | **fixed** | `@bsuite/theme@1.4.2` `vars.css`: `--shadow-ink-*` resolve from `--shadow-color` (dark `oklch(0.08 0.02 268 / 0.70)`) with real alpha steps 0.4/0.6/1.0/1.6 × `--shadow-strength`. Those are §5.4's proposed values to three decimals. |
+| 2 | surface scale flat, ΔL ≈ 0.002 | **fixed** | dark ladder now steps: sunken `0.145` · body `0.166` · panel `0.190` · surface `0.212` · input `0.240` |
+| 3 | the accent ring is pressed into service as the depth cue | **fixed** | resting `var(--glow-card)` sites: crm7 0 · BSU 0 · conduit 0 · throughput 0 |
+
+Defect 3 was still live until 2026-08-29 — crm7 and BSU had already dropped
+the resting ring, conduit and throughput never received it, and conduit kept
+one more in an unmounted `bento-grid` whose comment claimed a gate depended
+on it (no gate does; checked before removing). Fixed by conduit#640,
+throughput#441 and conduit#644.
+
+The ordering the spec insisted on held. Removing the ring while 1 and 2 stood
+would have left cards with no delineation at all; with a live ramp and a
+stepped surface scale, a resting card is delineated three ways — its border,
+a real shadow, and a surface step — none of which spend the accent. The glow
+is RELOCATED to hover/elevated, per §5.5, not deleted.
+
+`braden` is untouched and keeps its 32 resting rings **by design** — §0 of
+this spec puts Corporate explicitly out of scope.
+
+**Verified on deployed builds, not just in source.** Fetching the served CSS
+from `d.ideas.crm7.app` and `d.conduit.crm7.app` with positive controls
+(`bg-card`, `shadow-elev-2`, `.dark` rules all present, so the probe was
+demonstrably seeing the stylesheet): no resting inset-shadow rule survives,
+and the hover rule is present in both.
+
+**Gates cited by this document, all run and passing 2026-08-29:**
+`audit-oklch-lightness.py` (0 violations; self-test 10 cases, 8 asserting the
+gate FAILS), `check-dark-variant-strategy` (6 apps), `check-tailwind-sources`
+(26 pairs), `test-theme-audit-gates.sh`.
+
+**What this marker does and does not claim.** `F` states the document is
+frozen because the work it specifies is done and verified — not that the
+estate's borders are beyond improvement. §5.5's focus-visible and
+selected-state treatments are specified here and are a separate piece of
+work; they are not claimed as delivered by this record.
 
 ---
 
