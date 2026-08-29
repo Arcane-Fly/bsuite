@@ -3,8 +3,7 @@ kind: plan
 authority: engineering
 owner: platform-lane
 evidence:
-  - packages/nav-core/src/speedInsightsRoute.ts
-  - packages/nav-core/src/useSpeedInsightsRoute.ts
+  - scripts/check-speed-insights-route.mjs
 ---
 
 # Why the score is good and the app is slow
@@ -18,6 +17,13 @@ Measured 2026-08-29 against production.
 Those are two findings, and the first explains why the second was invisible.
 
 ---
+
+> **On the evidence line.** This document first cited the two source files
+> that fix the defect. The doc-evidence ratchet rejected that, correctly: a
+> source file is not a check, and a document whose claim nothing verifies is
+> the thing that ratchet exists to stop growing. `check-speed-insights-route.mjs`
+> was written so the claim here is actually checked, rather than swapping in an
+> unrelated gate to satisfy the count.
 
 ## 1. The report was measuring paths — FIXED
 
