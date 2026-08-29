@@ -15,11 +15,15 @@ import {
 } from 'react';
 import {
   getCoreRowModel,
+  getExpandedRowModel,
   getFilteredRowModel,
+  getGroupedRowModel,
   getSortedRowModel,
   useReactTable,
   type ColumnDef,
   type ColumnSizingState,
+  type ExpandedState,
+  type GroupingState,
   type SortingState,
 } from '@tanstack/react-table';
 import { useVirtualizer } from '@tanstack/react-virtual';
@@ -89,6 +93,9 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     undoLimit = DEFAULT_UNDO_LIMIT,
     emptyState,
     onRowClick,
+    groupBy = null,
+    groupExpanded,
+    onGroupExpandedChange,
     columnVisibility: columnVisibilityProp,
     onColumnVisibilityChange,
     globalFilter,
@@ -145,10 +152,32 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     });
   }, [columns]);
 
+  /*
+   * Grouping is DERIVED from the prop, never held locally: the host owns the
+   * choice so it can persist it. A local copy would silently diverge from the
+   * saved view preference the moment the reader reloaded.
+   */
+  const grouping = useMemo<GroupingState>(() => (groupBy ? [groupBy] : []), [groupBy]);
+  const [expanded, setExpanded] = useState<ExpandedState>(true);
+
+  /*
+   * Default is EXPANDED, and that is the deliberate choice. A grid that opens
+   * with every group shut shows the reader a list of headings and none of their
+   * data, which is a worse first screen than the flat grid it replaced.
+   */
+  useEffect(() => {
+    setExpanded(groupExpanded && Object.keys(groupExpanded).length > 0 ? groupExpanded : true);
+  }, [groupExpanded]);
+
   const table = useReactTable({
     data,
     columns: tableColumns,
-    state: { sorting, columnOrder, columnSizing, columnVisibility, globalFilter },
+    state: { sorting, columnOrder, columnSizing, columnVisibility, globalFilter, grouping, expanded },
+    onExpandedChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(expanded) : updater;
+      setExpanded(next);
+      if (onGroupExpandedChange && typeof next === 'object') onGroupExpandedChange(next);
+    },
     onSortingChange: setSorting,
     onColumnOrderChange: setColumnOrder,
     onColumnSizingChange: setColumnSizing,
@@ -179,6 +208,8 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     enableColumnResizing: true,
     getRowId,
     getCoreRowModel: getCoreRowModel(),
+    getGroupedRowModel: getGroupedRowModel(),
+    getExpandedRowModel: getExpandedRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
   });
@@ -866,6 +897,51 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
           {virtualRows.map((vr) => {
             const row = rows[vr.index];
             const rowTop = headerHeight + vr.start;
+
+            /*
+             * A GROUP HEADER is a different thing from a row of data, and drawing it
+             * as one is how a grouped grid becomes unreadable: the heading lines up
+             * under the first column, every other column is blank, and a heading is
+             * indistinguishable from an empty record.
+             *
+             * So it spans the full width, carries its own count, and is NOT clickable
+             * as a record — there is no record behind it.
+             */
+            if (row.getIsGrouped()) {
+              const groupColumn = columns.find((c) => c.id === row.groupingColumnId);
+              const rawValue = row.getGroupingValue(String(row.groupingColumnId));
+              const shown = groupColumn?.formatValue
+                ? groupColumn.formatValue(rawValue, row.original)
+                : formatCellValue(rawValue, groupColumn?.dataType);
+              const isExpanded = row.getIsExpanded();
+              const label = String(shown ?? '') || '(none)';
+              return (
+                <div
+                  key={row.id}
+                  role="row"
+                  aria-expanded={isExpanded}
+                  className="absolute left-0 z-10 flex items-center gap-2 border-b border-border bg-muted/60 px-3 text-sm font-medium"
+                  style={{ top: rowTop, width: totalWidth, height: vr.size }}
+                >
+                  <button
+                    type="button"
+                    onClick={row.getToggleExpandedHandler()}
+                    aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${label}`}
+                    className="flex h-5 w-5 shrink-0 items-center justify-center rounded hover:bg-muted"
+                  >
+                    <span aria-hidden className="text-xs">{isExpanded ? '\u25be' : '\u25b8'}</span>
+                  </button>
+                  <span className="truncate">
+                    {groupColumn?.header ? `${groupColumn.header}: ` : ''}
+                    {label}
+                  </span>
+                  <span className="text-xs font-normal text-muted-foreground">
+                    {row.subRows.length} {row.subRows.length === 1 ? 'row' : 'rows'}
+                  </span>
+                </div>
+              );
+            }
+
             return (
               <div
                 key={row.id}
