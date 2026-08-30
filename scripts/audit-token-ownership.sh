@@ -102,7 +102,21 @@ for a in "${APPS[@]}"; do
       # silently — an app CAN still fork by scoping to something broad, and that
       # stays visible in the SCOPED list rather than disappearing.
       sel=$(awk -v n="$n" 'NR<n && /\{/ { line=$0 } END { print line }' "$f" 2>/dev/null)
-      if grep -qE '(^|[,[:space:]])(:root|html|body|\*|#root|\.dark)([,[:space:]{]|$)' <<<"$sel"; then
+      # `@theme` IS root scope, and missing that made this gate blind.
+      #
+      # Tailwind v4's @theme block is not a narrow selector — it is THE place a
+      # design system defines its tokens, and Tailwind emits every one of them
+      # to :root. An app declaring a package-owned token there shadows the
+      # package for the whole document exactly as `:root` does.
+      #
+      # Measured 2026-08-30: conduit declares --radius-sm/md/lg/xl in
+      # `@theme {` at globals.css:135-138. It reported as 0 redeclarations AND
+      # did not appear in the SCOPED list either, so four forks were invisible
+      # in both directions while crm7 and BSU were correctly failed for the
+      # identical declaration written in `:root`. Same fork, different syntax,
+      # opposite verdict.
+      if grep -qE '(^|[,[:space:]])(:root|html|body|\*|#root|\.dark)([,[:space:]{]|$)' <<<"$sel" \
+         || grep -qE '^\s*@theme\b' <<<"$sel"; then
         hits+="  $f:$n  $tok"$'\n'
       else
         scoped+="  $a  $f:$n  $tok   in: $(printf '%s' "$sel" | tr -s ' ' | cut -c1-48)"$'\n'
