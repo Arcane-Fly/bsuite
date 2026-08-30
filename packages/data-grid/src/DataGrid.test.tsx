@@ -395,3 +395,80 @@ describe('DataGrid accessible name', () => {
     expect(screen.getByRole('grid', { name: 'Report rows' })).toBeInTheDocument();
   });
 });
+
+describe('DataGrid row identity, column order and refusals', () => {
+  const rows: Person[] = [
+    { id: 'p-1', name: 'Ada Lovelace', age: 36 },
+    { id: 'p-2', name: 'Grace Hopper', age: 85 },
+  ];
+  const cols: DataGridColumn<Person>[] = [
+    { id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text', editable: true },
+    { id: 'age', header: 'Age', accessor: (r) => r.age, dataType: 'number' },
+  ];
+
+  it('publishes the REAL record id in data-row-id, never the array index', () => {
+    const { container } = render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    /*
+     * An array index LOOKS like an identifier and addresses the wrong record the
+     * moment the data is sorted, grouped or filtered — with no sign it has.
+     */
+    const ids = Array.from(container.querySelectorAll('[data-row-id]')).map((el) =>
+      el.getAttribute('data-row-id'),
+    );
+    expect(ids).toContain('p-1');
+    expect(ids).toContain('p-2');
+    expect(ids).not.toContain('0');
+  });
+
+  it('SEEDS the column order from a persisted preference', () => {
+    render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        columnOrder={['age', 'name']}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    // Reversed from the columns array, so the seed is read rather than ignored.
+    const headers = screen
+      .getAllByRole('columnheader')
+      .map((h) => (h.textContent ?? '').trim())
+      .filter((t) => t === 'Name' || t === 'Age');
+    expect(headers[0]).toBe('Age');
+  });
+
+  it('shows a REFUSAL at the cell instead of reverting silently', async () => {
+    const user = userEvent.setup();
+    render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        onCellsEdited={vi.fn().mockRejectedValue(new Error('Read-only through RLS'))}
+        onError={() => {}}
+      />,
+    );
+    // Same sequence the existing failed-edit test uses: focus the GRID and type.
+    // Clicking a cell first and throwing synchronously does not reach the same
+    // commit path, which is why the first version of this test found nothing.
+    const grid = screen.getByRole('grid');
+    grid.focus();
+    await user.keyboard('Z');
+    await user.keyboard('{Enter}');
+    /*
+     * The value reverting is correct. The reader seeing WHY is the point — a
+     * revert with no visible reason is the "edited, nothing happened" defect.
+     */
+    expect(await screen.findByRole('alert')).toHaveTextContent('Read-only through RLS');
+  });
+});

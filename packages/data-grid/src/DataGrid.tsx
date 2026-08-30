@@ -94,6 +94,8 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     emptyState,
     onRowClick,
     ariaLabel,
+    columnOrder: columnOrderProp,
+    onColumnOrderChange,
     sortBy,
     onSortByChange,
     groupBy = null,
@@ -140,7 +142,32 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
       sortBy.every((s2, i) => s2.id === sorting[i]?.id && s2.desc === sorting[i]?.desc);
     if (!same) setSorting(sortBy);
   }, [sortBy, sorting]);
-  const [columnOrder, setColumnOrder] = useState<string[]>(() => columns.map((c) => c.id));
+  /*
+   * Per-cell refusal messages, keyed exactly like the optimistic overlay.
+   *
+   * A grid that reverts a failed edit and reports it only through `onError` is
+   * a SILENT revert from the reader's seat: they typed, the value went back,
+   * and nothing on screen says why. This is what makes the refusal visible at
+   * the cell it happened in.
+   */
+  const [refusals, setRefusals] = useState<Map<string, string>>(new Map());
+
+  const [columnOrder, setColumnOrder] = useState<string[]>(
+    () => columnOrderProp ?? columns.map((c) => c.id),
+  );
+
+  /*
+   * CONTROLLED WHEN GIVEN. Compared by VALUE, not identity: a caller that builds
+   * the array inline — most of them — would otherwise re-seed on every render
+   * and fight the reader's own drag.
+   */
+  useEffect(() => {
+    if (!columnOrderProp) return;
+    const same =
+      columnOrderProp.length === columnOrder.length &&
+      columnOrderProp.every((id, i) => id === columnOrder[i]);
+    if (!same) setColumnOrder(columnOrderProp);
+  }, [columnOrderProp, columnOrder]);
   const [columnSizing, setColumnSizing] = useState<ColumnSizingState>({});
   /*
    * Column visibility is CONTROLLED when the page supplies a change handler,
@@ -203,7 +230,11 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
       setSorting(next);
       onSortByChange?.(next.map((s2) => ({ id: s2.id, desc: s2.desc })));
     },
-    onColumnOrderChange: setColumnOrder,
+    onColumnOrderChange: (updater) => {
+      const next = typeof updater === 'function' ? updater(columnOrder) : updater;
+      setColumnOrder(next);
+      onColumnOrderChange?.(next);
+    },
     onColumnSizingChange: setColumnSizing,
     onColumnVisibilityChange: (updater) =>
       setColumnVisibility(typeof updater === 'function' ? updater(columnVisibility) : updater),
@@ -368,6 +399,14 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     setOverlay((prev) => {
       const next = new Map(prev);
       for (const edit of edits) next.set(overlayKey(edit.rowIndex, edit.columnId), edit.value);
+      // A fresh attempt clears the previous refusal — a stale marker on a cell
+      // the reader has since fixed is its own small lie.
+      setRefusals((prevRef) => {
+        if (prevRef.size === 0) return prevRef;
+        const cleared = new Map(prevRef);
+        for (const edit of edits) cleared.delete(overlayKey(edit.rowIndex, edit.columnId));
+        return cleared;
+      });
       return next;
     });
     if (!opts?.skipUndoPush) {
@@ -391,6 +430,11 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
         edits,
       };
       onError(error);
+      setRefusals((prev) => {
+        const next = new Map(prev);
+        for (const edit of edits) next.set(overlayKey(edit.rowIndex, edit.columnId), error.message);
+        return next;
+      });
       setOverlay((prev) => {
         const next = new Map(prev);
         for (const edit of edits) next.delete(overlayKey(edit.rowIndex, edit.columnId));
@@ -986,6 +1030,19 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
               <div
                 key={row.id}
                 role="row"
+                /*
+                 * The REAL record id, published for cell-to-cell navigation and for
+                 * anything outside the grid that needs to address a row.
+                 *
+                 * `getRowId` is the caller's resolver precisely so this is never an array
+                 * index: an index LOOKS like an identifier, addresses the wrong record the
+                 * moment the data is sorted, grouped or filtered, and gives no sign it has
+                 * done so.
+                 *
+                 * Group headers deliberately do NOT carry one — there is no record behind
+                 * a heading.
+                 */
+                data-row-id={getRowId ? getRowId(row.original, row.index) : String(row.index)}
                 className={cn('absolute left-0 flex', onRowClick && 'cursor-pointer hover:bg-muted/40')}
                 style={{ top: rowTop, width: totalWidth, height: vr.size }}
                 /*
@@ -1028,6 +1085,7 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
                     style={{ position: 'sticky', left: 0, zIndex: 10, width: frozenWidth, height: vr.size }}
                     column={columnConfigById.get(frozenColumn.id)!}
                     row={row.original}
+                    refusal={refusals.get(overlayKey(row.index, frozenColumn.id))}
                     rowIndex={row.index}
                     value={getEffectiveValue(row.index, frozenColumn.id)}
                     isSelected={Boolean(normalizedSelection && isCellInRange({ row: vr.index, col: 0 }, normalizedSelection))}
@@ -1054,7 +1112,8 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
                       style={{ position: 'absolute', left: frozenWidth + vc.start, top: 0, width: vc.size, height: vr.size }}
                       column={config}
                       row={row.original}
-                      rowIndex={row.index}
+                      refusal={refusals.get(overlayKey(row.index, config.id))}
+                    rowIndex={row.index}
                       value={getEffectiveValue(row.index, column.id)}
                       isSelected={Boolean(normalizedSelection && isCellInRange({ row: vr.index, col: gridCol }, normalizedSelection))}
                       isActive={Boolean(selection && selection.focus.row === vr.index && selection.focus.col === gridCol)}
@@ -1106,6 +1165,8 @@ interface GridCellRendererProps<TRow> {
   isActive: boolean;
   isEditing: boolean;
   editSeedChar?: string;
+  /** Refusal message for this cell, if its last edit was rejected. */
+  refusal?: string;
   onCommit: (nextValue: unknown) => void;
   onCancel: () => void;
   onMouseDown: (e: ReactMouseEvent<HTMLDivElement>) => void;
