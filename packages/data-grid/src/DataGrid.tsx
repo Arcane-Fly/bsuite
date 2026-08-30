@@ -227,6 +227,26 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     data,
     columns: tableColumns,
     state: { sorting, columnOrder, columnSizing, columnVisibility, globalFilter, grouping, expanded },
+    /*
+     * GROUPING MUST NOT REORDER A CONTROLLED COLUMN ORDER.
+     *
+     * TanStack's `groupedColumnMode` defaults to 'reorder', which hoists every
+     * grouped column to the FRONT of the column order — silently overriding
+     * whatever `columnOrder` the host passed. The host asked for an order; the
+     * table quietly answered with a different one the moment a group was set.
+     *
+     * Measured 2026-08-30 on crm7's report viewer: a saved personal view with
+     * columnOrder ['hours','employee_name'] and groupBy 'employee_name'
+     * rendered headers ['Employee','Hours']. The saved order was reaching the
+     * grid correctly — three package tests already prove controlled order is
+     * honoured at mount, on a later render, and against the columns-sync
+     * effect — and grouping undid it after all three.
+     *
+     * `false` keeps a grouped column exactly where the host put it. 'remove'
+     * would drop it from the header row entirely, which is a different product
+     * decision and not one a grouping toggle should make on the host's behalf.
+     */
+    groupedColumnMode: false,
     onExpandedChange: (updater) => {
       const next = typeof updater === 'function' ? updater(expanded) : updater;
       setExpanded(next);
