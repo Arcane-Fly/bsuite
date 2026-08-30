@@ -3,7 +3,7 @@ import type { CellEditorProps } from '../types.js';
 import { useAutoFocusSelect } from './useAutoFocusSelect.js';
 
 export function NumberEditor(props: CellEditorProps): React.ReactElement {
-  const { value, initialInputChar, onCommit, onCancel } = props;
+  const { value, initialInputChar, onCommit, onCancel, column } = props;
   const [text, setText] = useState<string>(() => initialInputChar ?? (value == null ? '' : String(value)));
   const ref = useRef<HTMLInputElement>(null);
   useAutoFocusSelect(ref, Boolean(initialInputChar));
@@ -31,6 +31,7 @@ export function NumberEditor(props: CellEditorProps): React.ReactElement {
 
   return (
     <input
+      aria-label={`Edit ${column.header}`}
       ref={ref}
       type="text"
       inputMode="decimal"

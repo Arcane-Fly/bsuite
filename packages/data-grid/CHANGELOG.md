@@ -7,6 +7,29 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.4.0] — 2026-08-30 — The grid announces what it actually is
+
+### Changed
+
+- **A read-only grid now renders `role="table"`, not `role="grid"`.**
+
+  `grid` promises an interactive, editable widget; `table` is a static one. Since 2.0.0 a
+  column is read-only unless it says otherwise, so a grid with nothing editable was
+  announcing an interaction the reader does not have — a screen reader offers cell-edit
+  affordances that go nowhere. The role now follows the truth.
+
+### Added
+
+- **Every cell editor has an accessible name** — `Edit <column header>`. An unnamed input
+  inside a grid is as unusable as an unnamed grid: the reader is placed in a text field with
+  nothing saying which column it belongs to.
+
+### Verification
+
+23 tests on the grid. Both directions are pinned — a read-only grid is a `table` **and** is
+not a `grid`; an editable one is still a `grid`. Two fail when the changes are reverted;
+the third guards the opposite direction and correctly does not.
+
 ## [2.3.0] — 2026-08-30 — Addressing moves to the CELL
 
 ### Added

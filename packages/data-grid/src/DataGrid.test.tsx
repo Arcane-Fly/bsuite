@@ -479,3 +479,59 @@ describe('DataGrid row identity, column order and refusals', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Read-only through RLS');
   });
 });
+
+describe('DataGrid announces what it actually is', () => {
+  const rows: Person[] = [{ id: 'p-1', name: 'Ada Lovelace', age: 36 }];
+
+  it('a read-only grid announces as a TABLE, not a grid', () => {
+    /*
+     * `grid` promises an interactive, editable widget; `table` is static. Since
+     * 2.0.0 a column is read-only unless it says otherwise, so a grid with
+     * nothing editable was offering cell-edit affordances that go nowhere.
+     */
+    render(
+      <DataGrid<Person>
+        columns={[{ id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text' }]}
+        data={rows}
+        getRowId={(r) => r.id}
+        ariaLabel="Report results"
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    expect(screen.getByRole('table', { name: 'Report results' })).toBeInTheDocument();
+    expect(screen.queryByRole('grid')).toBeNull();
+  });
+
+  it('an editable grid still announces as a GRID', () => {
+    render(
+      <DataGrid<Person>
+        columns={[{ id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text', editable: true }]}
+        data={rows}
+        getRowId={(r) => r.id}
+        ariaLabel="Editable results"
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    expect(screen.getByRole('grid', { name: 'Editable results' })).toBeInTheDocument();
+  });
+
+  it('the cell editor has an accessible name naming its COLUMN', async () => {
+    const user = userEvent.setup();
+    render(
+      <DataGrid<Person>
+        columns={[{ id: 'name', header: 'Status', accessor: (r) => r.name, dataType: 'text', editable: true }]}
+        data={rows}
+        getRowId={(r) => r.id}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    const grid = screen.getByRole('grid');
+    grid.focus();
+    await user.keyboard('Z');
+    // An unnamed input inside a grid is as unusable as an unnamed grid.
+    expect(await screen.findByRole('textbox', { name: 'Edit Status' })).toBeInTheDocument();
+  });
+});
