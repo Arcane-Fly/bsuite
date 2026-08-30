@@ -153,7 +153,7 @@
      this alias instead. */
   --role-text-secondary-base: oklch(0.38 0.018 250);
   --role-text-secondary: var(--role-text-secondary-base);
-  --role-text-muted:     oklch(0.52 0.018 250);
+  --role-text-muted:     oklch(0.44 0.018 250);  /* 7.05:1 on bg-body · 4.70:1 worst, on primary/20 over sunken ✓ AA */
   --role-text-subtle:    oklch(0.60 0.012 250);
   --role-text-disabled:  oklch(0.72 0.010 250);
   --role-text-strong:    oklch(0.16 0.024 252);
