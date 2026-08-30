@@ -220,6 +220,18 @@ export interface DataGridProps<TRow = unknown> {
    * cells with nothing saying what they are looking at. Every render site was
    * missing one, because there was no way to supply it.
    */
+  /**
+   * Seed and observe the COLUMN ORDER, so a host can persist it.
+   *
+   * The grid holds its own order for drag-to-reorder. Without this a saved
+   * column order is dropped on reload — the grid renders, the columns are
+   * simply not in the order the reader arranged them, and nothing fails. Same
+   * shape as the sort gap `sortBy` closed.
+   *
+   * Uncontrolled when omitted.
+   */
+  columnOrder?: string[] | null;
+  onColumnOrderChange?: (next: string[]) => void;
   ariaLabel?: string;
   sortBy?: { id: string; desc: boolean }[] | null;
   onSortByChange?: (next: { id: string; desc: boolean }[]) => void;
