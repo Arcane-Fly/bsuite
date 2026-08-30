@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Nav route reachability — the five non-crm7 apps
 
 **Status:** D — a dated audit. Findings below are measured, not asserted.
