@@ -130,7 +130,7 @@
      HIGHER, so bg-body is the conservative floor for every tier below. */
   --light-text-primary:   oklch(0.22 0.015 260);  /* 15.46:1 ✓ AAA (large+normal) */
   --light-text-secondary: oklch(0.38 0.018 260);  /*  8.94:1 ✓ AAA (large+normal) */
-  --light-text-muted:     oklch(0.52 0.018 260);  /*  4.92:1 ✓ AA  (normal, 4.5:1 floor) */
+  --light-text-muted:     oklch(0.45 0.018 260);  /*  6.64:1 on body · 4.76:1 worst, on primary/20 over sunken ✓ AA */
   --light-text-subtle:    oklch(0.60 0.012 260);  /*  3.52:1 ✓ AA large only (3:1) — ✗ AA normal */
   --light-text-disabled:  oklch(0.72 0.010 260);  /*  2.21:1 ✗ fails AA at any size — MUST pair with icon cue */
 
@@ -313,7 +313,7 @@
   --role-text-heading:     var(--role-h1);          /* 16.17:1 ✓ AAA */
   --role-text-body:        var(--light-text-primary);   /* 15.46:1 ✓ AAA */
   --role-text-secondary:   var(--light-text-secondary); /*  8.94:1 ✓ AAA */
-  --role-text-muted:       var(--light-text-muted);     /*  4.92:1 ✓ AA normal */
+  --role-text-muted:       var(--light-text-muted);     /*  6.18:1 ✓ AA normal (4.78:1 on a selection tint) */
   --role-text-subtle:      var(--light-text-subtle);    /*  3.52:1 ✓ AA large only */
   --role-text-disabled:    var(--light-text-disabled);  /*  2.21:1 ✗ icon cue required */
 
