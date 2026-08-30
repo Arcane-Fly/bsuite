@@ -286,7 +286,16 @@ async function probe(page, theme) {
       // braden.com.au — one such paragraph read 1.03:1 while rendering perfectly.
       // elementsFromPoint returns everything painting under the point, siblings
       // included, topmost first.
-      const rect = el.getBoundingClientRect();
+      // BRING IT INTO VIEW RATHER THAN SKIPPING IT. elementsFromPoint only sees
+      // the viewport, and on a long page that left 86 of 96 candidates unmeasured
+      // — honest, but nearly blind. scrollIntoView and the rect read are both
+      // synchronous, so the element can be moved under the sample point and
+      // measured in the same pass.
+      let rect = el.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0 && !(rect.top >= 0 && rect.bottom <= innerHeight)) {
+        try { el.scrollIntoView({ block: 'center', inline: 'nearest' }); } catch { /* ignore */ }
+        rect = el.getBoundingClientRect();
+      }
       const cx = Math.round(rect.left + Math.min(rect.width / 2, 40));
       const cy = Math.round(rect.top + rect.height / 2);
       const inView = rect.width > 0 && rect.height > 0 &&
@@ -460,6 +469,20 @@ for (const url of urls) {
       // 4.45 (crm7 sidebar, dark), 3.74 (braden ErrorAlert). A flat 3:1 passes all three.
       const floorFor = (q) =>
         (q.size >= 24 || (q.size >= 18.66 && q.weight >= 700)) ? 3 : 4.5;
+      // THE FAIL-OPEN MUST BE VISIBLE. contrast() returns Infinity for a colour it
+      // cannot parse, with the comment "not a finding, reported separately" — and
+      // nothing reported it. parseRgb matches rgb()/rgba() only, so every oklch,
+      // lab or oklab colour scored Infinity and could never be below any floor.
+      // This estate's palette gate REQUIRES oklch, so P7 was green by construction
+      // on every compliant surface. The probe now normalises both sides through a
+      // canvas before they reach Node, so this should be 0 — and if it is ever not,
+      // that is a hole, not a pass.
+      const unscorable = r.pairs.filter(
+        (q) => parseRgb(q.fg) === null || parseRgb(q.bg) === null).length;
+      if (unscorable) {
+        notes.push(`P7 [${theme}] ${unscorable} pair(s) could not be scored — ` +
+                   `a colour syntax the Node side cannot parse. NOT a pass.`);
+      }
       const unreadable = r.pairs
         .map((q) => ({ ...q, ratio: contrast(parseRgb(q.fg), parseRgb(q.bg)), need: floorFor(q) }))
         .filter((q) => q.ratio < q.need)
