@@ -8,6 +8,7 @@ import {
   SURFACES,
   contrast,
   declared,
+  oklchToSrgb,
   over,
   resolve_,
   round2,
@@ -182,6 +183,87 @@ describe('the stage ramp crosses over between steps 4 and 5', () => {
 })
 
 /**
+ * NEUTRAL TEXT ON A COLOURED WASH — the pairing no block above can express.
+ *
+ * Every block above pairs a role with ITS OWN tint: `--role-primary-text` on
+ * `bg-primary/15`. The DOM does not do that. A grid cell washed `bg-primary/15`
+ * holds a name in `--role-text-body` and a slug in `--role-text-muted` — NEUTRAL
+ * type on a COLOURED wash. `text-body`/`text-secondary`/`text-muted` appear in no
+ * list in this file, so no amount of adding alphas would ever have reached them.
+ *
+ * FOUND ON PRODUCTION, not here. crm.crm7.app/reports, 2026-08-30, light, <=1024px:
+ * `--role-text-muted` in the selected frozen cell measured 4.05:1. The token was
+ * 4.92:1 on the plain body background with a hand-written "OK AA normal" beside it —
+ * true for the case someone measured, silent about this one. The wash did not break
+ * the token; it spent headroom the token never had. Dark was 6.69:1 and passed, so a
+ * dark-only sweep saw nothing.
+ *
+ * WHY ONLY THE PRIMARY WASHES ARE ASSERTED. Counted across the five apps and the
+ * packages (grep of `bg-<role>/<alpha>` in .tsx/.ts):
+ *
+ *     bg-primary/10  195      bg-destructive/10 179      bg-muted/50  122
+ *     bg-muted/30     86      bg-primary/20      59      bg-warning/10 55
+ *     bg-muted/40     48      bg-primary/15      41      bg-success/10 30
+ *
+ * The primary washes at /10../20 are the ones PROVEN to host neutral text: that is
+ * the grid's own selected-cell styling (GridCell.tsx, `bg-primary/10` unfrozen and
+ * `bg-primary/15` frozen), measured above on a live page.
+ *
+ * The rest is NOT asserted, and this is a KNOWN GAP rather than a pass:
+ *   - The SEMANTIC washes (destructive/warning/success/info) are used mostly by
+ *     alerts and badges whose type is the matching `-text` role, already covered by
+ *     the "own tint" block. Whether any of them hosts neutral text is UNMEASURED.
+ *   - The HEAVY washes (>=/30, including bg-muted/50 at 122 sites) cannot host
+ *     neutral text AT ALL: `bg-secondary/50` over `--role-bg-sunken` tops out at
+ *     3.26:1 in light even when muted is set equal to secondary. There is no token
+ *     value that fixes those — they need on-fill text, or they carry no type. Do not
+ *     "fix" them by darkening this token; it cannot reach them.
+ *
+ * Asserting the full cross product instead would force light muted to L=0.44 against
+ * secondary at L=0.38 and collapse two tiers of a deliberate six-tier scale, and
+ * would still be red on the heavy washes forever. A permanently red gate is an
+ * unread gate.
+ *
+ * `-subtle` and `-disabled` are excluded ON PURPOSE: vars.css declares them 3.52:1
+ * (large only) and 2.21:1 (icon cue required) — below the floor by design.
+ */
+const NEUTRAL_TEXT = ['text-body', 'text-secondary', 'text-muted'] as const
+const WASHES = [0.1, 0.15, 0.2] as const
+
+describe('WCAG 1.4.3 — neutral text clears 4.5:1 on every primary wash', () => {
+  for (const { name, scope } of MODES) {
+    for (const neutral of NEUTRAL_TEXT) {
+      const token = `role-${neutral}`
+      if (!declared(token, scope)) continue
+      it(`${name}: --${token} on bg-primary/<10,15,20> over every surface`, () => {
+        const fg = resolve_(token, scope)
+        const fill = resolve_('role-primary', scope)
+        const worst = Math.min(
+          ...SURFACES.flatMap((s) => WASHES.map((a) => contrast(fg, over(fill, resolve_(s, scope), a)))),
+        )
+        expect(round2(worst)).toBeGreaterThanOrEqual(FLOOR)
+      })
+    }
+  }
+})
+
+describe('WCAG 1.4.3 — CORPORATE neutral text on every primary wash', () => {
+  const B = sheet(pathResolve(__dirname, 'css/braden.css'))
+  for (const [name, scope] of [['light', B.root], ['dark', B.blocks('.dark')]] as const) {
+    for (const neutral of NEUTRAL_TEXT) {
+      it(`${name}: --role-${neutral} on every corporate primary wash`, () => {
+        const fg = B.resolve(`role-${neutral}`, scope)
+        const fill = B.resolve('role-primary', scope)
+        const worst = Math.min(
+          ...SURFACES.flatMap((s) => WASHES.map((a) => contrast(fg, over(fill, B.resolve(s, scope), a)))),
+        )
+        expect(round2(worst)).toBeGreaterThanOrEqual(FLOOR)
+      })
+    }
+  }
+})
+
+/**
  * THE INSTRUMENT IS THE SUSPECT. A gate that cannot come back red is not a
  * gate. This pair is known-bad and must stay known-bad.
  */
@@ -195,5 +277,16 @@ describe('positive control', () => {
   it('a real -text token on the body surface passes, proving it is not red for everything', () => {
     expect(contrast(resolve_('role-primary-text', ROOT), resolve_('role-bg-body', ROOT)))
       .toBeGreaterThanOrEqual(FLOOR)
+  })
+
+  /**
+   * The value --light-text-muted carried until 2026-08-30. It must stay BELOW the
+   * floor on a primary wash, because that is the failure the block above was added
+   * to catch: if this ever passes, the instrument has stopped being able to see it.
+   */
+  it('the pre-2026-08-30 muted token still fails on a primary tint', () => {
+    const wasMuted = oklchToSrgb(0.52, 0.018, 260)
+    const bg = over(resolve_('role-primary', ROOT), resolve_('role-bg-body', ROOT), 0.15)
+    expect(round2(contrast(wasMuted, bg))).toBeLessThan(FLOOR)
   })
 })
