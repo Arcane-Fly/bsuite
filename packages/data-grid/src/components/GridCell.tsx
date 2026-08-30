@@ -23,6 +23,16 @@ export interface GridCellProps<TRow> {
    * what makes the refusal visible where it happened.
    */
   refusal?: string;
+  /**
+   * The row's REAL record id, published ON THE CELL.
+   *
+   * Cell-to-cell navigation and external tooling address a CELL, not a row, so
+   * the identifier has to live here — a row-level attribute cannot be read from
+   * a cell without walking the DOM upward and guessing at structure.
+   */
+  rowId?: string;
+  /** Whether this cell accepts edits, so a caller can find the editable ones. */
+  editable?: boolean;
   Editor: (props: CellEditorProps<TRow>) => ReactNode;
   onCommit: (nextValue: unknown) => void;
   onCancel: () => void;
@@ -47,6 +57,8 @@ export function GridCell<TRow>(props: GridCellProps<TRow>): React.ReactElement {
     frozen,
     content,
     refusal,
+    rowId,
+    editable,
     Editor,
     onCommit,
     onCancel,
@@ -63,6 +75,9 @@ export function GridCell<TRow>(props: GridCellProps<TRow>): React.ReactElement {
       onMouseDown={onMouseDown}
       onMouseEnter={onMouseEnter}
       onDoubleClick={onDoubleClick}
+      data-row-id={rowId}
+      data-column-id={column.id}
+      data-editable-cell={editable ? '' : undefined}
       title={refusal}
       aria-invalid={refusal ? true : undefined}
       className={cn(

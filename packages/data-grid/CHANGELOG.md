@@ -7,6 +7,31 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.3.0] — 2026-08-30 — Addressing moves to the CELL
+
+### Added
+
+- **`data-row-id`, `data-column-id` and `data-editable-cell` on every cell.**
+
+### Why the cell and not the row
+
+2.2.0 put `data-row-id` on the row. That was the wrong level: cell-to-cell navigation and
+external tooling address a **cell**, and a row-level attribute cannot be read from one
+without walking the DOM upward and guessing at structure.
+
+Found the same way as the rest — by running crm7's own contract test, which queries
+`[data-editable-cell][data-column-id="…"]` and reads `data-row-id` off the **cell**. The
+row-level attribute is kept, because row-level tooling is a real thing too; it is simply
+not what navigation needs.
+
+`data-editable-cell` is present only where the column actually accepts edits, so a caller
+can find the editable cells without re-deriving the rule.
+
+### Verification
+
+122 tests. The addressing test asserts both directions: the editable column is findable as
+editable, and the read-only one is **not**.
+
 ## [2.2.0] — 2026-08-30 — The three gaps that blocked the report viewer
 
 All three are the same shape: something a page has today that the grid could not carry, and

@@ -420,12 +420,19 @@ describe('DataGrid row identity, column order and refusals', () => {
      * An array index LOOKS like an identifier and addresses the wrong record the
      * moment the data is sorted, grouped or filtered — with no sign it has.
      */
-    const ids = Array.from(container.querySelectorAll('[data-row-id]')).map((el) =>
-      el.getAttribute('data-row-id'),
-    );
+    /*
+     * Addressed at the CELL, not the row. Cell-to-cell navigation and external
+     * tooling target a cell, and a row-level attribute cannot be read from one
+     * without walking the DOM upward and guessing at structure.
+     */
+    const cells = Array.from(container.querySelectorAll('[data-column-id]'));
+    const ids = cells.map((el) => el.getAttribute('data-row-id'));
     expect(ids).toContain('p-1');
     expect(ids).toContain('p-2');
     expect(ids).not.toContain('0');
+    // and the editable column is findable as such
+    expect(container.querySelector('[data-editable-cell][data-column-id="name"]')).not.toBeNull();
+    expect(container.querySelector('[data-editable-cell][data-column-id="age"]')).toBeNull();
   });
 
   it('SEEDS the column order from a persisted preference', () => {
