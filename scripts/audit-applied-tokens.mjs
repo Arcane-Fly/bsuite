@@ -182,7 +182,7 @@ async function probe(page, theme) {
   return page.evaluate(({ pure, theme, groups }) => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     const out = { theme, headings: {}, font: null, pureEndpoints: [], pairs: [],
-                  skipped: { gradientText: 0, unsampleableBackdrop: 0 } };
+                  skipped: { gradientText: 0, unsampleableBackdrop: 0, offscreen: 0, visuallyHidden: 0 } };
 
     // G5 — the ramp must produce six DISTINCT colours.
     for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) {
@@ -233,6 +233,15 @@ async function probe(page, theme) {
       // which is not the same thing as invisible.
       if ((cs.webkitBackgroundClip || cs.backgroundClip) === 'text') { out.skipped.gradientText++; continue; }
       if (cs.opacity === '0' || cs.visibility === 'hidden') continue;
+      // VISUALLY HIDDEN IS NOT LOW CONTRAST. The sr-only idiom clips a 1x1 box
+      // (`clip-path: inset(50%)`, or the legacy `clip: rect(0 0 0 0)`) and parks
+      // it off-flow. It is read aloud, never painted, so its computed colour has
+      // no backdrop in any meaningful sense — a skip link measured 2.76:1 or
+      // 7.02:1 purely on where the sample point happened to land. Neither number
+      // says anything about anyone's experience.
+      const clipped = cs.clipPath === 'inset(50%)' || (cs.clip && cs.clip !== 'auto');
+      const boxRect = el.getBoundingClientRect();
+      if (clipped || (boxRect.width <= 1 && boxRect.height <= 1)) { out.skipped.visuallyHidden++; continue; }
 
       // The backdrop is COMPOSITED, not "the nearest ancestor that is not fully
       // transparent". That earlier walk stopped at the first background whose
@@ -283,11 +292,20 @@ async function probe(page, theme) {
       const inView = rect.width > 0 && rect.height > 0 &&
         cx >= 0 && cy >= 0 && cx < innerWidth && cy < innerHeight;
 
+      // OFF-SCREEN IS UNMEASURED, NOT MEASURED-BY-A-WORSE-METHOD. The first
+      // version of this fell back to an ancestor walk for anything below the
+      // fold, which is precisely the sibling-blind method the point-stack was
+      // added to replace — and it produced NINE false failures on braden's dark
+      // pass. Scrolling the same page and measuring each element while it was
+      // actually in view gave 82 candidates, 70 measured, ZERO failures.
+      //
+      // A gate may not report a finding it obtained by a method it already knows
+      // is wrong. Counting these as unmeasured is the honest answer; measuring
+      // them properly means scrolling, which belongs in the harness, not here.
+      if (!inView) { out.skipped.offscreen++; continue; }
       const layers = [];
       let unsampleable = false;
-      const stack = inView
-        ? document.elementsFromPoint(cx, cy)
-        : (() => { const a = []; for (let n = el; n; n = n.parentElement) a.push(n); return a; })();
+      const stack = document.elementsFromPoint(cx, cy);
       // Start AT the element: text sits on its own background first. Skipping it
       // resolved a filled button's white label against the page ground — 1.01:1
       // on six buttons that render fine. Everything painted ABOVE the text in the
@@ -373,6 +391,21 @@ for (const url of urls) {
     await page.evaluate(() => document.fonts.ready);
 
     for (const theme of ['light', 'dark']) {
+      // EMULATE THE PREFERENCE, not just the class. Some surfaces drive their
+      // brand tokens off `prefers-color-scheme` and ignore a bare `.dark` class,
+      // so toggling the class alone produces a HYBRID no user can reach: package
+      // tokens go dark while hardcoded brand classes stay light. Measured on
+      // braden.com.au 2026-08-30 — the class alone reported a cookie-consent
+      // button at 1.63:1 and eight other failures; with the media preference
+      // emulated, the same buttons read 5.51:1 and 6.52:1 and the page is clean.
+      // Setting both makes the two mechanisms agree instead of fighting.
+      await page.emulateMedia({ colorScheme: theme });
+      // RELOAD after setting it. A ThemeProvider that reads the preference once
+      // at mount, with no matchMedia listener, never sees a change applied to an
+      // already-running page — so emulating without reloading measures the
+      // previous theme wearing the new one's name.
+      await page.reload({ waitUntil: 'networkidle' }).catch(() => {});
+      await page.evaluate(() => document.fonts.ready).catch(() => {});
       const r = await probe(page, theme);
       results[theme] = r;
 
@@ -445,11 +478,15 @@ for (const url of urls) {
       // gate. These are UNKNOWN, never PASS — resolving one needs the gradient's
       // own colour stops read off backgroundImage, which found a live 1.70:1 on
       // the public CTA when it was last done.
-      if (r.skipped && (r.skipped.gradientText || r.skipped.unsampleableBackdrop)) {
+      if (r.skipped && (r.skipped.gradientText || r.skipped.unsampleableBackdrop ||
+                        r.skipped.offscreen || r.skipped.visuallyHidden)) {
+        const cand = r.pairs.length + r.skipped.gradientText + r.skipped.unsampleableBackdrop +
+                     r.skipped.offscreen + r.skipped.visuallyHidden;
         notes.push(
           `P7 [${theme}] UNMEASURED: ${r.skipped.gradientText} gradient-clipped text, ` +
-          `${r.skipped.unsampleableBackdrop} on an image/gradient backdrop ` +
-          `(of ${r.pairs.length + r.skipped.gradientText + r.skipped.unsampleableBackdrop} candidates)`
+          `${r.skipped.unsampleableBackdrop} on an image/gradient backdrop, ` +
+          `${r.skipped.offscreen} below the fold, ` +
+          `${r.skipped.visuallyHidden} visually hidden — ${r.pairs.length} of ${cand} candidates measured`
         );
       }
     }
