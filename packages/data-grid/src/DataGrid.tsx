@@ -189,6 +189,13 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
   // Keep columnOrder in sync if the `columns` prop's identity set changes
   // (columns added/removed) without discarding the user's chosen order.
   useEffect(() => {
+    /*
+     * When the HOST controls the order, this must not fight it. Without the
+     * guard both effects run: the controlled one seeds the host's order, then
+     * this one restores `prev` — and the host's order loses silently, which is
+     * exactly how a saved column arrangement stops arriving.
+     */
+    if (columnOrderProp) return;
     setColumnOrder((prev) => {
       const ids = columns.map((c) => c.id);
       const idSet = new Set(ids);
@@ -197,7 +204,7 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
       const next = [...kept, ...missing];
       return next.length === prev.length && next.every((id, i) => id === prev[i]) ? prev : next;
     });
-  }, [columns]);
+  }, [columns, columnOrderProp]);
 
   /*
    * Grouping is DERIVED from the prop, never held locally: the host owns the

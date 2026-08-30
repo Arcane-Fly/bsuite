@@ -7,6 +7,25 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.5.0] — 2026-08-30 — A host-controlled column order is no longer overridden
+
+### Fixed
+
+- When `columnOrder` is supplied, the internal columns-sync effect **no longer restores the
+  previous order over it.**
+
+Both effects ran: the controlled one seeded the host's order, then the sync effect —
+which deliberately preserves the reader's own drag order when the column id *set* is
+unchanged — restored the previous one. The host's order lost, and lost **silently**: the
+grid rendered, the columns were simply not the ones the reader arranged.
+
+The sync behaviour itself is right and unchanged for uncontrolled use; it must simply not
+fight a host that has taken control.
+
+### Verification
+
+125 tests.
+
 ## [2.4.0] — 2026-08-30 — The grid announces what it actually is
 
 ### Changed
