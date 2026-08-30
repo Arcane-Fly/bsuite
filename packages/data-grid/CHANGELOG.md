@@ -7,6 +7,19 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.5.1] — 2026-08-30 — Regression cover for an order that arrives late
+
+### Added
+
+- A test for **`columnOrder` arriving on a later render**, not only at mount.
+
+That is the real scenario: a saved view preference loads asynchronously, so the grid mounts
+with the default order and the host's order arrives afterwards. The existing test seeded at
+mount and would not have caught a grid that ignored later updates — which is precisely
+where a saved arrangement goes missing.
+
+The behaviour was already correct as of 2.5.0; this pins it.
+
 ## [2.5.0] — 2026-08-30 — A host-controlled column order is no longer overridden
 
 ### Fixed
