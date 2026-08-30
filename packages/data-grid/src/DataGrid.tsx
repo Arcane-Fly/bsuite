@@ -1086,6 +1086,8 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
                     column={columnConfigById.get(frozenColumn.id)!}
                     row={row.original}
                     refusal={refusals.get(overlayKey(row.index, frozenColumn.id))}
+                    rowId={getRowId ? getRowId(row.original, row.index) : String(row.index)}
+                    editable={canEditColumn(frozenColumn.id)}
                     rowIndex={row.index}
                     value={getEffectiveValue(row.index, frozenColumn.id)}
                     isSelected={Boolean(normalizedSelection && isCellInRange({ row: vr.index, col: 0 }, normalizedSelection))}
@@ -1113,6 +1115,8 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
                       column={config}
                       row={row.original}
                       refusal={refusals.get(overlayKey(row.index, config.id))}
+                    rowId={getRowId ? getRowId(row.original, row.index) : String(row.index)}
+                    editable={canEditColumn(config.id)}
                     rowIndex={row.index}
                       value={getEffectiveValue(row.index, column.id)}
                       isSelected={Boolean(normalizedSelection && isCellInRange({ row: vr.index, col: gridCol }, normalizedSelection))}
@@ -1167,6 +1171,8 @@ interface GridCellRendererProps<TRow> {
   editSeedChar?: string;
   /** Refusal message for this cell, if its last edit was rejected. */
   refusal?: string;
+  rowId?: string;
+  editable?: boolean;
   onCommit: (nextValue: unknown) => void;
   onCancel: () => void;
   onMouseDown: (e: ReactMouseEvent<HTMLDivElement>) => void;
