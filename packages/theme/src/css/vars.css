@@ -548,6 +548,21 @@
      not guessed.
      ============================================================ */
   --radius-card: 1.5rem;
+
+  /* ------------------------------------------------------------
+     D2C Neon Electric has NO sm/md/lg radius scale, deliberately not
+     invented here. Braden Corporate defines 4/6/10 (braden.css); D2C
+     defines only this card radius. preset-v4.css maps the utilities to
+     `--role-radius-*` with Tailwind's own values as the fallback, so D2C
+     renders exactly as it does today and Corporate gets its language.
+
+     Choosing D2C numbers would be synthesising a design decision to make
+     the table tidy. When the D2C scale is decided, define the three
+     --role-radius-* here and the utilities pick it up with no call-site
+     change. 3,400+ raw `rounded-*` uses estate-wide are already pointed
+     at these utilities, which is why this is worth getting right rather
+     than guessing.
+     ------------------------------------------------------------ */
 }
 
 /* ============================================================

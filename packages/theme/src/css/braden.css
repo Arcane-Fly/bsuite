@@ -346,9 +346,19 @@
   --track-heading: -0.008em;
   --track-body:    0em;
   --track-eyebrow: 0.10em;
-  --radius-sm:     4px;
-  --radius:        6px;
-  --radius-lg:     10px;
+  /* Corporate radius language: tight, 4/6/10. Defined since the brand landed and
+     read by NOTHING — measured 2026-08-30, zero consumers estate-wide, so every
+     `rounded-sm`/`rounded-lg` in the braden app rendered Tailwind's 2px/8px instead
+     of the brand's 4px/10px. Moved into the --role-* namespace the contract already
+     uses for bindable tokens, and mapped onto the utilities in preset-v4.css. The
+     old names are kept as aliases: unconsumed today, but removing a public custom
+     property is a breaking change we have no reason to make in the same commit. */
+  --role-radius-sm:  4px;
+  --role-radius-md:  6px;
+  --role-radius-lg:  10px;
+  --radius-sm:     var(--role-radius-sm);
+  --radius:        var(--role-radius-md);
+  --radius-lg:     var(--role-radius-lg);
   --row-pad:       11px;
 }
 
