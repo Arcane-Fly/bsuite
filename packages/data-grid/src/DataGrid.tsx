@@ -926,7 +926,17 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     <DndContext sensors={dndSensors} onDragEnd={handleColumnDragEnd}>
       <div
         ref={scrollRef}
-        role="grid"
+        /*
+         * `grid` PROMISES an interactive, editable widget; `table` is a static
+         * one. Since 2.0.0 a column is read-only unless it says otherwise, so a
+         * grid with nothing editable was announcing an interaction the reader
+         * does not have — a screen reader offers cell-edit affordances that go
+         * nowhere.
+         *
+         * The role now follows the truth: editable anywhere -> grid, otherwise
+         * table.
+         */
+        role={columns.some((c) => c.editable === true) ? 'grid' : 'table'}
         aria-label={ariaLabel}
         aria-rowcount={rows.length}
         aria-colcount={visibleColumns.length}

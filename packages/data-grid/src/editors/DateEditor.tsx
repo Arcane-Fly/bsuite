@@ -7,7 +7,7 @@ import { useAutoFocusSelect } from './useAutoFocusSelect.js';
  * no basis to guess, and a bare ISO date string round-trips exactly through
  * TSV copy/paste with no ambiguity. */
 export function DateEditor(props: CellEditorProps): React.ReactElement {
-  const { value, initialInputChar, onCommit, onCancel } = props;
+  const { value, initialInputChar, onCommit, onCancel, column } = props;
   const [text, setText] = useState<string>(() => initialInputChar ?? (value == null ? '' : String(value)));
   const ref = useRef<HTMLInputElement>(null);
   useAutoFocusSelect(ref, Boolean(initialInputChar));
@@ -26,6 +26,7 @@ export function DateEditor(props: CellEditorProps): React.ReactElement {
 
   return (
     <input
+      aria-label={`Edit ${column.header}`}
       ref={ref}
       type="date"
       value={text}

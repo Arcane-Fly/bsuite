@@ -18,6 +18,7 @@ export function SelectEditor(props: CellEditorProps): React.ReactElement {
 
   return (
     <select
+      aria-label={`Edit ${column.header}`}
       ref={ref}
       value={current}
       onChange={(e) => onCommit(e.target.value === '' ? null : e.target.value)}

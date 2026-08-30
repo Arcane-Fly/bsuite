@@ -4,7 +4,7 @@ import type { CellEditorProps } from '../types.js';
 /** Booleans commit immediately on toggle — there is no intermediate "typed
  * but not yet committed" state for a checkbox, unlike text/number/date. */
 export function BooleanEditor(props: CellEditorProps): React.ReactElement {
-  const { value, onCommit, onCancel } = props;
+  const { value, onCommit, onCancel, column } = props;
   const ref = useRef<HTMLInputElement>(null);
   const checked = Boolean(value);
 
@@ -14,6 +14,7 @@ export function BooleanEditor(props: CellEditorProps): React.ReactElement {
 
   return (
     <input
+      aria-label={`Edit ${column.header}`}
       ref={ref}
       type="checkbox"
       checked={checked}
