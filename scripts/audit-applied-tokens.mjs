@@ -182,7 +182,7 @@ async function probe(page, theme) {
   return page.evaluate(({ pure, theme, groups }) => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
     const out = { theme, headings: {}, font: null, pureEndpoints: [], pairs: [],
-                  skipped: { gradientText: 0, unsampleableBackdrop: 0, offscreen: 0, visuallyHidden: 0 } };
+                  skipped: { gradientText: 0, unsampleableBackdrop: 0, offscreen: 0, visuallyHidden: 0, notAtSamplePoint: 0 } };
 
     // G5 — the ramp must produce six DISTINCT colours.
     for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) {
@@ -315,12 +315,21 @@ async function probe(page, theme) {
       const layers = [];
       let unsampleable = false;
       const stack = document.elementsFromPoint(cx, cy);
+      // THE ELEMENT MUST BE AT THE POINT IT IS SAMPLED AT. Hit-testing does not
+      // always return the text node's own element — a SPAN inside a BUTTON is
+      // commonly not in its own stack, because the button captures the hit. When
+      // indexOf gives -1 there is no way to know the sample point is over this
+      // element, and slicing from the topmost entry measures against whatever
+      // happens to be there: the same select label read 7.43:1 sampled alone and
+      // 1.64:1 during a full sweep. Two answers for one element means the point
+      // is not trustworthy, so this is unmeasured, not a finding.
+      const from = stack.indexOf(el);
+      if (from === -1) { out.skipped.notAtSamplePoint++; continue; }
       // Start AT the element: text sits on its own background first. Skipping it
       // resolved a filled button's white label against the page ground — 1.01:1
       // on six buttons that render fine. Everything painted ABOVE the text in the
       // stack is not its backdrop, so begin at the element's own index.
-      const from = stack.indexOf(el);
-      for (const node of stack.slice(from > -1 ? from : 0)) {
+      for (const node of stack.slice(from)) {
         const ucs = getComputedStyle(node);
         // An image or gradient behind the text makes the computed background
         // colour meaningless — skip rather than report a number we cannot stand up.
@@ -502,14 +511,17 @@ for (const url of urls) {
       // own colour stops read off backgroundImage, which found a live 1.70:1 on
       // the public CTA when it was last done.
       if (r.skipped && (r.skipped.gradientText || r.skipped.unsampleableBackdrop ||
-                        r.skipped.offscreen || r.skipped.visuallyHidden)) {
+                        r.skipped.offscreen || r.skipped.visuallyHidden ||
+                        r.skipped.notAtSamplePoint)) {
         const cand = r.pairs.length + r.skipped.gradientText + r.skipped.unsampleableBackdrop +
-                     r.skipped.offscreen + r.skipped.visuallyHidden;
+                     r.skipped.offscreen + r.skipped.visuallyHidden + r.skipped.notAtSamplePoint;
         notes.push(
           `P7 [${theme}] UNMEASURED: ${r.skipped.gradientText} gradient-clipped text, ` +
           `${r.skipped.unsampleableBackdrop} on an image/gradient backdrop, ` +
           `${r.skipped.offscreen} below the fold, ` +
-          `${r.skipped.visuallyHidden} visually hidden — ${r.pairs.length} of ${cand} candidates measured`
+          `${r.skipped.visuallyHidden} visually hidden, ` +
+          `${r.skipped.notAtSamplePoint} not at their own sample point — ` +
+          `${r.pairs.length} of ${cand} candidates measured`
         );
       }
     }
