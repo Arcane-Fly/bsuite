@@ -535,3 +535,46 @@ describe('DataGrid announces what it actually is', () => {
     expect(await screen.findByRole('textbox', { name: 'Edit Status' })).toBeInTheDocument();
   });
 });
+
+describe('DataGrid column order arriving AFTER mount', () => {
+  /*
+   * THE REAL SCENARIO. A saved view preference loads asynchronously, so the
+   * grid mounts with the default order and the host's order arrives on a later
+   * render. Seeding at mount alone does not cover this, and this is exactly
+   * where a saved arrangement was being lost.
+   */
+  const rows: Person[] = [{ id: 'p-1', name: 'Ada Lovelace', age: 36 }];
+  const cols: DataGridColumn<Person>[] = [
+    { id: 'name', header: 'Name', accessor: (r) => r.name, dataType: 'text' },
+    { id: 'age', header: 'Age', accessor: (r) => r.age, dataType: 'number' },
+  ];
+
+  const headerNames = () =>
+    screen.getAllByRole('columnheader').map((h) => (h.textContent ?? '').replace('⠿', '').trim());
+
+  it('applies an order that arrives on a LATER render', () => {
+    const { rerender } = render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    expect(headerNames()[0]).toBe('Name');
+
+    // preferences land
+    rerender(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        columnOrder={['age', 'name']}
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    expect(headerNames()[0]).toBe('Age');
+  });
+});

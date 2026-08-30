@@ -84,12 +84,22 @@ function walk(dir, base = dir, out = []) {
 /** Pure — so --self-test exercises the real decision, not a paraphrase of it. */
 export function evaluate(pkgs) {
   const failures = []
+  const unverifiable = []
   let compared = 0
 
   for (const p of pkgs) {
     if (p.status === 'unpublished') continue // normal between merge and promotion
     if (p.status === 'error') {
       failures.push({ code: 'P0', message: `${p.name}: could not be checked — ${p.detail}` })
+      continue
+    }
+    if (p.status === 'unverifiable') {
+      /*
+       * Reported, never counted as compared. It is not a failure — a dist-only
+       * package is a legitimate shape — but it must not read as a clean pass,
+       * because nothing about it was actually checked.
+       */
+      unverifiable.push(p.name)
       continue
     }
     compared++
@@ -194,6 +204,22 @@ function inspect(pkgDir) {
       if (!existsSync(there)) { missing.push(rel); continue }
       if (sha(readFileSync(join(pkgDir, rel))) !== sha(readFileSync(there))) differing.push(rel)
     }
+    /*
+     * ZERO FILES COMPARED IS NOT A PASS.
+     *
+     * `dist` is excluded above for a good reason — a build legitimately differs
+     * byte-for-byte between local and published. But a package that ships ONLY
+     * `dist` then has nothing left to compare, and this guard was reporting
+     * "0 differing" for it: a clean verdict produced by looking at nothing.
+     *
+     * Measured 2026-08-30: FIVE of thirteen packages were in that state —
+     * auth, charge-calc, data-grid, dates, schema-registry. Unevaluable is not
+     * passed, so they now say so in their own status rather than borrowing the
+     * clean one.
+     */
+    if (srcFiles.length === 0) {
+      return { name, version, status: 'unverifiable', missing, differing, filesChecked: 0 }
+    }
     return { name, version, status: 'ok', missing, differing, filesChecked: srcFiles.length }
   } catch (err) {
     return { name, version, status: 'error', detail: err.message }
@@ -226,8 +252,21 @@ function main() {
     const tag =
       r.status === 'unpublished' ? 'not yet published'
       : r.status === 'error' ? `ERROR ${r.detail}`
+      : r.status === 'unverifiable'
+        ? 'UNVERIFIABLE — ships dist only, so there is no source file to compare'
       : `${r.filesChecked} src file(s) compared, ${r.missing.length} missing, ${r.differing.length} differing`
     console.log(`    ${r.name}@${r.version ?? '?'} — ${tag}`)
+  }
+
+  const unverifiableNames = results.filter((r) => r.status === 'unverifiable').map((r) => r.name)
+  if (unverifiableNames.length > 0) {
+    console.log(
+      `\n  UNVERIFIABLE by this guard (${unverifiableNames.length}): ${unverifiableNames.join(', ')}\n` +
+      '  These ship dist only. dist is excluded because a build differs byte-for-byte\n' +
+      '  between local and published, so nothing remains to compare — which means a\n' +
+      '  clean verdict here would be produced by looking at nothing. Their builds are\n' +
+      "  verified by each package's own tests, not by this guard.",
+    )
   }
 
   if (!ok) {
