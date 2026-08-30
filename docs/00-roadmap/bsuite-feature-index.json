@@ -3367,7 +3367,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Page verified on production 2026-08-30 (grid renders, no fabricated KPI deltas, row click resolves). NOT approved: sibling_class entity-crud has 148 members and ADR-0010 treats a class as complete or not \u2014 2 of 148 verified is not a class."
+  }
  },
  {
   "id": "crm7.quotes.crud",
@@ -3934,7 +3937,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Page verified on production 2026-08-30 (7 columns, 24 rows, retired section headings absent). NOT approved: same entity-crud class, 148 members, 2 verified."
+  }
  },
  {
   "id": "crm7.reports.run",
