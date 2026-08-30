@@ -107,6 +107,36 @@ const DATA_ONLY_MARKER = '-- rehearsal: data-only';
  */
 const GUARDED_NOOP_MARKER = '-- rehearsal: guarded-no-op';
 
+/**
+ * A migration whose effect is ALREADY ESTABLISHED by an earlier migration in the
+ * same replay, and which therefore legitimately moves no catalog here while
+ * still being the thing that carries the guarantee in ITS OWN scope's history.
+ *
+ * Added 2026-08-30 for 20260930000000_revoke_anon_execute_definer_functions:
+ * it revokes anon/PUBLIC EXECUTE on four business-suite-unified SECURITY DEFINER
+ * functions. Those grants are already gone before it runs, because
+ * crm7/supabase/migrations/archive/20260611110100_revoke_anon_execute_legacy_helpers.sql
+ * does `REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM anon, public` and
+ * sorts earlier. The six scopes share one Postgres schema, so a whole-estate
+ * replay always has crm7's line in front of BSU's.
+ *
+ * Neither existing marker is true of it. It touches privileges, not rows, so it
+ * is not `data-only`. It carries no guard and the object exists, so it is not
+ * `guarded-no-op` — and that marker's claim, "it moves the census on production,
+ * not here", is false here: production measured these grants already absent too.
+ *
+ * The point of such a migration is PROVENANCE, not effect. Without it, BSU's
+ * security posture depends on another repository's history: replay BSU alone
+ * against a fresh database and each function is created carrying PostgreSQL's
+ * default `GRANT EXECUTE ... TO PUBLIC`. That is a real property to own, and it
+ * is invisible to a census taken during a whole-estate replay.
+ *
+ * Same reasoning as 2026-08-25: a third accurate marker is cheaper than one
+ * inaccurate one, because the marker's whole value is that it is an author's
+ * claim a reviewer can check in the diff.
+ */
+const ALREADY_ENFORCED_MARKER = '-- rehearsal: already-enforced';
+
 /* ───────────────────────── parsing (no regex) ───────────────────────── */
 
 function allDigits(text) {
@@ -156,13 +186,21 @@ function declaresGuardedNoOp(sqlText) {
   return false;
 }
 
+/** True when any line of the file, trimmed, is exactly the already-enforced marker. */
+function declaresAlreadyEnforced(sqlText) {
+  for (const line of sqlText.split('\n')) {
+    if (line.trim() === ALREADY_ENFORCED_MARKER) return true;
+  }
+  return false;
+}
+
 /**
  * Either marker excuses a census that did not move. They are deliberately
  * SEPARATE constants rather than one loose match: each is a different claim, and
  * a reviewer reading the diff should see which one the author made.
  */
 function declaresLegitimateNoOp(sqlText) {
-  return declaresDataOnly(sqlText) || declaresGuardedNoOp(sqlText);
+  return declaresDataOnly(sqlText) || declaresGuardedNoOp(sqlText) || declaresAlreadyEnforced(sqlText);
 }
 
 /* ───────────────────────── scope + file discovery ───────────────────────── */
@@ -647,6 +685,51 @@ function runSelfTest(dbUrl, tmpDir) {
   ];
 
   const outcomes = [];
+
+  /* MARKER PREDICATES — a pure positive control, no database needed.
+   *
+   * The SQL cases below exercise the census. They cannot exercise the markers,
+   * because a marker is read at the replay layer from the file's text. So the
+   * three markers were, until 2026-08-30, the only part of this gate with no
+   * control at all: a typo in a constant would silently stop excusing the
+   * migrations it names and read as those migrations regressing.
+   *
+   * Each marker must match ITSELF, must NOT match either sibling, and a
+   * near-miss (trailing word, wrong dash) must match nothing — otherwise a loose
+   * comparison would let an author write an approximation of a claim.
+   */
+  for (const probe of [
+    { name: 'MARKER — data-only matches only itself', fn: declaresDataOnly, yes: DATA_ONLY_MARKER, no: [GUARDED_NOOP_MARKER, ALREADY_ENFORCED_MARKER] },
+    { name: 'MARKER — guarded-no-op matches only itself', fn: declaresGuardedNoOp, yes: GUARDED_NOOP_MARKER, no: [DATA_ONLY_MARKER, ALREADY_ENFORCED_MARKER] },
+    { name: 'MARKER — already-enforced matches only itself', fn: declaresAlreadyEnforced, yes: ALREADY_ENFORCED_MARKER, no: [DATA_ONLY_MARKER, GUARDED_NOOP_MARKER] },
+  ]) {
+    const matchesOwn = probe.fn(`BEGIN;\n${probe.yes}\nCOMMIT;\n`);
+    const matchesSibling = probe.no.some((other) => probe.fn(`${other}\n`));
+    const matchesNearMiss = probe.fn(`${probe.yes} because the object is absent\n`);
+    const ok = matchesOwn && !matchesSibling && !matchesNearMiss;
+    outcomes.push({
+      name: probe.name,
+      expected: 'pass',
+      actual: ok ? 'pass' : 'noop',
+      ok,
+      detail: `own=${matchesOwn} sibling=${matchesSibling} nearMiss=${matchesNearMiss}`,
+    });
+  }
+
+  {
+    const all = [DATA_ONLY_MARKER, GUARDED_NOOP_MARKER, ALREADY_ENFORCED_MARKER];
+    const everyMarkerExcuses = all.every((m) => declaresLegitimateNoOp(`${m}\n`));
+    const bareFileDoesNot = !declaresLegitimateNoOp('BEGIN;\nSELECT 1;\nCOMMIT;\n');
+    const ok = everyMarkerExcuses && bareFileDoesNot;
+    outcomes.push({
+      name: 'MARKER — every marker excuses a no-op, an unmarked file does not',
+      expected: 'pass',
+      actual: ok ? 'pass' : 'noop',
+      ok,
+      detail: `allExcuse=${everyMarkerExcuses} unmarkedRejected=${bareFileDoesNot}`,
+    });
+  }
+
   try {
     for (const testCase of cases) {
       const file = path.join(tmpDir, 'selftest.sql');
@@ -754,8 +837,10 @@ function replay(dbUrl, migrations, options) {
           'legitimate no-op this is, on its own line, exactly: ' +
           `"${DATA_ONLY_MARKER}" if it only touches rows, or ` +
           `"${GUARDED_NOOP_MARKER}" if its effect is guarded on an object that does not ` +
-          'exist on a rebuild-from-baseline (it moves the census on production, not here). ' +
-          'Pick the one that is TRUE — the marker is a claim a reviewer checks.',
+          'exist on a rebuild-from-baseline (it moves the census on production, not here), or ' +
+          `"${ALREADY_ENFORCED_MARKER}" if an EARLIER migration in this same replay already ` +
+          'established the effect (it is this scope owning a guarantee another scope currently ' +
+          'carries). Pick the one that is TRUE — the marker is a claim a reviewer checks.',
       });
     }
   }

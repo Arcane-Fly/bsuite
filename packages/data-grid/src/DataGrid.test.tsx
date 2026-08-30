@@ -454,6 +454,35 @@ describe('DataGrid row identity, column order and refusals', () => {
     expect(headers[0]).toBe('Age');
   });
 
+  it('GROUPING does not reorder a controlled column order', () => {
+    /*
+     * TanStack's `groupedColumnMode` defaults to 'reorder', which hoists a
+     * grouped column to the FRONT and silently overrides the host's order.
+     * Measured on crm7's report viewer 2026-08-30: a saved view with
+     * columnOrder ['hours','employee_name'] grouped by 'employee_name'
+     * rendered ['Employee','Hours'] — the order arrived correctly and grouping
+     * undid it. The three tests above prove the order is honoured; none of them
+     * had a groupBy, so none of them could see this.
+     */
+    render(
+      <DataGrid<Person>
+        columns={cols}
+        data={rows}
+        getRowId={(r) => r.id}
+        columnOrder={['age', 'name']}
+        groupBy="name"
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    const headers = screen
+      .getAllByRole('columnheader')
+      .map((h) => (h.textContent ?? '').trim())
+      .filter((t) => t === 'Name' || t === 'Age');
+    // 'name' is the GROUPED column and must stay where the host put it — second.
+    expect(headers[0]).toBe('Age');
+  });
+
   it('shows a REFUSAL at the cell instead of reverting silently', async () => {
     const user = userEvent.setup();
     render(

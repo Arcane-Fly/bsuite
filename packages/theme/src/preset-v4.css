@@ -330,6 +330,29 @@
   --animate-shimmer:     shimmer     2s infinite;
   --animate-typing:      typing      1.5s infinite;
   --animate-shine:       shine       3s ease-in-out infinite;
+
+  /* ============================================================
+     RADIUS — the one part of the contract that was never mapped.
+
+     Measured 2026-08-30: 125 vars were bridged here and radius was not one
+     of them, so all 3,400+ `rounded-*` uses across the six apps resolved to
+     Tailwind's defaults. Braden Corporate has defined `4/6/10` since the
+     brand landed and NOTHING rendered it.
+
+     `inline` matters here for the same reason it does for colour: the value
+     stays a `var()`, so a theme that rebinds --role-radius-* (Corporate does,
+     D2C does not yet) reaches the utilities without a second copy.
+
+     The fallback is Tailwind's own value, so an app whose theme defines no
+     scale renders EXACTLY as it does today. This adds Corporate's language;
+     it changes nothing for D2C.
+     ============================================================ */
+  --radius-sm:   var(--role-radius-sm,   0.125rem);
+  --radius-md:   var(--role-radius-md,   0.375rem);
+  --radius-lg:   var(--role-radius-lg,   0.5rem);
+  --radius-xl:   var(--role-radius-xl,   0.75rem);
+  --radius-2xl:  var(--role-radius-2xl,  1rem);
+  --radius-3xl:  var(--role-radius-3xl,  1.5rem);
 }
 
 /* ============================================================
