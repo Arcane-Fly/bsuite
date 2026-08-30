@@ -212,6 +212,15 @@ export interface DataGridProps<TRow = unknown> {
    *
    * Uncontrolled when omitted: the grid keeps its own sort, exactly as before.
    */
+  /**
+   * Accessible name for the grid.
+   *
+   * The grid renders `role="grid"`, and a grid with no accessible name is
+   * announced as an unnamed table — a screen-reader user lands in a mesh of
+   * cells with nothing saying what they are looking at. Every render site was
+   * missing one, because there was no way to supply it.
+   */
+  ariaLabel?: string;
   sortBy?: { id: string; desc: boolean }[] | null;
   onSortByChange?: (next: { id: string; desc: boolean }[]) => void;
   groupBy?: string | null;
