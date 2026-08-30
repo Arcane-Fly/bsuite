@@ -4,8 +4,8 @@
   "_clickThroughDoc": "Files that HAD row-level click-through to a record. Recorded by PATH because a conversion destroys the <TableRow onClick> evidence. Any file here that renders a DataGrid must pass onRowClick, or the conversion turned a working navigation into a dead list. Operator ask 2026-08-28: \"make sure table that currently enable click through to a record still maintain this capability.\" The set is a UNION and only grows.",
   "apps": {
     "crm7": {
-      "handRolled": 153,
-      "dataGrid": 19,
+      "handRolled": 152,
+      "dataGrid": 20,
       "files": 98
     },
     "business-suite-unified": {
