@@ -181,7 +181,8 @@ async function probe(page, theme) {
   // this gate would have printed was a second light-mode run.
   return page.evaluate(({ pure, theme, groups }) => {
     document.documentElement.classList.toggle('dark', theme === 'dark');
-    const out = { theme, headings: {}, font: null, pureEndpoints: [], pairs: [] };
+    const out = { theme, headings: {}, font: null, pureEndpoints: [], pairs: [],
+                  skipped: { gradientText: 0, unsampleableBackdrop: 0 } };
 
     // G5 — the ramp must produce six DISTINCT colours.
     for (const tag of ['h1', 'h2', 'h3', 'h4', 'h5', 'h6']) {
@@ -230,21 +231,94 @@ async function probe(page, theme) {
       // Gradient text sets `color: transparent` ON PURPOSE and paints via
       // background-clip. Reading its computed colour says "fully transparent",
       // which is not the same thing as invisible.
-      if ((cs.webkitBackgroundClip || cs.backgroundClip) === 'text') continue;
+      if ((cs.webkitBackgroundClip || cs.backgroundClip) === 'text') { out.skipped.gradientText++; continue; }
       if (cs.opacity === '0' || cs.visibility === 'hidden') continue;
 
-      // The element's own background is usually transparent; what the text sits
-      // on is the nearest painted ancestor.
-      let bg = cs.backgroundColor, up = el;
-      while (up && (bg === 'rgba(0, 0, 0, 0)' || bg === 'transparent')) {
-        up = up.parentElement;
-        if (!up) break;
-        bg = getComputedStyle(up).backgroundColor;
+      // The backdrop is COMPOSITED, not "the nearest ancestor that is not fully
+      // transparent". That earlier walk stopped at the first background whose
+      // string was not `rgba(0, 0, 0, 0)` and reported it as-is, so a 15% wash
+      // read as the fully saturated fill underneath it. Measured 2026-08-30 on
+      // crm7 /reports: the selected grid cell is `bg-primary/15` over a card, and
+      // treating that as opaque compares muted text against saturated blue —
+      // a number that is wrong in both directions depending on the hue.
+      //
+      // So: collect every painted layer up to the first OPAQUE one, then fold
+      // them back down in paint order.
+      // NORMALISE THROUGH A CANVAS. getComputedStyle hands back whatever syntax
+      // the author wrote — `oklch(...)`, `lab(...)`, `color(display-p3 ...)` — and a
+      // regex for `rgb()` does not merely fail to parse those, it SKIPS THE LAYER.
+      // Measured 2026-08-30 on braden.com.au: a label's chain is
+      //   LABEL(transparent) -> FORM(transparent) -> DIV.bg-card oklch(0.982 …)
+      //   -> SECTION.bg-braden-navy rgb(44,62,80)
+      // The card is opaque and is what the text sits on. Skipping it walked
+      // through to the navy section and compared navy text against navy: 1.00:1,
+      // seven false failures on one page. The estate's palette gate REQUIRES
+      // oklch, so almost every card and panel was invisible to this walk.
+      const _cv = document.createElement('canvas'); _cv.width = _cv.height = 1;
+      const _ctx = _cv.getContext('2d', { willReadFrequently: true });
+      const norm = (v) => {
+        if (!v || v === 'transparent') return { rgb: [0, 0, 0], a: 0 };
+        _ctx.clearRect(0, 0, 1, 1);
+        _ctx.fillStyle = '#000';
+        _ctx.fillStyle = v;                       // invalid syntax leaves the previous value
+        _ctx.fillRect(0, 0, 1, 1);
+        const d = _ctx.getImageData(0, 0, 1, 1).data;
+        // Alpha survives in the string, not in the 1x1 read-back, so take it there.
+        const m = String(v).match(/(?:rgba?|oklch|oklab|lab|hsla?|color)\([^)]*?[,/]\s*([\d.]+%?)\s*\)$/);
+        let a = 1;
+        if (m) { a = parseFloat(m[1]); if (String(m[1]).endsWith('%')) a /= 100; }
+        return { rgb: [d[0], d[1], d[2]], a };
+      };
+
+      // THE STACK AT A POINT, not the ancestor chain. A hero's dark backdrop is
+      // very often an absolutely-positioned SIBLING (`z-0` under a `z-20` content
+      // layer), which no ancestor walk can see: it resolves to the page background
+      // and reports near-white text on near-white. Measured 2026-08-30 on
+      // braden.com.au — one such paragraph read 1.03:1 while rendering perfectly.
+      // elementsFromPoint returns everything painting under the point, siblings
+      // included, topmost first.
+      const rect = el.getBoundingClientRect();
+      const cx = Math.round(rect.left + Math.min(rect.width / 2, 40));
+      const cy = Math.round(rect.top + rect.height / 2);
+      const inView = rect.width > 0 && rect.height > 0 &&
+        cx >= 0 && cy >= 0 && cx < innerWidth && cy < innerHeight;
+
+      const layers = [];
+      let unsampleable = false;
+      const stack = inView
+        ? document.elementsFromPoint(cx, cy)
+        : (() => { const a = []; for (let n = el; n; n = n.parentElement) a.push(n); return a; })();
+      // Start AT the element: text sits on its own background first. Skipping it
+      // resolved a filled button's white label against the page ground — 1.01:1
+      // on six buttons that render fine. Everything painted ABOVE the text in the
+      // stack is not its backdrop, so begin at the element's own index.
+      const from = stack.indexOf(el);
+      for (const node of stack.slice(from > -1 ? from : 0)) {
+        const ucs = getComputedStyle(node);
+        // An image or gradient behind the text makes the computed background
+        // colour meaningless — skip rather than report a number we cannot stand up.
+        if (ucs.backgroundImage !== 'none') { unsampleable = true; break; }
+        const p = norm(ucs.backgroundColor);
+        if (p.a > 0) { layers.push(p); if (p.a >= 1) break; }
       }
-      // An image or gradient behind the text makes the computed background
-      // colour meaningless — skip rather than report a number we cannot stand up.
-      if (up && getComputedStyle(up).backgroundImage !== 'none') continue;
-      out.pairs.push({ tag: el.tagName, text: t.slice(0, 40), fg: cs.color, bg });
+      // Nothing opaque under the text means the stack ran out before a solid
+      // ground — an honest unknown, not a white default.
+      if (!unsampleable && (!layers.length || layers[layers.length - 1].a < 1)) unsampleable = true;
+      if (unsampleable || !layers.length) { out.skipped.unsampleableBackdrop++; continue; }
+      let base = layers[layers.length - 1].rgb;
+      for (let i = layers.length - 2; i >= 0; i--) {
+        const L = layers[i];
+        base = L.rgb.map((c, j) => Math.round(c * L.a + base[j] * (1 - L.a)));
+      }
+      const bg = `rgb(${base[0]}, ${base[1]}, ${base[2]})`;
+      // The text colour needs the same normalisation, for the same reason.
+      const fgN = norm(cs.color);
+      const fg = `rgb(${fgN.rgb[0]}, ${fgN.rgb[1]}, ${fgN.rgb[2]})`;
+      // Size and weight decide WHICH floor applies (WCAG 1.4.3), so they travel
+      // with the pair rather than being guessed in Node.
+      out.pairs.push({ tag: el.tagName, text: t.slice(0, 40), fg, bg,
+                       size: parseFloat(cs.fontSize) || 16,
+                       weight: parseInt(cs.fontWeight, 10) || 400 });
     }
     return out;
   }, { pure: [...PURE], theme, groups: SEMANTIC_GROUPS });
@@ -271,6 +345,9 @@ let skipped = 0;
 
 for (const url of urls) {
   const failures = [];
+  // Not failures — coverage the probe could not evaluate. Reported so a clean
+  // run cannot be mistaken for full coverage (ruling V-3: unevaluable is never PASS).
+  const notes = [];
   const results = {};
   let offOrigin = null;
 
@@ -332,18 +409,47 @@ for (const url of urls) {
     if (r.pureEndpoints.length) {
         failures.push(`P1 [${theme}] ${r.pureEndpoints.length} pure endpoint(s): ${r.pureEndpoints.slice(0, 3).join(' | ')}`);
       }
-      // P7 — real contrast, not exact equality. 3:1 is the WCAG large-text floor and
-      // deliberately lenient: this gate is hunting text you cannot read at all, and a
-      // stricter bar on a first pass produces a list nobody acts on.
+      // P7 — real contrast, at the floor WCAG 1.4.3 actually specifies: 4.5:1 for
+      // normal-weight body text, 3:1 only for large text (>=24px, or >=18.66px bold).
+      //
+      // This was a flat 3:1, and the comment said so honestly: "deliberately
+      // lenient ... a stricter bar on a first pass produces a list nobody acts on."
+      // That was true when written. It is no longer true, and the difference was
+      // MEASURED before this line moved, on production, both themes:
+      //
+      //     crm7 /dashboard    68 elements    0 below AA
+      //     crm7 /reports     181 elements    1 below AA   (4.05:1, since fixed)
+      //     BSU  /            112 elements    0 below AA
+      //
+      // 722 measured element-readings, ONE failure. The lenient band 3.0-4.5 is
+      // where the estate's remaining text defects live now that the sub-3:1 ones
+      // are gone: every real finding on 2026-08-30 sat in it — 4.05 (crm7 reports),
+      // 4.45 (crm7 sidebar, dark), 3.74 (braden ErrorAlert). A flat 3:1 passes all three.
+      const floorFor = (q) =>
+        (q.size >= 24 || (q.size >= 18.66 && q.weight >= 700)) ? 3 : 4.5;
       const unreadable = r.pairs
-        .map((q) => ({ ...q, ratio: contrast(parseRgb(q.fg), parseRgb(q.bg)) }))
-        .filter((q) => q.ratio < 3)
+        .map((q) => ({ ...q, ratio: contrast(parseRgb(q.fg), parseRgb(q.bg)), need: floorFor(q) }))
+        .filter((q) => q.ratio < q.need)
         .sort((a, b) => a.ratio - b.ratio);
       r.unreadable = unreadable;
       if (unreadable.length) {
         failures.push(
-          `P7 [${theme}] ${unreadable.length} below 3:1 — ` +
-          unreadable.slice(0, 3).map((q) => `${q.tag} "${q.text}" ${q.ratio.toFixed(2)}:1`).join(' | ')
+          `P7 [${theme}] ${unreadable.length} below the AA floor — ` +
+          unreadable.slice(0, 3)
+            .map((q) => `${q.tag} "${q.text}" ${q.ratio.toFixed(2)}:1 < ${q.need}`).join(' | ')
+        );
+      }
+      // COVERAGE, stated rather than implied. Gradient-clipped text and
+      // gradient/image backdrops are not measurable by computed colour, and a
+      // gate that cannot tell "checked nothing" from "found nothing" is not a
+      // gate. These are UNKNOWN, never PASS — resolving one needs the gradient's
+      // own colour stops read off backgroundImage, which found a live 1.70:1 on
+      // the public CTA when it was last done.
+      if (r.skipped && (r.skipped.gradientText || r.skipped.unsampleableBackdrop)) {
+        notes.push(
+          `P7 [${theme}] UNMEASURED: ${r.skipped.gradientText} gradient-clipped text, ` +
+          `${r.skipped.unsampleableBackdrop} on an image/gradient backdrop ` +
+          `(of ${r.pairs.length + r.skipped.gradientText + r.skipped.unsampleableBackdrop} candidates)`
         );
       }
     }
@@ -352,7 +458,7 @@ for (const url of urls) {
   if (failures.length) anyFailed = true;
 
   if (asJson) {
-    console.log(JSON.stringify({ app, url, skipped: offOrigin, failures, results }, null, 2));
+    console.log(JSON.stringify({ app, url, skipped: offOrigin, failures, notes, results }, null, 2));
   } else if (offOrigin) {
     console.log(`\n${app} — ${url}\n  – SKIPPED: ${offOrigin}\n    (an authenticated route needs a session; this is not a theme result)`);
   } else {
@@ -367,6 +473,10 @@ for (const url of urls) {
       failures.forEach((f) => console.log(`  ✗ ${f}`));
     } else {
       console.log('  ✓ ramp, font, pure endpoints and visibility all clean');
+    }
+    if (notes.length) {
+      console.log('');
+      notes.forEach((n) => console.log(`  ? ${n}`));
     }
   }
 }
