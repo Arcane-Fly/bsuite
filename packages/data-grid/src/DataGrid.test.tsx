@@ -377,3 +377,21 @@ describe('DataGrid read-only by default (2.0.0)', () => {
     expect(onCellsEdited).toHaveBeenCalled();
   });
 });
+
+describe('DataGrid accessible name', () => {
+  it('names the grid, so a screen reader announces what it is', () => {
+    render(
+      <DataGrid<Person>
+        columns={columns}
+        data={people}
+        getRowId={(r) => r.id}
+        ariaLabel="Report rows"
+        onCellsEdited={() => {}}
+        onError={() => {}}
+      />,
+    );
+    // role="grid" with no name announces as an unnamed table — a mesh of cells
+    // with nothing saying what the reader is looking at.
+    expect(screen.getByRole('grid', { name: 'Report rows' })).toBeInTheDocument();
+  });
+});

@@ -93,6 +93,7 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     undoLimit = DEFAULT_UNDO_LIMIT,
     emptyState,
     onRowClick,
+    ariaLabel,
     sortBy,
     onSortByChange,
     groupBy = null,
@@ -882,6 +883,7 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
       <div
         ref={scrollRef}
         role="grid"
+        aria-label={ariaLabel}
         aria-rowcount={rows.length}
         aria-colcount={visibleColumns.length}
         tabIndex={0}

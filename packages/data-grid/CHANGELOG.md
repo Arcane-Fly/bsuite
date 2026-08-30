@@ -7,6 +7,27 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.1.0] — 2026-08-30 — The grid has an accessible name
+
+### Added
+
+- **`ariaLabel`** — lands on the `role="grid"` element.
+
+### Why
+
+The grid renders `role="grid"` and had **no way to supply a name**, so every render site
+announced as an unnamed table: a screen-reader user lands in a mesh of cells with nothing
+saying what they are looking at. All 20 sites were affected — not one of them had omitted
+something optional, because there was nothing to omit.
+
+Found while converting crm7's `ReportTable`, which passes an `ariaLabel` to its `<table>`
+today. Dropping it in the conversion would have been an accessibility regression hidden
+inside a visual improvement.
+
+### Verification
+
+17 tests; the new one fails when the attribute is removed — checked by removing it.
+
 ## [2.0.0] — 2026-08-30 — Read-only by default
 
 ### Changed — BREAKING
