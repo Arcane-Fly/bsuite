@@ -7,6 +7,34 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [2.2.0] — 2026-08-30 — The three gaps that blocked the report viewer
+
+All three are the same shape: something a page has today that the grid could not carry, and
+would have lost **quietly** — the page renders, the data is right, and the saved view is
+simply not the one the reader saved.
+
+### Added
+
+- **`data-row-id` on every data row** — the real record id, from `getRowId`. An array index
+  *looks* like an identifier, addresses the wrong record the moment the data is sorted,
+  grouped or filtered, and gives no sign it has done so. Group headers deliberately carry
+  none: there is no record behind a heading.
+- **`columnOrder` / `onColumnOrderChange`** — seed and observe the column order so a host
+  can persist it. Uncontrolled when omitted. Same shape as the sort gap `sortBy` closed.
+- **A refusal is shown AT THE CELL** — a rejected edit marks its own cell and announces via
+  `role="alert"`, instead of reverting and reporting only through `onError`. A revert the
+  reader cannot see is the "edited, nothing happened" defect this package exists to close.
+  A fresh attempt clears the marker; a stale one on a cell since fixed is its own small lie.
+
+### Verification
+
+122 tests. Three new ones, each **proven to fail without its capability** — checked by
+removing each.
+
+The column-order control initially **passed with the seed removed**, because the injection
+disabled the sync effect and left the `useState` initialiser seeding anyway. That is a
+half-disabled control reporting a pass; re-run against **both** halves, it fails correctly.
+
 ## [2.1.0] — 2026-08-30 — The grid has an accessible name
 
 ### Added
