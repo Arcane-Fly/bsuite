@@ -26,7 +26,7 @@
       },
       "configScoped": {
         "react-hooks/exhaustive-deps": 4,
-        "react-hooks/set-state-in-effect": 79
+        "react-hooks/set-state-in-effect": 80
       },
       "configGlobal": [],
       "blanket": 0

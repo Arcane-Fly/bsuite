@@ -1,5 +1,48 @@
 # @bsuite/theme
 
+## 1.5.0 — 2026-08-31
+
+**A touch-target floor for coarse pointers.**
+
+Adds `src/css/touch.css`, imported by the `@bsuite/theme/css` barrel that all six
+apps already import, and exported as `@bsuite/theme/touch.css`.
+
+Measured on `suite.crm7.app/login` under iPhone 14 emulation: **every one of the
+eight controls** on the sign-in screen was below a usable tap size, and two were
+below even WCAG 2.2 AA (2.5.8, 24x24) —
+
+| control | size | control | size |
+|---|---|---|---|
+| Continue with Google | 300x36 | password input | 300x36 |
+| Continue with Microsoft | 300x36 | Sign In | 300x40 |
+| email input | 300x36 | password visibility | 24x24 |
+| Forgot password? | 85x16 | Create Account | 87x20 |
+
+**The font-size rule is not cosmetic.** Safari on iOS zooms the whole page when a
+focused input is under 16px. Both login inputs were 14px, so tapping the email
+field threw the layout out of scale and left it there — that is the symptom people
+notice, and the small targets are what they blame afterwards.
+
+**Gated on `pointer: coarse`, not a width breakpoint.** The constraint is the
+finger, not the viewport, so desktop rendering is untouched and the estate's dense
+data surfaces carry no risk.
+
+Blast radius, measured rather than assumed:
+
+```
+suite.crm7.app/login   8 of 8 controls failing -> 0 failing, no overflow
+crm.crm7.app/          0 failing before AND after; document height 3681px -> 3681px
+```
+
+A page that already complies is untouched — that property is what makes this safe
+to ship estate-wide rather than page by page.
+
+44px is Apple HIG and WCAG 2.5.5 (AAA); the AA floor is 24px. `.tap-exempt` opts a
+control out, and the file says plainly it is an admission rather than a default.
+
+Contract-tested (9 cases) and mutation-tested: removing the `pointer: coarse` gate
+or changing `min-height` to `height` each turns the suite red.
+
 ## 0.14.0 — 2026-08-17
 
 **Republishes work that 0.13.0 silently lost.**
