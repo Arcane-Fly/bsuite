@@ -7,8 +7,8 @@
     "crm7": 438,
     "business-suite-unified": 117,
     "conduit": 98,
-    "braden": 212,
-    "throughput": 99,
+    "braden": 207,
+    "throughput": 89,
     "R80.4": 5
   },
   "components": [
@@ -124,10 +124,12 @@
       "name": "DataUnavailable",
       "package": "@bsuite/ui",
       "consumers": {
-        "crm7": 2
+        "crm7": 2,
+        "business-suite-unified": 1,
+        "throughput": 2
       },
-      "consumerFiles": 2,
-      "consumingApps": 1
+      "consumerFiles": 5,
+      "consumingApps": 3
     },
     {
       "name": "Dialog",

@@ -21,8 +21,8 @@ A shared component nothing imports is not a library — it is dead code with a v
 | crm7 | 438 |
 | business-suite-unified | 117 |
 | conduit | 98 |
-| braden | 212 |
-| throughput | 99 |
+| braden | 207 |
+| throughput | 89 |
 | R80.4 | 5 |
 
 ## Shared components with NO consumer
@@ -158,11 +158,11 @@ A shared component nothing imports is not a library — it is dead code with a v
 | `BSUITE_DEV_PORTS` | @bsuite/nav-core | 7 | crm7, business-suite-unified, conduit, throughput |
 | `PageGridLayout` | @bsuite/page-builder | 6 | crm7, business-suite-unified, conduit, braden, throughput |
 | `BSUITE_APP_METADATA` | @bsuite/nav-core | 6 | crm7, business-suite-unified, conduit, braden, throughput, R80.4 |
+| `DataUnavailable` | @bsuite/ui | 5 | crm7, business-suite-unified, throughput |
 | `DataGrid` | @bsuite/data-grid | 4 | crm7 |
 | `AppSwitcher` | @bsuite/nav-core | 4 | business-suite-unified, conduit, throughput, R80.4 |
 | `SchemaBuilder` | @bsuite/schema-builder | 3 | crm7, business-suite-unified, conduit |
 | `AppShell` | @bsuite/ui | 2 | business-suite-unified, throughput |
-| `DataUnavailable` | @bsuite/ui | 2 | crm7 |
 | `EntitySelector` | @bsuite/ui | 2 | crm7, conduit |
 | `MobileSidebarDrawer` | @bsuite/nav-core | 2 | conduit, R80.4 |
 | `DialogContent` | @bsuite/ui | 1 | business-suite-unified |
