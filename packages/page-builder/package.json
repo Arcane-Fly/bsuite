@@ -75,7 +75,7 @@
     "react-dom": "^19.2.8",
     "react-grid-layout": "^2.2.4",
     "react-resizable": "^4.0.2",
-    "typescript": "~7.0.2",
+    "typescript": "^7.0.2",
     "vite": "^8.2.2",
     "vitest": "^4.1.11"
   },

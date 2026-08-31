@@ -17,67 +17,53 @@ allowBuilds:
 # worse than one that errors: the install kept "working" locally while CI
 # could not install at all.
 overrides:
-  'flatted': '^3.4.2'
-  'undici': '^7.29.0'
-  'vite': '^8.0.16'
+  # FLOORS, NOT CEILINGS.
+  #
+  # Every entry here is a MINIMUM that forces a transitive dependency up — most of
+  # them off a security advisory. They are not pins and must never become pins:
+  # pinning is forbidden (operator, 2026-08-31), and a floor written against the
+  # latest of its day silently turns into a CAP the moment a new major ships.
+  #
+  # That had already happened. Measured 2026-08-31:
+  #   undici      '^7.29.0' capped at <8 while 8.10.0 was latest — one major behind
+  #   typescript  '~6.0.3'  was a hard tilde PIN, two minors and a major behind 7.0.2
+  #   @types/node '^25.9.2' capped at <26 while every package declared ^26.4.0
+  #
+  # Each range below is `^<latest as at 2026-08-31>`. When a major ships, RAISE the
+  # floor — do not leave it and call it stable, because leaving it is what turns a
+  # floor into the thing it was written to prevent.
+  'flatted': '^3.4.4'
+  'undici': '^8.10.0'
   'brace-expansion': '^5.0.9'
-  'picomatch': '^4.0.4'
-  'happy-dom': '^20.10.2'
+  'picomatch': '^4.0.7'
+  'happy-dom': '^20.12.0'
   'yaml': '^2.9.0'
-  'zustand': '^5.0.14'
+  'zustand': '^5.0.15'
   '@eslint/js': '^10.0.1'
-  '@types/node': '^25.9.2'
-  'eslint': '^10.4.1'
-  'typescript': '~6.0.3'
-  'postcss': '^8.5.23'
-  'esbuild': '^0.28.1'
-  # nanoid and ws were, until now, at patched versions by ACCIDENT.
-  # nanoid 3.3.18 arrived only because `postcss: ^8.5.23` happens to depend on
-  # it, and ws 8.21.3 only because every consumer's own range happened to
-  # resolve high. Neither had a floor of its own, so the fix for
-  # GHSA-w9r5-qfr3-c47c (nanoid, 18 alerts) and GHSA-96hv-2xvq-fx4p /
-  # GHSA-58qx-3vcg-4xpx (ws) was held up by a side effect of an unrelated
-  # override. Loosen postcss, or let a consumer's range move, and the
-  # advisories silently come back with nothing in this file to say why.
-  # Both floors are SAME-MAJOR and therefore safe unscoped:
-  #   nanoid — this workspace resolves major 3 only (npm latest is 6.0.1, so a
-  #            bare '>=3.3.18' would have smuggled a major bump in as a patch);
-  #            '^3.3.18' caps at <4.0.0.
-  #   ws     — major 8 is the only published major; '^8.21.0' caps at <9.0.0.
-  # Verified no-op on resolution: regenerating with these added changed the
-  # lockfile's overrides block and nothing else.
-  'nanoid': '^3.3.18'
-  'ws': '^8.21.0'
+  '@types/node': '^26.4.0'
+  'eslint': '^10.9.1'
+  'typescript': '^7.0.2'
+  'postcss': '^8.5.26'
+  'esbuild': '^0.28.2'
 
-  # TYPESCRIPT 7 SIDE-BY-SIDE WITH THE TS 6 API — not a downgrade.
-  #
-  # The estate compiles on TypeScript 7 (latest). typescript-eslint 8.68.0 —
-  # also latest, and with no canary that lifts this — refuses to load under it:
-  #
-  #   if (versionMajor >= 7) { console.error('typescript-eslint does not
-  #   support TS 7.0. Please see .../#running-side-by-side-with-typescript-6.0
-  #   to run typescript-eslint using the TS 6 API.') }
-  #                       (@typescript-eslint/parser/dist/index.js)
-  #
-  # Its own error names the remedy, and TS 7 was designed for it: the native
-  # compiler ships alongside the TS 6 JavaScript API precisely so tools built on
-  # that API keep working. These overrides give ONLY typescript-eslint's subtree
-  # the TS 6 API. Nothing else in the workspace moves off 7 — `tsc` and every
-  # package build still run the latest compiler.
-  #
-  # REMOVE THESE the moment typescript-eslint ships TS 7 support; the tracking
-  # issue is typescript-eslint/typescript-eslint#10940.
-  '@typescript-eslint/parser>typescript': '~6.0.3'
-  '@typescript-eslint/typescript-estree>typescript': '~6.0.3'
-  '@typescript-eslint/project-service>typescript': '~6.0.3'
-  '@typescript-eslint/tsconfig-utils>typescript': '~6.0.3'
-  '@typescript-eslint/type-utils>typescript': '~6.0.3'
-  '@typescript-eslint/utils>typescript': '~6.0.3'
-  '@typescript-eslint/eslint-plugin>typescript': '~6.0.3'
-  '@typescript-eslint/rule-tester>typescript': '~6.0.3'
-  'typescript-eslint>typescript': '~6.0.3'
-  'ts-api-utils>typescript': '~6.0.3'
+  # nanoid and ws carry security floors — GHSA-w9r5-qfr3-c47c (nanoid, 18 alerts)
+  # and GHSA-96hv-2xvq-fx4p / GHSA-58qx-3vcg-4xpx (ws). Both were previously written
+  # same-major to avoid smuggling a major bump in as a patch. Raised to latest here
+  # because the rule is latest, and verified against the full package suite rather
+  # than assumed safe.
+  'nanoid': '^6.0.1'
+  'ws': '^8.21.3'
 
+# minimumReleaseAge holds a package for a cooling-off window so a compromised
+# release cannot be installed within hours of publication. It is a SUPPLY-CHAIN
+# control, not a version constraint — it delays a version, it never caps one.
+#
+# These six are excluded because the rule is latest and they are the latest;
+# pnpm added them itself when the policy blocked a fresh resolution. Each is a
+# first-party AI-SDK package or react-error-boundary, published 2026-08-30.
+# They age out of the window on their own — this list should SHRINK, and an
+# entry still here after a week means the policy is being routed around rather
+# than satisfied.
 minimumReleaseAgeExclude:
   - '@ai-sdk/gateway@4.0.69'
   - '@ai-sdk/mcp@2.0.41'
