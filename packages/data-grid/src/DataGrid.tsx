@@ -22,7 +22,7 @@ import {
   type GroupingState,
   type SortingState,
 } from '@tanstack/react-table';
-import { gridFeatures, type GridFeatures } from './tableFeatures';
+import { gridFeatures, type GridFeatures } from './tableFeatures.js';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';

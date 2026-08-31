@@ -8,7 +8,7 @@ import {
   oklchToSrgb,
   resolve_,
   round2,
-} from './contrast-instrument'
+} from './contrast-instrument.js'
 
 /**
  * WCAG 1.4.11 NON-TEXT CONTRAST — the border roles, measured, not asserted.

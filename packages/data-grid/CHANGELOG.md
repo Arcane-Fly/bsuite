@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.0.1] — 2026-08-31 — Ship a resolvable ESM import
+
+`3.0.0` shipped `import { gridFeatures } from './tableFeatures'` — no file
+extension. This package is ESM, and Node's resolver is strict: that specifier is a
+resolution error. Bundlers are lenient, so it passed typecheck, passed build,
+passed consuming apps' dev servers and their production builds, and failed only
+where a real Node resolver runs.
+
+Measured in crm7: **17 test suites** broke, and were worked around with
+`server.deps.inline` in the consumer's `vitest.config.ts` rather than fixed here.
+A workaround repeated in every consumer is the wrong shape — the fix belongs in
+this package.
+
+Both references are corrected (`DataGrid.tsx` and `components/ColumnHeaderCell.tsx`),
+and `scripts/check-esm-relative-extensions.mjs` now gates the whole `packages/`
+tree on every PR so it cannot recur. Running it estate-wide found **5 more**
+instances a grep had missed.
+
+No API change.
+
+---
+
 ## [2.5.1] — 2026-08-30 — Regression cover for an order that arrives late
 
 ### Added

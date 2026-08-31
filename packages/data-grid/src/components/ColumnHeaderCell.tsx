@@ -1,7 +1,7 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import type { Header } from '@tanstack/react-table';
 import type { RowData } from '@tanstack/react-table';
-import type { GridFeatures } from '../tableFeatures';
+import type { GridFeatures } from '../tableFeatures.js';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../cn.js';
