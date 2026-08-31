@@ -40,7 +40,9 @@
  * those as phantoms would bury the real ones under 81 false alarms.
  */
 
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const FLOOR = process.env.MIGRATION_FLOOR || '20260611000000';
 const args = process.argv.slice(2);
@@ -202,6 +204,18 @@ function selfTest() {
   process.exit(failed ? 1 : 0);
 }
 
+// Everything below is CLI behaviour, and it must not run on import.
+// `check-phantom-relations.mjs` reuses `claimedObjects` from this module so that
+// the two gates share ONE parser for the CREATE-TABLE grammar; without this
+// guard that import executed this file's main, ran these self-tests, and called
+// process.exit before the importing gate had done anything at all. Two copies of
+// the parser would drift instead, and the drift would land on whichever gate was
+// read less.
+const INVOKED_DIRECTLY =
+  Boolean(process.argv[1]) && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (INVOKED_DIRECTLY) {
+
 if (args.includes('--self-test')) selfTest();
 
 // ---- live mode ----
@@ -236,9 +250,6 @@ if (have.tables.size < 50 || applied.size < 100) {
   console.error('  not clean. Fix the state query before reading the findings.');
   process.exit(3);
 }
-
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
 
 /** Every object dropped by a migration at or after `from`, cached per directory. */
 const dropCache = new Map();
@@ -320,3 +331,5 @@ if (floorArg) {
 }
 
 process.exit(findings.length ? 1 : 0);
+
+} // end INVOKED_DIRECTLY
