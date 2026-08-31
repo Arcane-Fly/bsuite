@@ -1,0 +1,1074 @@
+{
+  "generatedFrom": "scripts/generate-component-registry.mjs",
+  "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
+  "sharedComponents": 141,
+  "unusedSharedComponents": 119,
+  "localComponentFiles": {
+    "crm7": 438,
+    "business-suite-unified": 117,
+    "conduit": 98,
+    "braden": 207,
+    "throughput": 89,
+    "R80.4": 5
+  },
+  "components": [
+    {
+      "name": "AppShell",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "business-suite-unified": 1,
+        "throughput": 1
+      },
+      "consumerFiles": 2,
+      "consumingApps": 2
+    },
+    {
+      "name": "BrandingCard",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "Button",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ColorEditorSheet",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "Command",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandDialog",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandEmpty",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandGroup",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandInput",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandItem",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandList",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandSeparator",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandShortcut",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CorePrimitives",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "D2CDefaultLogo",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DataUnavailable",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "crm7": 2,
+        "business-suite-unified": 1,
+        "throughput": 2
+      },
+      "consumerFiles": 5,
+      "consumingApps": 3
+    },
+    {
+      "name": "Dialog",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DialogClose",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DialogContent",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "business-suite-unified": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "DialogDescription",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "business-suite-unified": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "DialogFooter",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "business-suite-unified": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "DialogHeader",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "business-suite-unified": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "DialogOverlay",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DialogPortal",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DialogTitle",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "business-suite-unified": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "DialogTrigger",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DotPattern",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EmptyState",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EntitySelector",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "crm7": 1,
+        "conduit": 1
+      },
+      "consumerFiles": 2,
+      "consumingApps": 2
+    },
+    {
+      "name": "ErrorBoundary",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "HeroGrid",
+      "package": "@bsuite/ui",
+      "consumers": {
+        "business-suite-unified": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "LoadingSpinner",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "Logo",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "OklchColorPicker",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "Popover",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PopoverContent",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PopoverTrigger",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "StatusBadge",
+      "package": "@bsuite/ui",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BooleanEditor",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ColumnHeaderCell",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DataGrid",
+      "package": "@bsuite/data-grid",
+      "consumers": {
+        "crm7": 4
+      },
+      "consumerFiles": 4,
+      "consumingApps": 1
+    },
+    {
+      "name": "DataGridToolbar",
+      "package": "@bsuite/data-grid",
+      "consumers": {
+        "crm7": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "DateEditor",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FillHandle",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "GridCell",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "NumberEditor",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ROW_HEIGHTS",
+      "package": "@bsuite/data-grid",
+      "consumers": {
+        "crm7": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "SelectEditor",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "TextEditor",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "UndoStack",
+      "package": "@bsuite/data-grid",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BORDER_STYLES",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BORDER_TONES",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BORDER_WIDTH_RANGE",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BareContentNoChrome",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BareContentOptsIn",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CANVAS_GRID_COLUMNS",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CanvasCard",
+      "package": "@bsuite/page-builder",
+      "consumers": {
+        "business-suite-unified": 7
+      },
+      "consumerFiles": 7,
+      "consumingApps": 1
+    },
+    {
+      "name": "CardHeadingGradient",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CardStyleBorderless",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CardStyleDashedAccent",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CardStyleDefault",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CardStyleElevationLadder",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CardStyleSquare",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CardStyleThickBorder",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DEFAULT_CANVAS_CARD_WIDTH",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DEFAULT_CARD_STYLE",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DEFAULT_EDITOR_EVENT_NAMES",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DERIVED_BREAKPOINTS",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DraggableCardPage",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "MIRRORED_BREAKPOINTS",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "NestedCardDoubleFrame",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "NestedCardSingleFrame",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PACKAGE_LAYOUT_EPOCH",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PADDING_RANGE",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PAGE_GRID_EDITING_EVENT",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PageEditorLauncher",
+      "package": "@bsuite/page-builder",
+      "consumers": {
+        "conduit": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "PageGridLayout",
+      "package": "@bsuite/page-builder",
+      "consumers": {
+        "crm7": 1,
+        "business-suite-unified": 1,
+        "conduit": 1,
+        "braden": 2,
+        "throughput": 1
+      },
+      "consumerFiles": 6,
+      "consumingApps": 5
+    },
+    {
+      "name": "RADIUS_RANGE",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "RESPONSIVE_BREAKPOINTS",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "RelationshipField",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "STACKED_BREAKPOINTS",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WYSIWYG_REQUIRED_PRIMITIVES",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WYSIWYG_SURFACE_CONTRACTS",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WidthLadder",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "AppSwitcher",
+      "package": "@bsuite/nav-core",
+      "consumers": {
+        "business-suite-unified": 1,
+        "conduit": 1,
+        "throughput": 1,
+        "R80.4": 1
+      },
+      "consumerFiles": 4,
+      "consumingApps": 4
+    },
+    {
+      "name": "BSUITE_ALL_APP_KEYS",
+      "package": "@bsuite/nav-core",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BSUITE_APP_KEYS",
+      "package": "@bsuite/nav-core",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BSUITE_APP_LANDING_PATHS",
+      "package": "@bsuite/nav-core",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BSUITE_APP_METADATA",
+      "package": "@bsuite/nav-core",
+      "consumers": {
+        "crm7": 1,
+        "business-suite-unified": 1,
+        "conduit": 1,
+        "braden": 1,
+        "throughput": 1,
+        "R80.4": 1
+      },
+      "consumerFiles": 6,
+      "consumingApps": 6
+    },
+    {
+      "name": "BSUITE_DEV_PORTS",
+      "package": "@bsuite/nav-core",
+      "consumers": {
+        "crm7": 2,
+        "business-suite-unified": 1,
+        "conduit": 2,
+        "throughput": 2
+      },
+      "consumerFiles": 7,
+      "consumingApps": 4
+    },
+    {
+      "name": "BSUITE_PROD_URLS",
+      "package": "@bsuite/nav-core",
+      "consumers": {
+        "crm7": 2,
+        "business-suite-unified": 1,
+        "conduit": 4,
+        "braden": 1,
+        "throughput": 2,
+        "R80.4": 2
+      },
+      "consumerFiles": 12,
+      "consumingApps": 6
+    },
+    {
+      "name": "BSUITE_TENANT_APP_KEYS",
+      "package": "@bsuite/nav-core",
+      "consumers": {
+        "braden": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
+    },
+    {
+      "name": "MobileSidebarDrawer",
+      "package": "@bsuite/nav-core",
+      "consumers": {
+        "conduit": 1,
+        "R80.4": 1
+      },
+      "consumerFiles": 2,
+      "consumingApps": 2
+    },
+    {
+      "name": "AutoStatusBadge",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BRANDING_OVERRIDE_FLAG",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BRANDING_STORAGE_KEY",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BrandingContext",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BrandingProvider",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DARK",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ROOT",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SURFACES",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "StatusBadge",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "THEME_STORAGE_KEY",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ThemeContext",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ThemeProvider",
+      "package": "@bsuite/theme",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "APP_SCOPES",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CARD_CHROME_HEIGHT",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CARD_MAX_WIDTH",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CardinalitySchema",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CommandPalette",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EntityFieldSchema",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EntityNode",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EntityNodeDataSchema",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EntityPropertiesPanel",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FIELD_ROW_HEIGHT",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FIELD_TYPE_OPTIONS",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FieldCreateDialog",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FieldEditDialog",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FieldRow",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "RELATION_COLUMNS_DROPPED_20260503",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ReferentialActionSchema",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "RelationshipConfigDialog",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SNAKE_CASE_RE",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SchemaBuilder",
+      "package": "@bsuite/schema-builder",
+      "consumers": {
+        "crm7": 1,
+        "business-suite-unified": 1,
+        "conduit": 1
+      },
+      "consumerFiles": 3,
+      "consumingApps": 3
+    },
+    {
+      "name": "SchemaCanvas",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SchemaRelationSchema",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SchemaToolbar",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SmartEdge",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SmartEdgeMarkers",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "TENANT_ENTITY_RELATIONS_COLUMNS",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ZOD_TO_DB_ALIASES",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "AREA_VALUES",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CLASSIFIER_TAXONOMY_VERSION",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DEFAULT_CONFIDENCE_THRESHOLD",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DEFAULT_MODEL_ID",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EFFORTS",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "EFFORT_VALUES",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ROUTING_MATRIX",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SEVERITIES",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SEVERITY_VALUES",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "TYPE_VALUES",
+      "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    }
+  ]
+}

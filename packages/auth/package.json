@@ -11,7 +11,7 @@
     "url": "https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/auth"
   },
-  "description": "BSuite OAuth 2.1 PKCE client \u2014 shared across CRM7, R80.3, Braden, and Throughput. Uses JWKS for token verification via jose.",
+  "description": "BSuite OAuth 2.1 PKCE client — shared across CRM7, R80.3, Braden, and Throughput. Uses JWKS for token verification via jose.",
   "files": [
     "dist"
   ],
@@ -30,15 +30,15 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "jose": "^6.2.3"
+    "jose": "^6.2.10"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^6.9.1",
-    "@vitejs/plugin-react": "^6.0.2",
-    "jsdom": "^29.1.1",
-    "typescript": "~6.0.3",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.8"
+    "@testing-library/jest-dom": "^7.0.1",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.0.1",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   },
   "packageManager": "pnpm@10.33.3"
 }

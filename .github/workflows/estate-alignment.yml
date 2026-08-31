@@ -15,6 +15,9 @@ on:
       - 'docs/00-roadmap/**'
       - 'docs/*operator-notes-register*'
       - 'scripts/estate-align.mjs'
+      - 'scripts/generate-feature-index.mjs'
+      - 'scripts/generate-component-registry.mjs'
+      - 'packages/*/src/**'
       - '.github/workflows/estate-alignment.yml'
   push:
     branches: [development, main]
@@ -22,6 +25,7 @@ on:
       - 'docs/00-roadmap/**'
       - 'docs/*operator-notes-register*'
       - 'scripts/estate-align.mjs'
+      - 'scripts/generate-feature-index.mjs'
   schedule:
     # Nightly on whatever development holds, so drift arriving by merge is caught without a PR.
     - cron: '41 18 * * *'
@@ -79,6 +83,35 @@ jobs:
         run: node scripts/estate-align.mjs --self-test
       - name: Reconcile registers against the code
         run: node scripts/estate-align.mjs --strict
+      # THE PARENT INDEX IS A VIEW, NOT A SECOND REGISTER.
+      #
+      # BSUITE-FEATURE-INDEX.md was hand-maintained beside a 666-row JSON. On
+      # 2026-08-31 it rendered 572 of them and its own header still claimed "659
+      # features across 13 modules" — a 94-row hole, and the operator's read was
+      # that the index had gone. It had not; it had stopped being true, which
+      # from the outside is the same thing.
+      #
+      # A hand-kept mirror of a machine-sized register drifts by construction, so
+      # the markdown is now GENERATED and this asserts the committed file is what
+      # the JSON renders. Add a feature to the JSON without regenerating and this
+      # fails — which is how the index stays maintained without anyone
+      # remembering to maintain it.
+      - name: Feature-index generator self-test
+        run: node scripts/generate-feature-index.mjs --self-test
+      - name: Parent index matches the register
+        run: node scripts/generate-feature-index.mjs --check
+      # THE COMPONENT REGISTRY — what the platform is BUILT FROM.
+      #
+      # The feature index answers "what does this do". Nothing answered "what is
+      # it built from", and that is the denominator every recurring defect needs:
+      # D8.1's sibling count, "fix the class not the page", and the estate's habit
+      # of shipping a shared component nothing consumes. Measured 2026-08-31:
+      # 119 of 141 shared components have NO importer, against 969 local
+      # component files — every app reimplemented the same primitives.
+      - name: Component registry self-test
+        run: node scripts/generate-component-registry.mjs --self-test
+      - name: Component registry matches the code
+        run: node scripts/generate-component-registry.mjs --check
       - name: Report (always, so the numbers are visible even on failure)
         if: always()
         run: node scripts/estate-align.mjs >> "$GITHUB_STEP_SUMMARY"

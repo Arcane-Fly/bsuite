@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import type { CellPosition, CellRange } from './lib/selection.js';
+import type { RowData } from '@tanstack/react-table';
 
 /**
  * Column value type — drives which built-in inline editor renders and how
@@ -162,7 +163,13 @@ export interface DataGridHandle {
   copySelection: () => Promise<void>;
 }
 
-export interface DataGridProps<TRow = unknown> {
+/**
+ * `TRow` is constrained to TanStack v9's `RowData` (`Record<string, any> |
+ * Array<any>`). v9 requires row data to be a record or an array — a bare
+ * `unknown` row can no longer be fed to a table. Every consumer already passes
+ * row objects, so this narrows the type to what was always actually used.
+ */
+export interface DataGridProps<TRow extends RowData = RowData> {
   columns: DataGridColumn<TRow>[];
   data: TRow[];
   /** Stable row id extractor, used for React keys and edit bookkeeping.
