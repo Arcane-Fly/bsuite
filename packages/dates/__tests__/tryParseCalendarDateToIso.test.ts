@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { tryParseCalendarDateToIso, parseIsoDate } from '../src/formatDate';
+import { tryParseCalendarDateToIso, parseIsoDate } from '../src/formatDate.js';
 
 describe('tryParseCalendarDateToIso (bsuite#1610)', () => {
   it('accepts ISO yyyy-mm-dd', () => {

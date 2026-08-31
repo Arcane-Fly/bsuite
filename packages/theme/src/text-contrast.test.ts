@@ -14,7 +14,7 @@ import {
   round2,
   sheet,
   type Rgb,
-} from './contrast-instrument'
+} from './contrast-instrument.js'
 
 /**
  * WCAG 1.4.3 TEXT CONTRAST — the `-text` roles, measured on the backgrounds

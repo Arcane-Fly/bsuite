@@ -1,0 +1,44 @@
+# Every relative import in a published @bsuite/* package must carry its extension.
+#
+# The @bsuite packages ship ESM. Node's resolver is strict; bundlers are not. So an
+# extensionless relative import passes typecheck, passes build, passes the app's dev
+# server AND its production build, and fails only in a consumer's Node/Vitest run.
+#
+# Measured 2026-08-31: @bsuite/data-grid@3.0.0 shipped `import './tableFeatures'`
+# and broke 17 test suites in crm7 — which were worked around with
+# `server.deps.inline` in the consumer rather than fixed in the package. A
+# workaround repeated in every consumer is what this gate exists to prevent.
+name: ESM relative imports carry their extension
+
+on:
+  pull_request:
+    paths:
+      - 'packages/**/*.ts'
+      - 'packages/**/*.tsx'
+      - 'packages/**/*.mts'
+      - 'packages/**/*.cts'
+      - 'scripts/check-esm-relative-extensions.mjs'
+      - '.github/workflows/esm-relative-extensions.yml'
+  push:
+    branches: [development, main]
+
+permissions:
+  contents: read
+
+jobs:
+  esm-relative-extensions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      # The instrument is checked before it is trusted. A gate whose own controls
+      # have never run is a gate nobody has reason to believe.
+      - name: Self-test the check
+        run: node scripts/check-esm-relative-extensions.mjs --self-test
+
+      - name: Every relative import carries an extension
+        run: node scripts/check-esm-relative-extensions.mjs packages

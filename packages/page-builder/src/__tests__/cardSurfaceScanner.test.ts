@@ -255,7 +255,7 @@ describe('retired single-widget primitive', () => {
     write('src/components/platform/PageGridPage.tsx', `export const PageGridPage = () => null`);
     write(
       'src/pages/uses-retired.tsx',
-      `import { PageGridPage } from '../components/platform/PageGridPage'
+      `import { PageGridPage } from '../components/platform/PageGridPage.js'
        export const P = () => <PageGridPage><Card/></PageGridPage>`,
     );
     const r = scanCardSurfaces({
