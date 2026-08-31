@@ -437,6 +437,31 @@ export const GUARDS = [
       'missing completion marker)"',
   },
   {
+    id: 'parent-phantom-relations',
+    label: 'App code querying a relation or function that does not exist (live DB)',
+    repo: '.',
+    // The comparison needs the live catalog; only the scanner runs here. CI pipes a
+    // pg_class/pg_proc dump into it. `--self-test` is what this registry can verify
+    // locally — same arrangement as parent-cross-tenant-duplicate-objects above.
+    command: ['node', 'scripts/check-phantom-relations.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/phantom-relations.yml',
+    mode: 'run',
+    evidence:
+      '"18/18 self-tests pass" — the mirror of phantom-migrations: that gate asks ' +
+      'whether a RECORDED migration produced its objects, this one asks whether the ' +
+      'objects the CODE queries exist at all. Measured 2026-08-31 over the six app ' +
+      'src trees: 1601 production .from() call sites naming 283 relations, of which ' +
+      'TWENTY-TWO existed in no schema across 82 call sites — every one answering ' +
+      '404/PGRST205 through PostgREST. Nothing caught it because supabase-js returns ' +
+      '{ data: null, error } and the universal `data ?? []` renders that as an empty ' +
+      'list, which is indistinguishable from a feature nobody has used. The 18 cases ' +
+      'assert in BOTH directions: 5 shapes that MUST be found, and 8 that must NOT be ' +
+      'flagged (storage buckets whose .storage receiver sits on a previous line, ' +
+      'Buffer.from, line and block comments, template literals, test files), plus ' +
+      'const resolution and .rpc() capture. The storage case was a real bug in this ' +
+      'scanner that would have reported four of braden\'s calls as phantoms.',
+  },
+  {
     id: 'parent-check-doc-naming',
     label: 'Documentation filename classification (all files, not just dated ones)',
     repo: '.',
