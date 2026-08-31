@@ -42,7 +42,6 @@ overrides:
   '@eslint/js': '^10.0.1'
   '@types/node': '^26.4.0'
   'eslint': '^10.9.1'
-  'typescript': '^7.0.2'
   'postcss': '^8.5.26'
   'esbuild': '^0.28.2'
 
