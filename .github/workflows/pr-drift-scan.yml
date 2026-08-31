@@ -44,7 +44,21 @@ jobs:
   drift-scan:
     name: BSuite 9-signal drift scan
     runs-on: ubuntu-latest
-    if: github.event.pull_request.draft == false
+    # NO JOB-LEVEL `if:` HERE — DELIBERATELY.
+    #
+    # This job used to carry `if: github.event.pull_request.draft == false`.
+    # A job skipped by a job-level `if:` still emits a check run, with
+    # conclusion `skipped` — and a skipped check does NOT satisfy a required
+    # status check. So while that line was here this gate could never be made
+    # required: any PR opened as a draft would have parked the branch behind a
+    # check that had already reported and would not report again until the PR
+    # was marked ready. The estate has been bitten by exactly that shape before
+    # (see crm7/.github/workflows/rls-jwt-lint.yml, which spells out the same
+    # rule: gate with `if:` on the STEP, never on the job).
+    #
+    # The scanner is pure Node stdlib with no install step, so running it on
+    # drafts too costs seconds, and a draft that already carries a hard-fail
+    # drift signal is better off saying so before it is marked ready.
     steps:
       - name: Checkout PR head
         uses: actions/checkout@v5

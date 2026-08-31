@@ -31,14 +31,14 @@
     "prepublishOnly": "pnpm build"
   },
   "dependencies": {
-    "@ai-sdk/mcp": "^1.0.46",
-    "ai": "^6.0.199",
+    "@ai-sdk/mcp": "^2.0.41",
+    "ai": "^7.0.85",
     "date-fns": "^4.4.0",
-    "zod": "^4.4.3"
+    "zod": "^4.5.4"
   },
   "devDependencies": {
-    "@types/node": "^25.9.2",
-    "typescript": "~6.0.3",
-    "vitest": "^4.1.8"
+    "@types/node": "^26.4.0",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.11"
   }
 }

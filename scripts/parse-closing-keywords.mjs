@@ -93,6 +93,7 @@ const SKIP_INDENTED = 'indented-code'
 const SKIP_QUOTE = 'blockquote'
 const SKIP_COMMENT = 'html-comment'
 const SKIP_CHECKLIST = 'checklist-item'
+const SKIP_TABLE = 'table-row'
 const LIVE = 'live'
 
 // ---------------------------------------------------------------------------
@@ -185,6 +186,24 @@ function isChecklistItem(line) {
   const mark = line[i + 1]
   if (mark !== ' ' && mark !== 'x' && mark !== 'X') return false
   return line[i + 2] === ']'
+}
+
+/**
+ * Is this line a markdown table row — the first non-space character is a pipe?
+ *
+ * A table cell is a REPORT, not an instruction. Merged conduit pull request
+ * #569 carried the row
+ *   | crm7 | 6 | fixed (#2013) — on `development`, awaiting promotion #2008 |
+ * which is a status table about ANOTHER repository's issue. This parser read it
+ * as a same-repo directive and the closer tried to close conduit#2013. It was
+ * saved only because conduit has no issue 2013, so the API returned 404. Had
+ * conduit owned that number, the closer would have closed live work — the exact
+ * failure this file's design exists to prevent.
+ */
+function isTableRow(line) {
+  let i = 0
+  while (i < line.length && isSpace(line[i])) i += 1
+  return line[i] === '|'
 }
 
 /** Blockquote marker: up to three spaces then `>`. */
@@ -303,6 +322,9 @@ export function classifyLines(body) {
 
     // --- task list ---
     if (isChecklistItem(text)) { push(SKIP_CHECKLIST, text); continue }
+
+    // --- table row ---
+    if (isTableRow(text)) { push(SKIP_TABLE, text); continue }
 
     push(LIVE, text)
   }
@@ -432,6 +454,18 @@ function directivesInLine(line) {
     if (i > 0) {
       const prev = trimPunctuation(tokens[i - 1].text).toLowerCase()
       if (NEGATORS.has(prev)) continue
+    }
+
+    // A BRACKETED reference is a citation, not an instruction. "This was
+    // fixed (#4321) last week" reports that something already happened
+    // elsewhere; "Fixes #4321" instructs. The estate writes the first form
+    // constantly in status prose, and the asymmetric error cost at the top of
+    // this file resolves the ambiguity toward NOT closing. GitHub is more
+    // permissive here; being stricter than GitHub only ever leaves an issue
+    // open for a human, which is the cheap direction.
+    if (i + 1 < tokens.length) {
+      const nextRaw = tokens[i + 1].text
+      if (nextRaw.startsWith('(') || nextRaw.startsWith('[') || nextRaw.startsWith('{')) continue
     }
 
     // The reference must come IMMEDIATELY next — GitHub's own rule.
@@ -592,6 +626,15 @@ export const SELF_TEST_CASES = [
 
   // --- must NOT close ---------------------------------------------------
   { label: 'blockquote', body: '> Closes #99', closes: [] },
+  {
+    label: 'markdown table row reporting another repo (conduit#569 regression)',
+    body: '| app | n | status |\n|---|---|---|\n| crm7 | 6 | fixed (#2013) — awaiting promotion |',
+    closes: [],
+  },
+  { label: 'table row with a bare directive-looking cell', body: '| crm7 | Closes #2013 |', closes: [] },
+  { label: 'parenthesised back-reference in prose', body: 'This was fixed (#4321) last week.', closes: [] },
+  { label: 'square-bracketed back-reference', body: 'Already resolved [#4322] upstream.', closes: [] },
+  { label: 'positive control still fires beside a table', body: 'Closes #77\n\n| a | b |\n|---|---|\n| x | y |', closes: [77] },
   {
     label: 'blockquote lazy continuation',
     body: '> quoting the previous PR\nCloses #64',

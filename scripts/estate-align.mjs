@@ -67,7 +67,56 @@ export function dodState(s) { return typeof s === 'string' ? s : (s && s.state) 
  * and is not a reason to weaken it: it binds on the first APPROVE anyone writes,
  * which is the moment it needs to.
  */
-export function siblingClassViolations(index) {
+export /**
+ * DoD coverage, per module and overall.
+ *
+ * REPLACES A GATE THAT COULD NOT FIRE. This used to be reported as:
+ *
+ *   if (report.dod['not-evaluated'] === index.length) { ...never been run... }
+ *
+ * an ALL-OR-NOTHING equality. Measured 2026-08-31: not-evaluated = 659 and
+ * index.length = 666, so seven evaluated rows out of six hundred and sixty-six
+ * silenced the warning for the entire estate — including conduit, which is
+ * 0-of-82 and had nothing said about it at all. A gate that only speaks when
+ * coverage is EXACTLY zero goes quiet the moment anyone evaluates one row, which
+ * is the first thing that ever happens.
+ *
+ * Coverage is a proportion, so it is reported as one, and per module — because
+ * "1% estate-wide" and "one module at 0%" are different facts and only the
+ * second is actionable.
+ */
+function dodCoverage(index) {
+  const stateOf = (f) =>
+    typeof f.dod_status === 'string'
+      ? f.dod_status
+      : (f.dod_status && f.dod_status.state) || 'not-evaluated'
+  const evaluated = (f) => {
+    const st = stateOf(f)
+    return st !== 'not-evaluated' && st !== 'malformed'
+  }
+  const byModule = new Map()
+  for (const f of index) {
+    const m = f.module || '(unassigned)'
+    if (!byModule.has(m)) byModule.set(m, { total: 0, evaluated: 0 })
+    const e = byModule.get(m)
+    e.total += 1
+    if (evaluated(f)) e.evaluated += 1
+  }
+  const total = index.length
+  const done = index.filter(evaluated).length
+  return {
+    total,
+    evaluated: done,
+    pct: total === 0 ? 100 : Math.round((done / total) * 1000) / 10,
+    zeroModules: [...byModule.entries()]
+      .filter(([, v]) => v.evaluated === 0 && v.total > 0)
+      .map(([m, v]) => ({ module: m, total: v.total }))
+      .sort((a, b) => b.total - a.total),
+    byModule: Object.fromEntries([...byModule].map(([m, v]) => [m, v])),
+  }
+}
+
+function siblingClassViolations(index) {
   const byClass = new Map()
   for (const f of index || []) {
     const c = f && f.sibling_class
@@ -320,8 +369,13 @@ function main() {
     console.log(`estate-align: ${index.length} indexed feature(s), ${anchorsChecked} code anchor(s), ${register.length} operator ask(s)`)
     console.log(`  register: ${registerPath || '(none found)'}`)
     console.log(`  dod_status: ${JSON.stringify(report.dod)}`)
-    if (report.dod['not-evaluated'] === index.length) {
+    const cov = dodCoverage(index)
+    console.log(`  dod coverage: ${cov.evaluated}/${cov.total} evaluated (${cov.pct}%)`)
+    if (cov.evaluated === 0) {
       console.log('  NOTE: every feature is not-evaluated. The gate has never been run against this index.')
+    } else if (cov.zeroModules.length) {
+      console.log(`  NOTE: ${cov.zeroModules.length} module(s) have ZERO evaluated rows — the gate has never run against them:`)
+      for (const z of cov.zeroModules) console.log(`    ${z.module}  (${z.total} row(s), 0 evaluated)`)
     }
     for (const n of notes) console.log(`  NOTE: ${n}`)
     const byCheck = violations.reduce((a, v) => { (a[v.check] = a[v.check] || []).push(v); return a }, {})
@@ -376,6 +430,29 @@ if (process.argv.includes('--self-test')) {
     siblingClassViolations([cls('a', 'x', 'approved'), cls('b', 'y', 'not-evaluated')]).length, 0)
   t('sibling: object-form dod_status is read the same as the string form',
     siblingClassViolations([cls('a', 'x', { state: 'approved', evidence: 'e' }), cls('b', 'x', 'not-evaluated')]).length, 1)
+
+  // ---- F. dod coverage: the all-or-nothing bug that let 659/666 read as clean ----
+  const feat = (module, state) => ({ module, dod_status: state })
+  t('coverage: an empty index is 100%, not a divide-by-zero',
+    dodCoverage([]).pct, 100)
+  t('coverage: nothing evaluated reports 0%',
+    dodCoverage([feat('crm7', 'not-evaluated'), feat('crm7', 'not-evaluated')]).pct, 0)
+  t('coverage: malformed counts as NOT evaluated',
+    dodCoverage([feat('crm7', 'malformed')]).evaluated, 0)
+  t('coverage: object-form dod_status is read like the string form',
+    dodCoverage([feat('crm7', { state: 'approved', evidence: 'e' })]).evaluated, 1)
+  // THE REGRESSION. Seven evaluated out of 666 used to silence the warning for
+  // the whole estate. It must now report a real proportion, not zero and not 100.
+  t('coverage: 7 of 666 is 1.1%, not silence',
+    dodCoverage([...Array(659)].map(() => feat('crm7', 'not-evaluated'))
+      .concat([...Array(7)].map(() => feat('crm7', 'approved')))).pct, 1.1)
+  // A module at zero is the actionable fact, and it must survive other modules
+  // having coverage — which is precisely what the old equality could not express.
+  t('coverage: a module at ZERO is named even when the estate is not',
+    dodCoverage([feat('crm7', 'approved'), feat('conduit', 'not-evaluated'), feat('conduit', 'not-evaluated')])
+      .zeroModules.map((z) => `${z.module}:${z.total}`), ['conduit:2'])
+  t('coverage: a fully evaluated estate names no zero modules',
+    dodCoverage([feat('crm7', 'approved'), feat('conduit', 'send-back')]).zeroModules.length, 0)
 
   const bad = cases.filter((c) => !c.ok)
   for (const b of bad) console.error(`FAIL ${b.n}: expected ${JSON.stringify(b.e)}, got ${JSON.stringify(b.a)}`)

@@ -1,11 +1,13 @@
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react';
 import type { Header } from '@tanstack/react-table';
+import type { RowData } from '@tanstack/react-table';
+import type { GridFeatures } from '../tableFeatures';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { cn } from '../cn.js';
 
-export interface ColumnHeaderCellProps<TRow> {
-  header: Header<TRow, unknown>;
+export interface ColumnHeaderCellProps<TRow extends RowData> {
+  header: Header<GridFeatures, TRow, unknown>;
   style: CSSProperties;
   frozen?: boolean;
   className?: string;
@@ -46,7 +48,7 @@ const DRAG_HANDLE_CLASS =
  * own built-in column-resize API (plain pointer events under the hood,
  * no extra dependency).
  */
-export function ColumnHeaderCell<TRow>(props: ColumnHeaderCellProps<TRow>): React.ReactElement {
+export function ColumnHeaderCell<TRow extends RowData>(props: ColumnHeaderCellProps<TRow>): React.ReactElement {
   const { header, style, frozen, className } = props;
   const column = header.column;
   const sortDirection = column.getIsSorted();

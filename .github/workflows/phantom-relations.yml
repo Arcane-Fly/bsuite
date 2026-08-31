@@ -1,0 +1,185 @@
+name: Phantom relations
+
+# Application code that QUERIES A RELATION THAT DOES NOT EXIST.
+#
+# The mirror of `phantom-migrations`, and the question that had never been asked.
+# That gate asks "a migration was recorded — did its objects appear?". This one
+# asks "the code SELECTs from something — is it there at all?".
+#
+# Measured on the live database 2026-08-31 across the six app `src` trees:
+# 1601 production `.from('<name>')` call sites naming 283 distinct relations.
+# TWENTY-TWO of those relations existed in no schema, across 82 call sites —
+# every one returning HTTP 404 / PGRST205 through PostgREST, the exact path the
+# apps use. That included all nine call sites behind braden's theme editor,
+# which is why the site editor never worked, and nine more behind crm7's
+# training-plan version history.
+#
+# WHY IT WENT UNSEEN FOR SO LONG. A `.from()` against a missing table does not
+# throw. supabase-js returns `{ data: null, error }`, and the near-universal
+# idiom `const rows = data ?? []` renders that as an empty list. An empty list
+# is indistinguishable from a feature nobody has used yet: the tile shows 0,
+# the grid shows "No records", and the page looks finished.
+#
+# AND WHY TYPES CANNOT CATCH IT. `Database` types are generated from the live
+# schema, so a phantom table is a type error — which is exactly why casts grew
+# up around them. crm7 carried `.from('gto_compliance_status' as never)`.
+# braden carried a whole second Supabase client (`legacyTables.ts`) typed
+# against a hand-written `LegacyDatabase` whose own header admits "at runtime
+# these calls return 404/401". Both silenced the compiler rather than the
+# defect. Only the database can answer this, so this workflow reads it.
+#
+# THE CATALOG QUERY USES pg_class, NOT pg_tables. `pg_tables` shows ordinary
+# tables only; this estate serves 285 relations from the `browse` schema as
+# VIEWS. An earlier pass of the audit used `pg_tables` and produced five false
+# absences, every one of them a view.
+
+on:
+  schedule:
+    - cron: '40 4 * * *'
+  pull_request:
+    branches: [development, main]
+    paths:
+      - '**/src/**'
+      - 'scripts/check-phantom-relations.mjs'
+      - '.github/workflows/phantom-relations.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: phantom-relations-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  phantom-relations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Guard — require project ref
+        env:
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          if [ -z "${PROJECT_ID:-}" ]; then
+            echo "::error::SUPABASE_PROJECT_ID is not set. Refusing to report 'no phantom relations' without reading a database."
+            exit 1
+          fi
+
+      - name: Checkout (with submodules — the code being checked IS the submodules)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # Before the database is touched, so that a clean result below is known to
+      # come from a checker that can still fail. Sixteen cases, covering every
+      # false-positive class this actually hit while being written — the
+      # storage-bucket receiver on a previous line was a real bug that would
+      # have reported four of braden's calls as phantoms.
+      - name: Self-test the checker
+        run: node scripts/check-phantom-relations.mjs --self-test
+
+      - name: Install psql client
+        run: |
+          set -euo pipefail
+          # GitHub's runner image ships a Microsoft apt repo this estate never reads.
+          # It intermittently answers 403, and under `set -euo pipefail` that makes
+          # `apt-get update` fatal — presenting as flake and getting re-run rather
+          # than fixed. Dropping the lists removes the dependency instead.
+          sudo rm -f /etc/apt/sources.list.d/*microsoft* /etc/apt/sources.list.d/*azure* || true
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      - name: Resolve pooler host
+        id: pooler
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+        # There is no SUPABASE_DB_URL secret in this repo. Supavisor tenants live
+        # on a numbered cluster per region — newer projects on aws-1, older on
+        # aws-0 — and the wrong one returns "tenant/user not found". No cluster
+        # accepting the connection is a HARD FAILURE, never a quiet pass.
+        run: |
+          set -euo pipefail
+          for CLUSTER in aws-1 aws-0; do
+            HOST="${CLUSTER}-us-east-1.pooler.supabase.com"
+            if psql "postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${HOST}:5432/postgres" \
+                 -c "SELECT 1" >/dev/null 2>&1; then
+              echo "db_host=$HOST" >> "$GITHUB_OUTPUT"
+              echo "✓ Pooler host: $HOST"
+              exit 0
+            fi
+          done
+          echo "::error::No pooler cluster accepted the connection for postgres.${PROJECT_ID}. Refusing to report a false 'no phantom relations'."
+          exit 1
+
+      - name: Read every relation and function the database actually has
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        # relkind r/v/m/f/p — ordinary tables, views, materialised views, foreign
+        # tables and partitioned tables. Every schema, because `.schema('catalog')`
+        # is a form crm7 already uses in production.
+        #
+        # Functions too: `.rpc('fn')` fails exactly as silently as `.from()`, and
+        # the same sweep found four of them — including `vault_create_secret` on
+        # crm7's government-integrations page, where the real function is
+        # `vault_create_secret_wrapper` and saving a credential did nothing.
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL' > db-relations.json
+          SELECT json_build_object(
+            'relations', (SELECT COALESCE(json_agg(n.nspname||'.'||c.relname), '[]'::json)
+                            FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+                           WHERE c.relkind IN ('r','v','m','f','p')
+                             AND n.nspname NOT IN ('pg_catalog','information_schema','pg_toast')),
+            'functions', (SELECT COALESCE(json_agg(DISTINCT n.nspname||'.'||p.proname), '[]'::json)
+                            FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+                           WHERE n.nspname NOT IN ('pg_catalog','information_schema')));
+          SQL
+          test -s db-relations.json || { echo "::error::db-relations.json is empty."; exit 1; }
+
+      # Two positive controls, because this check has two inputs and either can
+      # be silently empty. The checker itself refuses a catalog under 200
+      # relations (live figure: 784). --require-examined guards the TREE side:
+      # a populated catalog against an unpopulated submodule checkout would
+      # otherwise print "examined 0 ... 0 phantoms" and exit 0. Live figure
+      # across the six trees 2026-08-31: 1634 examined. The floor is 1000 —
+      # comfortably under, and it only grows as code lands.
+      #
+      # --migrations tells a PHANTOM from mere SCHEMA LAG. A relation that does
+      # not exist yet, but which an unapplied migration on this branch creates,
+      # is correct work waiting on the applier — not a defect. Without this the
+      # gate would fail the very pull request that fixes a phantom properly
+      # (BSU's `idea_feedback` is exactly that case), and a permanently red gate
+      # is an unread gate.
+      - name: Check every queried relation and function exists
+        run: |
+          node scripts/check-phantom-relations.mjs \
+            --db-state=db-relations.json \
+            --require-examined=1000 \
+            --migrations=supabase/migrations \
+            --migrations=crm7/supabase/migrations \
+            --migrations=business-suite-unified/supabase/migrations \
+            --migrations=conduit/supabase/migrations \
+            --migrations=braden/supabase/migrations \
+            --migrations=throughput/supabase/migrations \
+            --migrations=R80.4/supabase/migrations \
+            --migrations=packages/schema-builder/supabase/migrations \
+            crm7/src \
+            business-suite-unified/src \
+            conduit/src \
+            braden/src \
+            throughput/src \
+            R80.4/src

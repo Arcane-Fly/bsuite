@@ -10,7 +10,15 @@ export function FormRendererWidget({ supabase, entity, fields, submitLabel = 'Su
     setStatus('submitting');
     const { data: entityDef } = await supabase.from('tenant_entities').select('id').eq('name', entity).in('app_scope',[appScope,'all']).maybeSingle();
     if (!entityDef) { setStatus('error'); return; }
-    const { error } = await supabase.from(entity).insert(values);
+    /*
+     * The table name is a RUNTIME string, so postgrest-js cannot infer a row
+     * type for it and (from 2.112) rejects a loose `Record<string, string>`
+     * against `RejectExcessProperties`. This widget renders a form for whatever
+     * tenant entity it was handed; there is no compile-time row type to give it.
+     * The cast states that plainly instead of widening the client's generics,
+     * which would switch off row typing for every OTHER call in this package.
+     */
+    const { error } = await supabase.from(entity).insert(values as never);
     setStatus(error ? 'error' : 'success');
   };
   return (
