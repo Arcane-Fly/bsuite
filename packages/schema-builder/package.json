@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/schema-builder",
-  "version": "1.6.4",
+  "version": "1.7.0",
   "description": "Shared Schema Builder canvas, hooks, and Zod schemas for BSuite consumer apps (crm7, BSU, conduit, R80.3). Canonical implementation consolidating the 4 previously-duplicated React Flow schema builders, plus dagre auto-layout, crow's-foot cardinality edges, floating toolbar, inline rename (0.2.0), column-level handles, field CRUD, schema reflection RPC + PNG export (v0.3.0 = Phase 1b.2), the FieldCreateDialog component (v0.4.0 = Phase 1c), the FieldEditDialog for editing existing fields via double-click (v0.5.0 = Phase 2), migration consolidation to BSU canonical (v0.5.1 = Phase 2 prereq cleanup), Phase 3A field reorder via Alt+ArrowUp/Down with atomic sort_order RPC + aria-live announcer (v0.6.0), and Phase 3B opt-in ALTER TABLE RENAME COLUMN path with dry-run → confirm → wet-run flow and per-tenant audit log (v0.7.0).",
   "type": "module",
   "license": "UNLICENSED",
