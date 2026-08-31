@@ -158,6 +158,15 @@ jobs:
           SQL
           test -s db-state.json || { echo "::error::db-state.json is empty."; exit 1; }
 
+      # --require-examined-below-floor guards the FLOOR FIX. Until 2026-08-31 this
+      # gate skipped every below-floor version before asking whether it was
+      # recorded, so a RECORDED-but-absent migration below the floor read as
+      # clean -- 20260506000000 sat that way for four months while two apps
+      # shipped a UI control calling the RPC it defines. The floor now gates the
+      # UNRECORDED branch only. Measured 2026-08-31: 12 recorded below-floor
+      # migrations across all seven roots. The floor of 10 fails the job if that
+      # coverage disappears rather than letting the blind spot reopen silently.
+      #
       # The checker carries its own positive control: fewer than 50 tables or 100
       # applied migrations exits 3, because a phantom scan against an empty state
       # says either that everything is missing or that nothing is — and both read
@@ -178,6 +187,7 @@ jobs:
           node scripts/check-phantom-migrations.mjs \
             --db-state=db-state.json \
             --require-examined=50 \
+            --require-examined-below-floor=10 \
             crm7/supabase/migrations \
             business-suite-unified/supabase/migrations \
             conduit/supabase/migrations \
