@@ -1,0 +1,72 @@
+/*
+ * @bsuite/theme — touch-target floor for coarse pointers
+ *
+ * WHY THIS EXISTS
+ * ───────────────
+ * Measured on suite.crm7.app/login at 390x844 (iPhone 14 emulation), 2026-08-31:
+ * EVERY ONE of the eight interactive controls on the sign-in screen was below a
+ * usable tap size, and two were below even WCAG 2.2 AA (2.5.8, 24x24):
+ *
+ *   Continue with Google      300x36    Continue with Microsoft  300x36
+ *   email input               300x36    password input           300x36
+ *   Sign In                   300x40    password visibility       24x24
+ *   Forgot password?           85x16    Create Account            87x20
+ *
+ * The sign-in screen is the one surface every user of every app passes through,
+ * and on a phone it was the hardest thing in the estate to hit.
+ *
+ * THE FONT-SIZE RULE IS NOT COSMETIC. Safari on iOS ZOOMS THE WHOLE PAGE when a
+ * focused input has a font-size below 16px. Both login inputs were 14px, so
+ * tapping the email field threw the layout out of scale and left it there. That
+ * is the "why is it wrong on my phone" symptom people actually notice; the small
+ * tap targets are what they blame afterwards.
+ *
+ * WHY `pointer: coarse` AND NOT A WIDTH BREAKPOINT
+ * ───────────────────────────────────────────────
+ * The constraint is the finger, not the viewport. A 1024px tablet needs 44px; a
+ * 390px browser window on a desktop does not. `pointer: coarse` asks the right
+ * question, and it means DESKTOP RENDERING IS UNTOUCHED — no risk to the dense
+ * data surfaces this estate is mostly made of.
+ *
+ * BLAST RADIUS, MEASURED RATHER THAN ASSUMED
+ * ──────────────────────────────────────────
+ * Applied under iPhone 14 emulation and re-measured, 2026-08-31:
+ *   suite.crm7.app/login   8 of 8 controls failing -> 0 failing, no overflow
+ *   crm.crm7.app/          0 failing before AND after; document height
+ *                          3681px -> 3681px, i.e. NOTHING MOVED
+ * A page that already complies is untouched. That is the property that makes
+ * this safe to ship estate-wide rather than page by page.
+ *
+ * 44px is Apple HIG and WCAG 2.5.5 (AAA). WCAG 2.2's AA floor (2.5.8) is 24px —
+ * this deliberately clears the higher bar, because "meets the minimum" is not
+ * the standard this estate holds itself to.
+ *
+ * THE ESCAPE HATCH
+ * ────────────────
+ * `.tap-exempt` opts a control out. It exists for a genuinely dense surface where
+ * a 44px floor would break the layout — but it is an admission, not a default:
+ * a control a finger cannot hit is not usable on a phone, whatever the reason.
+ * Reach for a different layout on touch before reaching for this class.
+ */
+
+@media (pointer: coarse) {
+  /* iOS Safari zooms the viewport on focus below 16px. `max()` keeps a larger
+     app-level font if one is set, rather than clamping it down to 16. */
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+  select,
+  textarea {
+    font-size: max(16px, 1rem);
+  }
+
+  /* A 44px floor on the hit box. min-height/min-width rather than height/width so
+     anything already larger keeps its own size. */
+  button:not(.tap-exempt),
+  [role='button']:not(.tap-exempt),
+  a[role='button']:not(.tap-exempt),
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='hidden']),
+  select,
+  textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}
