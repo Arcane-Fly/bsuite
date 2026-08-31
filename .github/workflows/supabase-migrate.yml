@@ -378,7 +378,11 @@ jobs:
         if: steps.resolve-dir.outputs.has_migrations == 'true'
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          PROJECT_ID: ${{ steps.project.outputs.project_id }}
+          # vars.SUPABASE_PROJECT_ID directly: there is no step with `id: project`
+          # in this workflow, so `steps.project.outputs.project_id` resolved to the
+          # empty string on every run since it was written. The pooler step above
+          # already reads the variable this way.
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
           DB_HOST: ${{ steps.pooler.outputs.db_host }}
         shell: bash
         run: |
