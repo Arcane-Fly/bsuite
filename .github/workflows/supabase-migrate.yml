@@ -335,6 +335,45 @@ jobs:
       # a file that no longer exists is invisible to all of them. The phantom
       # detector below caught it, but only AFTER an apply that claimed success.
       # This turns that silent skip into a loud refusal, before anything runs.
+      # THE CATALOG IS FED IN ALONGSIDE THE LEDGER, and that is the 2026-08-31 fix.
+      #
+      # This gate used to answer a name mismatch with two blanket skips: anything
+      # below MIGRATION_FLOOR, and any ledger row named `reconciled-*`. Between
+      # them they hid TWELVE mismatches on the live ledger, in two disjoint sets
+      # of six — and because every one of the 72 `reconciled-2026-05-19` rows
+      # sits below the floor, lifting the floor alone reveals NONE of the marker
+      # set, including 20260506000000, the version the investigation started from.
+      #
+      # A reconcile marker records that a history repair was INTENDED. Only the
+      # catalog says whether it HAPPENED, and the two are identical in the ledger.
+      # Measured 2026-08-31 across 787 ledger rows and 227 file versions: of the
+      # 12 mismatches, 10 have every claimed object present (legitimate repair,
+      # reported not failed) and 2 do not. Removing either suppression on its own
+      # would have produced 6 findings, 5 of them noise; conditioning both on the
+      # catalog produces 2, both real.
+      #
+      # --known-burned is a RATCHET, not an exemption. It banks ONE measured case
+      # so the estate is not held red, and a banked version that stops being
+      # burned FAILS the gate so the list can only shrink:
+      #
+      #   20260228000000  business-suite-unified/20260228000000_add_billing_tables.sql
+      #                   claims public.update_subscriptions_updated_at(); the ledger
+      #                   holds that version as `ensure_apprentice_gto_fields`, so the
+      #                   file can never run. The function is absent — BUT production
+      #                   already carries the trigger it was for:
+      #                     CREATE TRIGGER update_subscriptions_updated_at
+      #                       BEFORE UPDATE ON public.subscriptions
+      #                       FOR EACH ROW EXECUTE FUNCTION update_updated_at_column()
+      #                   i.e. the estate's shared helper does the job, and creating
+      #                   the per-table duplicate would add a dead function to
+      #                   production purely to make a gate green. Verified on
+      #                   tuybltdrdefjblnplpqo 2026-08-31. Remove this entry if the
+      #                   trigger is ever repointed at the per-table function.
+      #
+      # With no --db-state the gate REFUSES (exit 2) the moment it meets a mismatch
+      # it cannot resolve, rather than exempting it. That refusal is the point:
+      # silently passing what it could not check is precisely how the marker hid
+      # 20260506000000 for four months.
       - name: Refuse a version the ledger already holds under another name
         if: steps.resolve-dir.outputs.has_migrations == 'true'
         env:
@@ -344,17 +383,30 @@ jobs:
         shell: bash
         run: |
           set -uo pipefail
-          node "$GITHUB_WORKSPACE/scripts/check-migration-version-already-in-ledger.mjs" --self-test || {
+          GATE="$GITHUB_WORKSPACE/scripts/check-migration-version-already-in-ledger.mjs"
+          DB="postgresql://postgres.${PROJECT_ID}@${DB_HOST}:6543/postgres"
+
+          node "$GATE" --self-test || {
             echo "::error::the collision checker's own self-test failed — its verdict would mean nothing"
             exit 1
           }
-          LEDGER=$(node "$GITHUB_WORKSPACE/scripts/check-migration-version-already-in-ledger.mjs" --print-query \
-            | psql "postgresql://postgres.${PROJECT_ID}@${DB_HOST}:6543/postgres" -tAX -f - 2>/dev/null)
+
+          LEDGER=$(node "$GATE" --print-query | psql "$DB" -tAX -f - 2>/dev/null)
           if [ -z "$LEDGER" ]; then
             echo "::error::could not read schema_migrations — refusing to apply on an unchecked ledger"
             exit 1
           fi
-          printf '%s' "$LEDGER" | node "$GITHUB_WORKSPACE/scripts/check-migration-version-already-in-ledger.mjs"
+
+          node "$GATE" --print-state-query | psql "$DB" -tAX -f - > db-state.json 2>/dev/null
+          if [ ! -s db-state.json ]; then
+            echo "::error::could not read the catalog — refusing to judge a reconcile marker without one"
+            exit 1
+          fi
+
+          printf '%s' "$LEDGER" | node "$GATE" \
+            --db-state=db-state.json \
+            --require-scopes=8 \
+            --known-burned=20260228000000
 
       - name: Apply transactional migrations (.sql, via psql)
         if: steps.resolve-dir.outputs.has_migrations == 'true'
