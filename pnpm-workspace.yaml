@@ -1,7 +1,6 @@
 packages:
   - 'packages/*'
 
-useNodeVersion: 24.15.0
 nodeVersion: 24.15.0
 
 allowBuilds:
@@ -49,3 +48,40 @@ overrides:
   # lockfile's overrides block and nothing else.
   'nanoid': '^3.3.18'
   'ws': '^8.21.0'
+
+  # TYPESCRIPT 7 SIDE-BY-SIDE WITH THE TS 6 API — not a downgrade.
+  #
+  # The estate compiles on TypeScript 7 (latest). typescript-eslint 8.68.0 —
+  # also latest, and with no canary that lifts this — refuses to load under it:
+  #
+  #   if (versionMajor >= 7) { console.error('typescript-eslint does not
+  #   support TS 7.0. Please see .../#running-side-by-side-with-typescript-6.0
+  #   to run typescript-eslint using the TS 6 API.') }
+  #                       (@typescript-eslint/parser/dist/index.js)
+  #
+  # Its own error names the remedy, and TS 7 was designed for it: the native
+  # compiler ships alongside the TS 6 JavaScript API precisely so tools built on
+  # that API keep working. These overrides give ONLY typescript-eslint's subtree
+  # the TS 6 API. Nothing else in the workspace moves off 7 — `tsc` and every
+  # package build still run the latest compiler.
+  #
+  # REMOVE THESE the moment typescript-eslint ships TS 7 support; the tracking
+  # issue is typescript-eslint/typescript-eslint#10940.
+  '@typescript-eslint/parser>typescript': '~6.0.3'
+  '@typescript-eslint/typescript-estree>typescript': '~6.0.3'
+  '@typescript-eslint/project-service>typescript': '~6.0.3'
+  '@typescript-eslint/tsconfig-utils>typescript': '~6.0.3'
+  '@typescript-eslint/type-utils>typescript': '~6.0.3'
+  '@typescript-eslint/utils>typescript': '~6.0.3'
+  '@typescript-eslint/eslint-plugin>typescript': '~6.0.3'
+  '@typescript-eslint/rule-tester>typescript': '~6.0.3'
+  'typescript-eslint>typescript': '~6.0.3'
+  'ts-api-utils>typescript': '~6.0.3'
+
+minimumReleaseAgeExclude:
+  - '@ai-sdk/gateway@4.0.69'
+  - '@ai-sdk/mcp@2.0.41'
+  - '@ai-sdk/provider-utils@5.0.34'
+  - '@ai-sdk/provider@4.0.9'
+  - ai@7.0.85
+  - react-error-boundary@6.1.4
