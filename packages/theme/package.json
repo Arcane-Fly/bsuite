@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/theme",
-  "version": "1.4.4",
+  "version": "1.5.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -36,6 +36,7 @@
     "./css": "./src/css/index.css",
     "./vars.css": "./src/css/vars.css",
     "./utilities.css": "./src/css/utilities.css",
+    "./touch.css": "./src/css/touch.css",
     "./braden-css": "./src/css/braden.css",
     "./fonts.css": "./src/css/fonts.css"
   },
