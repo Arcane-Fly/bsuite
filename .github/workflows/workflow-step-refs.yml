@@ -1,0 +1,43 @@
+# Every `steps.<id>.outputs.<name>` must name a step that exists.
+#
+# GitHub Actions does not error on a reference to a step id that does not exist —
+# it substitutes the EMPTY STRING and the job carries on. So a typo'd or renamed
+# step id produces a silently blank env var.
+#
+# Measured 2026-08-31: supabase-migrate.yml passed
+# `PROJECT_ID: ${{ steps.project.outputs.project_id }}` to its ledger gate, and no
+# step in that workflow declares `id: project`. PROJECT_ID had been empty on every
+# run since the line was written, so that gate could not reach the database — and
+# because it failed open, it reported clean. It had never actually run. It surfaced
+# only when the gate was rewritten to refuse rather than pass when it cannot see.
+name: Workflow step references resolve
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/**'
+      - 'scripts/check-workflow-step-refs.mjs'
+  push:
+    branches: [development, main]
+
+permissions:
+  contents: read
+
+jobs:
+  workflow-step-refs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      # The instrument before the measurement. Two of these controls exist because
+      # this check reported ITSELF on first run — it documents the bad reference in
+      # its own prose, and the first matcher read raw lines.
+      - name: Self-test the check
+        run: node scripts/check-workflow-step-refs.mjs --self-test
+
+      - name: Every step reference resolves
+        run: node scripts/check-workflow-step-refs.mjs .github/workflows
