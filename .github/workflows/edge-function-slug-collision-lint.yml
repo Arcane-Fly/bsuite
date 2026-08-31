@@ -90,7 +90,7 @@ jobs:
       - name: Check for cross-scope edge function slug collisions
         run: node scripts/check-edge-function-slug-collisions.mjs --require-scopes=6
 
-  # BU-5/BU-6 (docs/20260819-built-unlanded-and-unwired-register-v1.00F.md):
+  # BU-5/BU-6 (docs/20260817-built-unlanded-and-unwired-register-v1.00W.md):
   # a lint exemption can outlive its subject. Kept in this workflow file
   # rather than the job above — same trigger conditions, same
   # `submodules: recursive` checkout need, and the same "one guard, one

@@ -2,7 +2,7 @@
 /**
  * check-stale-lint-exemptions.mjs
  *
- * BU-5 / BU-6 (docs/20260819-built-unlanded-and-unwired-register-v1.00F.md):
+ * BU-5 / BU-6 (docs/20260817-built-unlanded-and-unwired-register-v1.00W.md):
  * a lint exemption can outlive its subject. `eslint.config.js` in every app
  * carries per-file rule overrides — a `files: [...]` block paired with
  * `rules: { 'some/rule': 'off' }`, or a rule-scoped `ignores: [...]` list —
