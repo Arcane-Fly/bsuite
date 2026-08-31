@@ -993,116 +993,6 @@
   "dod_status": "not-evaluated"
  },
  {
-  "id": "crm7.hosts.monitoring",
-  "name": "Host employer monitoring",
-  "module": "crm7",
-  "capability_area": "Host employers",
-  "surface_type": "page",
-  "entry_point": "orphan route /hosts/monitoring",
-  "route": "/hosts/monitoring",
-  "code_anchors": [
-   "crm7/src/pages/hosts/monitoring"
-  ],
-  "db_objects": [],
-  "build_status": "unwired",
-  "ui_touched": true,
-  "doc_coverage": "documented",
-  "docs": [
-   {
-    "path": "R80.4/awards/MA000001.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000002.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000004.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000009.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000010.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000015.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000016.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000017.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000023.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000025.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000026.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "R80.4/awards/MA000027.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "current"
-   }
-  ],
-  "doc_count": 325,
-  "sibling_class": "entity-crud",
-  "sibling_count": 148,
-  "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
-  "compliance_risk": [],
-  "origin": "pass1-code-truth",
-  "notes": "No nav entry found; distinct from WHS Host Employers and Monitoring Visits pages.",
-  "dod_status": "not-evaluated"
- },
- {
   "id": "crm7.hosts.reports",
   "name": "Host reports (staff view)",
   "module": "crm7",
@@ -34963,7 +34853,6 @@
   "route": "/ideas/:id",
   "code_anchors": [
    "throughput/src/components/MindMap.tsx",
-   "throughput/src/components/mindmap/nodeOperations.ts",
    "throughput/src/components/mindmap/useDragAndDrop.ts"
   ],
   "db_objects": [
@@ -35036,7 +34925,7 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [],
   "origin": "pass1-code-truth",
-  "notes": "Not exported to PDF/PNG despite Export page listing 'Mind map visualization' as part of what's included.",
+  "notes": "Not exported to PDF/PNG despite Export page listing 'Mind map visualization' as part of what's included. throughput/src/components/mindmap/nodeOperations.ts removed 2026-08-31 with the phantom-relation sweep; the feature remains on its other anchors.",
   "dod_status": "not-evaluated"
  },
  {
@@ -36669,33 +36558,6 @@
   "dod_status": "not-evaluated"
  },
  {
-  "id": "throughput.dead.todos_page",
-  "name": "Todo list page",
-  "module": "throughput",
-  "capability_area": "Idea management",
-  "surface_type": "page",
-  "entry_point": "orphan -- src/pages/Page.tsx (pageKey '/todos') has no <Route> entry in App.tsx",
-  "route": null,
-  "code_anchors": [
-   "throughput/src/pages/Page.tsx"
-  ],
-  "db_objects": [
-   "todos"
-  ],
-  "build_status": "unwired",
-  "ui_touched": true,
-  "doc_coverage": "undocumented",
-  "docs": [],
-  "doc_count": 0,
-  "sibling_class": "admin-tool",
-  "sibling_count": 12,
-  "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
-  "compliance_risk": [],
-  "origin": "pass1-code-truth",
-  "notes": "This is the exact '/todos' link the nav-route-remediation plan removed as a dead nav entry (per navigation.ts's comment); the page component itself was left behind, unrouted.",
-  "dod_status": "not-evaluated"
- },
- {
   "id": "throughput.dead.auth_diagnostics",
   "name": "Auth diagnostics panel",
   "module": "throughput",
@@ -36728,42 +36590,6 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Fully built (status grid, logs, one-click fix operations for auth/session issues) but unreachable from the app.",
-  "dod_status": "not-evaluated"
- },
- {
-  "id": "throughput.dead.database_setup_wizard",
-  "name": "Database setup / connection diagnostics wizard",
-  "module": "throughput",
-  "capability_area": "Developer tooling",
-  "surface_type": "wizard",
-  "entry_point": "no confirmed mount point found -- not referenced from App.tsx, Layout, or MainContent; Layout's own auth ErrorScreen has its own inline (simpler) DB-status warning instead",
-  "route": null,
-  "code_anchors": [
-   "throughput/src/components/DatabaseSetup.tsx",
-   "throughput/src/components/DatabaseSetupInstructions.tsx",
-   "throughput/src/components/database-setup/index.tsx",
-   "throughput/src/components/database/DatabaseSetupPrompt.tsx"
-  ],
-  "db_objects": [],
-  "build_status": "unwired",
-  "ui_touched": true,
-  "doc_coverage": "archive-only",
-  "docs": [
-   {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/2026-06/20260504-tp-04-bsuite-auth-migration-plan-v1.00D.md",
-    "why": [
-     "anchor"
-    ],
-    "status": "archived"
-   }
-  ],
-  "doc_count": 1,
-  "sibling_class": "developer-tool",
-  "sibling_count": 32,
-  "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
-  "compliance_risk": [],
-  "origin": "pass1-code-truth",
-  "notes": "CLI + SQL + verification + troubleshooting sub-sections all implemented; mounting site not confirmed by search -- flagged as likely-orphaned rather than certain.",
   "dod_status": "not-evaluated"
  },
  {
@@ -53117,8 +52943,7 @@
   "entry_point": "under the Jodie panel",
   "route": null,
   "code_anchors": [
-   "throughput/src/lib/conversationDb.ts",
-   "throughput/src/lib/conversationSync.ts"
+   "throughput/src/lib/conversationDb.ts"
   ],
   "db_objects": [],
   "build_status": "live",
@@ -53131,7 +52956,7 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [],
   "origin": "pass5-round3",
-  "notes": "IndexedDB offline-first store with conflict resolution; sits under an indexed UI with no row of its own",
+  "notes": "IndexedDB offline-first store with conflict resolution; sits under an indexed UI with no row of its own throughput/src/lib/conversationSync.ts removed 2026-08-31 with the phantom-relation sweep; the feature remains on its other anchors.",
   "dod_status": "not-evaluated"
  },
  {
