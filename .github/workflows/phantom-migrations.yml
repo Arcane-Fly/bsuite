@@ -182,6 +182,14 @@ jobs:
       # floor is 50 — comfortably under the real figure, and the number only grows
       # as migrations land, so it does not need chasing unless MIGRATION_FLOOR is
       # raised.
+      # packages/schema-builder IS an applied scope — supabase-migrate.yml lists it
+      # in its path filter and its dispatch choices ("root + 6 apps + schema-builder").
+      # It was missing from this root list, and that is not cosmetic: the pending-fix
+      # carve-out below can only see a forward migration in a root it scans. The
+      # remedy for 20260506000000 lives in packages/schema-builder/supabase/migrations,
+      # so without this line the gate reports that phantom as a hard failure ON THE
+      # VERY PR THAT FIXES IT — the self-deadlock the carve-out exists to prevent.
+      # Measured 2026-08-31: 3 phantoms without this root, 1 with it.
       - name: Check every recorded migration's objects exist
         run: |
           node scripts/check-phantom-migrations.mjs \
@@ -194,4 +202,5 @@ jobs:
             braden/supabase/migrations \
             throughput/supabase/migrations \
             R80.4/supabase/migrations \
+            packages/schema-builder/supabase/migrations \
             supabase/migrations
