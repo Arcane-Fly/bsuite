@@ -299,15 +299,26 @@ export async function reorderEntityFields(
  * Result of `rename_physical_column`. On a dry-run `executed` is always
  * `false` and `would_execute` / `affected_views` / `affected_policies` are
  * populated so the UI can ask the user to confirm. On a wet-run `executed`
- * flips to `true` when the ALTER TABLE succeeded. Metadata-only entities
- * (no matching `public.<name>` table) return `{ executed: false, reason:
- * 'no_physical_table' }` without writing an audit row.
+ * flips to `true` when the ALTER TABLE succeeded.
+ *
+ * REFUSALS carry a `reason`, and since migration 20261101000000 they are
+ * distinguished — because the caller can act on one and not the other:
+ *
+ *   'no_physical_table'    there is genuinely no `public.<name>` table
+ *   'table_not_registered' the table exists but is not in
+ *                          `schema_builder_physical_tables` for this tenant, so a
+ *                          platform developer can register it
+ *
+ * Both were previously `no_physical_table`, and because the allowlist ships EMPTY
+ * that was the answer for every entity — which the dialog rendered as "No physical
+ * table exists for this entity", usually false. Neither refusal writes an audit row.
  *
  * Phase 3B — see `docs/20260504-schema-builder-phase-3-plan-v1.00W.md` §3.B
  * and migration `20260506000000_rename_physical_column_rpc.sql`.
  */
 export interface RenamePhysicalColumnResult {
   executed: boolean;
+  /** See the note above: 'no_physical_table' | 'table_not_registered' on refusal. */
   reason?: string;
   audit_id?: string;
   would_execute?: string;

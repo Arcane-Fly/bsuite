@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.7.0] — 2026-09-01 — The refusal reason tells the truth
+
+`rename_physical_column` collapsed two different refusals into one reason code, and
+because its allowlist **ships empty** that code was the answer for every entity.
+`FieldEditDialog` rendered it as:
+
+> "No physical table exists for this entity; only the metadata name will change."
+
+Both halves were untrue in the common case. The physical table usually **does**
+exist — it is simply not allowlisted — and the handler returns without performing
+any metadata rename, so nothing was renamed at all. The 20261009000100 migration's
+own header claimed "the UI already handles [it] by falling back to the
+metadata-only rename"; it does not.
+
+Paired with BSU migration `20261101000000`, which splits the reason:
+
+| reason | meaning | who can act |
+|---|---|---|
+| `table_not_registered` | the table exists, but is not in `schema_builder_physical_tables` for this tenant | a platform developer can register it |
+| `no_physical_table` | there is genuinely no such table | nobody — there is no column to rename |
+
+`refusalMessage()` is exported and tested directly: 5 cases asserting the specific
+claims, including that no message ever again says a metadata rename happened.
+Mutation-tested — removing the `table_not_registered` branch turns 3 red.
+
+No security change: the allowlist is still the gate and still ships empty. Only the
+reason the caller is given becomes true.
+
 ## [1.6.4] — 2026-08-31 — Dev fixtures for the hardened forward migrations
 
 No source change. Adds the two dev-fixture copies of the forward migrations that

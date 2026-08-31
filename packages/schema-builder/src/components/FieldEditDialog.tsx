@@ -185,6 +185,41 @@ type PhysicalRenameState =
   | { phase: 'running-wet'; result: RenamePhysicalColumnResult }
   | { phase: 'error'; message: string };
 
+/**
+ * Say what actually happened.
+ *
+ * Until 2026-09-01 every refusal rendered as "No physical table exists for this
+ * entity; only the metadata name will change." Both halves were untrue for the
+ * common case. `rename_physical_column` returned `no_physical_table` for ANY
+ * unregistered entity, and its allowlist ships EMPTY — so that was the answer for
+ * every entity, while the physical table usually did exist and was merely not
+ * registered. The second half was untrue in every case: this branch returns
+ * without performing any metadata rename, so nothing was renamed at all.
+ *
+ * The RPC now distinguishes the two (migration 20261101000000), and each message
+ * below states the real situation and who can change it. A message that names the
+ * wrong cause is worse than a vague one — it sends the user to fix something that
+ * was never broken.
+ */
+export function refusalMessage(reason: string | undefined): string {
+  switch (reason) {
+    case 'table_not_registered':
+      return (
+        'This entity\'s table is not registered for physical column renames, so the ' +
+        'column was left unchanged. A platform developer can register it. Renaming ' +
+        'the field label instead is always available and affects only what this app ' +
+        'displays.'
+      );
+    case 'no_physical_table':
+      return (
+        'This entity has no physical database table, so there is no column to rename. ' +
+        'Renaming the field label instead affects only what this app displays.'
+      );
+    default:
+      return 'The rename did not run, and the column was left unchanged.';
+  }
+}
+
 export function FieldEditDialog({
   open,
   onOpenChange,
@@ -338,13 +373,7 @@ export function FieldEditDialog({
     try {
       const wet = await onRenamePhysical(state.fieldName, { dryRun: false });
       if (!wet.executed) {
-        setRenameState({
-          phase: 'error',
-          message:
-            wet.reason === 'no_physical_table'
-              ? 'No physical table exists for this entity; only the metadata name will change.'
-              : 'Rename did not execute. Please try again.',
-        });
+        setRenameState({ phase: 'error', message: refusalMessage(wet.reason) });
         return;
       }
       setRenameState({ phase: 'idle' });
