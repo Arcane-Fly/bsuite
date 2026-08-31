@@ -280,17 +280,16 @@ async function surveyScope(scope) {
   // and then failed on the one that mattered, after the issue had already been
   // left open.
   //
-  // So the readiness is checked here, before any directive is looked for, and
-  // reported whether or not one is found. `has_issues === false` means a
-  // directive in this scope can NEVER be honoured; `permissions.push === false`
-  // means this credential cannot mutate the scope at all. Both are recorded as
-  // unreadable, which is what makes the run exit non-zero.
+  // So what CAN be asserted is asserted here, before any directive is looked
+  // for, and reported whether or not one is found. Exactly one condition is
+  // fatal: `has_issues === false`, which means a directive in this scope can
+  // NEVER be honoured no matter how good the credential.
   //
-  // Deliberately NOT a hard failure on anything softer than those two. GitHub
-  // reports `permissions` as the authenticated identity's role, which a
-  // fine-grained token can under- or over-state; a gate that goes red on an
-  // ambiguity is a gate nobody reads (see the estate's permanently-red-gate
-  // ruling). Ambiguity is logged and left to a human.
+  // Everything else is REPORTED, not enforced. GitHub's `permissions` block
+  // describes CONTENTS access and the authenticated identity's role; there is
+  // no field here that reports issues:write for an installation token. A gate
+  // that goes red on an ambiguity is a gate nobody reads, so the closure itself
+  // is the test — a failed closure already exits non-zero and names the issue.
   const perms = meta.permissions ?? {}
   const permsSeen = Object.keys(perms).filter((k) => perms[k] === true).join(',') || 'none-reported'
   if (meta.has_issues === false) {
@@ -302,16 +301,21 @@ async function surveyScope(scope) {
     })
     return
   }
-  if (perms.push === false) {
-    report.scopesUnreadable.push({
-      scope,
-      reason:
-        `this credential has read but NOT write on the scope (permissions: ${permsSeen}). ` +
-        'It would survey cleanly and then fail on the first genuine directive. ' +
-        'Grant the token issues:write here, or drop the scope from CLOSER_SCOPES.',
-    })
-    return
-  }
+  // `permissions.push` IS NOT A PROXY FOR issues:write, and treating it as one
+  // broke the event path within minutes of shipping.
+  //
+  // The workflow's pull_request path uses the built-in Actions GITHUB_TOKEN
+  // declared `contents: read, issues: write, pull-requests: read`. GitHub
+  // reports that as `permissions.push === false`, because `push` describes
+  // CONTENTS access. The token could close an issue perfectly well; the check
+  // said "read but NOT write" and failed the run. That is the ambiguity the
+  // comment above already warned about, hard-failed anyway.
+  //
+  // There is no field on this response that reports issues:write for an
+  // installation token, so the honest thing is to record what GitHub did say
+  // and let the closure itself be the test — a failed closure already exits
+  // non-zero and names the issue. Only `has_issues === false` above, which is
+  // unambiguous, stays fatal.
   report.writeReady.push({ scope, permissions: permsSeen })
 
   const cutoff = Date.now() - lookbackHours * 3600_000
@@ -352,7 +356,7 @@ async function surveyScope(scope) {
   report.scopesSurveyed += 1
 
   say(
-    `  ${scope}: default \`${meta.default_branch}\`, write-ready (${permsSeen}), ` +
+    `  ${scope}: default \`${meta.default_branch}\`, issues on, token perms (${permsSeen}), ` +
       `${merged.length} pull request(s) merged into \`${baseBranch}\` in the last ` +
       `${lookbackHours}h.`,
   )
@@ -410,7 +414,7 @@ const headline =
   `${report.scopesUnreadable.length} unreadable; ` +
   `${report.pullRequestsExamined} pull request(s) examined, ` +
   `${report.pullRequestsMerged} merged into \`${baseBranch}\` in the last ${lookbackHours}h; ` +
-  `${report.writeReady.length} scope(s) write-ready; ` +
+  `${report.writeReady.length} scope(s) passed preflight; ` +
   `${report.directivesFound} closing directive(s) found, ` +
   `${report.ignoredMentions} mention(s) deliberately ignored, ` +
   `${report.issuesClosed.length} issue(s) closed${dryRun ? ' (DRY RUN — nothing mutated)' : ''}.`
