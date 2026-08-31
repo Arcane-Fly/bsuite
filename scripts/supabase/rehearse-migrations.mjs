@@ -137,6 +137,35 @@ const GUARDED_NOOP_MARKER = '-- rehearsal: guarded-no-op';
  */
 const ALREADY_ENFORCED_MARKER = '-- rehearsal: already-enforced';
 
+/**
+ * A migration that DECLARES AN INTENTIONAL ABSENCE: an object an earlier
+ * recorded migration creates does not exist, is not wanted, and the file exists
+ * to say so rather than to change anything. It moves no catalog on the rehearsal
+ * database AND none on production, and that symmetry is the whole claim.
+ *
+ * Added 2026-08-31 for 20261009000200_retire_update_subscriptions_updated_at:
+ * 20260228000000_add_billing_tables is recorded as applied and creates
+ * public.update_subscriptions_updated_at(), which does not exist on production.
+ * The estate standardised on the shared update_updated_at_column() and the
+ * per-table variant was never needed — the trigger on public.subscriptions runs
+ * the shared function and works. A `DROP FUNCTION IF EXISTS` is how a migration
+ * tells check-phantom-migrations that an earlier CREATE was deliberately undone.
+ *
+ * None of the three existing markers is true of it, and reaching for the nearest
+ * one would put a false claim in the diff:
+ *   - not `data-only`: it is DDL, it touches no rows.
+ *   - not `guarded-no-op`: that marker's claim is "it moves the census on
+ *     production, not here". Measured 2026-08-31 on tuybltdrdefjblnplpqo, the
+ *     function is absent on production too, so it moves nothing there either.
+ *   - not `already-enforced`: nothing earlier in the replay established the
+ *     absence. The object was never created, rather than dropped ahead of it.
+ *
+ * Third time on the same reasoning (2026-08-25, 2026-08-30, and here): a fourth
+ * ACCURATE marker is cheaper than one inaccurate one, because the marker's whole
+ * value is that it is an author's claim a reviewer can check in the diff.
+ */
+const DECLARED_ABSENCE_MARKER = '-- rehearsal: declared-absence';
+
 /* ───────────────────────── parsing (no regex) ───────────────────────── */
 
 function allDigits(text) {
@@ -194,13 +223,26 @@ function declaresAlreadyEnforced(sqlText) {
   return false;
 }
 
+/** True when any line of the file, trimmed, is exactly the declared-absence marker. */
+function declaresDeclaredAbsence(sqlText) {
+  for (const line of sqlText.split('\n')) {
+    if (line.trim() === DECLARED_ABSENCE_MARKER) return true;
+  }
+  return false;
+}
+
 /**
- * Either marker excuses a census that did not move. They are deliberately
- * SEPARATE constants rather than one loose match: each is a different claim, and
- * a reviewer reading the diff should see which one the author made.
+ * Any marker excuses a census that did not move. They are deliberately SEPARATE
+ * constants rather than one loose match: each is a different claim, and a
+ * reviewer reading the diff should see which one the author made.
  */
 function declaresLegitimateNoOp(sqlText) {
-  return declaresDataOnly(sqlText) || declaresGuardedNoOp(sqlText) || declaresAlreadyEnforced(sqlText);
+  return (
+    declaresDataOnly(sqlText) ||
+    declaresGuardedNoOp(sqlText) ||
+    declaresAlreadyEnforced(sqlText) ||
+    declaresDeclaredAbsence(sqlText)
+  );
 }
 
 /* ───────────────────────── scope + file discovery ───────────────────────── */
@@ -694,14 +736,15 @@ function runSelfTest(dbUrl, tmpDir) {
    * control at all: a typo in a constant would silently stop excusing the
    * migrations it names and read as those migrations regressing.
    *
-   * Each marker must match ITSELF, must NOT match either sibling, and a
+   * Each marker must match ITSELF, must NOT match ANY sibling, and a
    * near-miss (trailing word, wrong dash) must match nothing — otherwise a loose
    * comparison would let an author write an approximation of a claim.
    */
   for (const probe of [
-    { name: 'MARKER — data-only matches only itself', fn: declaresDataOnly, yes: DATA_ONLY_MARKER, no: [GUARDED_NOOP_MARKER, ALREADY_ENFORCED_MARKER] },
-    { name: 'MARKER — guarded-no-op matches only itself', fn: declaresGuardedNoOp, yes: GUARDED_NOOP_MARKER, no: [DATA_ONLY_MARKER, ALREADY_ENFORCED_MARKER] },
-    { name: 'MARKER — already-enforced matches only itself', fn: declaresAlreadyEnforced, yes: ALREADY_ENFORCED_MARKER, no: [DATA_ONLY_MARKER, GUARDED_NOOP_MARKER] },
+    { name: 'MARKER — data-only matches only itself', fn: declaresDataOnly, yes: DATA_ONLY_MARKER, no: [GUARDED_NOOP_MARKER, ALREADY_ENFORCED_MARKER, DECLARED_ABSENCE_MARKER] },
+    { name: 'MARKER — guarded-no-op matches only itself', fn: declaresGuardedNoOp, yes: GUARDED_NOOP_MARKER, no: [DATA_ONLY_MARKER, ALREADY_ENFORCED_MARKER, DECLARED_ABSENCE_MARKER] },
+    { name: 'MARKER — already-enforced matches only itself', fn: declaresAlreadyEnforced, yes: ALREADY_ENFORCED_MARKER, no: [DATA_ONLY_MARKER, GUARDED_NOOP_MARKER, DECLARED_ABSENCE_MARKER] },
+    { name: 'MARKER — declared-absence matches only itself', fn: declaresDeclaredAbsence, yes: DECLARED_ABSENCE_MARKER, no: [DATA_ONLY_MARKER, GUARDED_NOOP_MARKER, ALREADY_ENFORCED_MARKER] },
   ]) {
     const matchesOwn = probe.fn(`BEGIN;\n${probe.yes}\nCOMMIT;\n`);
     const matchesSibling = probe.no.some((other) => probe.fn(`${other}\n`));
@@ -717,7 +760,7 @@ function runSelfTest(dbUrl, tmpDir) {
   }
 
   {
-    const all = [DATA_ONLY_MARKER, GUARDED_NOOP_MARKER, ALREADY_ENFORCED_MARKER];
+    const all = [DATA_ONLY_MARKER, GUARDED_NOOP_MARKER, ALREADY_ENFORCED_MARKER, DECLARED_ABSENCE_MARKER];
     const everyMarkerExcuses = all.every((m) => declaresLegitimateNoOp(`${m}\n`));
     const bareFileDoesNot = !declaresLegitimateNoOp('BEGIN;\nSELECT 1;\nCOMMIT;\n');
     const ok = everyMarkerExcuses && bareFileDoesNot;
