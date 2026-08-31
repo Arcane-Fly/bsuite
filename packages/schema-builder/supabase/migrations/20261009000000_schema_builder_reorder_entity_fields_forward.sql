@@ -5,6 +5,14 @@
 -- This copy exists only so `pnpm --filter @bsuite/schema-builder test` can spin
 -- up a self-contained Supabase fixture. See README.md in this directory.
 --
+--
+-- REHEARSAL: this file is a byte-identical copy of a BSU migration that sorts
+-- ahead of it in a whole-estate replay, so every object it declares already
+-- exists by the time it runs and its catalog census cannot move. That is not a
+-- broken migration — it is what a dev-fixture copy IS. The claim below is the
+-- accurate one, and it sits ABOVE the sync boundary because the BSU canonical
+-- copy must NOT carry it: there the migration really does move the census.
+-- rehearsal: already-enforced
 -- @sync-boundary-below
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
@@ -71,6 +79,12 @@ language plpgsql
 security definer
 set search_path = ''
 as $$
+-- @SD-JUSTIFICATION: reorders tenant_field_definitions.sort_order atomically for a
+--   whole entity. INVOKER cannot hold the row set stable across the rewrite under
+--   RLS, and a partial reorder leaves duplicate or gapped sort_order values that the UI
+--   reads as lost fields. Gated on tenant membership before any write.
+-- @SD-CATEGORY: 2.1B
+-- @SD-AUDIT: 2026-08-31 (bsuite#2862 — added-security-definer gate)
 declare
   v_caller uuid := auth.uid();
   v_tenant_id uuid;
