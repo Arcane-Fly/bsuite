@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/data-grid",
-  "version": "2.5.2",
+  "version": "3.0.0",
   "description": "Virtualized, spreadsheet-feel data grid for BSuite apps \u2014 cell range selection, keyboard grid navigation, TSV clipboard round-trip, fill handle, undo/redo. Built on @tanstack/react-table + @tanstack/react-virtual.",
   "type": "module",
   "license": "UNLICENSED",
@@ -40,27 +40,27 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
-    "@tanstack/react-virtual": "^3.14.9",
+    "@tanstack/react-virtual": "^3.14.10",
     "clsx": "^2.1.1"
   },
   "peerDependencies": {
-    "@tanstack/react-table": "^8.21.3",
+    "@tanstack/react-table": "^9.2.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@tanstack/react-table": "^8.21.3",
-    "@testing-library/jest-dom": "^6.9.1",
-    "@testing-library/react": "^16.3.2",
-    "@testing-library/user-event": "^14.6.1",
-    "@types/react": "^19.2.17",
-    "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^6.0.2",
-    "jsdom": "^29.1.1",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
-    "typescript": "~6.0.3",
-    "vite": "^8.0.16",
-    "vitest": "^4.1.8"
+    "@tanstack/react-table": "^9.2.4",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.6",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.5",
+    "@vitejs/plugin-react": "^6.1.1",
+    "jsdom": "^30.0.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "typescript": "^6.0.3",
+    "vite": "^8.2.2",
+    "vitest": "^4.1.11"
   }
 }

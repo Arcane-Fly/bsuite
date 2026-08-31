@@ -76,7 +76,7 @@
       "_note": "24 set-state-in-effect + 1 exhaustive-deps, every one carrying a `-- reason` suffix (mostly 'bootstrap async fetch on mount' and 'sync prop->state'). eslint.config.js:118 claims 'All set-state-in-effect findings resolved via real refactors' immediately above setting the rule to 'error' — 24 inline suppressions say otherwise. The reasons are honest and several are legitimate; the claim above them is not.",
       "inline": {
         "react-hooks/exhaustive-deps": 1,
-        "react-hooks/set-state-in-effect": 24
+        "react-hooks/set-state-in-effect": 22
       },
       "configScoped": {
         "react-hooks/exhaustive-deps": 0,

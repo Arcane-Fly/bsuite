@@ -14,18 +14,15 @@ import {
   type ReactElement,
 } from 'react';
 import {
-  getCoreRowModel,
-  getExpandedRowModel,
-  getFilteredRowModel,
-  getGroupedRowModel,
-  getSortedRowModel,
-  useReactTable,
+  useTable,
   type ColumnDef,
+  type RowData,
   type ColumnSizingState,
   type ExpandedState,
   type GroupingState,
   type SortingState,
 } from '@tanstack/react-table';
+import { gridFeatures, type GridFeatures } from './tableFeatures';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { DndContext, PointerSensor, useSensor, useSensors, type DragEndEvent } from '@dnd-kit/core';
 import { SortableContext, arrayMove, horizontalListSortingStrategy } from '@dnd-kit/sortable';
@@ -78,7 +75,7 @@ function editorFor<TRow>(column: DataGridColumn<TRow>): (props: CellEditorProps<
   }
 }
 
-function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGridHandle>): ReactElement {
+function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: React.Ref<DataGridHandle>): ReactElement {
   const {
     columns,
     data,
@@ -110,7 +107,7 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
   const scrollRef = useRef<HTMLDivElement>(null);
   const columnConfigById = useMemo(() => new Map(columns.map((c) => [c.id, c] as const)), [columns]);
 
-  const tableColumns = useMemo<ColumnDef<TRow, unknown>[]>(
+  const tableColumns = useMemo<ColumnDef<GridFeatures, TRow, unknown>[]>(
     () =>
       columns.map((col) => ({
         id: col.id,
@@ -223,7 +220,8 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     setExpanded(groupExpanded && Object.keys(groupExpanded).length > 0 ? groupExpanded : true);
   }, [groupExpanded]);
 
-  const table = useReactTable({
+  const table = useTable({
+    features: gridFeatures,
     data,
     columns: tableColumns,
     state: { sorting, columnOrder, columnSizing, columnVisibility, globalFilter, grouping, expanded },
@@ -289,11 +287,6 @@ function DataGridInner<TRow>(props: DataGridProps<TRow>, ref: React.Ref<DataGrid
     columnResizeMode: 'onChange',
     enableColumnResizing: true,
     getRowId,
-    getCoreRowModel: getCoreRowModel(),
-    getGroupedRowModel: getGroupedRowModel(),
-    getExpandedRowModel: getExpandedRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
   });
 
   const rows = table.getRowModel().rows;
@@ -1279,6 +1272,6 @@ function SelectionOverlay(props: SelectionOverlayProps): ReactElement {
   );
 }
 
-export const DataGrid = forwardRef(DataGridInner) as <TRow>(
+export const DataGrid = forwardRef(DataGridInner) as <TRow extends RowData>(
   props: DataGridProps<TRow> & { ref?: React.Ref<DataGridHandle> },
 ) => ReactElement;
