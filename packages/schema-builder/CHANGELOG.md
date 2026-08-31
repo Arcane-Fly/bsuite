@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.6.4] — 2026-08-31 — Dev fixtures for the hardened forward migrations
+
+No source change. Adds the two dev-fixture copies of the forward migrations that
+landed canonically in BSU (`business-suite-unified#1056`), so `supabase start`
+against this package reproduces the same schema the estate runs:
+
+- `20261009000000_schema_builder_reorder_entity_fields_forward.sql`
+- `20261009000100_schema_builder_rename_physical_column_hardened.sql`
+
+The second is the privilege-escalation fix: `rename_physical_column` took its
+`ALTER TABLE` target from caller-controlled `tenant_entities.name`, so any tenant
+admin could rename a column on any `public` table — `user_tenants.role` included.
+It is now constrained by a `schema_builder_physical_tables` allowlist, which ships
+empty, so the RPC is inert until a table is explicitly opted in.
+
+Both files are **DEV-FIXTURE COPIES**; BSU remains canonical. Content below the
+`-- @sync-boundary-below` marker is byte-identical to the BSU originals, which is
+what `schema-builder-migration-parity` Check 3 enforces.
+
+---
+
 ## [1.6.3] — 2026-08-29 — Republish so the tarball carries the REVOKE
 
 No source change. `1.6.2` was published **before** the 2026-08-28 REVOKE was appended
