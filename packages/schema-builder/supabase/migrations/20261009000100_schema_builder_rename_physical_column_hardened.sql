@@ -48,6 +48,13 @@ COMMENT ON TABLE public.schema_builder_physical_tables IS
 CREATE INDEX IF NOT EXISTS idx_sbpt_tenant
   ON public.schema_builder_physical_tables (tenant_id);
 
+-- pgTAP A1 / R1: every FK column leads an index, in the migration that creates it.
+-- ON DELETE SET NULL makes Postgres scan this column whenever an auth.users row
+-- is deleted; without the index that is a sequential scan of the whole table.
+CREATE INDEX IF NOT EXISTS idx_sbpt_registered_by
+  ON public.schema_builder_physical_tables (registered_by)
+  WHERE registered_by IS NOT NULL;
+
 ALTER TABLE public.schema_builder_physical_tables ENABLE ROW LEVEL SECURITY;
 
 -- SELECT for members of the owning tenant; developers see everything.
@@ -104,6 +111,13 @@ CREATE INDEX IF NOT EXISTS idx_sma_tenant_created
 CREATE INDEX IF NOT EXISTS idx_sma_entity
   ON public.schema_mutations_audit (entity_id)
   WHERE entity_id IS NOT NULL;
+
+-- pgTAP A1 / R1: actor_id is an FK to auth.users with ON DELETE SET NULL, so a
+-- user deletion scans this audit table. It is append-only and grows without
+-- bound, which is exactly where an unindexed FK scan hurts most.
+CREATE INDEX IF NOT EXISTS idx_sma_actor
+  ON public.schema_mutations_audit (actor_id)
+  WHERE actor_id IS NOT NULL;
 
 ALTER TABLE public.schema_mutations_audit ENABLE ROW LEVEL SECURITY;
 
