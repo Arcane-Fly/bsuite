@@ -62,6 +62,10 @@
  *   CLOSER_SCOPES             comma-separated owner/repo (default: the estate)
  *   CLOSER_BASE_BRANCH        default 'development'
  *   CLOSER_LOOKBACK_HOURS     default '48'
+ *   CLOSER_MAX_PAGES          default '10' (100 PRs per page). Raise this to
+ *                             survey a window wider than the most recent 1000
+ *                             closed pull requests in a scope. A window the cap
+ *                             cannot cover is reported UNREADABLE, never clean.
  *   CLOSER_DRY_RUN            '1' to report without mutating
  *   GITHUB_STEP_SUMMARY       optional; a job summary is appended when set
  *
@@ -91,6 +95,7 @@ const token = process.env.GITHUB_TOKEN ?? ''
 const baseBranch = process.env.CLOSER_BASE_BRANCH || 'development'
 const lookbackHours = Number.parseInt(process.env.CLOSER_LOOKBACK_HOURS || '48', 10)
 const dryRun = process.env.CLOSER_DRY_RUN === '1'
+const maxPages = Number.parseInt(process.env.CLOSER_MAX_PAGES || '10', 10)
 const scopes = (process.env.CLOSER_SCOPES || DEFAULT_SCOPES.join(','))
   .split(',')
   .map((s) => s.trim())
@@ -105,6 +110,9 @@ if (token === '') die('GITHUB_TOKEN is not set. Refusing to run blind.')
 if (scopes.length === 0) die('CLOSER_SCOPES resolved to nothing.')
 if (!Number.isFinite(lookbackHours) || lookbackHours <= 0) {
   die(`CLOSER_LOOKBACK_HOURS must be a positive integer, got "${process.env.CLOSER_LOOKBACK_HOURS}"`)
+}
+if (!Number.isFinite(maxPages) || maxPages <= 0) {
+  die(`CLOSER_MAX_PAGES must be a positive integer, got "${process.env.CLOSER_MAX_PAGES}"`)
 }
 
 // ---------------------------------------------------------------------------
@@ -148,6 +156,7 @@ const report = {
   issuesSkipped: [],
   crossRepo: [],
   ignoredMentions: 0,
+  writeReady: [],
   errors: [],
 }
 
@@ -257,6 +266,54 @@ async function surveyScope(scope) {
     return
   }
 
+  // RULE 8 — WRITE-READINESS IS ASSERTED EVERY RUN, NOT DISCOVERED ON THE FIRST
+  // CLOSURE.
+  //
+  // The estate-wide sweep runs from GaryOcean428/bsuite with
+  // BSUITE_CROSS_REPO_PAT, and the six submodule scopes are reached with that
+  // one credential. READ access is proven every hour by the survey itself.
+  // WRITE access was not proven by anything: between this closer being built
+  // and 2026-08-31 it closed zero issues, because all 133 closing directives
+  // ever written in the estate referenced issues that were already closed. A
+  // credential that can read six repositories and write to none would have
+  // looked exactly like a healthy run for as long as no directive appeared —
+  // and then failed on the one that mattered, after the issue had already been
+  // left open.
+  //
+  // So the readiness is checked here, before any directive is looked for, and
+  // reported whether or not one is found. `has_issues === false` means a
+  // directive in this scope can NEVER be honoured; `permissions.push === false`
+  // means this credential cannot mutate the scope at all. Both are recorded as
+  // unreadable, which is what makes the run exit non-zero.
+  //
+  // Deliberately NOT a hard failure on anything softer than those two. GitHub
+  // reports `permissions` as the authenticated identity's role, which a
+  // fine-grained token can under- or over-state; a gate that goes red on an
+  // ambiguity is a gate nobody reads (see the estate's permanently-red-gate
+  // ruling). Ambiguity is logged and left to a human.
+  const perms = meta.permissions ?? {}
+  const permsSeen = Object.keys(perms).filter((k) => perms[k] === true).join(',') || 'none-reported'
+  if (meta.has_issues === false) {
+    report.scopesUnreadable.push({
+      scope,
+      reason:
+        'issues are DISABLED on this repository — a closing directive here can ' +
+        'never be honoured, so this scope must not be reported as clean.',
+    })
+    return
+  }
+  if (perms.push === false) {
+    report.scopesUnreadable.push({
+      scope,
+      reason:
+        `this credential has read but NOT write on the scope (permissions: ${permsSeen}). ` +
+        'It would survey cleanly and then fail on the first genuine directive. ' +
+        'Grant the token issues:write here, or drop the scope from CLOSER_SCOPES.',
+    })
+    return
+  }
+  report.writeReady.push({ scope, permissions: permsSeen })
+
   const cutoff = Date.now() - lookbackHours * 3600_000
   let page = 1
   const merged = []
@@ -277,15 +334,15 @@ async function surveyScope(scope) {
       merged.push(pr)
     }
     if (allOlder) break
-    if (page >= 10) {
+    if (page >= maxPages) {
       // Rule 6 again: a paging cap that stops early has NOT surveyed the
       // window it was asked for, and must not be reported as if it had.
       report.scopesUnreadable.push({
         scope,
         reason:
-          `paging cap reached (10 pages / 1000 pull requests) before exhausting a ` +
-          `${lookbackHours}h window — the survey is TRUNCATED, not clean. Lower ` +
-          `CLOSER_LOOKBACK_HOURS or raise the cap.`,
+          `paging cap reached (${maxPages} page(s) / ${maxPages * 100} pull requests) ` +
+          `before exhausting a ${lookbackHours}h window — the survey is TRUNCATED, ` +
+          `not clean. Lower CLOSER_LOOKBACK_HOURS or raise CLOSER_MAX_PAGES.`,
       })
       break
     }
@@ -295,7 +352,7 @@ async function surveyScope(scope) {
   report.scopesSurveyed += 1
 
   say(
-    `  ${scope}: default \`${meta.default_branch}\`, ` +
+    `  ${scope}: default \`${meta.default_branch}\`, write-ready (${permsSeen}), ` +
       `${merged.length} pull request(s) merged into \`${baseBranch}\` in the last ` +
       `${lookbackHours}h.`,
   )
@@ -353,6 +410,7 @@ const headline =
   `${report.scopesUnreadable.length} unreadable; ` +
   `${report.pullRequestsExamined} pull request(s) examined, ` +
   `${report.pullRequestsMerged} merged into \`${baseBranch}\` in the last ${lookbackHours}h; ` +
+  `${report.writeReady.length} scope(s) write-ready; ` +
   `${report.directivesFound} closing directive(s) found, ` +
   `${report.ignoredMentions} mention(s) deliberately ignored, ` +
   `${report.issuesClosed.length} issue(s) closed${dryRun ? ' (DRY RUN — nothing mutated)' : ''}.`
