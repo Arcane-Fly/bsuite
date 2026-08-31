@@ -10,7 +10,7 @@ import {
   formatTime,
   localeToDateFormat,
   parseIsoDate,
-} from '../src/formatDate';
+} from '../src/formatDate.js';
 
 describe('defaults', () => {
   it('defaults to en-AU + au preference', () => {
