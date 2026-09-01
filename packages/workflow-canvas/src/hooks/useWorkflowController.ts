@@ -24,8 +24,10 @@
  *    whole `{nodes,edges,viewport}` document, and a write per pointer-move would
  *    be hundreds of round trips per drag.
  *  - Undo/redo over that local graph (`useUndoRedo`, depth 50).
- *  - A drag is ONE undo step. Position changes replace the present; the change
- *    that reports `dragging: false` is the one that pushes a checkpoint.
+ *  - A drag is ONE undo step, banked at its START. The gesture's first frame
+ *    checkpoints where the node WAS; every frame after it replaces the present.
+ *    Checkpointing at the end would bank the second-to-last pointer-move, so
+ *    undo would nudge the node back a pixel instead of returning it.
  */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -37,7 +39,7 @@ import type {
   NodeChange,
   Viewport,
 } from '@xyflow/react';
-import { useCallback, useEffect, useMemo, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   createDraftVersion,
@@ -99,7 +101,10 @@ export interface WorkflowController {
 
   isLoading: boolean;
   loadError: Error | null;
-  /** True from the first unsaved edit until the write lands. */
+  /**
+   * True from the first unsaved edit until the write LANDS — and it stays true
+   * when the write fails, because an edit that did not save is still unsaved.
+   */
   isDirty: boolean;
   isSaving: boolean;
 
@@ -247,6 +252,16 @@ export function useWorkflowController({
   const saveMutateRef = useRef(saveMutation.mutateAsync);
   saveMutateRef.current = saveMutation.mutateAsync;
 
+  // `isDirty` is STATE, not `pendingRef.current !== null`.
+  //
+  // A ref read during render does not re-render when it changes, so a consumer
+  // rendering "Unsaved changes…" from it would have shown the value as of
+  // whatever unrelated render happened last — never flipping on the edit, and
+  // never clearing on the save. An indicator that is wrong in both directions
+  // is worse than none: it teaches the user not to trust it, and the whole
+  // reason to show it is that the save is deferred behind a debounce.
+  const [isDirty, setIsDirty] = useState(false);
+
   const flush = useCallback(async (): Promise<void> => {
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -255,14 +270,28 @@ export function useWorkflowController({
     const next = pendingRef.current;
     const versionId = seededVersionRef.current;
     pendingRef.current = null;
-    if (!next || !versionId) return;
-    await saveMutateRef.current({ versionId, next });
+    if (!next || !versionId) {
+      setIsDirty(false);
+      return;
+    }
+    try {
+      await saveMutateRef.current({ versionId, next });
+      // Only clear on SUCCESS. A failed save leaves the edit unsaved, and
+      // saying otherwise is how work gets lost quietly — the mutation's
+      // onError has already rolled the cache back and told the caller.
+      setIsDirty(false);
+    } catch {
+      // Left dirty deliberately. The error is surfaced by the mutation's
+      // onError; swallowing it here only stops it becoming an unhandled
+      // rejection from the debounce timer, which has no caller to catch it.
+    }
   }, []);
 
   const scheduleSave = useCallback(
     (next: WorkflowGraph) => {
       if (readOnly) return;
       pendingRef.current = next;
+      setIsDirty(true);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         void flush();
@@ -553,7 +582,7 @@ export function useWorkflowController({
     isLoading:
       definitionQuery.isLoading || draftQuery.isLoading || versionsQuery.isLoading,
     loadError,
-    isDirty: pendingRef.current !== null || saveMutation.isPending,
+    isDirty: isDirty || saveMutation.isPending,
     isSaving: saveMutation.isPending,
 
     onNodesChange,
