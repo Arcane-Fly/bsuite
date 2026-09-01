@@ -21,6 +21,7 @@ import { describe, expect, it } from 'vitest'
 import {
   sanitizeBrandingUrl,
   sanitizeFontFamily,
+  sanitizeFontFamilyForCss,
   toCssUrl,
 } from './branding-sanitize.js'
 
@@ -181,5 +182,76 @@ describe('sanitizeFontFamily — rejects injection attempts', () => {
     expect(sanitizeFontFamily('Arial\nBlack')).toBeNull()
     expect(sanitizeFontFamily(null)).toBeNull()
     expect(sanitizeFontFamily(undefined)).toBeNull()
+  })
+})
+
+// ─── sanitizeFontFamilyForCss — fallback chain + alias resolution ────────────
+//
+// Regression coverage for the production defect on suite.crm7.app/login
+// (2026-09-01): a sibling consumer app's own branding hook wrote
+// `--font-body: Geist` — bare, no fallback — as an inline style on `<html>`,
+// which beats every stylesheet rule including this package's own
+// correctly-chained `vars.css` default. No `@font-face` named plain "Geist"
+// exists (the registered family is `"Geist Variable"`), so the page fell
+// through to the browser's serif default. `sanitizeFontFamily` alone does
+// not prevent this — a syntactically legitimate bare name passes the
+// injection check with nothing left to fall back to. Every
+// `<BrandingProvider>` font write (`--font-stack` here, and the equivalent
+// sink in any consumer app's own richer branding hook) must go through
+// `sanitizeFontFamilyForCss` instead.
+
+describe('sanitizeFontFamilyForCss — appends the system-sans fallback chain', () => {
+  it('appends the fallback chain to a family with no shipped face (Inter)', () => {
+    // platform_branding.header_font/body_font are 'Inter' estate-wide, and
+    // no app in the estate ships an @font-face for it.
+    expect(sanitizeFontFamilyForCss('Inter')).toBe('Inter, system-ui, sans-serif')
+  })
+
+  it('resolves the bare "Geist" default to the registered "Geist Variable" face', () => {
+    expect(sanitizeFontFamilyForCss('Geist')).toBe(
+      '"Geist Variable", Geist, system-ui, sans-serif',
+    )
+  })
+
+  it('resolves "Geist Mono" to the registered "Geist Mono Variable" face', () => {
+    expect(sanitizeFontFamilyForCss('Geist Mono')).toBe(
+      '"Geist Mono Variable", Geist Mono, system-ui, sans-serif',
+    )
+  })
+
+  it('does not duplicate an already-correct quoted face name', () => {
+    expect(sanitizeFontFamilyForCss('"Geist Variable"')).toBe(
+      '"Geist Variable", system-ui, sans-serif',
+    )
+  })
+
+  it('resolves the alias case-insensitively', () => {
+    expect(sanitizeFontFamilyForCss('GEIST')).toBe(
+      '"Geist Variable", GEIST, system-ui, sans-serif',
+    )
+  })
+
+  it('appends the fallback chain to a multi-family stack unchanged (no alias match)', () => {
+    const stack = '"Helvetica Neue", Arial, system-ui, sans-serif'
+    expect(sanitizeFontFamilyForCss(stack)).toBe(
+      '"Helvetica Neue", Arial, system-ui, sans-serif, system-ui, sans-serif',
+    )
+  })
+
+  it('trims surrounding whitespace before appending', () => {
+    expect(sanitizeFontFamilyForCss('  Inter  ')).toBe('Inter, system-ui, sans-serif')
+  })
+
+  it('returns null (not a bare fallback string) for an injection attempt', () => {
+    expect(sanitizeFontFamilyForCss('Inter; } html { display: none } body {')).toBeNull()
+    expect(sanitizeFontFamilyForCss('Arial</style><script>alert(1)</script>')).toBeNull()
+    expect(sanitizeFontFamilyForCss('x, url(//evil.example/font)')).toBeNull()
+  })
+
+  it('returns null for empty, over-long, control-bearing and non-string input', () => {
+    expect(sanitizeFontFamilyForCss('')).toBeNull()
+    expect(sanitizeFontFamilyForCss('A'.repeat(300))).toBeNull()
+    expect(sanitizeFontFamilyForCss(null)).toBeNull()
+    expect(sanitizeFontFamilyForCss(undefined)).toBeNull()
   })
 })
