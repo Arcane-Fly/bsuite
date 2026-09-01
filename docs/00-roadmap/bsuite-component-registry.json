@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 183,
-  "unusedSharedComponents": 161,
+  "sharedComponents": 186,
+  "unusedSharedComponents": 164,
   "localComponentFiles": {
     "crm7": 438,
     "business-suite-unified": 117,
@@ -1344,6 +1344,13 @@
       "consumingApps": 0
     },
     {
+      "name": "WorkflowInspector",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "WorkflowNodeKindSchema",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
@@ -1352,6 +1359,20 @@
     },
     {
       "name": "WorkflowNodeSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowPalette",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowToolbar",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
       "consumerFiles": 0,
