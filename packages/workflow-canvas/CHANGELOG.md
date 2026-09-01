@@ -24,9 +24,11 @@ cannot know the database would have refused the query.
 - **`published_at` was never created.** `publishVersion()` SETs it and the merged apprentice seed
   INSERTs it, but `20261103000000` declares `published_by` and no `published_at` — so **publishing
   failed, and the seed could never land the template Phase 1 exists to ship**. Added by
-  `supabase/migrations/20261104000000_workflow_definition_versions_published_at.sql` (a new version,
+  `supabase/migrations/20261105000000_workflow_definition_versions_published_at.sql` (a new version,
   not an edit to the merged one: the ledger is keyed on version alone across eight applier scopes
-  and a re-used version is silently skipped).
+  and a re-used version is silently skipped — as this file itself then demonstrated, having been
+  authored at `20261104000000` and renumbered when business-suite-unified#1085 took that version an
+  hour later).
 - **Platform templates were unrepresentable and unreachable.** `tenant_id` is NULLABLE and a NULL is
   a platform template — the entire subject of "Duplicate to my tenant". 0.1.0 typed it `string` and
   filtered the list with `.eq('tenant_id', …)`, which excludes every NULL row, so the feature had

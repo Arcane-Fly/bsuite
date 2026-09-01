@@ -50,6 +50,29 @@
 -- holds exactly SELECT/INSERT/UPDATE/DELETE). A new column inherits them, and
 -- re-issuing them here would only create a second place they could drift.
 --
+-- RENUMBERED FROM 20261104000000, AND THE REASON IS THE POINT OF THIS COMMENT.
+-- That version was free when this file was authored — 0 rows in the ledger, 0
+-- files on origin/development in any of the three scopes, both checked in the
+-- same minute as the commit. It stopped being free about an hour later, when
+-- business-suite-unified#1085 merged
+-- `20261104000000_workflow_runs_execution_bridge.sql` (the Phase 3 execution
+-- bridge) into the same scope. For a short window `development` carried TWO
+-- files at 20261104000000 and NOTHING WAS RED: business-suite-unified has no
+-- collision gate of its own, and the root repo's could not see them because its
+-- gitlink had not advanced. One of the two would simply never have applied.
+--
+-- The execution bridge merged FIRST and keeps the version; this file moves. It
+-- is the cheaper of the two to move — one ALTER against a table that does not
+-- exist in any environment yet — and neither has been applied anywhere
+-- (`schema_migrations` max is still 20261101000000, read live 2026-09-01).
+--
+-- The lesson is the one 20261103000000 already records one version earlier, and
+-- it is worth repeating because re-checking did not prevent it: a census is a
+-- SNAPSHOT, not a reservation. Nothing holds a version between authoring and
+-- merge, and this time the collision arrived AFTER the commit and after CI went
+-- green. The check that catches it is the one run against the branch as it is
+-- about to merge, not the one run when the work started.
+--
 -- CHECKED INTO THREE SCOPES byte-for-byte identically — root, crm7 and
 -- business-suite-unified — matching 20261103000000, whose tables these are.
 -- Carries a paired `n=3 intentional-duplicate` entry in

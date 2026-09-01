@@ -156,15 +156,17 @@ predicate copied verbatim from `public.form_layouts`, `graph jsonb`, `ai_context
 column name in `src/types.ts` disagrees with that file, the migration is right.
 
 The tables are created by `20261103000000_workflow_definitions.sql` and extended by
-`20261104000000_workflow_definition_versions_published_at.sql`. Both are checked into three scopes
+`20261105000000_workflow_definition_versions_published_at.sql`. Both are checked into three scopes
 (root, crm7, business-suite-unified) byte-identically, with paired entries in
 `scripts/migration-collision-allowlist.txt`.
 
 > **Version collisions are silent.** `schema_migrations` is keyed on the 14-digit version ALONE
 > across eight applier scopes, so a file at a version already in the ledger is **skipped without a
 > word** — success reported, nothing applied. The plan reserved `20261102000000` and #2896 took it
-> the same day; `published_at` is a new file at `20261104000000` for the same reason, rather than an
-> edit to the merged `20261103000000`.
+> the same day; `published_at` is a new file for the same reason, rather than an edit to the merged
+> `20261103000000` — and it was itself renumbered from `20261104000000` to `20261105000000` when
+> business-suite-unified#1085 merged the execution bridge at that version an hour after this one had
+> checked it free. A census is a snapshot, not a reservation, in both directions.
 
 > **0.1.0 disagreed with its own tables, and every test passed.** The service ordered by, SET and
 > inserted `label` — a column that has never existed — and `publishVersion()` wrote `published_at`,

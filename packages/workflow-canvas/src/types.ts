@@ -234,9 +234,12 @@ export type WorkflowVersionStatus = 'draft' | 'published' | 'archived';
  * (`supabase/seeds/20260901_apprentice_placement_workflow_seed.sql`) INSERTs it
  * and `publishVersion()` SETs it, and 20261103000000 never created it — so the
  * seed and every publish would have failed. Added by migration
- * 20261104000000_workflow_definition_versions_published_at.sql rather than by
+ * 20261105000000_workflow_definition_versions_published_at.sql rather than by
  * editing a merged file, because a migration already merged may have been
- * applied somewhere and editing it in place would be silently skipped.
+ * applied somewhere and editing it in place would be silently skipped. (It was
+ * authored at 20261104000000; that version was taken an hour later by
+ * business-suite-unified#1085's execution bridge, in the same scope, and this
+ * file moved. A census is a snapshot, not a reservation.)
  */
 export interface WorkflowDefinitionRow {
   id: string;

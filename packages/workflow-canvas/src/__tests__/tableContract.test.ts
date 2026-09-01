@@ -15,7 +15,7 @@
  *     apprentice seed. `20261103000000` declares `published_by` and no
  *     `published_at`, so publishing failed and the seed could never land the
  *     template that is the whole point of Phase 1. Added by
- *     `20261104000000_workflow_definition_versions_published_at.sql`.
+ *     `20261105000000_workflow_definition_versions_published_at.sql`.
  *
  * WHAT MAKES THIS A GATE RATHER THAN A GESTURE. It reads the migration FILES —
  * both of them, whichever scope this package sits beside — and parses the
@@ -39,7 +39,7 @@ const MIGRATIONS = resolve(REPO_ROOT, 'supabase/migrations');
 const PHASE_1 = resolve(MIGRATIONS, '20261103000000_workflow_definitions.sql');
 const PHASE_2 = resolve(
   MIGRATIONS,
-  '20261104000000_workflow_definition_versions_published_at.sql',
+  '20261105000000_workflow_definition_versions_published_at.sql',
 );
 
 const SERVICE = resolve(PACKAGE_ROOT, 'src/service.ts');

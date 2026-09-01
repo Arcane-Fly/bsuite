@@ -155,4 +155,15 @@
 # published. Added as a NEW version rather than by editing the merged file,
 # because the ledger is keyed on version alone across all eight applier scopes
 # and a re-used version is silently skipped.
-20261104000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261104000000_workflow_definition_versions_published_at.sql, byte-for-byte identical (verified via md5sum, all three d9354e529d0e7598a688a18183b0a5c2, 2026-09-01). Same convention and same reason as 20261103000000 immediately above, whose table this alters: each app that reads these tables carries the migration in its own history. No live-catalog verification needed — the content is identical, so whichever two copies the applier skips lose nothing.
+20261105000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261105000000_workflow_definition_versions_published_at.sql, byte-for-byte identical (verified via md5sum, all three 9f36ca980ae39f89e083b4d3a8ba61a7, 2026-09-01). Same convention and same reason as 20261103000000 immediately above, whose table this alters: each app that reads these tables carries the migration in its own history. No live-catalog verification needed — the content is identical, so whichever two copies the applier skips lose nothing.
+#
+# RENUMBERED FROM 20261104000000. That version was free at authoring and at
+# commit — ledger and all three origin/development trees, both checked — and
+# stopped being free about an hour later when business-suite-unified#1085 merged
+# 20261104000000_workflow_runs_execution_bridge.sql into the same scope. For a
+# window `development` carried two files at one version with nothing red: BSU has
+# no collision gate of its own and the root gate could not see them because the
+# gitlink had not advanced. The execution bridge merged first and keeps the
+# version; this file moved, being the cheaper of the two (one ALTER against a
+# table that exists nowhere yet). Neither had been applied — ledger max was still
+# 20261101000000.
