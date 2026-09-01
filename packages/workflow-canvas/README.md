@@ -116,11 +116,16 @@ made that a hard rule with a bundle-analyser proof.
 
 ## The table contract
 
-This package does **not** create its tables. Migration
-`20261102000000_workflow_definitions.sql` owns `workflow_definitions` and
-`workflow_definition_versions` (its own `tenant_id` column, flat RLS predicate copied verbatim from
-`public.form_layouts`, `graph jsonb`, `ai_context jsonb`). If a column name in `src/types.ts`
-disagrees with that file, the migration is right.
+This package does **not** create its tables. The `workflow_definitions` migration owns
+`workflow_definitions` and `workflow_definition_versions` (its own `tenant_id` column, flat RLS
+predicate copied verbatim from `public.form_layouts`, `graph jsonb`, `ai_context jsonb`). If a
+column name in `src/types.ts` disagrees with that file, the migration is right.
+
+> **Version collision.** The plan reserves `20261102000000`, and that version is already taken on
+> `development` by `20261102000000_training_contracts_training_plan_fk.sql` (#2896, merged
+> 2026-09-01). `schema_migrations` is keyed on version alone across eight applier scopes, so a
+> colliding version is **silently skipped** — success reported, nothing applied. The workflow
+> migration must take a later version.
 
 Readers must go through `current_published_version_id`, never "the highest version number" — that
 is what makes publishing atomic and reversible, and what stops a half-finished draft reaching

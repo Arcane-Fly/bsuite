@@ -56,6 +56,8 @@ not also drag in `html-to-image`. `@xyflow/react`, `zod`, `@tanstack/react-query
 
 ### Not in this release
 
-Table creation (migration `20261102000000_workflow_definitions.sql`, authored in parallel), the
+Table creation (the `workflow_definitions` migration, authored in parallel — note that the
+version the plan reserved, `20261102000000`, was taken on `development` by #2896 on the same
+day, and a colliding version is silently skipped), the
 apprentice template seed, the crm7 `/workflows/:id` route, the node palette and properties panel
 (Phase 2), execution (Phase 3), and the Jodie authoring tools (Phase 4).

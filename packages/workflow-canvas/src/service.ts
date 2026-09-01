@@ -8,10 +8,11 @@
  * shape are lifted from that file deliberately — three consumer apps render
  * that canvas and a fourth pattern here would be a fourth thing to keep in step.
  *
- * THIS PACKAGE DOES NOT OWN THE TABLES. Migration
- * `20261102000000_workflow_definitions.sql` creates them, with RLS copied
- * verbatim from `public.form_layouts` (four separate policies, never `FOR ALL`).
- * If a column name here disagrees with that file, the migration is right.
+ * THIS PACKAGE DOES NOT OWN THE TABLES. The `workflow_definitions` migration
+ * creates them, with RLS copied verbatim from `public.form_layouts` (four
+ * separate policies, never `FOR ALL`). If a column name here disagrees with that
+ * file, the migration is right. See `types.ts` for the version-collision note:
+ * the version the plan reserved is no longer free.
  */
 
 import { deserialiseGraph, serialiseGraph } from './schemas.js';

@@ -14,10 +14,18 @@
  *
  * 2. THE TABLE CONTRACT — the row shapes of `workflow_definitions` and
  *    `workflow_definition_versions`. This package does NOT create those tables.
- *    Migration `20261102000000_workflow_definitions.sql` owns them (Phase 1,
- *    authored in parallel). Every column named below is one the migration
- *    declares; if a name here and a name there disagree, the migration wins and
- *    this file is the thing that must change.
+ *    The `workflow_definitions` migration owns them (Phase 1, authored in
+ *    parallel). Every column named below is one that migration declares; if a
+ *    name here and a name there disagree, the migration wins and this file is
+ *    the thing that must change.
+ *
+ *    VERSION COLLISION — the plan reserves `20261102000000` for that file, and
+ *    that version is ALREADY TAKEN on `development` by
+ *    `20261102000000_training_contracts_training_plan_fk.sql` (merged as #2896
+ *    on 2026-09-01, after the plan was written). `schema_migrations` is keyed on
+ *    VERSION ALONE across eight applier scopes, so a colliding version is
+ *    SILENTLY SKIPPED — the migration reports success twice and applies nothing.
+ *    The workflow migration must take a later version.
  *
  * See `docs/plans/20260901-workflow-canvas-implementation-v1.00A.md` §3 Phase 1.
  */
@@ -197,7 +205,7 @@ export function emptyWorkflowGraph(): WorkflowGraph {
 }
 
 // ---------------------------------------------------------------------------
-// Table contract — owned by migration 20261102000000_workflow_definitions.sql
+// Table contract — owned by the `workflow_definitions` migration (see header)
 // ---------------------------------------------------------------------------
 
 export type WorkflowVersionStatus = 'draft' | 'published' | 'archived';
