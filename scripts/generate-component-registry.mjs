@@ -28,7 +28,7 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const JSON_OUT = path.join(ROOT, 'docs/00-roadmap/bsuite-component-registry.json');
 const MD_OUT = path.join(ROOT, 'docs/00-roadmap/BSUITE-COMPONENT-REGISTRY.md');
 
-const PACKAGES = ['ui', 'data-grid', 'page-builder', 'nav-core', 'theme', 'schema-builder', 'jodie', 'auth', 'data-export'];
+const PACKAGES = ['ui', 'data-grid', 'page-builder', 'nav-core', 'theme', 'schema-builder', 'jodie', 'auth', 'data-export', 'workflow-canvas'];
 const APPS = ['crm7', 'business-suite-unified', 'conduit', 'braden', 'throughput', 'R80.4'];
 
 /** An exported symbol that looks like a React component: PascalCase. */

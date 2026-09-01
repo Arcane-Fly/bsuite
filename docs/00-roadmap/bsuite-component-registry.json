@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 141,
-  "unusedSharedComponents": 119,
+  "sharedComponents": 183,
+  "unusedSharedComponents": 161,
   "localComponentFiles": {
     "crm7": 438,
     "business-suite-unified": 117,
@@ -994,6 +994,13 @@
       "consumingApps": 0
     },
     {
+      "name": "XY_TOKEN_BINDINGS",
+      "package": "@bsuite/schema-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "ZOD_TO_DB_ALIASES",
       "package": "@bsuite/schema-builder",
       "consumers": {},
@@ -1066,6 +1073,293 @@
     {
       "name": "TYPE_VALUES",
       "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BUILT_IN_NODE_DATA_SCHEMAS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BUILT_IN_NODE_DESCRIPTORS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DECISION_DEFAULT_SIZE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DECISION_DESCRIPTOR",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DEFAULT_SAVE_DEBOUNCE_MS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DecisionNode",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DecisionNodeDataSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "DuplicateNodeKindError",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FLOW_IN",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "FLOW_OUT",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "HANDOFF_DEFAULT_SIZE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "HANDOFF_DESCRIPTOR",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "HandoffNode",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "HandoffNodeDataSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "LOD_DETAIL_VISIBLE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "LOOP_IN",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "LOOP_OUT",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SEQUENTIAL_HANDLES",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "STEP_DEFAULT_SIZE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "STEP_DESCRIPTOR",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SWIMLANE_DEFAULT_SIZE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SWIMLANE_DESCRIPTOR",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SWIMLANE_HEADER_HEIGHT",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "StepNode",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "StepNodeDataSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SwimlaneNode",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "SwimlaneNodeDataSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "TERMINATOR_DEFAULT_SIZE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "TERMINATOR_DESCRIPTOR",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "TerminatorNode",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "TerminatorNodeDataSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "UNDO_STACK_LIMIT",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ViewportSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_NODE_KINDS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowCanvas",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowEdgeSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowGraphSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowHandles",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowNodeKindSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowNodeSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "XYPositionSchema",
+      "package": "@bsuite/workflow-canvas",
       "consumers": {},
       "consumerFiles": 0,
       "consumingApps": 0

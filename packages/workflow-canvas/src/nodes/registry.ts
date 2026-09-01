@@ -87,6 +87,28 @@ export interface NodeDataValidation {
   reason?: string;
 }
 
+/**
+ * Two kinds with the same name is a programmer error at construction time, so
+ * it throws rather than returning a verdict — there is no partially-valid
+ * registry to hand back.
+ *
+ * It is a NAMED error carrying the offending `kind` as a field, not a bare
+ * `Error` with the detail only in its message. Operator ruling 2026-08-26:
+ * assert the OUTCOME, not the wording. A caller — and the test — can identify
+ * this outcome without matching prose, so rewording the message never silently
+ * changes what anything asserts.
+ */
+export class DuplicateNodeKindError extends Error {
+  readonly code = 'duplicate-node-kind';
+
+  constructor(readonly kind: string) {
+    super(
+      `Duplicate workflow node kind '${kind}' — a registry may declare each kind once.`,
+    );
+    this.name = 'DuplicateNodeKindError';
+  }
+}
+
 export interface WorkflowNodeTypeRegistry {
   /** Every registered kind, in registration order. */
   readonly kinds: readonly string[];
@@ -116,9 +138,7 @@ export function createNodeTypeRegistry(
     if (byKind.has(d.kind)) {
       // Silently keeping one of two would give the canvas a node type whose
       // card and whose validation came from different descriptors.
-      throw new Error(
-        `Duplicate workflow node kind '${d.kind}' — a registry may declare each kind once.`,
-      );
+      throw new DuplicateNodeKindError(d.kind);
     }
     byKind.set(d.kind, d);
   }

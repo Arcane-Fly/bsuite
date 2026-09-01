@@ -11,6 +11,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   BUILT_IN_NODE_DESCRIPTORS,
+  DuplicateNodeKindError,
   createNodeTypeRegistry,
   workflowNodeTypeRegistry,
 } from '../nodes/registry.js';
@@ -171,8 +172,20 @@ describe('the registry is OPEN but not mutable', () => {
   });
 
   it('refuses a duplicate kind rather than silently keeping one of the two', () => {
-    expect(() =>
-      createNodeTypeRegistry([...BUILT_IN_NODE_DESCRIPTORS, { ...delayDescriptor, kind: 'step' }]),
-    ).toThrow(/Duplicate workflow node kind 'step'/);
+    // Asserts the OUTCOME, not the wording (operator ruling 2026-08-26): the
+    // named error type and the `kind` it carries, so rewording the message
+    // cannot quietly change what this test proves.
+    let thrown: unknown;
+    try {
+      createNodeTypeRegistry([
+        ...BUILT_IN_NODE_DESCRIPTORS,
+        { ...delayDescriptor, kind: 'step' },
+      ]);
+    } catch (err) {
+      thrown = err;
+    }
+    expect(thrown).toBeInstanceOf(DuplicateNodeKindError);
+    expect((thrown as DuplicateNodeKindError).kind).toBe('step');
+    expect((thrown as DuplicateNodeKindError).code).toBe('duplicate-node-kind');
   });
 });

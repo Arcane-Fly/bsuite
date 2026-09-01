@@ -6,6 +6,7 @@ export type { WorkflowCanvasProps } from './components/index.js';
 export {
   BUILT_IN_NODE_DATA_SCHEMAS,
   BUILT_IN_NODE_DESCRIPTORS,
+  DuplicateNodeKindError,
   DECISION_DESCRIPTOR,
   HANDOFF_DESCRIPTOR,
   STEP_DESCRIPTOR,
