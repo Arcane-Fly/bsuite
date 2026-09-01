@@ -1,0 +1,34 @@
+{
+  "rationale_notes": [
+    {
+      "id": "dec-block-Qqub4XXbaM20-Thgq.q-1cMax",
+      "question": "How should rate handling appear in the journey?",
+      "answer": "Show quoted rates, approval, and final rate confirmation as separate steps. Quoted rates may cover wages, allowances, associated billing, and funding offsets; final confirmation considers apprentice particulars such as funding eligibility and adult or junior status affecting award wage conditions."
+    },
+    {
+      "id": "dec-block-Qqub4T2qoK2e-Thgq.q-1cMax",
+      "question": "What should happen if the host does not accept the placement through e-signing?",
+      "answer": "The host non-acceptance path may return to the GTO for rate or placement changes and resend for e-signing, proceed through manual host approval, or cancel the placement and have the GTO seek a new host. These are all valid outcomes."
+    },
+    {
+      "id": "dec-block-LkuboFdRAeoM-Thgq.q-1cMax",
+      "question": "How should the training contract status be represented after it is lodged with DEWR?",
+      "answer": "For this basic journey, assume the contract proceeds directly from DEWR lodging to State Training Authority notification without adding approval, query, or rejection branches."
+    },
+    {
+      "id": "dec-block-IkubR9UdPmNb-Thgq.q-1cMax",
+      "question": "At what point is the host placement confirmed in the onboarding journey?",
+      "answer": "Host placement is usually confirmed just after placement for a new apprentice, but it may be confirmed before for an existing apprentice who already has a training plan. The training plan is nominal or approximate, showing when units of competency are expected for the qualification and trade; the training provider confirms actual training days closer to delivery, usually a few weeks beforehand."
+    },
+    {
+      "id": "dec-block-Haubrzx1oh7f-Thgq.q-1cMax",
+      "question": "Which roles should own the process lanes?",
+      "answer": "The GTO / Labour Hire team owns the process lane; other parties are participants or external handoffs rather than separate process owners."
+    },
+    {
+      "id": "dec-block-HaubaJwRIIvC-Thgq.q-1cMax",
+      "question": "When a host employer hands the apprentice back, what should happen next?",
+      "answer": "When the handback is due to the host running out of work or no longer needing the apprentice, with no fault by the apprentice, the GTO reviews and places the apprentice with another host employer. The apprentice continues attending training and remains employed and paid by the GTO while a new placement is found. A disciplinary handback is a separate reason and is not part of this flow."
+    }
+  ]
+}
