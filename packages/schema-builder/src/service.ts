@@ -335,6 +335,45 @@ export interface RenamePhysicalColumnResult {
  * writes one audit row per call (dry-run and wet-run both) so every attempt
  * — successful or not — is observable in `schema_mutations_audit`.
  */
+/**
+ * How many physical tables this tenant has registered for Schema-Builder renames.
+ *
+ * WHY THE UI NEEDS THIS. `rename_physical_column` refuses unless the entity's
+ * table appears in `schema_builder_physical_tables`, and that allowlist ships
+ * EMPTY by design — it is the fix for a privilege escalation where the ALTER
+ * TABLE target came from caller-controlled `tenant_entities.name`. Measured on
+ * production 2026-09-01: the allowlist holds 0 rows, and 0 of 45 `tenant_entities`
+ * resolve to a real `public.<name>` table at all.
+ *
+ * So the "also rename the database column" checkbox was being offered on every
+ * field of every entity while being unable to succeed for any of them — an inert
+ * control that charged the user a confirm step to reach a refusal. When this
+ * returns 0, the caller hides the disclosure and the rename takes the metadata
+ * path, which is what the user wanted and what works.
+ *
+ * Counted per TENANT rather than per entity because the allowlist is keyed on
+ * `(table_name, tenant_id)` with no entity column — there is no cheap client-side
+ * entity -> table mapping, and the RPC still enforces the per-entity check. Zero
+ * is the answer that matters: it proves no entity can succeed.
+ */
+export async function countPhysicalTableRegistrations(
+  client: LooseSupabaseClient,
+  tenantId: string,
+): Promise<number> {
+  const res = await (client
+    .from('schema_builder_physical_tables')
+    .select('table_name', { count: 'exact', head: true })
+    .eq('tenant_id', tenantId) as unknown as Promise<{ count: number | null; error: unknown }>);
+  if (res.error) {
+    // A read failure is NOT proof of zero. Returning 0 here would hide the
+    // control on a transient error and quietly remove a capability, which is the
+    // exact failure this whole change exists to undo. Surface it as "unknown"
+    // by throwing; the caller decides, and its default is the old behaviour.
+    throw res.error;
+  }
+  return res.count ?? 0;
+}
+
 export async function renamePhysicalColumn(
   client: LooseSupabaseClient,
   entityId: string,

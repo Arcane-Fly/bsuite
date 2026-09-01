@@ -6,6 +6,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.8.0] — 2026-09-01 — Do not offer a rename that cannot succeed
+
+The "Advanced: also rename the underlying Postgres column" disclosure appeared
+whenever a rename handler was supplied and the field name had changed. That is not
+the same question as whether it can work.
+
+`rename_physical_column` refuses unless the entity's table is registered in
+`schema_builder_physical_tables`, and that allowlist **ships empty** — it is the fix
+for a privilege escalation where the `ALTER TABLE` target came from
+caller-controlled `tenant_entities.name`. Measured on production 2026-09-01:
+
+```
+schema_builder_physical_tables   0 rows
+tenant_entities                  45 total, 0 resolving to a real public.<name> table
+```
+
+So the checkbox was offered on every field of every entity while being unable to
+succeed for any of them — an inert control charging the user a confirmation step
+to reach a refusal.
+
+New optional prop `physicalRenameAvailable`, and `countPhysicalTableRegistrations()`
+to source it. `false` hides the disclosure so the rename takes the metadata path
+that actually works; **`undefined` keeps it shown** — a failed read is not proof of
+zero, and defaulting to hidden would silently remove a working capability.
+
+4 cases, mutation-tested: removing the gate turns 3 red. Asserted on the stable
+`data-testid`, not on the copy.
+
 ## [1.7.0] — 2026-09-01 — The refusal reason tells the truth
 
 `rename_physical_column` collapsed two different refusals into one reason code, and
