@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [1.9.0] — 2026-09-01 — Export the theme bindings instead of letting a fourth copy be made
+
+`XY_TOKEN_BINDINGS` — the CSS-custom-property map that binds React Flow's own
+palette to BSuite role tokens — existed in **three** independently-maintained
+copies: this package's `SchemaCanvas.tsx`, `business-suite-unified/src/lib/
+xyflowThemeTokens.ts`, and `crm7/src/pages/sales/pipeline-flow-inner.tsx`.
+Tracked at https://github.com/GaryOcean428/bsuite/issues/2550.
+
+`@bsuite/workflow-canvas@0.1.0` needed the same object and would have made a
+FOURTH. Instead the object moved to its own module and is now exported, so
+there is something for the other copies to collapse onto.
+
+### Added
+- `XY_TOKEN_BINDINGS` exported from the package root and from
+  `@bsuite/schema-builder/components`.
+- `useDocumentColorMode` (and its `DocumentColorMode` type) exported from the
+  package root and from `@bsuite/schema-builder/hooks`. The hook already
+  existed; nothing outside the package could reach it, so every consumer that
+  needed React Flow's `colorMode` re-derived it.
+
+### Changed
+- `XY_TOKEN_BINDINGS` moved from `src/components/SchemaCanvas.tsx` to
+  `src/components/xyflowTokenBindings.ts`, with every comment intact. It has its
+  own file rather than being exported in place because `SchemaCanvas.tsx` pulls
+  in dagre and html-to-image, and bundle size is an explicit operator
+  constraint — importing the bindings must not import the canvas.
+- `SchemaCanvas.tokenBindings.test.tsx` reads the new path. That audit works on
+  SOURCE TEXT (`indexOf('XY_TOKEN_BINDINGS')`), so left pointing at
+  `SchemaCanvas.tsx` it would have sliced from the new import line and audited
+  nothing.
+
+**No behaviour change.** The object, its values and its call site are identical;
+only its address changed.
+
+---
+
 ## [1.8.0] — 2026-09-01 — Do not offer a rename that cannot succeed
 
 The "Advanced: also rename the underlying Postgres column" disclosure appeared

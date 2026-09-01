@@ -16,6 +16,7 @@ export {
   SmartEdgeMarkers,
   buildSmartEdgeStyle,
   getMarkerIdsForCardinality,
+  XY_TOKEN_BINDINGS,
 } from './components/index.js';
 export type {
   EntityNodeData,
@@ -46,6 +47,7 @@ export {
   useSchemaController,
   useRealtimeSubscription,
   useSchemaReflection,
+  useDocumentColorMode,
   schemaEntitiesOptions,
   schemaRelationsOptions,
   entityFieldsOptions,
@@ -58,6 +60,7 @@ export type {
   ReflectedColumn,
   UseSchemaReflectionOptions,
   UseSchemaReflectionResult,
+  DocumentColorMode,
 } from './hooks/index.js';
 
 // Zod schemas (re-exported for convenience)

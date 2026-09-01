@@ -19,3 +19,5 @@ export type {
 } from './useSchemaReflection.js';
 export { useDismissOnOutsideOrEscape } from './useDismissOnOutsideOrEscape.js';
 export { useLightDismissDialog } from './useLightDismissDialog.js';
+export { useDocumentColorMode } from './useDocumentColorMode.js';
+export type { DocumentColorMode } from './useDocumentColorMode.js';
