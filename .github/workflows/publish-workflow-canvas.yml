@@ -1,0 +1,195 @@
+# Publish @bsuite/workflow-canvas to npm
+#
+# Triggers automatically when packages/workflow-canvas/package.json changes on main.
+# Skips publish if the current version is already on npm (idempotent).
+#
+# Authentication:
+#   PREFERRED: npm Trusted Publishers (OIDC) — configure at npmjs.com →
+#     package → Settings → Trusted Publisher → GitHub Actions, with
+#     organization GaryOcean428, repository bsuite, workflow filename
+#     matching this file's basename. Requires `id-token: write` (set below).
+#   FALLBACK: NPM_TOKEN secret used by setup-node's auto-generated .npmrc
+#     until the package is migrated. Remove NPM_TOKEN reference here
+#     after the first successful OIDC publish.
+#
+# Required GitHub Secret:
+#   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
+#                Token type: "Automation" (bypasses 2FA for CI)
+#
+# To trigger manually (e.g. after a version bump merged to main):
+#   gh workflow run publish-ui.yml
+
+name: Publish @bsuite/workflow-canvas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/workflow-canvas/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write   # OIDC for npm Trusted Publishers (https://docs.npmjs.com/trusted-publishers)
+
+jobs:
+  publish:
+    name: Build, test and publish
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/workflow-canvas
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          registry-url: 'https://registry.npmjs.org'
+
+          # setup-node@v5 defaults `package-manager-cache: true`, which makes it
+          # resolve the `packageManager` field's pnpm BEFORE corepack has run —
+          # and this job enables corepack further down. The result is a hard
+          # "Unable to locate executable file: pnpm" at the setup-node step.
+          package-manager-cache: false
+      - name: Setup pnpm
+        run: corepack enable && corepack prepare pnpm@10.33.3 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # BUILD THE WORKSPACE SIBLINGS BEFORE TYPECHECKING AGAINST THEM.
+      #
+      # This package depends on @bsuite/schema-builder through `workspace:`, and
+      # pnpm links it straight from packages/ rather than installing a tarball. The link
+      # resolves — the install log says so, `+ @bsuite/nav-core 1.0.1 <- ../nav-core`
+      # — but a linked package is only as useful as its BUILT output, and every
+      # @bsuite package points `types` at `dist/*.d.ts`. A fresh CI checkout has no
+      # dist/, so tsc reported the sibling as missing entirely:
+      #
+      #   src/react/useTenantNavigation.ts(5,53): error TS2307:
+      #   Cannot find module '@bsuite/nav-core'
+      #
+      # That read as a dependency problem and was a build-ordering one. It failed
+      # this workflow four consecutive times (17, 18 and twice on 19 August; last
+      # success 13 August) while npm quietly kept serving the previous version —
+      # a failed publish breaks nothing visible, it just means the fix never ships.
+      #
+      # Exactly the packages with `workspace:` siblings are the ones with the worst
+      # publish records: schema-registry (nav-core), page-builder (nav-core +
+      # theme), ui (theme). This package joins them — it imports
+      # `computeDagreLayout` and `XY_TOKEN_BINDINGS` from @bsuite/schema-builder
+      # rather than re-bundling dagre or making a fourth copy of the token map.
+      #
+      # `--filter "<pkg>^..."` builds this package's DEPENDENCIES and not the
+      # package itself, which the Build step below still owns. Run from the repo
+      # root because a filter needs the workspace, and this job's default
+      # working-directory is the package folder.
+      - name: Build workspace dependencies
+        working-directory: .
+        run: pnpm --filter "@bsuite/workflow-canvas^..." build
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+
+      - name: Check if version already published
+        id: version-check
+        run: |
+          set -euo pipefail
+
+          # D-90 / bsuite#1908 — this check must distinguish THREE outcomes,
+          # not two. `npm view ... 2>/dev/null || echo "not-published"` collapsed
+          # "the version is genuinely absent" and "npm was unreachable, or auth
+          # failed, or the registry 5xx'd" into the same string, and then acted
+          # on it. That is D-92's shape inside a publish step: a gate that
+          # cannot tell "checked nothing" from "found nothing".
+          #
+          #   exit 0 + version matches -> already published, skip
+          #   E404                     -> genuinely absent, publish
+          #   anything else            -> UNKNOWN, fail closed
+          #
+          # Failing closed on UNKNOWN is the conservative direction: a missed
+          # publish is a re-run; a wrong one burns a version number forever.
+          PKG_VERSION=$(node -p "require('./package.json').version")
+          echo "version=${PKG_VERSION}" >> "$GITHUB_OUTPUT"
+
+          set +e
+          VIEW_OUT=$(npm view "@bsuite/workflow-canvas@${PKG_VERSION}" version 2>&1)
+          VIEW_RC=$?
+          set -e
+
+          # `npm view … 2>&1` folds STDERR into the value. npm currently emits
+          #   npm warn Unknown user config "always-auth". …
+          # on every invocation, so VIEW_OUT is "npm warn …\n1.0.1" and an equality
+          # test against "1.0.1" is FALSE. The check then falls to its fail-closed
+          # branch and the publish dies with "Cannot determine whether … is published"
+          # while npm is answering perfectly well.
+          #
+          # It only bites when the version IS already on npm -- i.e. exactly when the
+          # content changed and the version did not, which is when the clean "skip,
+          # already published" message matters most. @bsuite/dry-lint failed this way
+          # on every run from 2026-08-17 to 2026-08-22 and nobody saw it, because a
+          # failed publish looks like nothing happening.
+          #
+          # Compare the VERSION LINE, not the whole stream.
+          VIEW_VER=$(printf '%s\n' "$VIEW_OUT" | grep -vE '^npm (warn|notice|WARN)' | tail -1 | tr -d '[:space:]')
+          if [ "$VIEW_RC" -eq 0 ] && [ "$VIEW_VER" = "$PKG_VERSION" ]; then
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::@bsuite/workflow-canvas@${PKG_VERSION} is already on npm — skipping publish"
+          elif printf '%s' "$VIEW_OUT" | grep -q 'E404'; then
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Will publish @bsuite/workflow-canvas@${PKG_VERSION} (registry reports 404 — genuinely absent)"
+          else
+            echo "::error::Cannot determine whether @bsuite/workflow-canvas@${PKG_VERSION} is published."
+            echo "::error::npm view exited ${VIEW_RC}; output below. Failing closed rather than guessing."
+            printf '%s\n' "$VIEW_OUT"
+            exit 1
+          fi
+
+      # THE PROMOTION DEADLOCK CUT — see scripts/publish-dist-tag.mjs for the full
+      # loop this breaks. A RELEASE version may only publish from main and takes
+      # 'latest'; a PRERELEASE may publish from any ref and takes 'next', which
+      # nothing resolves unless a lockfile names that exact version. Bare
+      # `npm publish` applies 'latest' even to a prerelease, so the tag is passed
+      # explicitly below and is never left to npm's default.
+      #
+      # This runs BEFORE the dry run, not just before the real publish: the dry run
+      # exercises the same command shape, so it needs the same decided tag.
+      - name: Decide the dist-tag (and refuse a release off main)
+        id: dist-tag
+        if: steps.version-check.outputs.skip == 'false'
+        run: node "$GITHUB_WORKSPACE/scripts/publish-dist-tag.mjs" --version "$PKG_VERSION" --ref "$GITHUB_REF" --package "$(node -p "require('./package.json').name")"
+        env:
+          PKG_VERSION: ${{ steps.version-check.outputs.version }}
+
+      - name: Dry-run publish (catches missing files or bad exports)
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --dry-run --access public --tag "${{ steps.dist-tag.outputs.tag }}"
+
+      - name: Publish to npm
+        if: steps.version-check.outputs.skip == 'false'
+        run: npm publish --access public --tag "${{ steps.dist-tag.outputs.tag }}"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Job summary
+        if: always()
+        env:
+          PKG_VERSION: ${{ steps.version-check.outputs.version }}
+          PKG_SKIPPED: ${{ steps.version-check.outputs.skip }}
+        run: |
+          if [ "$PKG_SKIPPED" = "true" ]; then
+            echo "### Skipped - already published" >> "$GITHUB_STEP_SUMMARY"
+            echo "\`@bsuite/workflow-canvas@${PKG_VERSION}\` is already on npm." >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "### Published" >> "$GITHUB_STEP_SUMMARY"
+            echo "[\`@bsuite/workflow-canvas@${PKG_VERSION}\`](https://www.npmjs.com/package/@bsuite/workflow-canvas) published to npm." >> "$GITHUB_STEP_SUMMARY"
+          fi

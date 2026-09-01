@@ -3,13 +3,26 @@
     "Artifacts that exist with ZERO consumers, already known. This list may only SHRINK.",
     "A NEW zero-consumer artifact fails the gate; an entry here that has since gained a",
     "consumer ALSO fails, so this cannot become a place findings go to be forgotten.",
-    "Regenerate deliberately with --write-baseline; never to make a red run green."
+    "Regenerate deliberately with --write-baseline; never to make a red run green.",
+    "",
+    "@bsuite/workflow-canvas (added 2026-09-01, v0.1.0) is here for a reason the gate's own",
+    "'wire it or remove it' cannot yet accept: NO CONSUMER IS POSSIBLE UNTIL IT IS PUBLISHED.",
+    "Every app is a submodule built standalone on Vercel, which has no parent directory, so",
+    "an app may never depend on a package through `workspace:` or `file:../packages/*` - it",
+    "must resolve the published tarball. The package cannot be published until this lands on",
+    "main. So the ordering is publish, then wire, and there is no arrangement in which the",
+    "first consumer ships in the same PR as the package itself. Its consumer is the crm7",
+    "/workflows/:id route, Phase 1 of",
+    "docs/plans/20260901-workflow-canvas-implementation-v1.00A.md.",
+    "This entry expires by construction: the moment that route imports it, the gate FAILS on",
+    "a stale entry and forces the removal."
   ],
   "package": [
     "@bsuite/eslint-config",
     "@bsuite/jodie",
     "@bsuite/theme-codemod",
-    "@bsuite/tsconfig"
+    "@bsuite/tsconfig",
+    "@bsuite/workflow-canvas"
   ],
   "hook": [
     "useLocale"

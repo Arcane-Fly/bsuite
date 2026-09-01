@@ -7,14 +7,22 @@
     "package that has since been published ALSO fails, so it cannot become a place absent",
     "packages go to be forgotten.",
     "",
-    "Why these two are here: the publish token can push to an EXISTING package but cannot",
-    "CREATE one — a 404 on PUT means authenticated-but-unauthorised. Creating them needs a",
-    "token with create rights, or an npm Trusted Publisher configured per package. Both are",
-    "operator actions. They also reach zero consumers (B-19), so whether they should exist",
-    "at all is an open question, not a foregone one."
+    "Why eslint-config and tsconfig are here: the publish token can push to an EXISTING",
+    "package but cannot CREATE one — a 404 on PUT means authenticated-but-unauthorised.",
+    "Creating them needs a token with create rights, or an npm Trusted Publisher configured",
+    "per package. Both are operator actions. They also reach zero consumers (B-19), so",
+    "whether they should exist at all is an open question, not a foregone one.",
+    "",
+    "Why workflow-canvas is here: it is BRAND NEW (0.1.0, 2026-09-01) and has never been",
+    "published, so a 404 is the only answer the registry can give until its first publish",
+    "from main. It hits the same create-rights wall as the two above — that is an operator",
+    "action, not something this PR can do. This entry is the ONLY one expected to leave:",
+    "the moment @bsuite/workflow-canvas exists on the registry the gate FAILS on a stale",
+    "acknowledgement, which is what forces it out rather than letting it settle here."
   ],
   "unpublished": [
     "@bsuite/eslint-config",
-    "@bsuite/tsconfig"
+    "@bsuite/tsconfig",
+    "@bsuite/workflow-canvas"
   ]
 }

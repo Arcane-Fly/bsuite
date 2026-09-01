@@ -39,9 +39,15 @@ describe('XY_TOKEN_BINDINGS are read by the installed @xyflow/react', () => {
   // than as a failure. A suite that cannot load is not a suite that passed.
   const require_ = createRequire(resolve(process.cwd(), 'package.json'));
   const cssPath = require_.resolve('@xyflow/react/dist/style.css');
-  const sourcePath = resolve(process.cwd(), 'src/components/SchemaCanvas.tsx');
+  // v1.9.0 moved the object out of SchemaCanvas.tsx into its own module so
+  // @bsuite/workflow-canvas could import it without dragging dagre and
+  // html-to-image along. This audit reads the SOURCE TEXT, so it follows the
+  // file — pointed at SchemaCanvas.tsx it would now slice from the import line
+  // and find zero bindings, which the non-zero-denominator assertion below
+  // would catch, but only after reading as a real regression.
+  const sourcePath = resolve(process.cwd(), 'src/components/xyflowTokenBindings.ts');
   if (!existsSync(sourcePath)) {
-    throw new Error(`SchemaCanvas.tsx not found at ${sourcePath} — the audit cannot run`);
+    throw new Error(`xyflowTokenBindings.ts not found at ${sourcePath} — the audit cannot run`);
   }
   const css = readFileSync(cssPath, 'utf8');
   const source = readFileSync(sourcePath, 'utf8');

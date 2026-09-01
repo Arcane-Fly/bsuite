@@ -50,3 +50,4 @@ export {
   getMarkerIdsForCardinality,
   type SmartEdgeData,
 } from './edges/SmartEdge.js';
+export { XY_TOKEN_BINDINGS } from './xyflowTokenBindings.js';
