@@ -311,6 +311,79 @@ async function collectExemptions(root, scope) {
   return found
 }
 
+/**
+ * ENTRY POINTS ARE NOT ORPHANS.
+ *
+ * `findImporters` answers "does any tracked file import this?" — the right
+ * question for a module, the WRONG one for a file never imported by design.
+ * Measured 2026-09-02: all 11 reported orphans were of that kind and NOT ONE
+ * was dead.
+ *
+ *   5x scripts/drift-scan.mjs   invoked by three CI workflows each
+ *   vite.config.js              loaded by vite, BY NAME
+ *   2x tailwind.config.js       loaded by tailwind, BY NAME
+ *   next-env.d.ts               generated ambient declaration, named by tsconfig
+ *   *.test.ts                   collected by the runner, never imported
+ *
+ * A brief acting on that list would have deleted three build configs and five
+ * scripts CI runs. A gate whose advisory output is entirely false positives is
+ * worse than silent: it invites breaking the build, and it trains readers to
+ * skim past the one entry that will some day be real.
+ *
+ * So a file is an orphan only when nothing imports it AND nothing invokes it.
+ * The return value NAMES the evidence, so a reader can check the claim.
+ */
+function findInvocation(root, repoDir, relPath) {
+  const base = path.basename(relPath)
+
+  // Tooling loads these from the package root by name; there is never an import.
+  const BY_NAME = new Set([
+    'vite.config.js', 'vite.config.ts', 'vite.config.mjs',
+    'tailwind.config.js', 'tailwind.config.ts', 'tailwind.config.mjs', 'tailwind.config.cjs',
+    'postcss.config.js', 'postcss.config.mjs', 'postcss.config.cjs',
+    'next.config.js', 'next.config.mjs', 'next.config.ts',
+    'eslint.config.js', 'eslint.config.mjs', 'vitest.config.ts', 'playwright.config.ts',
+  ])
+  if (BY_NAME.has(base)) return `loaded by tooling by name (${base})`
+
+  // Ambient declarations are named by tsconfig `include`, never imported.
+  if (base.endsWith('.d.ts')) return 'ambient type declaration (named by tsconfig)'
+
+  // A test imports; nothing imports a test.
+  if (/\.(test|spec)\.[cm]?[jt]sx?$/.test(base)) {
+    return 'test file (collected by the runner, never imported)'
+  }
+
+  // A script is live if package.json runs it or a workflow references it.
+  try {
+    const pkgPath = path.join(repoDir, 'package.json')
+    if (fs.existsSync(pkgPath)) {
+      const scripts = JSON.parse(fs.readFileSync(pkgPath, 'utf8')).scripts || {}
+      for (const [name, cmd] of Object.entries(scripts)) {
+        if (typeof cmd === 'string' && cmd.includes(base)) return `package.json script "${name}"`
+      }
+    }
+  } catch {
+    // A malformed package.json is not this gate's business to report on.
+  }
+
+  for (const dir of [path.join(root, '.github', 'workflows'), path.join(repoDir, '.github', 'workflows')]) {
+    if (!fs.existsSync(dir)) continue
+    try {
+      for (const f of fs.readdirSync(dir)) {
+        if (!/\.ya?ml$/.test(f)) continue
+        if (fs.readFileSync(path.join(dir, f), 'utf8').includes(base)) {
+          return `referenced by workflow ${f}`
+        }
+      }
+    } catch {
+      // Unreadable workflow dir: fall through and report it as an orphan rather
+      // than clearing it. Failing OPEN here would hide the real ones.
+    }
+  }
+  return null
+}
+
 async function runCheck(root, scopes) {
   const missing = []
   const orphaned = []
@@ -328,7 +401,9 @@ async function runCheck(root, scopes) {
         continue
       }
       const { importers, via } = findImporters(repoDir, ex.relPath)
-      if (importers.length === 0) orphaned.push({ ...ex, via })
+      if (importers.length > 0) continue
+      // Nothing IMPORTS it. Ask whether anything INVOKES it before calling it dead.
+      if (findInvocation(root, repoDir, ex.relPath) === null) orphaned.push({ ...ex, via })
     }
   }
   return { checked, missing, orphaned, scopesFound }
@@ -395,6 +470,93 @@ async function withScope(root, dir, fn) {
 
 function selfTest() {
   const cases = []
+
+  // Regression, 2026-09-02. This gate reported 11 orphans across the estate and
+  // NOT ONE was dead: five drift-scan.mjs invoked by three CI workflows each,
+  // a vite.config.js and two tailwind.config.js loaded by tooling BY NAME, a
+  // generated next-env.d.ts, and a test file. `findImporters` asks "does anything
+  // import this?", which is the wrong question for a file that is never imported
+  // by design. A brief acting on that list would have deleted three build configs
+  // and five scripts CI runs.
+  //
+  // Each case below fails against the old behaviour (everything with no importer
+  // was an orphan) and passes against the new one.
+
+  cases.push([
+    'a script referenced by a workflow is NOT an orphan',
+    async () =>
+      withTempRepo(async (root) => {
+        const repoDir = path.join(root, 'app')
+        initGitRepo(repoDir)
+        writeFile(repoDir, 'scripts/drift-scan.mjs', 'console.log("live")\n')
+        writeConfig(repoDir, `[{ ignores: ['scripts/drift-scan.mjs'] }]`)
+        writeFile(root, '.github/workflows/drift.yml', 'jobs:\n  a:\n    steps:\n      - run: node scripts/drift-scan.mjs\n')
+        commitAll(repoDir)
+        const { orphaned } = await runCheck(root, [{ name: 'app', dir: 'app', config: 'eslint.config.mjs' }])
+        return orphaned.length === 0
+      }),
+  ])
+
+  cases.push([
+    'a config loaded by tooling by name is NOT an orphan',
+    async () =>
+      withTempRepo(async (root) => {
+        const repoDir = path.join(root, 'app')
+        initGitRepo(repoDir)
+        writeFile(repoDir, 'tailwind.config.js', 'export default {}\n')
+        writeConfig(repoDir, `[{ ignores: ['tailwind.config.js'] }]`)
+        commitAll(repoDir)
+        const { orphaned } = await runCheck(root, [{ name: 'app', dir: 'app', config: 'eslint.config.mjs' }])
+        return orphaned.length === 0
+      }),
+  ])
+
+  cases.push([
+    'a test file is NOT an orphan — the runner collects it, nothing imports it',
+    async () =>
+      withTempRepo(async (root) => {
+        const repoDir = path.join(root, 'app')
+        initGitRepo(repoDir)
+        writeFile(repoDir, 'src/thing.test.ts', 'it("x", () => {})\n')
+        writeConfig(repoDir, `[{ ignores: ['src/thing.test.ts'] }]`)
+        commitAll(repoDir)
+        const { orphaned } = await runCheck(root, [{ name: 'app', dir: 'app', config: 'eslint.config.mjs' }])
+        return orphaned.length === 0
+      }),
+  ])
+
+  cases.push([
+    'a script run by a package.json script is NOT an orphan',
+    async () =>
+      withTempRepo(async (root) => {
+        const repoDir = path.join(root, 'app')
+        initGitRepo(repoDir)
+        writeFile(repoDir, 'scripts/probe.js', 'console.log(1)\n')
+        writeFile(repoDir, 'package.json', JSON.stringify({ name: 'a', scripts: { probe: 'node scripts/probe.js' } }) + '\n')
+        writeConfig(repoDir, `[{ ignores: ['scripts/probe.js'] }]`)
+        commitAll(repoDir)
+        const { orphaned } = await runCheck(root, [{ name: 'app', dir: 'app', config: 'eslint.config.mjs' }])
+        return orphaned.length === 0
+      }),
+  ])
+
+  // THE CONTROL. Without this the three cases above are satisfiable by a gate
+  // that reports nothing at all, which is the failure mode they were written to
+  // prevent: an advisory list of pure false positives, and an advisory list that
+  // can never fire, are both useless in the same way.
+  cases.push([
+    'a genuinely uninvoked, unimported script IS still an orphan',
+    async () =>
+      withTempRepo(async (root) => {
+        const repoDir = path.join(root, 'app')
+        initGitRepo(repoDir)
+        writeFile(repoDir, 'scripts/nobody-runs-this.js', 'console.log(1)\n')
+        writeConfig(repoDir, `[{ ignores: ['scripts/nobody-runs-this.js'] }]`)
+        commitAll(repoDir)
+        const { orphaned } = await runCheck(root, [{ name: 'app', dir: 'app', config: 'eslint.config.mjs' }])
+        return orphaned.length === 1 && orphaned[0].relPath === 'scripts/nobody-runs-this.js'
+      }),
+  ])
 
   cases.push([
     'a files-scoped exemption for a MISSING path fails',
