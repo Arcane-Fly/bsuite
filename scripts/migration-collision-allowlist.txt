@@ -167,3 +167,4 @@
 # version; this file moved, being the cheaper of the two (one ALTER against a
 # table that exists nowhere yet). Neither had been applied — ledger max was still
 # 20261101000000.
+20261105000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261105000000_workflow_definition_versions_published_at.sql, byte-for-byte identical (verified via sha256, all three b003a2f4cb41, 2026-09-01). Same convention as the 20261102000000 and 20261103000000 pins: every tree that reads these tables carries the migration in its own history. This version exists because 20261104000000 was claimed twice by two lanes running concurrent censuses — the 1702-line workflow_runs_execution_bridge (business-suite-unified, kept the version) and this 83-line ALTER (moved, being far cheaper to move). The n=3 pin is what makes a fourth file at this version fail loudly instead of being silently skipped.
