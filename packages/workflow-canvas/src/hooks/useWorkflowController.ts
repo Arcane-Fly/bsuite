@@ -65,6 +65,7 @@ import { computeSwimlaneLayout } from '../utils/autoLayout.js';
 import type { SwimlaneLayoutOptions } from '../utils/autoLayout.js';
 import {
   workflowDefinitionOptions,
+  workflowDefinitionsOptions,
   workflowDraftOptions,
   workflowVersionsOptions,
 } from './queries.js';
@@ -220,6 +221,8 @@ export function useWorkflowController({
   const definitionKey = workflowDefinitionOptions(supabase, definitionId).queryKey;
   const draftKey = workflowDraftOptions(supabase, definitionId).queryKey;
   const versionsKey = workflowVersionsOptions(supabase, definitionId).queryKey;
+  // The LIST key's first segment, for prefix invalidation after a duplicate.
+  const definitionsKeyPrefix = [workflowDefinitionsOptions(supabase, tenantId).queryKey[0]];
 
   // --- local graph, with undo/redo -----------------------------------------
   const graphApi = useUndoRedo<WorkflowGraph>(emptyWorkflowGraph());
@@ -612,7 +615,16 @@ export function useWorkflowController({
     onSuccess: () => {
       // The copy is a DIFFERENT definition, so this workflow's own caches are
       // untouched; what changed is the LIST the caller renders it from.
-      void qc.invalidateQueries({ queryKey: ['workflow', 'definitions'] });
+      //
+      // The key comes from the FACTORY, not from a literal. queries.ts says
+      // keys live there and nowhere else, and the first draft of this line
+      // ignored that: it passed ['workflow', 'definitions'] while the list is
+      // keyed ['workflow-definitions', tenantId], so it matched nothing and the
+      // new workflow did not appear until a reload. Only the first segment is
+      // taken, so every cached tenant's list is invalidated rather than just
+      // the one in session — a developer who switches tenants must not be shown
+      // a stale list from before the copy.
+      void qc.invalidateQueries({ queryKey: definitionsKeyPrefix });
       onSuccess?.('Copied to your organisation as a draft');
     },
     onError: (err) => onError?.('Could not copy that workflow', err),
