@@ -1,6 +1,16 @@
-// Components
-export { WorkflowCanvas } from './components/index.js';
-export type { WorkflowCanvasProps } from './components/index.js';
+// Components — the canvas, plus the Phase 2 editing chrome that goes over it.
+export {
+  WorkflowCanvas,
+  WorkflowInspector,
+  WorkflowPalette,
+  WorkflowToolbar,
+} from './components/index.js';
+export type {
+  WorkflowCanvasProps,
+  WorkflowInspectorProps,
+  WorkflowPaletteProps,
+  WorkflowToolbarProps,
+} from './components/index.js';
 
 // Node types — the registry is the point of this package. See nodes/registry.ts.
 export {
@@ -122,6 +132,7 @@ export {
   createDraftVersion,
   createWorkflowDefinition,
   deleteWorkflowVersion,
+  duplicateWorkflowDefinition,
   getDraftVersion,
   getPublishedGraph,
   getWorkflowDefinition,
@@ -135,5 +146,7 @@ export {
 } from './service.js';
 export type {
   CreateDraftVersionArgs,
+  CreateWorkflowDefinitionArgs,
+  DuplicateWorkflowDefinitionArgs,
   LooseSupabaseClient,
 } from './service.js';

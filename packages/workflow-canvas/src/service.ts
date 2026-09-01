@@ -16,6 +16,7 @@
  */
 
 import { deserialiseGraph, serialiseGraph } from './schemas.js';
+import { emptyWorkflowGraph } from './types.js';
 import type {
   WorkflowDefinitionRow,
   WorkflowDefinitionVersionRow,
@@ -74,18 +75,40 @@ function hydrateVersion(row: WorkflowDefinitionVersionRow): WorkflowDefinitionVe
 // Definitions
 // ---------------------------------------------------------------------------
 
+/**
+ * Everything a tenant can see: its own workflows AND the platform templates.
+ *
+ * TWO THINGS WERE WRONG HERE AND BOTH WERE INVISIBLE UNTIL THE QUERY RAN.
+ *
+ *  1. `.order('label')` named a column that does not exist. The migration
+ *     declares `name`; PostgREST answered `42703 column
+ *     workflow_definitions.label does not exist`, so the list was empty in
+ *     every environment, for every tenant.
+ *  2. `.eq('tenant_id', tenantId)` excluded every `tenant_id IS NULL` row —
+ *     which is precisely the set of platform templates, the only rows
+ *     "Duplicate to my tenant" can act on. The feature had nothing to show.
+ *
+ * `.or()` rather than two round trips: the SELECT policy already admits both
+ * branches (`tenant_id IS NULL OR tenant_id IN (SELECT auth_tenant_id())`), so
+ * one request returns exactly what the caller is allowed to see and no more.
+ *
+ * With no tenant — a developer who has not chosen one — the templates alone are
+ * still the right answer, not an empty list: they are readable by every
+ * authenticated user and they are what such a session is usually there to edit.
+ */
 export async function listWorkflowDefinitions(
   client: LooseSupabaseClient,
   tenantId: string | null,
 ): Promise<WorkflowDefinitionRow[]> {
-  if (!tenantId) return [];
-  const q: LooseQuery = client
+  const base: LooseQuery = client
     .from(DEFINITIONS)
     .select('*')
-    .eq('tenant_id', tenantId)
-    .order('label', { ascending: true });
+    .order('name', { ascending: true });
+  const q: LooseQuery = tenantId
+    ? base.or(`tenant_id.is.null,tenant_id.eq.${tenantId}`)
+    : base.is('tenant_id', null);
   const res = await (q as unknown as Promise<{ data: unknown; error: unknown }>);
-  return assertNoError<WorkflowDefinitionRow[]>(res);
+  return assertNoError<WorkflowDefinitionRow[]>(res) ?? [];
 }
 
 export async function getWorkflowDefinition(
@@ -100,25 +123,54 @@ export async function getWorkflowDefinition(
   return assertNoError<WorkflowDefinitionRow | null>(res);
 }
 
+/**
+ * The insertable shape, spelled out rather than derived by `Omit`.
+ *
+ * `Omit<Row, …>` looked tidy and was wrong in both directions: it REQUIRED
+ * `created_by` (which the database fills or leaves null, and which a client has
+ * no business asserting) and it silently allowed `label`, a column that does
+ * not exist. `key` is NOT NULL with no default, so it is required here.
+ */
+export interface CreateWorkflowDefinitionArgs {
+  tenantId: string | null;
+  key: string;
+  name: string;
+  description?: string | null;
+  appScope?: string;
+  isSystem?: boolean;
+}
+
 export async function createWorkflowDefinition(
   client: LooseSupabaseClient,
-  definition: Omit<
-    WorkflowDefinitionRow,
-    'id' | 'created_at' | 'updated_at' | 'current_published_version_id'
-  >,
+  args: CreateWorkflowDefinitionArgs,
 ): Promise<WorkflowDefinitionRow> {
   const res = await client
     .from(DEFINITIONS)
-    .insert({ ...definition, current_published_version_id: null })
+    .insert({
+      tenant_id: args.tenantId,
+      key: args.key,
+      name: args.name,
+      description: args.description ?? null,
+      app_scope: args.appScope ?? 'all',
+      is_system: args.isSystem ?? false,
+      current_published_version_id: null,
+    })
     .select('*')
     .single();
   return assertNoError<WorkflowDefinitionRow>(res);
 }
 
+/**
+ * `label` is gone from the update set because the column never existed: a
+ * rename SET a column PostgREST refused, so renaming a workflow failed with a
+ * 42703 every time. `name` is the display name and `key` is deliberately NOT
+ * updatable here — an automation trigger names the key, so changing it would
+ * silently detach every trigger pointed at this workflow.
+ */
 export async function updateWorkflowDefinition(
   client: LooseSupabaseClient,
   definitionId: string,
-  updates: Partial<Pick<WorkflowDefinitionRow, 'label' | 'description' | 'name'>>,
+  updates: Partial<Pick<WorkflowDefinitionRow, 'description' | 'name'>>,
 ): Promise<WorkflowDefinitionRow> {
   const res = await client
     .from(DEFINITIONS)
@@ -351,6 +403,91 @@ export async function publishVersion(
     .select('*')
     .single();
   return assertNoError<WorkflowDefinitionRow>(defRes);
+}
+
+/**
+ * Copy a workflow — normally a platform template — into a tenant, as a DRAFT.
+ *
+ * IT LANDS AS A DRAFT AND THAT IS THE SAFETY PROPERTY, not an omission. The new
+ * definition's `current_published_version_id` stays NULL, so no runtime and no
+ * consumer can pick the copy up until a person deliberately publishes it. A
+ * duplicate that arrived published would put an unreviewed process into force
+ * on somebody else's tenant with one click.
+ *
+ * THE SOURCE GRAPH IS READ THROUGH THE PUBLISHED POINTER, never as "the newest
+ * version". Copying the newest would copy whoever happens to have a draft open
+ * on the template — the exact half-finished state the pointer exists to hide.
+ *
+ * THE KEY COLLIDES ON THE SECOND COPY. `(tenant_id, key)` is unique, so
+ * duplicating the same template twice into one tenant raises 23505. Surfacing
+ * that to the user is surfacing a constraint name they cannot act on, so the
+ * suffix is bumped and the insert retried. Bounded at five: past that it is a
+ * naming problem, not contention, and it should be reported rather than spun on.
+ */
+export interface DuplicateWorkflowDefinitionArgs {
+  sourceDefinitionId: string;
+  /** The tenant receiving the copy. Never null — a copy must be owned. */
+  tenantId: string;
+  /** Overrides the copied name; the key is derived from the source either way. */
+  name?: string;
+}
+
+export async function duplicateWorkflowDefinition(
+  client: LooseSupabaseClient,
+  args: DuplicateWorkflowDefinitionArgs,
+): Promise<{ definition: WorkflowDefinitionRow; draft: WorkflowDefinitionVersionRow }> {
+  const source = await getWorkflowDefinition(client, args.sourceDefinitionId);
+  if (!source) throw new Error('That workflow no longer exists.');
+
+  const sourceVersion = source.current_published_version_id
+    ? await getWorkflowVersion(client, source.current_published_version_id)
+    : null;
+  const graph = sourceVersion?.graph ?? emptyWorkflowGraph();
+
+  let definition: WorkflowDefinitionRow | null = null;
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= 5 && !definition; attempt += 1) {
+    const key = attempt === 1 ? source.key : `${source.key}-${attempt}`;
+    const name =
+      attempt === 1
+        ? (args.name ?? source.name)
+        : `${args.name ?? source.name} (${attempt})`;
+    const res = await client
+      .from(DEFINITIONS)
+      .insert({
+        tenant_id: args.tenantId,
+        key,
+        name,
+        description: source.description,
+        app_scope: source.app_scope,
+        // The copy is the tenant's own, never a platform-maintained one.
+        is_system: false,
+        current_published_version_id: null,
+      })
+      .select('*')
+      .single();
+    if (!res.error) {
+      definition = res.data as WorkflowDefinitionRow;
+      break;
+    }
+    lastError = res.error;
+    if (errorCode(res.error) !== UNIQUE_VIOLATION) break;
+  }
+  if (!definition) {
+    return assertNoError<never>({ data: null, error: lastError });
+  }
+
+  const draft = await createDraftVersion(client, {
+    definitionId: definition.id,
+    tenantId: args.tenantId,
+    graph,
+    // The rationale notes travel with the graph. A copied process without the
+    // reasons behind its branches is a shape nobody can maintain.
+    aiContext: sourceVersion?.ai_context ?? null,
+    version: 1,
+  });
+
+  return { definition, draft };
 }
 
 export async function deleteWorkflowVersion(

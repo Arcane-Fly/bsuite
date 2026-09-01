@@ -94,7 +94,13 @@ and State Training Authority · Training Provider · Host Employer.
 ## Usage
 
 ```tsx
-import { WorkflowCanvas, useWorkflowController } from '@bsuite/workflow-canvas';
+import {
+  WorkflowCanvas,
+  WorkflowInspector,
+  WorkflowPalette,
+  WorkflowToolbar,
+  useWorkflowController,
+} from '@bsuite/workflow-canvas';
 
 function WorkflowPage({ id }: { id: string }) {
   const controller = useWorkflowController({
@@ -105,12 +111,40 @@ function WorkflowPage({ id }: { id: string }) {
     onConnectionRefused: (v) => toast.info(v.reason),
   });
 
-  return <WorkflowCanvas controller={controller} />;
+  return (
+    <WorkflowCanvas controller={controller}>
+      <WorkflowPalette controller={controller} activeLaneId={activeLane} />
+      <WorkflowToolbar controller={controller} onDuplicated={(id) => navigate(`/workflows/${id}`)} />
+      <WorkflowInspector
+        controller={controller}
+        selectedNodeId={selected}
+        onNodeDeleted={() => setSelected(null)}
+      />
+    </WorkflowCanvas>
+  );
 }
 ```
 
+The three chrome components are children of the canvas, positioned over it. Each renders nothing
+when it has nothing to do — no selection, or a workflow the session cannot edit — so a consumer
+never has to gate them itself.
+
 Lazy-load the route. `@xyflow/react` must never reach the entry chunk — Phase C.2 of the May plan
 made that a hard rule with a bundle-analyser proof.
+
+### Editing, drafts and publishing
+
+- **The palette is built from the registry**, not from a list. A kind added through
+  `registry.extend()` appears without the palette being touched; containers (swimlanes) are excluded
+  because a lane is the frame of the diagram rather than a step in it.
+- **A rename commits on blur or Enter, not per keystroke.** `updateNodeData` checkpoints the undo
+  stack, so a per-keystroke commit would spend the whole 50-slot buffer on one word.
+- **Publish is disabled while an edit is unsaved.** The graph saves on a 900 ms debounce; publishing
+  inside that window would freeze a version whose last edits are still in a timer. The controller
+  flushes first as a second guard.
+- **`duplicateToTenant()` copies a template as a DRAFT**, reading the source THROUGH
+  `current_published_version_id` so it never copies somebody's open draft, and bumping the key rather
+  than surfacing a 23505 when the same template is copied twice.
 
 ---
 
@@ -121,11 +155,23 @@ This package does **not** create its tables. The `workflow_definitions` migratio
 predicate copied verbatim from `public.form_layouts`, `graph jsonb`, `ai_context jsonb`). If a
 column name in `src/types.ts` disagrees with that file, the migration is right.
 
-> **Version collision.** The plan reserves `20261102000000`, and that version is already taken on
-> `development` by `20261102000000_training_contracts_training_plan_fk.sql` (#2896, merged
-> 2026-09-01). `schema_migrations` is keyed on version alone across eight applier scopes, so a
-> colliding version is **silently skipped** — success reported, nothing applied. The workflow
-> migration must take a later version.
+The tables are created by `20261103000000_workflow_definitions.sql` and extended by
+`20261104000000_workflow_definition_versions_published_at.sql`. Both are checked into three scopes
+(root, crm7, business-suite-unified) byte-identically, with paired entries in
+`scripts/migration-collision-allowlist.txt`.
+
+> **Version collisions are silent.** `schema_migrations` is keyed on the 14-digit version ALONE
+> across eight applier scopes, so a file at a version already in the ledger is **skipped without a
+> word** — success reported, nothing applied. The plan reserved `20261102000000` and #2896 took it
+> the same day; `published_at` is a new file at `20261104000000` for the same reason, rather than an
+> edit to the merged `20261103000000`.
+
+> **0.1.0 disagreed with its own tables, and every test passed.** The service ordered by, SET and
+> inserted `label` — a column that has never existed — and `publishVersion()` wrote `published_at`,
+> which `20261103000000` never created. Listing, renaming, creating and publishing a workflow each
+> returned a PostgREST error, and the merged apprentice seed could not land at all. Nothing caught it
+> because every test stubbed the Supabase client. `src/__tests__/tableContract.test.ts` now parses
+> the migration files and fails when the service names a column the DDL does not declare.
 
 Readers must go through `current_published_version_id`, never "the highest version number" — that
 is what makes publishing atomic and reversible, and what stops a half-finished draft reaching
@@ -135,7 +181,7 @@ production.
 
 ## Tests
 
-`pnpm test` — 80 tests over five files:
+`pnpm test` — 105 tests over eight files:
 
 - `nodeRegistry.test.ts` — the vocabulary, `nodeTypes` stability, data-driven handles, openness
 - `connectionValidation.test.ts` — **a cycle is accepted**, both apprentice loops, the four-way
@@ -144,3 +190,10 @@ production.
   dagre call is schema-builder's rather than a reimplementation
 - `graphRoundTrip.test.ts` — serialise → deserialise → deep-equal, including through `JSON`
 - `undoRedo.test.ts` — the 50-snapshot cap, batching correctness, one-drag-one-step
+- `tableContract.test.ts` — the service may only name columns the migration FILES declare, with a
+  control assertion so a parser that matched nothing cannot report clean
+- `duplicateDefinition.test.ts` — the copy lands as a draft, comes from the published pointer rather
+  than `max(version)`, carries the rationale notes, bumps a colliding key, and does **not** retry an
+  error that is not a unique violation
+- `editorChrome.test.tsx` — the palette follows the registry, a rename is one undo step, deleting a
+  lane asks first, and publish is refused while an edit is unsaved
