@@ -1247,6 +1247,12 @@ export const SchemaCanvas = forwardRef<SchemaCanvasHandle, SchemaCanvasProps>(
                   throw err;
                 }
               }}
+              // Hide the physical-rename disclosure when the tenant has NO
+              // registered tables — the RPC would refuse for every entity, so
+              // offering it is an inert control. `undefined` (loading, or a
+              // failed read) keeps the disclosure rather than removing a
+              // capability on incomplete information.
+              physicalRenameAvailable={controller.physicalRenameAvailable}
               onRenamePhysical={async (newName, opts) => {
                 // Phase 3B: the two-phase dry-run → wet-run flow is owned by
                 // the dialog. `renameField` with `physical: true` forwards to

@@ -274,3 +274,59 @@ describe('FieldEditDialog', () => {
     ).toBe(false);
   });
 });
+
+/**
+ * The physical-rename disclosure must not be offered when it cannot succeed.
+ *
+ * `rename_physical_column` refuses unless the entity's table is registered in
+ * `schema_builder_physical_tables`, and that allowlist ships EMPTY — it is the fix
+ * for a privilege escalation where the ALTER TABLE target came from
+ * caller-controlled `tenant_entities.name`. Measured on production 2026-09-01: 0
+ * registrations, and 0 of 45 `tenant_entities` resolve to a real `public.<name>`
+ * table at all.
+ *
+ * So the checkbox was shown on every field of every entity while being unable to
+ * succeed for any of them — an inert control that charged the user a confirmation
+ * step to reach a refusal.
+ */
+describe('FieldEditDialog — physical rename availability', () => {
+  const withRename = () => ({
+    onRenamePhysical: vi.fn(async () => ({ executed: false, reason: 'table_not_registered' })),
+  });
+
+  const changeName = () => {
+    fireEvent.change(screen.getByLabelText('Field Name'), {
+      target: { value: 'renamed_field' },
+    });
+  };
+
+  // Asserted on the stable test id, not on copy — the disclosure wording is
+  // allowed to change without silently turning these into no-ops.
+  const disclosure = () => screen.queryByTestId('field-edit-physical-disclosure');
+
+  it('hides the disclosure when the tenant has a MEASURED zero registrations', () => {
+    setup({ ...withRename(), physicalRenameAvailable: false });
+    changeName();
+    expect(disclosure()).toBeNull();
+  });
+
+  it('shows it when registrations exist', () => {
+    setup({ ...withRename(), physicalRenameAvailable: true });
+    changeName();
+    expect(disclosure()).not.toBeNull();
+  });
+
+  it('shows it when availability is UNKNOWN, rather than removing a capability', () => {
+    // undefined means loading, or a failed read. A failed read is not proof of
+    // zero, and defaulting to hidden would silently drop a working control.
+    setup({ ...withRename(), physicalRenameAvailable: undefined });
+    changeName();
+    expect(disclosure()).not.toBeNull();
+  });
+
+  it('still hides it when no rename handler is supplied at all', () => {
+    setup({ physicalRenameAvailable: true });
+    changeName();
+    expect(disclosure()).toBeNull();
+  });
+});
