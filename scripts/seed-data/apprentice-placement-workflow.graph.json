@@ -1,0 +1,1101 @@
+{
+  "nodes": [
+    {
+      "id": "lane-apprentice",
+      "type": "swimlane",
+      "position": {
+        "x": 0,
+        "y": 0
+      },
+      "style": {
+        "width": 4720,
+        "height": 160
+      },
+      "data": {
+        "label": "Apprentice",
+        "order": 0
+      },
+      "draggable": false,
+      "selectable": false
+    },
+    {
+      "id": "lane-gto-labour-hire-team",
+      "type": "swimlane",
+      "position": {
+        "x": 0,
+        "y": 184
+      },
+      "style": {
+        "width": 4720,
+        "height": 160
+      },
+      "data": {
+        "label": "GTO / Labour Hire Team",
+        "order": 1
+      },
+      "draggable": false,
+      "selectable": false
+    },
+    {
+      "id": "lane-apprentice-connect-provider",
+      "type": "swimlane",
+      "position": {
+        "x": 0,
+        "y": 368
+      },
+      "style": {
+        "width": 4720,
+        "height": 160
+      },
+      "data": {
+        "label": "Apprentice Connect Provider",
+        "order": 2
+      },
+      "draggable": false,
+      "selectable": false
+    },
+    {
+      "id": "lane-dewr-and-state-training-authority",
+      "type": "swimlane",
+      "position": {
+        "x": 0,
+        "y": 552
+      },
+      "style": {
+        "width": 4720,
+        "height": 160
+      },
+      "data": {
+        "label": "DEWR and State Training Authority",
+        "order": 3
+      },
+      "draggable": false,
+      "selectable": false
+    },
+    {
+      "id": "lane-training-provider",
+      "type": "swimlane",
+      "position": {
+        "x": 0,
+        "y": 736
+      },
+      "style": {
+        "width": 4720,
+        "height": 160
+      },
+      "data": {
+        "label": "Training Provider",
+        "order": 4
+      },
+      "draggable": false,
+      "selectable": false
+    },
+    {
+      "id": "lane-host-employer",
+      "type": "swimlane",
+      "position": {
+        "x": 0,
+        "y": 920
+      },
+      "style": {
+        "width": 4720,
+        "height": 160
+      },
+      "data": {
+        "label": "Host Employer",
+        "order": 5
+      },
+      "draggable": false,
+      "selectable": false
+    },
+    {
+      "id": "state-training-authority-notifies-training-provider",
+      "type": "step",
+      "parentId": "lane-dewr-and-state-training-authority",
+      "extent": "parent",
+      "position": {
+        "x": 560,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "State Training Authority notifies Training Provider",
+        "sourceId": "xzgqxA_9Kd5V"
+      }
+    },
+    {
+      "id": "view-employment-placement-training-and-progress-in-apprentice-portal",
+      "type": "step",
+      "parentId": "lane-apprentice",
+      "extent": "parent",
+      "position": {
+        "x": 1340,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "View employment, placement, training, and progress in apprentice portal",
+        "sourceId": "xzgqzLFwl0~g"
+      }
+    },
+    {
+      "id": "sign-training-contract-and-provide-apprentice-qualification-signature-and-training-provider-details",
+      "type": "step",
+      "parentId": "lane-apprentice",
+      "extent": "parent",
+      "position": {
+        "x": 820,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Sign training contract and provide apprentice, qualification, signature, and training provider details",
+        "sourceId": "xzgqjFeSAX7D"
+      }
+    },
+    {
+      "id": "change-rates-or-placement-and-resend-for-e-signing",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 3420,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Change rates or placement and resend for e-signing",
+        "sourceId": "xzgqe.Xp8Hvf"
+      }
+    },
+    {
+      "id": "end",
+      "type": "terminator",
+      "parentId": "lane-host-employer",
+      "extent": "parent",
+      "position": {
+        "x": 820,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "End",
+        "sourceId": "xzgq4au_wMBz"
+      }
+    },
+    {
+      "id": "route-for-manual-host-approval",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 2640,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Route for manual host approval",
+        "sourceId": "xzgqODNT3Wo5"
+      }
+    },
+    {
+      "id": "complete-host-onboarding-or-site-induction-as-applicable",
+      "type": "step",
+      "parentId": "lane-host-employer",
+      "extent": "parent",
+      "position": {
+        "x": 300,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Complete host onboarding or site induction as applicable",
+        "sourceId": "xzgqy2SQop.b"
+      }
+    },
+    {
+      "id": "dewr-notifies-state-training-authority",
+      "type": "step",
+      "parentId": "lane-dewr-and-state-training-authority",
+      "extent": "parent",
+      "position": {
+        "x": 300,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "DEWR notifies State Training Authority",
+        "sourceId": "xzgqaq_.ApWG"
+      }
+    },
+    {
+      "id": "dewr-receives-training-contract",
+      "type": "step",
+      "parentId": "lane-dewr-and-state-training-authority",
+      "extent": "parent",
+      "position": {
+        "x": 40,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "DEWR receives training contract",
+        "sourceId": "xzgqWsvrLLrz"
+      }
+    },
+    {
+      "id": "host-accepted-placement",
+      "type": "decision",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 2380,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Host accepted placement?",
+        "sourceId": "xzgqJ.n89b-6"
+      }
+    },
+    {
+      "id": "lodge-training-contract-with-dewr",
+      "type": "step",
+      "parentId": "lane-apprentice-connect-provider",
+      "extent": "parent",
+      "position": {
+        "x": 300,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Lodge training contract with DEWR",
+        "sourceId": "xzgqEWgh4nMR"
+      }
+    },
+    {
+      "id": "update-crm-apprentice-record-and-calendar-with-actual-training-days",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 4460,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Update CRM, apprentice record, and calendar with actual training days",
+        "sourceId": "xzgqQZHcex2y"
+      }
+    },
+    {
+      "id": "confirm-actual-training-days-closer-to-delivery",
+      "type": "step",
+      "parentId": "lane-training-provider",
+      "extent": "parent",
+      "position": {
+        "x": 560,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Confirm actual training days closer to delivery",
+        "sourceId": "xzgqKajcxMra"
+      }
+    },
+    {
+      "id": "cancel-placement-and-seek-a-new-host",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 2900,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Cancel placement and seek a new host",
+        "sourceId": "xzgqmn0BAruF"
+      }
+    },
+    {
+      "id": "record-nominal-training-plan-in-crm-and-apprentice-record",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 560,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Record nominal training plan in CRM and apprentice record",
+        "sourceId": "xzgqNornTqM5"
+      }
+    },
+    {
+      "id": "confirm-final-rates-and-placement-particulars",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 3680,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Confirm final rates and placement particulars",
+        "sourceId": "xzgqe8fc4fYz"
+      }
+    },
+    {
+      "id": "set-up-initial-training-schedule-and-calendar",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 820,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Set up initial training schedule and calendar",
+        "sourceId": "xzgqNA9VC~oh"
+      }
+    },
+    {
+      "id": "attend-first-day-and-complete-applicable-host-onboarding",
+      "type": "step",
+      "parentId": "lane-apprentice",
+      "extent": "parent",
+      "position": {
+        "x": 1080,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Attend first day and complete applicable host onboarding",
+        "sourceId": "xzgqLiNgr6jd"
+      }
+    },
+    {
+      "id": "accept-employment-offer",
+      "type": "step",
+      "parentId": "lane-apprentice",
+      "extent": "parent",
+      "position": {
+        "x": 300,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Accept employment offer",
+        "sourceId": "xzgquGG1D1aT"
+      }
+    },
+    {
+      "id": "send-placement-for-crm-triggered-e-signing",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 2120,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Send placement for CRM-triggered e-signing",
+        "sourceId": "xzgq.laikjh."
+      }
+    },
+    {
+      "id": "prepare-nominal-training-plan-for-qualification-and-trade",
+      "type": "step",
+      "parentId": "lane-training-provider",
+      "extent": "parent",
+      "position": {
+        "x": 40,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Prepare nominal training plan for qualification and trade",
+        "sourceId": "xzgqfCkRF.zW"
+      }
+    },
+    {
+      "id": "link-approved-placement-to-apprentice-record",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 3940,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Link approved placement to apprentice record",
+        "sourceId": "xzgqN~XKTw0H"
+      }
+    },
+    {
+      "id": "manual-approval-accepted",
+      "type": "decision",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 3160,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Manual approval accepted?",
+        "sourceId": "xzgqt1ccSjy_"
+      }
+    },
+    {
+      "id": "send-nominal-training-plan-to-gto",
+      "type": "step",
+      "parentId": "lane-training-provider",
+      "extent": "parent",
+      "position": {
+        "x": 300,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Send nominal training plan to GTO",
+        "sourceId": "xzgqY2ACVDLM"
+      }
+    },
+    {
+      "id": "view-placement-training-progress-insurance-billing-and-provide-feedback",
+      "type": "step",
+      "parentId": "lane-host-employer",
+      "extent": "parent",
+      "position": {
+        "x": 560,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "View placement, training, progress, insurance, billing, and provide feedback",
+        "sourceId": "xzgqjFcc~uPQ"
+      }
+    },
+    {
+      "id": "complete-and-sign-employment-paperwork",
+      "type": "step",
+      "parentId": "lane-apprentice",
+      "extent": "parent",
+      "position": {
+        "x": 560,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Complete and sign employment paperwork",
+        "sourceId": "xzgqzmQXcTAt"
+      }
+    },
+    {
+      "id": "create-or-confirm-host-placement",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 1080,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Create or confirm host placement",
+        "sourceId": "xzgqcLNV-dcZ"
+      }
+    },
+    {
+      "id": "obtain-host-approval-of-quoted-placement",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 1860,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Obtain host approval of quoted placement",
+        "sourceId": "xzgqRlZrA2T."
+      }
+    },
+    {
+      "id": "start",
+      "type": "terminator",
+      "parentId": "lane-apprentice",
+      "extent": "parent",
+      "position": {
+        "x": 40,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Start",
+        "sourceId": "xzgqtG.ZX2~."
+      }
+    },
+    {
+      "id": "prepare-quoted-range-for-wages-allowances-billing-and-possible-funding-offsets",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 1340,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Prepare quoted range for wages, allowances, billing, and possible funding offsets",
+        "sourceId": "xzgqiWPATAWD"
+      }
+    },
+    {
+      "id": "publish-placement-and-nominal-training-information-to-portals",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 4200,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Publish placement and nominal training information to portals",
+        "sourceId": "xzgqV9EqflZg"
+      }
+    },
+    {
+      "id": "obtain-gto-employer-signature-and-check-contract-details",
+      "type": "step",
+      "parentId": "lane-apprentice-connect-provider",
+      "extent": "parent",
+      "position": {
+        "x": 40,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Obtain GTO employer signature and check contract details",
+        "sourceId": "xzgqSSSIP-O8"
+      }
+    },
+    {
+      "id": "schedule-employment-paperwork-in-person-or-online-through-applicant-tracking-system",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 40,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Schedule employment paperwork in person or online through Applicant Tracking System",
+        "sourceId": "xzgqgySr_E_W"
+      }
+    },
+    {
+      "id": "engage-apprentice-connect-provider",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 300,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Engage Apprentice Connect Provider",
+        "sourceId": "xzgqxIWvv8Xv"
+      }
+    },
+    {
+      "id": "review-quoted-placement-and-apprentice-particulars",
+      "type": "step",
+      "parentId": "lane-host-employer",
+      "extent": "parent",
+      "position": {
+        "x": 40,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Review quoted placement and apprentice particulars",
+        "sourceId": "xzgqLaQG4di-"
+      }
+    },
+    {
+      "id": "confirm-apprentice-particulars-affecting-funding-and-adult-or-junior-award-conditions",
+      "type": "step",
+      "parentId": "lane-gto-labour-hire-team",
+      "extent": "parent",
+      "position": {
+        "x": 1600,
+        "y": 40
+      },
+      "style": {
+        "width": 220,
+        "height": 80
+      },
+      "data": {
+        "label": "Confirm apprentice particulars affecting funding and adult or junior award conditions",
+        "sourceId": "xzgqpnISggUw"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "id": "e-state-training-authority-notifies-training-provider-prepare-nominal-training-plan-for-qualification-and-trade",
+      "source": "state-training-authority-notifies-training-provider",
+      "target": "prepare-nominal-training-plan-for-qualification-and-trade",
+      "data": {
+        "sourceId": "yzgqSUBWq_mA"
+      }
+    },
+    {
+      "id": "e-obtain-host-approval-of-quoted-placement-review-quoted-placement-and-apprentice-particulars",
+      "source": "obtain-host-approval-of-quoted-placement",
+      "target": "review-quoted-placement-and-apprentice-particulars",
+      "data": {
+        "sourceId": "yzgqkUaJWzhJ"
+      }
+    },
+    {
+      "id": "e-view-placement-training-progress-insurance-billing-and-provide-feedback-end",
+      "source": "view-placement-training-progress-insurance-billing-and-provide-feedback",
+      "target": "end",
+      "data": {
+        "sourceId": "yzgqZ7j.V~wo"
+      }
+    },
+    {
+      "id": "e-sign-training-contract-and-provide-apprentice-qualification-signature-and-training-provider-details-engage-apprentice-connect-provider",
+      "source": "sign-training-contract-and-provide-apprentice-qualification-signature-and-training-provider-details",
+      "target": "engage-apprentice-connect-provider",
+      "data": {
+        "sourceId": "yzgqITZqD0Dq"
+      }
+    },
+    {
+      "id": "e-attend-first-day-and-complete-applicable-host-onboarding-view-employment-placement-training-and-progress-in-apprentice-portal",
+      "source": "attend-first-day-and-complete-applicable-host-onboarding",
+      "target": "view-employment-placement-training-and-progress-in-apprentice-portal",
+      "data": {
+        "sourceId": "yzgqRktD1B0h"
+      }
+    },
+    {
+      "id": "e-schedule-employment-paperwork-in-person-or-online-through-applicant-tracking-system-complete-and-sign-employment-paperwork",
+      "source": "schedule-employment-paperwork-in-person-or-online-through-applicant-tracking-system",
+      "target": "complete-and-sign-employment-paperwork",
+      "data": {
+        "sourceId": "yzgqXy.c2PM-"
+      }
+    },
+    {
+      "id": "e-host-accepted-placement-confirm-final-rates-and-placement-particulars",
+      "source": "host-accepted-placement",
+      "target": "confirm-final-rates-and-placement-particulars",
+      "data": {
+        "sourceId": "yzgqpSnL9lOf"
+      },
+      "label": "Yes"
+    },
+    {
+      "id": "e-review-quoted-placement-and-apprentice-particulars-send-placement-for-crm-triggered-e-signing",
+      "source": "review-quoted-placement-and-apprentice-particulars",
+      "target": "send-placement-for-crm-triggered-e-signing",
+      "data": {
+        "sourceId": "yzgqHl1QWrsU"
+      }
+    },
+    {
+      "id": "e-engage-apprentice-connect-provider-obtain-gto-employer-signature-and-check-contract-details",
+      "source": "engage-apprentice-connect-provider",
+      "target": "obtain-gto-employer-signature-and-check-contract-details",
+      "data": {
+        "sourceId": "yzgqmqm66~_d"
+      }
+    },
+    {
+      "id": "e-cancel-placement-and-seek-a-new-host-create-or-confirm-host-placement",
+      "source": "cancel-placement-and-seek-a-new-host",
+      "target": "create-or-confirm-host-placement",
+      "data": {
+        "sourceId": "yzgqq1_G5CnS"
+      }
+    },
+    {
+      "id": "e-confirm-apprentice-particulars-affecting-funding-and-adult-or-junior-award-conditions-obtain-host-approval-of-quoted-placement",
+      "source": "confirm-apprentice-particulars-affecting-funding-and-adult-or-junior-award-conditions",
+      "target": "obtain-host-approval-of-quoted-placement",
+      "data": {
+        "sourceId": "yzgqxg9Z6.Uz"
+      }
+    },
+    {
+      "id": "e-change-rates-or-placement-and-resend-for-e-signing-send-placement-for-crm-triggered-e-signing",
+      "source": "change-rates-or-placement-and-resend-for-e-signing",
+      "target": "send-placement-for-crm-triggered-e-signing",
+      "data": {
+        "sourceId": "yzgqs3uNb9GA"
+      }
+    },
+    {
+      "id": "e-host-accepted-placement-route-for-manual-host-approval",
+      "source": "host-accepted-placement",
+      "target": "route-for-manual-host-approval",
+      "data": {
+        "sourceId": "yzgq-EMsS8GD"
+      },
+      "label": "Manual approval"
+    },
+    {
+      "id": "e-dewr-notifies-state-training-authority-state-training-authority-notifies-training-provider",
+      "source": "dewr-notifies-state-training-authority",
+      "target": "state-training-authority-notifies-training-provider",
+      "data": {
+        "sourceId": "yzgqyxpB3OcE"
+      }
+    },
+    {
+      "id": "e-host-accepted-placement-cancel-placement-and-seek-a-new-host",
+      "source": "host-accepted-placement",
+      "target": "cancel-placement-and-seek-a-new-host",
+      "data": {
+        "sourceId": "yzgqa0GjqTND"
+      },
+      "label": "Cancel"
+    },
+    {
+      "id": "e-record-nominal-training-plan-in-crm-and-apprentice-record-set-up-initial-training-schedule-and-calendar",
+      "source": "record-nominal-training-plan-in-crm-and-apprentice-record",
+      "target": "set-up-initial-training-schedule-and-calendar",
+      "data": {
+        "sourceId": "yzgqG-LY0RNi"
+      }
+    },
+    {
+      "id": "e-obtain-gto-employer-signature-and-check-contract-details-lodge-training-contract-with-dewr",
+      "source": "obtain-gto-employer-signature-and-check-contract-details",
+      "target": "lodge-training-contract-with-dewr",
+      "data": {
+        "sourceId": "yzgqfx1bJb37"
+      }
+    },
+    {
+      "id": "e-route-for-manual-host-approval-manual-approval-accepted",
+      "source": "route-for-manual-host-approval",
+      "target": "manual-approval-accepted",
+      "data": {
+        "sourceId": "yzgqXLGtVHEc"
+      }
+    },
+    {
+      "id": "e-view-employment-placement-training-and-progress-in-apprentice-portal-complete-host-onboarding-or-site-induction-as-applicable",
+      "source": "view-employment-placement-training-and-progress-in-apprentice-portal",
+      "target": "complete-host-onboarding-or-site-induction-as-applicable",
+      "data": {
+        "sourceId": "yzgq3WqTLrt-"
+      }
+    },
+    {
+      "id": "e-send-nominal-training-plan-to-gto-record-nominal-training-plan-in-crm-and-apprentice-record",
+      "source": "send-nominal-training-plan-to-gto",
+      "target": "record-nominal-training-plan-in-crm-and-apprentice-record",
+      "data": {
+        "sourceId": "yzgqfSmHVqw4"
+      }
+    },
+    {
+      "id": "e-host-accepted-placement-change-rates-or-placement-and-resend-for-e-signing",
+      "source": "host-accepted-placement",
+      "target": "change-rates-or-placement-and-resend-for-e-signing",
+      "data": {
+        "sourceId": "yzgqzatr4-9x"
+      },
+      "label": "No"
+    },
+    {
+      "id": "e-prepare-nominal-training-plan-for-qualification-and-trade-send-nominal-training-plan-to-gto",
+      "source": "prepare-nominal-training-plan-for-qualification-and-trade",
+      "target": "send-nominal-training-plan-to-gto",
+      "data": {
+        "sourceId": "yzgqXMFrevVU"
+      }
+    },
+    {
+      "id": "e-dewr-receives-training-contract-dewr-notifies-state-training-authority",
+      "source": "dewr-receives-training-contract",
+      "target": "dewr-notifies-state-training-authority",
+      "data": {
+        "sourceId": "yzgqnJW24Q~G"
+      }
+    },
+    {
+      "id": "e-publish-placement-and-nominal-training-information-to-portals-confirm-actual-training-days-closer-to-delivery",
+      "source": "publish-placement-and-nominal-training-information-to-portals",
+      "target": "confirm-actual-training-days-closer-to-delivery",
+      "data": {
+        "sourceId": "yzgq3b.SBu.v"
+      }
+    },
+    {
+      "id": "e-accept-employment-offer-complete-and-sign-employment-paperwork",
+      "source": "accept-employment-offer",
+      "target": "complete-and-sign-employment-paperwork",
+      "data": {
+        "sourceId": "xzgqSp9i-Y6r"
+      }
+    },
+    {
+      "id": "e-manual-approval-accepted-change-rates-or-placement-and-resend-for-e-signing",
+      "source": "manual-approval-accepted",
+      "target": "change-rates-or-placement-and-resend-for-e-signing",
+      "data": {
+        "sourceId": "yzgqj0JnBOe4"
+      },
+      "label": "No"
+    },
+    {
+      "id": "e-start-accept-employment-offer",
+      "source": "start",
+      "target": "accept-employment-offer",
+      "data": {
+        "sourceId": "xzgqzaL.xL4K"
+      }
+    },
+    {
+      "id": "e-sign-training-contract-and-provide-apprentice-qualification-signature-and-training-provider-details-attend-first-day-and-complete-applicable-host-onboarding",
+      "source": "sign-training-contract-and-provide-apprentice-qualification-signature-and-training-provider-details",
+      "target": "attend-first-day-and-complete-applicable-host-onboarding",
+      "data": {
+        "sourceId": "xzgqED_V_ia5"
+      }
+    },
+    {
+      "id": "e-confirm-final-rates-and-placement-particulars-link-approved-placement-to-apprentice-record",
+      "source": "confirm-final-rates-and-placement-particulars",
+      "target": "link-approved-placement-to-apprentice-record",
+      "data": {
+        "sourceId": "yzgqGjYX-~~H"
+      }
+    },
+    {
+      "id": "e-lodge-training-contract-with-dewr-dewr-receives-training-contract",
+      "source": "lodge-training-contract-with-dewr",
+      "target": "dewr-receives-training-contract",
+      "data": {
+        "sourceId": "yzgqTHyoD910"
+      }
+    },
+    {
+      "id": "e-complete-host-onboarding-or-site-induction-as-applicable-view-placement-training-progress-insurance-billing-and-provide-feedback",
+      "source": "complete-host-onboarding-or-site-induction-as-applicable",
+      "target": "view-placement-training-progress-insurance-billing-and-provide-feedback",
+      "data": {
+        "sourceId": "yzgqIXua1ke1"
+      }
+    },
+    {
+      "id": "e-prepare-quoted-range-for-wages-allowances-billing-and-possible-funding-offsets-confirm-apprentice-particulars-affecting-funding-and-adult-or-junior-award-conditions",
+      "source": "prepare-quoted-range-for-wages-allowances-billing-and-possible-funding-offsets",
+      "target": "confirm-apprentice-particulars-affecting-funding-and-adult-or-junior-award-conditions",
+      "data": {
+        "sourceId": "yzgqKt5aYUkm"
+      }
+    },
+    {
+      "id": "e-set-up-initial-training-schedule-and-calendar-create-or-confirm-host-placement",
+      "source": "set-up-initial-training-schedule-and-calendar",
+      "target": "create-or-confirm-host-placement",
+      "data": {
+        "sourceId": "yzgqQv1vI5.l"
+      }
+    },
+    {
+      "id": "e-complete-and-sign-employment-paperwork-sign-training-contract-and-provide-apprentice-qualification-signature-and-training-provider-details",
+      "source": "complete-and-sign-employment-paperwork",
+      "target": "sign-training-contract-and-provide-apprentice-qualification-signature-and-training-provider-details",
+      "data": {
+        "sourceId": "xzgqGAayDX43"
+      }
+    },
+    {
+      "id": "e-create-or-confirm-host-placement-prepare-quoted-range-for-wages-allowances-billing-and-possible-funding-offsets",
+      "source": "create-or-confirm-host-placement",
+      "target": "prepare-quoted-range-for-wages-allowances-billing-and-possible-funding-offsets",
+      "data": {
+        "sourceId": "yzgqkjp_i.w8"
+      }
+    },
+    {
+      "id": "e-link-approved-placement-to-apprentice-record-publish-placement-and-nominal-training-information-to-portals",
+      "source": "link-approved-placement-to-apprentice-record",
+      "target": "publish-placement-and-nominal-training-information-to-portals",
+      "data": {
+        "sourceId": "yzgq62LAkCML"
+      }
+    },
+    {
+      "id": "e-send-placement-for-crm-triggered-e-signing-host-accepted-placement",
+      "source": "send-placement-for-crm-triggered-e-signing",
+      "target": "host-accepted-placement",
+      "data": {
+        "sourceId": "yzgqen.1q9gV"
+      }
+    },
+    {
+      "id": "e-accept-employment-offer-schedule-employment-paperwork-in-person-or-online-through-applicant-tracking-system",
+      "source": "accept-employment-offer",
+      "target": "schedule-employment-paperwork-in-person-or-online-through-applicant-tracking-system",
+      "data": {
+        "sourceId": "xzgqTS-I6xlC"
+      }
+    },
+    {
+      "id": "e-update-crm-apprentice-record-and-calendar-with-actual-training-days-attend-first-day-and-complete-applicable-host-onboarding",
+      "source": "update-crm-apprentice-record-and-calendar-with-actual-training-days",
+      "target": "attend-first-day-and-complete-applicable-host-onboarding",
+      "data": {
+        "sourceId": "yzgqakUO3-op"
+      }
+    },
+    {
+      "id": "e-confirm-actual-training-days-closer-to-delivery-update-crm-apprentice-record-and-calendar-with-actual-training-days",
+      "source": "confirm-actual-training-days-closer-to-delivery",
+      "target": "update-crm-apprentice-record-and-calendar-with-actual-training-days",
+      "data": {
+        "sourceId": "yzgq83IjlhtF"
+      }
+    },
+    {
+      "id": "e-manual-approval-accepted-confirm-final-rates-and-placement-particulars",
+      "source": "manual-approval-accepted",
+      "target": "confirm-final-rates-and-placement-particulars",
+      "data": {
+        "sourceId": "yzgqD_xY3MRX"
+      },
+      "label": "Yes"
+    }
+  ],
+  "viewport": {
+    "x": 0,
+    "y": 0,
+    "zoom": 1
+  }
+}
