@@ -134,3 +134,37 @@
 # separately-enforced instance of "intentional-duplicate" in this repo —
 # higher confidence than the crm7/root pairs above, which are identical by
 # inspection only, with no dedicated CI enforcing that they stay that way.
+
+# --- Phase 1 of the workflow canvas (docs/plans/20260901-workflow-canvas-
+#     implementation-v1.00A.md) ----------------------------------------------
+
+20261103000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261103000000_workflow_definitions.sql, byte-for-byte identical (verified via md5sum, all three 8236d87abb9dacbc1c2c19046813f25a, 2026-09-01). Deliberately duplicated so each app that reads these tables has the migration in its own history, the same convention 20260728120000 and 20260707000020/21 already follow. No live-catalog verification needed: the content is identical, so whichever two copies the applier skips lose nothing.
+
+# Not this lane's migration — recorded here because the gate is estate-wide and
+# went red on development the moment bsuite#2896 merged without an entry. The
+# three copies were verified byte-identical (md5 c1c7ce13000dbf2a081144e9c7d2ccd9)
+# on 2026-09-01, so this is the same benign intentional-duplicate shape as the
+# entries above, not a waiver of anything unexamined.
+20261102000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261102000000_training_contracts_training_plan_fk.sql (bsuite#2896), byte-for-byte identical (verified via md5sum, all three c1c7ce13000dbf2a081144e9c7d2ccd9, 2026-09-01). No live-catalog verification needed: the content is identical, so whichever two copies the applier skips lose nothing.
+
+# --- Phase 2 of the workflow canvas -----------------------------------------
+#
+# The column 20261103000000 forgot. Its own seed and the canvas package's
+# publishVersion() both write published_at and the CREATE TABLE never declared
+# it, so the apprentice template could not be seeded and no workflow could be
+# published. Added as a NEW version rather than by editing the merged file,
+# because the ledger is keyed on version alone across all eight applier scopes
+# and a re-used version is silently skipped.
+20261105000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261105000000_workflow_definition_versions_published_at.sql, byte-for-byte identical (verified via md5sum, all three 9f36ca980ae39f89e083b4d3a8ba61a7, 2026-09-01). Same convention and same reason as 20261103000000 immediately above, whose table this alters: each app that reads these tables carries the migration in its own history. No live-catalog verification needed — the content is identical, so whichever two copies the applier skips lose nothing.
+#
+# RENUMBERED FROM 20261104000000. That version was free at authoring and at
+# commit — ledger and all three origin/development trees, both checked — and
+# stopped being free about an hour later when business-suite-unified#1085 merged
+# 20261104000000_workflow_runs_execution_bridge.sql into the same scope. For a
+# window `development` carried two files at one version with nothing red: BSU has
+# no collision gate of its own and the root gate could not see them because the
+# gitlink had not advanced. The execution bridge merged first and keeps the
+# version; this file moved, being the cheaper of the two (one ALTER against a
+# table that exists nowhere yet). Neither had been applied — ledger max was still
+# 20261101000000.
+20261105000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261105000000_workflow_definition_versions_published_at.sql, byte-for-byte identical (verified via sha256, all three b003a2f4cb41, 2026-09-01). Same convention as the 20261102000000 and 20261103000000 pins: every tree that reads these tables carries the migration in its own history. This version exists because 20261104000000 was claimed twice by two lanes running concurrent censuses — the 1702-line workflow_runs_execution_bridge (business-suite-unified, kept the version) and this 83-line ALTER (moved, being far cheaper to move). The n=3 pin is what makes a fourth file at this version fail loudly instead of being silently skipped.
