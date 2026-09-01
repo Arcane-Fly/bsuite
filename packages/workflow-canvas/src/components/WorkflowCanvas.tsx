@@ -66,8 +66,19 @@ function WorkflowCanvasInner({
 }: WorkflowCanvasProps) {
   const colorMode = useDocumentColorMode();
 
+  /**
+   * Persist the camera ONLY when a person moved it.
+   *
+   * `OnMoveEnd` is typed `(event: MouseEvent | TouchEvent | null, viewport)`,
+   * and the `null` is not incidental — it is how xyflow marks a PROGRAMMATIC
+   * move. `fitView` fires one on mount, so without this guard merely OPENING a
+   * workflow would schedule a write of the fitted viewport: a database write on
+   * every page load, by every viewer, last-one-wins on a shared draft, for a
+   * camera position nobody chose.
+   */
   const onMoveEnd = useCallback(
-    (_event: unknown, viewport: Viewport) => {
+    (event: MouseEvent | TouchEvent | null, viewport: Viewport) => {
+      if (event === null) return;
       controller.onViewportChange(viewport);
     },
     [controller],

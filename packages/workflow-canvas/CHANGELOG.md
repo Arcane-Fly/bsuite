@@ -46,6 +46,19 @@ Both found by writing the first tests `useUndoRedo` has ever had:
   second-to-last pointer-move, so undo nudged a node back a pixel instead of returning it to where
   the drag began. The checkpoint is now taken at drag START.
 
+### Two things this release deliberately does NOT do
+
+- **`sideEffects` is an array, not `false`.** `WorkflowCanvas.tsx` imports
+  `@xyflow/react/dist/style.css`, and a bare import of a module with no used exports is exactly what
+  `sideEffects: false` licenses a bundler to remove — the canvas would ship unstyled with nothing in
+  the build log to say why. The array keeps tree-shaking everywhere else and protects the one file
+  that genuinely has a side effect.
+- **The viewport is saved only when a person moved it.** `OnMoveEnd` is typed
+  `(event: MouseEvent | TouchEvent | null, viewport)` and the `null` marks a PROGRAMMATIC move.
+  `fitView` fires one on mount, so without that guard merely opening a workflow would write the
+  fitted viewport back — a database write on every page load, by every viewer, last-one-wins on a
+  shared draft, for a camera position nobody chose.
+
 ### Dependencies
 
 **None.** `dependencies` is `{}` — an explicit operator constraint ("hopefully it doesnt take up

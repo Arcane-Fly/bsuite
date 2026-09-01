@@ -12,7 +12,10 @@
     "url": "git+https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/workflow-canvas"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "**/*.css",
+    "./dist/components/WorkflowCanvas.js"
+  ],
   "files": [
     "dist",
     "README.md"
