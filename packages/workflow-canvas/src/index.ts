@@ -144,6 +144,7 @@ export {
   updateVersionAiContext,
   updateWorkflowDefinition,
 } from './service.js';
+export { WorkflowServiceError, WorkflowSourceMissingError } from './service.js';
 export type {
   CreateDraftVersionArgs,
   CreateWorkflowDefinitionArgs,

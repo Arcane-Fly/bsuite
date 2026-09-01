@@ -89,6 +89,30 @@ function declaredColumns(sql: string, table: string): Set<string> {
   return columns;
 }
 
+/**
+ * Lines of the service that name a `label` COLUMN, as a plain list.
+ *
+ * Prose in the header explains the defect at length and must stay readable, so
+ * comment lines are dropped first — otherwise the file that documents the fix
+ * reads as the violation, which has happened to three separate greps in this
+ * estate.
+ *
+ * Substring matching, not a pattern: the three forms a column literal can take
+ * in this file are `'label'`, `"label"` and a backticked `label`, and listing
+ * them is both exhaustive here and legible to a reader.
+ */
+export function linesNamingLabelColumn(source: string): string[] {
+  const forms = ["'label'", '"label"', '`label`'];
+  return source
+    .split('\n')
+    .filter((line) => {
+      const t = line.trimStart();
+      if (t.startsWith('*') || t.startsWith('/*') || t.startsWith('//')) return false;
+      return forms.some((form) => line.includes(form));
+    })
+    .map((line) => line.trim());
+}
+
 function loadDdl(): string {
   // Not `?? ''`. An unreadable migration must fail the test, not silently
   // shrink the column set until nothing is checked.
@@ -150,17 +174,11 @@ describe('workflow tables — the service may only name columns the DDL declares
   });
 
   it('never mentions a `label` column in the service layer', () => {
-    const service = readFileSync(SERVICE, 'utf8');
-    // Prose in the header explains the defect and must stay readable, so only
-    // the code is searched.
-    const code = service
-      .split('\n')
-      .filter((line) => {
-        const t = line.trimStart();
-        return !t.startsWith('*') && !t.startsWith('/*') && !t.startsWith('//');
-      })
-      .join('\n');
-    expect(code).not.toMatch(/['"`]label['"`]/);
-    expect(code).not.toMatch(/\border\('label'/);
+    // The assertion is on a NAMED OUTCOME — the list of offending lines — not on
+    // a pattern match. Operator ruling 2026-08-26: a regex assertion is brittle
+    // in both directions, and the dangerous direction is that rewording makes it
+    // stop matching and PASS. An empty list is unambiguous, and a non-empty one
+    // names the exact lines to fix.
+    expect(linesNamingLabelColumn(readFileSync(SERVICE, 'utf8'))).toEqual([]);
   });
 });

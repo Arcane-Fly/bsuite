@@ -40,17 +40,47 @@ const VERSIONS = 'workflow_definition_versions';
 /** Postgres unique-violation. See `createDraftVersion` for why it is caught. */
 const UNIQUE_VIOLATION = '23505';
 
+/**
+ * Every failure this module raises carries a MACHINE-READABLE `code`, and that
+ * is not decoration.
+ *
+ * Operator ruling 2026-08-26: assert the OUTCOME, not the wording. A caller —
+ * and a test — that has to match on prose is brittle in both directions, and
+ * the dangerous direction is the quiet one: reword the message and the check
+ * stops matching and PASSES while the code still misbehaves. `DuplicateNodeKind
+ * Error` in `nodes/registry.ts` already made this call for the same reason.
+ *
+ * For a PostgREST failure the code is the SQLSTATE the database returned
+ * (`23505` unique violation, `42501` insufficient privilege, `42703` undefined
+ * column), which is what a caller actually needs to branch on.
+ */
+export class WorkflowServiceError extends Error {
+  constructor(
+    readonly code: string,
+    message: string,
+  ) {
+    super(message);
+    this.name = 'WorkflowServiceError';
+  }
+}
+
+/** The source of a duplicate is gone — deleted, or never visible to this role. */
+export class WorkflowSourceMissingError extends Error {
+  readonly code = 'workflow-source-missing';
+
+  constructor(readonly definitionId: string) {
+    super(`Workflow '${definitionId}' no longer exists, or you cannot see it.`);
+    this.name = 'WorkflowSourceMissingError';
+  }
+}
+
 function assertNoError<T>(res: { data: unknown; error: unknown }): T {
   if (res.error) {
-    throw res.error instanceof Error
-      ? res.error
-      : new Error(
-          typeof res.error === 'object' &&
-          res.error !== null &&
-          'message' in res.error
-            ? String((res.error as { message: unknown }).message)
-            : String(res.error),
-        );
+    const message =
+      typeof res.error === 'object' && res.error !== null && 'message' in res.error
+        ? String((res.error as { message: unknown }).message)
+        : String(res.error);
+    throw new WorkflowServiceError(errorCode(res.error) ?? 'unknown', message);
   }
   return res.data as T;
 }
@@ -437,7 +467,7 @@ export async function duplicateWorkflowDefinition(
   args: DuplicateWorkflowDefinitionArgs,
 ): Promise<{ definition: WorkflowDefinitionRow; draft: WorkflowDefinitionVersionRow }> {
   const source = await getWorkflowDefinition(client, args.sourceDefinitionId);
-  if (!source) throw new Error('That workflow no longer exists.');
+  if (!source) throw new WorkflowSourceMissingError(args.sourceDefinitionId);
 
   const sourceVersion = source.current_published_version_id
     ? await getWorkflowVersion(client, source.current_published_version_id)

@@ -52,6 +52,26 @@ function codeOnly(source: string): string {
     .join('\n');
 }
 
+/**
+ * Lines that build a query key inline, as a plain list.
+ *
+ * `queryKey:` followed by `[` is the hand-written form. Every legitimate use in
+ * these files passes a value derived from a factory, so it reads
+ * `queryKey: someKey`. Scanned by character rather than by pattern so the
+ * assertion can be on the RESULT.
+ */
+export function handWrittenKeyLines(source: string): string[] {
+  return codeOnly(source)
+    .split('\n')
+    .filter((line) => {
+      const at = line.indexOf('queryKey:');
+      if (at === -1) return false;
+      const rest = line.slice(at + 'queryKey:'.length).trimStart();
+      return rest.startsWith('[');
+    })
+    .map((line) => line.trim());
+}
+
 describe('query keys', () => {
   it('the five factories produce five distinct first segments', () => {
     // The control. If two factories shared a first segment, prefix invalidation
@@ -70,10 +90,10 @@ describe('query keys', () => {
   });
 
   it.each(CONSUMERS)('%s writes no query key by hand', (file) => {
-    const code = codeOnly(readFileSync(resolve(HOOKS, file), 'utf8'));
-    // `queryKey: [` is the hand-written form. Every legitimate use in these
-    // files passes a value derived from a factory, so it reads `queryKey: name`.
-    expect(code).not.toMatch(/queryKey:\s*\[/);
+    // A NAMED OUTCOME — the offending lines — rather than a pattern match.
+    // Operator ruling 2026-08-26. An empty list is unambiguous, and a non-empty
+    // one names exactly what to fix instead of reporting "did not match".
+    expect(handWrittenKeyLines(readFileSync(resolve(HOOKS, file), 'utf8'))).toEqual([]);
   });
 
   it.each(CONSUMERS)('%s never mentions a key segment as a bare literal', (file) => {

@@ -22,7 +22,11 @@
 
 import { describe, expect, it } from 'vitest';
 
-import { duplicateWorkflowDefinition } from '../service.js';
+import {
+  duplicateWorkflowDefinition,
+  WorkflowServiceError,
+  WorkflowSourceMissingError,
+} from '../service.js';
 import type {
   WorkflowDefinitionRow,
   WorkflowDefinitionVersionRow,
@@ -259,24 +263,32 @@ describe('duplicateWorkflowDefinition', () => {
       insertError: { code: '42501', message: 'permission denied' },
     });
 
-    await expect(
-      duplicateWorkflowDefinition(client, {
-        sourceDefinitionId: 'def-template',
-        tenantId: TENANT,
-      }),
-    ).rejects.toThrow(/permission denied/);
+    // The OUTCOME is the SQLSTATE, not the sentence. Matching on prose is
+    // brittle in both directions and silently PASSES when the wording changes
+    // (operator, 2026-08-26).
+    const error = await duplicateWorkflowDefinition(client, {
+      sourceDefinitionId: 'def-template',
+      tenantId: TENANT,
+    }).catch((err: unknown) => err);
 
+    expect(error).toBeInstanceOf(WorkflowServiceError);
+    expect((error as WorkflowServiceError).code).toBe('42501');
     expect(inserts.filter((i) => i.table === 'workflow_definitions')).toHaveLength(1);
   });
 
   it('refuses a source that does not exist rather than creating an empty copy', async () => {
     const { client, inserts } = makeClient();
-    await expect(
-      duplicateWorkflowDefinition(client, {
-        sourceDefinitionId: 'def-missing',
-        tenantId: TENANT,
-      }),
-    ).rejects.toThrow(/no longer exists/);
+
+    const error = await duplicateWorkflowDefinition(client, {
+      sourceDefinitionId: 'def-missing',
+      tenantId: TENANT,
+    }).catch((err: unknown) => err);
+
+    expect(error).toBeInstanceOf(WorkflowSourceMissingError);
+    expect((error as WorkflowSourceMissingError).code).toBe('workflow-source-missing');
+    // The id travels on the error, so a caller can say WHICH workflow without
+    // parsing the message for it.
+    expect((error as WorkflowSourceMissingError).definitionId).toBe('def-missing');
     expect(inserts).toHaveLength(0);
   });
 });
