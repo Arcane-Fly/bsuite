@@ -134,3 +134,15 @@
 # separately-enforced instance of "intentional-duplicate" in this repo —
 # higher confidence than the crm7/root pairs above, which are identical by
 # inspection only, with no dedicated CI enforcing that they stay that way.
+
+# --- Phase 1 of the workflow canvas (docs/plans/20260901-workflow-canvas-
+#     implementation-v1.00A.md) ----------------------------------------------
+
+20261103000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261103000000_workflow_definitions.sql, byte-for-byte identical (verified via md5sum, all three 8236d87abb9dacbc1c2c19046813f25a, 2026-09-01). Deliberately duplicated so each app that reads these tables has the migration in its own history, the same convention 20260728120000 and 20260707000020/21 already follow. No live-catalog verification needed: the content is identical, so whichever two copies the applier skips lose nothing.
+
+# Not this lane's migration — recorded here because the gate is estate-wide and
+# went red on development the moment bsuite#2896 merged without an entry. The
+# three copies were verified byte-identical (md5 c1c7ce13000dbf2a081144e9c7d2ccd9)
+# on 2026-09-01, so this is the same benign intentional-duplicate shape as the
+# entries above, not a waiver of anything unexamined.
+20261102000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261102000000_training_contracts_training_plan_fk.sql (bsuite#2896), byte-for-byte identical (verified via md5sum, all three c1c7ce13000dbf2a081144e9c7d2ccd9, 2026-09-01). No live-catalog verification needed: the content is identical, so whichever two copies the applier skips lose nothing.

@@ -59,8 +59,29 @@ jobs:
       - name: Collect added/changed migration files in this PR
         id: delta
         run: |
+          # `:(glob)` IS LOAD-BEARING, and its absence made this step blind to the
+          # ROOT scope for as long as it has existed.
+          #
+          # A git pathspec without pathspec-magic is matched with fnmatch-style
+          # semantics in which a leading `**/` requires at least one directory
+          # component. So the old `'**/supabase/migrations/*.sql'` matched
+          # `<submodule>/supabase/migrations/x.sql` but NOT the parent repo's own
+          # `supabase/migrations/x.sql` — which is scope "root" in
+          # supabase-migrate.yml, one of the 8 scopes that write to the shared
+          # ledger. Every root-scope migration therefore reached this job as a
+          # PR-delta of `<none>` and was never checked for FK indexes at all.
+          #
+          # `:(glob)` switches the pathspec to wildmatch, where a leading `**/`
+          # matches ZERO or more components, so the same one pattern now covers
+          # root and submodule paths alike. Confirmed on bsuite#2901: without it
+          # the diff returned nothing for a root migration, with it the file
+          # appears.
+          #
+          # This was not caught by the gate going green over a real defect — the
+          # cross-check below refused to pass on the diff/API disagreement, which
+          # is exactly what it was added to do. It is the reason this was found.
           FILES=$(git diff --name-only --diff-filter=AM "origin/${BASE_REF}...HEAD" \
-                  -- '**/supabase/migrations/*.sql' 'packages/db/migrations/*.sql' \
+                  -- ':(glob)**/supabase/migrations/*.sql' 'packages/db/migrations/*.sql' \
                   | tr '\n' ',' | sed 's/,$//')
           echo "count=$(echo "$FILES" | tr ',' '\n' | grep -c . || true)" >> "$GITHUB_OUTPUT"
           echo "files=$FILES" >> "$GITHUB_OUTPUT"
