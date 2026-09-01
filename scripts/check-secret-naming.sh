@@ -198,6 +198,18 @@ ALLOWLIST=(
   # ---- crm7 server-side AI tools (edge functions, process.env is correct) ----
   'crm7/src/lib/ai/tools/ui-builder-tools.ts:*'
   'crm7/src/lib/ai/tools/ui-builder-tools.test.ts:*'
+  # `workflow-tools.ts` is the second member of exactly this category, added by
+  # the workflow-canvas Phase 1 work. Its `createScopedSupabaseClient` is the
+  # same function as `ui-builder-tools.ts`'s, deliberately so: the implementation
+  # plan names ui-builder-tools as THE template for "one engine, two callers".
+  # It is server-only by construction — `src/lib/ai/tools/index.ts` is the tool
+  # registry, and its ONLY importer estate-wide is `api/ai/chat.ts`, a Vercel
+  # serverless function. Nothing here reaches the client bundle, so `process.env`
+  # with the server-canonical names is right and `import.meta.env.VITE_*` would
+  # be wrong. Same shape as the throughput/api entry above: the rule started
+  # firing on a file that was correct the whole time, because the file
+  # post-dates the allowlist. Retire with the rest under bsuite#464.
+  'crm7/src/lib/ai/tools/workflow-tools.ts:*'
   # ---- conduit ANON_KEY fallback in src/lib/supabase/cacheable.ts (bsuite#464 cleanup) ----
   'conduit/src/lib/supabase/cacheable.ts:*'
   # ---- BSU edge functions reading SUPABASE_ANON_KEY (bsuite#464 cleanup; runtime-injected by Supabase) ----
