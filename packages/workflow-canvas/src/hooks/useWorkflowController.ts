@@ -43,6 +43,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   createDraftVersion,
+  duplicateWorkflowDefinition,
   publishVersion,
   saveVersionGraph,
   updateWorkflowDefinition,
@@ -64,6 +65,7 @@ import { computeSwimlaneLayout } from '../utils/autoLayout.js';
 import type { SwimlaneLayoutOptions } from '../utils/autoLayout.js';
 import {
   workflowDefinitionOptions,
+  workflowDefinitionsOptions,
   workflowDraftOptions,
   workflowVersionsOptions,
 } from './queries.js';
@@ -129,7 +131,30 @@ export interface WorkflowController {
   saveNow: () => Promise<void>;
   createDraft: () => Promise<WorkflowDefinitionVersionRow>;
   publish: (versionId?: string) => Promise<WorkflowDefinitionRow>;
-  rename: (label: string, description?: string | null) => Promise<WorkflowDefinitionRow>;
+  /**
+   * Rename the WORKFLOW (not a node). `name` is the column; there is no `label`
+   * column on `workflow_definitions`, and the earlier signature said there was —
+   * every rename returned a 42703. `key` is deliberately not renameable: an
+   * automation trigger names the key, so changing it detaches every trigger.
+   */
+  rename: (name: string, description?: string | null) => Promise<WorkflowDefinitionRow>;
+  /**
+   * "Duplicate to my tenant" — copy this workflow (normally a platform
+   * template) into `tenantId` as an editable DRAFT. Nothing is published, so
+   * the copy cannot go live by accident.
+   */
+  duplicateToTenant: (
+    name?: string,
+  ) => Promise<{ definition: WorkflowDefinitionRow; draft: WorkflowDefinitionVersionRow }>;
+  /** True when the loaded workflow is a platform template (tenant_id IS NULL). */
+  isPlatformTemplate: boolean;
+  /**
+   * True when the loaded workflow belongs to a DIFFERENT tenant than the one in
+   * session. Editing is refused rather than attempted: RLS would refuse the
+   * write anyway, and a canvas that accepts edits it cannot save is worse than
+   * one that says so.
+   */
+  isReadOnly: boolean;
 }
 
 /**
@@ -196,6 +221,8 @@ export function useWorkflowController({
   const definitionKey = workflowDefinitionOptions(supabase, definitionId).queryKey;
   const draftKey = workflowDraftOptions(supabase, definitionId).queryKey;
   const versionsKey = workflowVersionsOptions(supabase, definitionId).queryKey;
+  // The LIST key's first segment, for prefix invalidation after a duplicate.
+  const definitionsKeyPrefix = [workflowDefinitionsOptions(supabase, tenantId).queryKey[0]];
 
   // --- local graph, with undo/redo -----------------------------------------
   const graphApi = useUndoRedo<WorkflowGraph>(emptyWorkflowGraph());
@@ -541,15 +568,15 @@ export function useWorkflowController({
   });
 
   const renameMutation = useMutation({
-    mutationFn: ({ label, description }: { label: string; description?: string | null }) => {
+    mutationFn: ({ name, description }: { name: string; description?: string | null }) => {
       if (!definitionId) throw new Error('Cannot rename without a workflow.');
-      return updateWorkflowDefinition(supabase, definitionId, { label, description });
+      return updateWorkflowDefinition(supabase, definitionId, { name, description });
     },
-    onMutate: async ({ label, description }) => {
+    onMutate: async ({ name, description }) => {
       await qc.cancelQueries({ queryKey: definitionKey });
       const prev = qc.getQueryData<WorkflowDefinitionRow | null>(definitionKey);
       qc.setQueryData<WorkflowDefinitionRow | null>(definitionKey, (old) =>
-        old ? { ...old, label, description: description ?? old.description } : old,
+        old ? { ...old, name, description: description ?? old.description } : old,
       );
       return { prev };
     },
@@ -558,6 +585,49 @@ export function useWorkflowController({
       onError?.('Could not rename the workflow', err);
     },
     onSuccess: (row) => qc.setQueryData(definitionKey, row),
+  });
+
+  // A platform template has no owning tenant; a workflow owned by ANOTHER
+  // tenant is visible only if the session is a platform developer, and RLS
+  // would refuse every write to it. Both are computed from the row rather than
+  // passed in, so a consumer cannot forget to pass them.
+  const definitionRow = definitionQuery.data ?? null;
+  const isPlatformTemplate = definitionRow !== null && definitionRow.tenant_id === null;
+  const isReadOnly =
+    readOnly ||
+    (definitionRow !== null &&
+      definitionRow.tenant_id !== null &&
+      tenantId !== null &&
+      definitionRow.tenant_id !== tenantId);
+
+  const duplicateMutation = useMutation({
+    mutationFn: (name?: string) => {
+      if (!definitionId) throw new Error('Cannot duplicate without a workflow.');
+      if (!tenantId) {
+        throw new Error('No tenant is selected, so there is nowhere to copy this to.');
+      }
+      return duplicateWorkflowDefinition(supabase, {
+        sourceDefinitionId: definitionId,
+        tenantId,
+        name,
+      });
+    },
+    onSuccess: () => {
+      // The copy is a DIFFERENT definition, so this workflow's own caches are
+      // untouched; what changed is the LIST the caller renders it from.
+      //
+      // The key comes from the FACTORY, not from a literal. queries.ts says
+      // keys live there and nowhere else, and the first draft of this line
+      // ignored that: it passed ['workflow', 'definitions'] while the list is
+      // keyed ['workflow-definitions', tenantId], so it matched nothing and the
+      // new workflow did not appear until a reload. Only the first segment is
+      // taken, so every cached tenant's list is invalidated rather than just
+      // the one in session — a developer who switches tenants must not be shown
+      // a stale list from before the copy.
+      void qc.invalidateQueries({ queryKey: definitionsKeyPrefix });
+      onSuccess?.('Copied to your organisation as a draft');
+    },
+    onError: (err) => onError?.('Could not copy that workflow', err),
   });
 
   const loadError = useMemo(
@@ -604,6 +674,9 @@ export function useWorkflowController({
     saveNow: flush,
     createDraft: createDraftMutation.mutateAsync,
     publish: publishMutation.mutateAsync,
-    rename: (label, description) => renameMutation.mutateAsync({ label, description }),
+    rename: (name, description) => renameMutation.mutateAsync({ name, description }),
+    duplicateToTenant: duplicateMutation.mutateAsync,
+    isPlatformTemplate,
+    isReadOnly,
   };
 }

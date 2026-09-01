@@ -6,6 +6,85 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [0.2.0] — 2026-09-01 — Phase 2: editable, versioned, and talking to the right columns
+
+Phase 2 of `docs/plans/20260901-workflow-canvas-implementation-v1.00A.md`.
+
+### Fixed — three contract breaks between this package and its own tables
+
+Every one of these is a runtime PostgREST failure, and all 80 of the 0.1.0 tests passed the whole
+time, because all of them stub the Supabase client. A stub answers what it is told to answer; it
+cannot know the database would have refused the query.
+
+- **`label` is not a column.** `workflow_definitions` declares `name`. 0.1.0 ordered
+  `listWorkflowDefinitions` by `label`, SET `label` in the rename mutation, and inserted it from
+  `createWorkflowDefinition`. Each returned `42703 column workflow_definitions.label does not
+  exist`, so **listing, renaming and creating a workflow all failed**. `WorkflowDefinitionRow.label`
+  is gone and `rename()` now takes a `name`.
+- **`published_at` was never created.** `publishVersion()` SETs it and the merged apprentice seed
+  INSERTs it, but `20261103000000` declares `published_by` and no `published_at` — so **publishing
+  failed, and the seed could never land the template Phase 1 exists to ship**. Added by
+  `supabase/migrations/20261105000000_workflow_definition_versions_published_at.sql` (a new version,
+  not an edit to the merged one: the ledger is keyed on version alone across eight applier scopes
+  and a re-used version is silently skipped — as this file itself then demonstrated, having been
+  authored at `20261104000000` and renumbered when business-suite-unified#1085 took that version an
+  hour later).
+- **Platform templates were unrepresentable and unreachable.** `tenant_id` is NULLABLE and a NULL is
+  a platform template — the entire subject of "Duplicate to my tenant". 0.1.0 typed it `string` and
+  filtered the list with `.eq('tenant_id', …)`, which excludes every NULL row, so the feature had
+  nothing to act on. `listWorkflowDefinitions` now returns the tenant's workflows **and** the
+  templates in one request, which is exactly what the SELECT policy already admits.
+
+`WorkflowDefinitionRow` also gained `key`, `app_scope`, `is_system` and `created_by`, and
+`WorkflowDefinitionVersionRow` gained `trigger_config`, `published_by` and `created_by` — all
+declared by the migration and all previously missing here. `createWorkflowDefinition` now takes an
+explicit `CreateWorkflowDefinitionArgs` instead of an `Omit<Row, …>`, which had been requiring
+`created_by` from the caller and permitting `label`.
+
+### Added
+
+- **`tableContract.test.ts` — the gate that would have caught all three.** It parses the columns out
+  of the migration FILES and asserts the service names nothing else. It strips SQL comments first
+  (140 lines of header prose in `20261103000000` discuss `label` while explaining it), it fails when
+  a migration is missing rather than passing vacuously, and it carries a control assertion on the
+  parsed column count so a parser that matched nothing cannot report clean.
+- **`WorkflowPalette`** — add a step, decision, handoff or terminator. Built FROM `registry.palette`,
+  so a kind added through `registry.extend()` appears without touching the palette; containers are
+  excluded, because a lane is the frame of the diagram rather than a step in it. Click places the
+  node at the centre of the current viewport (projected through `screenToFlowPosition`, so it lands
+  where the user is looking rather than at the graph origin); no drag is required, so it works from a
+  keyboard.
+- **`WorkflowInspector`** — inline rename, notes, and delete for the selected node. The field holds a
+  local draft and commits on blur or Enter: `updateNodeData` checkpoints, so a per-keystroke commit
+  would fill the 50-slot undo stack with one word. Deleting a lane asks first, because the controller
+  removes its children with it.
+- **`WorkflowToolbar`** — undo, redo, tidy, a live `aria-live` save-state indicator, and
+  Draft → Publish. Publish names the version it will publish, and is disabled while an edit is still
+  unsaved: publishing mid-debounce freezes a version whose last edits are still in a timer.
+- **`duplicateWorkflowDefinition` / `controller.duplicateToTenant`** — "Copy to my organisation".
+  The copy lands as a DRAFT with `current_published_version_id` NULL, so nothing downstream picks it
+  up until a person publishes it; the source graph is read THROUGH the published pointer, never as
+  `max(version)`, so copying a template while somebody has a draft open does not copy their
+  half-finished work; the rationale notes travel with the graph; and a second copy bumps the key
+  rather than surfacing a 23505 the user cannot act on.
+- **`controller.isPlatformTemplate` / `controller.isReadOnly`** — computed from the loaded row rather
+  than passed in, so a consumer cannot forget them. The palette and the destructive controls render
+  nothing when the workflow belongs to another tenant, instead of accepting edits RLS would refuse.
+
+### Not in this release
+
+Execution (Phase 3 — generalises conduit's `r7_automation_queue` → pg_cron → edge function rather
+than growing a second queue) and the Jodie authoring tools (Phase 4).
+
+**crm7 still cannot import this package.** Apps are submodules that Vercel builds standalone with no
+parent directory, so they resolve the published tarball, and `@bsuite/workflow-canvas` is not on npm
+(404, 2026-09-01). It cannot be published yet either: it peer-depends on `@bsuite/schema-builder`
+>= 1.9.0 for the `/xyflow` and `/auto-layout` subpaths, and npm's newest schema-builder is 1.8.0.
+Publishing schema-builder 1.9.0 and then this package is what unblocks the crm7 canvas; until then
+crm7's `/workflows/:id` reads the same graph and renders the process as a lane-by-lane outline.
+
+---
+
 ## [0.1.0] — 2026-09-01 — Phase 1: a process canvas that permits loops
 
 First release. Phase 1 of `docs/plans/20260901-workflow-canvas-implementation-v1.00A.md`, which

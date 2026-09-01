@@ -210,18 +210,65 @@ export function emptyWorkflowGraph(): WorkflowGraph {
 
 export type WorkflowVersionStatus = 'draft' | 'published' | 'archived';
 
+/**
+ * RECONCILED AGAINST THE MIGRATION, 2026-09-01 (Phase 2).
+ *
+ * The header above says the migration wins whenever a name here disagrees with
+ * it. Three names did, and each was a runtime PostgREST 400 rather than a
+ * cosmetic drift:
+ *
+ *  - `label` DOES NOT EXIST. `workflow_definitions` declares `name`. The
+ *    service ordered its list by `label`, the rename mutation SET `label`, and
+ *    `createWorkflowDefinition` inserted it, so listing, renaming and creating
+ *    a workflow each returned `42703 column workflow_definitions.label does not
+ *    exist`. The column is `name`, and `name` is what this file now declares.
+ *  - `tenant_id` IS NULLABLE. A NULL is a PLATFORM TEMPLATE — the shared
+ *    starting point every tenant can copy, and the entire subject of Phase 2's
+ *    "Duplicate to my tenant". Typing it `string` made the templates
+ *    unrepresentable, and the list query's `.eq('tenant_id', …)` then hid every
+ *    one of them, so the feature had nothing to act on.
+ *  - `key`, `app_scope` and `is_system` were MISSING here and `key` is NOT NULL
+ *    with no default, so any insert built from this type violated it.
+ *
+ * `published_at` is the one addition in the other direction: the merged seed
+ * (`supabase/seeds/20260901_apprentice_placement_workflow_seed.sql`) INSERTs it
+ * and `publishVersion()` SETs it, and 20261103000000 never created it — so the
+ * seed and every publish would have failed. Added by migration
+ * 20261105000000_workflow_definition_versions_published_at.sql rather than by
+ * editing a merged file, because a migration already merged may have been
+ * applied somewhere and editing it in place would be silently skipped. (It was
+ * authored at 20261104000000; that version was taken an hour later by
+ * business-suite-unified#1085's execution bridge, in the same scope, and this
+ * file moved. A census is a snapshot, not a reservation.)
+ */
 export interface WorkflowDefinitionRow {
   id: string;
-  tenant_id: string;
+  /**
+   * NULL is a PLATFORM TEMPLATE, readable by every authenticated user and
+   * writable only by a platform developer. Not an absent value — a meaningful
+   * one, and the reason `listWorkflowDefinitions` cannot filter with `.eq`.
+   */
+  tenant_id: string | null;
+  /**
+   * Stable machine identifier — what an automation trigger names. Unique per
+   * tenant and, because the constraint is `UNIQUE NULLS NOT DISTINCT`, unique
+   * across platform templates too.
+   */
+  key: string;
+  /** The display name. There is no `label` column; see the note above. */
   name: string;
-  label: string;
   description: string | null;
+  /** `'all'`, or an app slug such as `'crm7'`. Free text, deliberately. */
+  app_scope: string;
+  /** True for workflows the platform ships. Provenance, not permission. */
+  is_system: boolean;
   /**
    * Consumers read the published graph ONLY through this pointer. A reader that
    * picks "the highest version number" gets whatever a half-finished draft has
    * in it; the pointer is what makes publish an atomic, reversible act.
    */
   current_published_version_id: string | null;
+  created_by: string | null;
   created_at: string | null;
   updated_at: string | null;
 }
@@ -233,18 +280,30 @@ export interface WorkflowDefinitionVersionRow {
    * Its OWN tenant_id column, never a join-through to the parent. A join-through
    * RLS predicate is re-evaluated per row and cannot use the index, and the
    * estate has already shipped one policy that was open in exactly that shape.
+   *
+   * Nullable for the same reason as the parent's: a platform template's
+   * versions carry NULL, and the composite FK is MATCH SIMPLE so the pair is
+   * simply not checked when it contains one.
    */
-  tenant_id: string;
+  tenant_id: string | null;
   version: number;
   status: WorkflowVersionStatus;
   /** xyflow-native `{ nodes, edges, viewport }`. See the header. */
   graph: WorkflowGraph;
+  /**
+   * What starts this workflow — event name, schedule, or manual. Read by Phase
+   * 3's execution bridge, which generalises conduit's r7_automation_queue
+   * rather than growing a second queue. Inert until then.
+   */
+  trigger_config: Record<string, unknown> | null;
   /**
    * Prose grounding for Jodie (Phase 4). The six Lucidchart decision-rationale
    * notes go in here verbatim — they are the answers to "why does the process
    * do that", which no amount of graph topology encodes.
    */
   ai_context: Record<string, unknown> | null;
+  created_by: string | null;
+  published_by: string | null;
   created_at: string | null;
   updated_at: string | null;
   published_at: string | null;
