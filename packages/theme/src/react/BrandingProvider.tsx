@@ -46,7 +46,7 @@ import type { ReactNode } from 'react'
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     sanitizeBrandingUrl,
-    sanitizeFontFamily,
+    sanitizeFontFamilyForCss,
     toCssUrl,
 } from './branding-sanitize.js'
 
@@ -209,7 +209,15 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
   setOrClearUrlVar('--mark-url', branding.mark_url)
   setOrClearUrlVar('--favicon-url', branding.favicon_url)
 
-  const safeFontStack = sanitizeFontFamily(branding.font_stack ?? null)
+  // sanitizeFontFamilyForCss both validates (rejects an injection attempt,
+  // same contract as sanitizeFontFamily) and appends the system-sans
+  // fallback chain — required because this writes straight to a CSS custom
+  // property a stylesheet resolves as `font-family: var(--font-stack)`. A
+  // bare family name with no matching @font-face (confirmed live on a
+  // sibling consumer app: `--font-body: Geist`, no fallback, rendering as
+  // Times) must degrade to system-ui/sans-serif, never the browser's serif
+  // default.
+  const safeFontStack = sanitizeFontFamilyForCss(branding.font_stack ?? null)
   if (safeFontStack) {
     root.style.setProperty('--font-stack', safeFontStack)
   } else {
