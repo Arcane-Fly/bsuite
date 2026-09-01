@@ -218,8 +218,25 @@ COMMENT ON COLUMN public.workflow_definitions.is_system IS
 -- unique constraint matching given keys for referenced table". `id` alone is
 -- already the primary key, so this adds no restriction that was not already
 -- true; it only makes the pair addressable as an FK target.
-ALTER TABLE public.workflow_definitions
-  ADD CONSTRAINT workflow_definitions_id_tenant_unique UNIQUE (id, tenant_id);
+-- Guarded: `ALTER TABLE ... ADD CONSTRAINT` has no IF NOT EXISTS in Postgres, so a
+-- replay raises 42P07 and aborts the whole migration. That matters here because THREE
+-- trees carry this file (parent, crm7, business-suite-unified) and the disposable-database
+-- rehearsal applies every scope's copy against one database — three runs, not one.
+-- Production skips copies 2 and 3 via the shared schema_migrations ledger, so this only
+-- ever failed in rehearsal; but a migration that cannot be replayed is a migration that
+-- cannot be rehearsed, and an unrehearsable migration is estate debt.
+DO $guard$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+     WHERE conname = 'workflow_definitions_id_tenant_unique'
+       AND conrelid = 'public.workflow_definitions'::regclass
+  ) THEN
+    ALTER TABLE public.workflow_definitions
+      ADD CONSTRAINT workflow_definitions_id_tenant_unique UNIQUE (id, tenant_id);
+  END IF;
+END
+$guard$;
 
 -- ============================================================================
 -- 2. workflow_definition_versions — the graph, one row per version
