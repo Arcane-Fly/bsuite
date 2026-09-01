@@ -132,3 +132,92 @@ export function sanitizeFontFamily(raw: string | null | undefined): string | nul
   }
   return value
 }
+
+/**
+ * The chain appended to every branding-supplied font-family before it
+ * reaches a CSS custom property a stylesheet resolves directly
+ * (`font-family: var(--font-stack)` etc). `system-ui` and `sans-serif` are
+ * always available — neither needs an `@font-face` rule — so a family this
+ * package never registered a face for degrades to the platform system-sans
+ * stack instead of the browser's serif default.
+ *
+ * Confirmed live on suite.crm7.app/login (2026-09-01): a consumer app's own
+ * branding hook wrote `--font-body: Geist` (bare, no fallback) as an inline
+ * style on `<html>` — which beats every stylesheet rule, including this
+ * package's own correctly-chained `vars.css` default — and the page
+ * rendered pixel-identical to an explicit `font-family: serif` probe, i.e.
+ * Times. `sanitizeFontFamily` alone does not prevent this: a syntactically
+ * legitimate bare name (no @font-face required to pass the injection check)
+ * still has nothing to fall back to once it reaches the DOM. Every
+ * `<BrandingProvider>` font write — here and in any consumer app's own
+ * DOM-apply sink — must go through {@link sanitizeFontFamilyForCss} instead.
+ */
+const FONT_FALLBACK_CHAIN = 'system-ui, sans-serif'
+
+/**
+ * Maps a family name someone would reasonably type or pick in a branding UI
+ * to the face this package actually registers via `@font-face`
+ * (`../css/fonts.css`). Keyed on the lowercased, unquoted bare name. A human
+ * choosing "Geist" must land on the variable face that exists, not silently
+ * degrade past it to the generic fallback — bare `Geist` (no such face; the
+ * registered family is `"Geist Variable"`) was exactly the production
+ * defect this module exists to prevent.
+ */
+const FONT_FACE_ALIASES: ReadonlyMap<string, string> = new Map([
+  ['geist', 'Geist Variable'],
+  ['geist variable', 'Geist Variable'],
+  ['geist mono', 'Geist Mono Variable'],
+  ['geist mono variable', 'Geist Mono Variable'],
+])
+
+/** Strip one layer of matching straight quotes, if present. Regex-free. */
+function unquoteFamily(value: string): string {
+  if (value.length >= 2) {
+    const first = value.charAt(0)
+    const last = value.charAt(value.length - 1)
+    if ((first === '"' && last === '"') || (first === "'" && last === "'")) {
+      return value.slice(1, -1)
+    }
+  }
+  return value
+}
+
+/** Split a font-family stack into its first (primary) entry and the rest,
+ *  on the first top-level comma. Regex-free. */
+function splitFirstFamily(stack: string): { first: string; rest: string } {
+  const commaIndex = stack.indexOf(',')
+  if (commaIndex === -1) return { first: stack.trim(), rest: '' }
+  return { first: stack.slice(0, commaIndex).trim(), rest: stack.slice(commaIndex + 1).trim() }
+}
+
+/**
+ * Validate a CSS `font-family` value, resolve a known alias to the face
+ * this package actually ships, and append {@link FONT_FALLBACK_CHAIN} — for
+ * call sites that write straight to a CSS custom property consumed as
+ * `font-family: var(--font-x)`. Delegates the injection check to
+ * {@link sanitizeFontFamily} — this only changes what a legitimate value
+ * turns into on its way to the DOM, never the accept/reject decision.
+ * Returns `null` when the input fails sanitization (caller then leaves the
+ * theme's own default — which already carries its own fallback — in place).
+ *
+ * Alias resolution looks only at the FIRST (primary) entry of the stack —
+ * the one a single-family branding picker actually submits — and, when it
+ * matches a known alias, prepends the resolved face ahead of it (keeping
+ * the raw name in the stack too): `Geist` → `"Geist Variable", Geist,
+ * system-ui, sans-serif`. A value with no known alias (`Inter`, or anything
+ * else this package has not shipped a face for) is passed through
+ * unresolved and still gets the fallback chain, so it degrades to system
+ * sans rather than the browser's serif default.
+ */
+export function sanitizeFontFamilyForCss(raw: string | null | undefined): string | null {
+  const safe = sanitizeFontFamily(raw)
+  if (!safe) return null
+
+  const { first } = splitFirstFamily(safe)
+  const bareLower = unquoteFamily(first).toLowerCase()
+  const resolvedFace = FONT_FACE_ALIASES.get(bareLower)
+  const alreadyResolved = resolvedFace != null && resolvedFace.toLowerCase() === bareLower
+  const withResolvedFace = resolvedFace && !alreadyResolved ? `"${resolvedFace}", ${safe}` : safe
+
+  return `${withResolvedFace}, ${FONT_FALLBACK_CHAIN}`
+}

@@ -1,6 +1,6 @@
 /**
  * BrandingProvider — runtime enterprise white-labelling
- * Version 0.4.1
+ * Version 0.4.2
  *
  * On mount:
  *  1. Calls supabase.rpc('branding_json_for_tenant') using the user's authed session.
@@ -25,6 +25,17 @@
  *    token is emitted in the safe quoted form with `"` and `\` escaped;
  *    font values carrying CSS-breakout tokens (`< > ( ) { } ; @ \ /* *\/`)
  *    are rejected and the var is cleared so the default font applies.
+ *  - 0.4.2 — `font_stack` now goes through `sanitizeFontFamilyForCss`, not
+ *    `sanitizeFontFamily`: a syntactically legitimate bare family name (no
+ *    injection attempt) with no matching `@font-face` used to reach
+ *    `--font-stack` with nothing to fall back to. Confirmed live on a
+ *    consumer app: an inline `--font-body: Geist` (a sibling write, same
+ *    class) beat this package's own correctly-chained `vars.css` default
+ *    and rendered the page in the browser's serif default. The fix
+ *    validates + resolves a known alias to the face this package actually
+ *    ships (`Geist` → `"Geist Variable"`, `Geist Mono` → `"Geist Mono
+ *    Variable"`) + appends a `system-ui, sans-serif` fallback, so any
+ *    family with no shipped face degrades to system sans, never to serif.
  *
  * Environment flags:
  *  - VITE_ENABLE_BRANDING_OVERRIDE (default: 'true') — set 'false' as kill switch.
@@ -46,7 +57,7 @@ import type { ReactNode } from 'react'
 import { createContext, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import {
     sanitizeBrandingUrl,
-    sanitizeFontFamily,
+    sanitizeFontFamilyForCss,
     toCssUrl,
 } from './branding-sanitize.js'
 
@@ -209,7 +220,15 @@ function applyBrandingToRoot(branding: TenantBranding | null): void {
   setOrClearUrlVar('--mark-url', branding.mark_url)
   setOrClearUrlVar('--favicon-url', branding.favicon_url)
 
-  const safeFontStack = sanitizeFontFamily(branding.font_stack ?? null)
+  // sanitizeFontFamilyForCss both validates (rejects an injection attempt,
+  // same contract as sanitizeFontFamily) and appends the system-sans
+  // fallback chain — required because this writes straight to a CSS custom
+  // property a stylesheet resolves as `font-family: var(--font-stack)`. A
+  // bare family name with no matching @font-face (confirmed live on a
+  // sibling consumer app: `--font-body: Geist`, no fallback, rendering as
+  // Times) must degrade to system-ui/sans-serif, never the browser's serif
+  // default.
+  const safeFontStack = sanitizeFontFamilyForCss(branding.font_stack ?? null)
   if (safeFontStack) {
     root.style.setProperty('--font-stack', safeFontStack)
   } else {
