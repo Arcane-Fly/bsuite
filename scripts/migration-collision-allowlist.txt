@@ -134,3 +134,8 @@
 # separately-enforced instance of "intentional-duplicate" in this repo —
 # higher confidence than the crm7/root pairs above, which are identical by
 # inspection only, with no dedicated CI enforcing that they stay that way.
+
+# --- Phase 1 of the workflow canvas (docs/plans/20260901-workflow-canvas-
+#     implementation-v1.00A.md) ----------------------------------------------
+
+20261102000000  n=3  intentional-duplicate, CROSS-SCOPE — root, crm7 and business-suite-unified all carry 20261102000000_workflow_definitions.sql, byte-for-byte identical (verified via md5sum, all three 19c24544d5c6205ac68717865554046c, 2026-09-01). Deliberately duplicated so each app that reads these tables has the migration in its own history, the same convention 20260728120000 and 20260707000020/21 already follow. No live-catalog verification needed: the content is identical, so whichever two copies the applier skips lose nothing.
