@@ -109,6 +109,7 @@ export {
   deleteEntityField,
   reorderEntityFields,
   renamePhysicalColumn,
+  countPhysicalTableRegistrations,
   getSchemaLayout,
   resolveLayout,
   saveSchemaLayoutPosition,

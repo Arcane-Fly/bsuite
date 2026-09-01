@@ -27,6 +27,7 @@ import {
   deleteSchemaEntity,
   deleteSchemaRelation,
   renamePhysicalColumn,
+  countPhysicalTableRegistrations,
   reorderEntityFields,
   resolveLayout,
   saveSchemaLayoutPosition,
@@ -84,6 +85,8 @@ export interface SchemaController {
    * the same rule independently, so a tampered client gains nothing.
    */
   isPlatformDeveloper: boolean;
+  /** false only on a measured zero; undefined while loading or on read failure. */
+  physicalRenameAvailable: boolean | undefined;
   isLoading: boolean;
   loadError: Error | null;
   createEntity: (
@@ -216,6 +219,34 @@ export function useSchemaController({
       if (error) return false;
       return data === true;
     },
+    staleTime: 5 * 60_000,
+  });
+
+  /**
+   * Can a physical column rename succeed for this tenant AT ALL?
+   *
+   * `rename_physical_column` refuses unless the entity's table is registered in
+   * `schema_builder_physical_tables`, which ships EMPTY by design — it is the fix
+   * for a privilege escalation where the ALTER TABLE target came from
+   * caller-controlled `tenant_entities.name`. With zero registrations the
+   * "also rename the database column" checkbox cannot succeed for any entity, so
+   * offering it charges the user a confirm step to reach a refusal.
+   *
+   * On error this resolves UNDEFINED, not false: a failed read is not proof of
+   * zero, and defaulting to false would silently remove a working capability the
+   * moment the query hiccuped.
+   */
+  const physicalRenameQuery = useQuery({
+    queryKey: ['physical-table-registrations', tenantId] as const,
+    queryFn: async () => {
+      if (!tenantId) return 0;
+      try {
+        return await countPhysicalTableRegistrations(supabase, tenantId);
+      } catch {
+        return undefined;
+      }
+    },
+    enabled: tenantId !== undefined,
     staleTime: 5 * 60_000,
   });
 
@@ -746,6 +777,13 @@ export function useSchemaController({
     fields: fieldsByEntity,
     layout: resolvedLayout,
     isPlatformDeveloper: platformDeveloperQuery.data === true,
+    /**
+     * `false` only when the count is a measured zero. `undefined` while loading
+     * or after a read failure, so the consumer keeps prior behaviour rather than
+     * hiding a control on incomplete information.
+     */
+    physicalRenameAvailable:
+      physicalRenameQuery.data === undefined ? undefined : physicalRenameQuery.data > 0,
     // Fields are non-critical — loading them must not gate the canvas, and
     // RLS failures on `tenant_field_definitions` (common across consumer
     // apps that haven't applied the Phase 1b.2 migration yet) must NOT

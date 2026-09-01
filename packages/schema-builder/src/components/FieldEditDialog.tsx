@@ -76,6 +76,24 @@ export interface FieldEditDialogProps {
     newName: string,
     opts: { dryRun: boolean },
   ) => Promise<RenamePhysicalColumnResult>;
+
+  /**
+   * Whether a physical column rename can actually succeed for THIS entity.
+   *
+   * The disclosure used to appear whenever `onRenamePhysical` was supplied and
+   * the name had changed — which is not the same question. `rename_physical_column`
+   * refuses unless the entity's table is registered in
+   * `schema_builder_physical_tables`, and measured on production 2026-09-01 that
+   * allowlist holds 0 rows while 0 of 45 `tenant_entities` resolve to a real
+   * `public.<name>` table at all. So the checkbox was offered on every field of
+   * every entity and could not succeed for any of them: an inert control that
+   * spent the user a confirmation step to reach a refusal.
+   *
+   * Undefined keeps the old behaviour, so an existing consumer is not silently
+   * changed; pass `false` to hide the disclosure and let the rename take the
+   * metadata path that actually works.
+   */
+  physicalRenameAvailable?: boolean;
 }
 
 interface FormState {
@@ -230,6 +248,7 @@ export function FieldEditDialog({
   onSave,
   onDelete,
   onRenamePhysical,
+  physicalRenameAvailable,
 }: FieldEditDialogProps) {
   const dialogRef = useRef<HTMLDialogElement>(null);
 
@@ -305,8 +324,12 @@ export function FieldEditDialog({
     renameState.phase !== 'running-wet';
 
   const fieldNameChanged = state.fieldName !== ownName;
+  // `physicalRenameAvailable === false` hides it outright. `undefined` preserves
+  // the previous behaviour for consumers that have not been updated.
   const showPhysicalDisclosure =
-    typeof onRenamePhysical === 'function' && fieldNameChanged;
+    typeof onRenamePhysical === 'function' &&
+    fieldNameChanged &&
+    physicalRenameAvailable !== false;
 
   const buildPayload = (): FieldEditDialogPayload => ({
     field_name: state.fieldName,
