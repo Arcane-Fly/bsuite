@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 186,
-  "unusedSharedComponents": 164,
+  "sharedComponents": 188,
+  "unusedSharedComponents": 166,
   "localComponentFiles": {
     "crm7": 438,
     "business-suite-unified": 117,
@@ -1366,6 +1366,20 @@
     },
     {
       "name": "WorkflowPalette",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowServiceError",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowSourceMissingError",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
       "consumerFiles": 0,
