@@ -33,6 +33,7 @@ on:
       - '.github/workflows/dist-tag-wiring.yml'
       - 'scripts/publish-dist-tag.mjs'
       - 'scripts/check-publish-dist-tag-wiring.mjs'
+      - 'scripts/check-publish-trusted-publishing.mjs'
       - 'scripts/guard-registry.mjs'
   push:
     branches: [main, development]
@@ -41,6 +42,7 @@ on:
       - '.github/workflows/dist-tag-wiring.yml'
       - 'scripts/publish-dist-tag.mjs'
       - 'scripts/check-publish-dist-tag-wiring.mjs'
+      - 'scripts/check-publish-trusted-publishing.mjs'
   # A publish workflow can be edited by a merge that touched none of the paths above
   # (a revert, or a submodule pointer bump that carries a workflow change). The daily
   # run is the backstop for that.
@@ -118,6 +120,9 @@ jobs:
 
       - name: Every publish workflow decides its dist-tag, before using it
         run: node scripts/check-publish-dist-tag-wiring.mjs
+      - name: Publishers authenticate through Trusted Publishers only
+
+        run: node scripts/check-publish-trusted-publishing.mjs
 
       - name: The guard registry has not silently lost an entry
         # A missing '},' + '{' merges two entries into one and JavaScript reports
