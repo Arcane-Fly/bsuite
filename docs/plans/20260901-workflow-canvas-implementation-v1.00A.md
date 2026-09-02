@@ -66,6 +66,7 @@ conduit's queue already provides durable execution on the same Postgres.
 ## 3. PHASES — all of them, to completion
 
 ### Phase 1 — the apprentice workflow on screen, from the database
+
 - Migration `20261103000000_workflow_definitions.sql` — NOTE: `20261102000000` was ALREADY TAKEN by the training_contracts FK migration the same day; a colliding version is silently skipped (global max was `20261102000000`; one shared
   `schema_migrations` keyed on version alone across 8 applier scopes — a colliding version is
   SILENTLY SKIPPED). Tables: `workflow_definitions`, `workflow_definition_versions` (own `tenant_id`
@@ -82,6 +83,7 @@ conduit's queue already provides durable execution on the same Postgres.
 - crm7 route `/workflows/:id` renders it. Positions save back to the draft.
 
 ### Phase 2 — editable, versioned, and the dead UI RETIRED
+
 - Node palette, `onConnect` with **loop-permissive** validation, inline rename, delete, undo/redo.
 - Draft→Publish: new version row, `current_published_version_id` moves; consumers read only through it.
 - **Same PR, non-negotiable deletions:** `crm7/src/lib/workflows/workflow-store.ts`,
@@ -91,11 +93,13 @@ conduit's queue already provides durable execution on the same Postgres.
   Keep `workflow-engine.ts`'s step/trigger types, moved into the package.
 
 ### Phase 3 — execution, by generalising conduit's queue
+
 - Generalise `r7_automation_queue` → pg_cron → edge function to accept a workflow graph.
 - Graph→step bridge handling branches and loops.
 - The emission trigger that actually fires on placement/apprentice creation.
 
 ### Phase 4 — Jodie designs workflows, and the billing hole closes
+
 - Fill `jodie-skills.ts` `toolIds: []` with workflow authoring tools following the
   `ui-builder-tools.ts` one-engine-two-callers pattern.
 - Workflow-shaped Zod schema; replace the `generate-workflow` 501.
@@ -103,6 +107,7 @@ conduit's queue already provides durable execution on the same Postgres.
   server-side check. Currently AI is billable in BSU and free in crm7.
 
 ## 4. Constraints
+
 - Demo tenant `aaaaaaaa-0000-0000-0000-000000000001` holds the anonymised FutureBuild mirror
   (8 placements, 9 plans, 16 schedules, 119 qualification_units, 539 training_plan_units).
   **Build and demo against it.**
@@ -215,4 +220,181 @@ Account `braden@braden.com.au`, host `d.crm.crm7.app`, `build-matrix-runner.mjs`
 2. The empty state alone would have passed every check. A run was created on the **demo**
    tenant so the populated state could be inspected — which is the only reason the slug defect
    was found — then removed, verified back to 0 runs / 0 steps.
+
+BSuite Customization Surfaces — Audit and Recommendation
+0. The headline, before the inventory
+Almost everything the operator asked for is already built, published to npm, and not rendered. @bsuite/workflow-canvas@0.2.2 ships a complete editor — WorkflowPalette (add step/decision/handoff), WorkflowToolbar (undo/redo/tidy/save-state/publish), WorkflowInspector (inline rename, describe, guarded delete) — all public exports (packages/workflow-canvas/src/index.ts:2-13). crm7's adapter (crm7/src/components/workflows/WorkflowCanvasInner.tsx:82-88) renders `PackageCanvas` with the `controller`, `readOnly`, and `showMiniMap` props, but no children. Grep for WorkflowPalette|WorkflowToolbar|WorkflowInspector across crm7/src: 0 hits. So on an editable workflow the user can drag existing nodes and draw validated edges, but cannot add a node, rename one, see save state, or publish — and on a platform template (the only kind a fresh tenant has), nothing drags at all. That is the operator's entire complaint, mechanically explained.
+
+Second headline: create-from-blank is half-wired in the same file that hides it. crm7/src/pages/workflows/index.tsx imports createWorkflowWithDraft (line 47), defines starterGraph() (line 73, a publishable Start→End graph) and keyFromName() (line 95), imports the Plus icon (line 53) — and none of them appear in the JSX. The page copy even asserts the limitation: "New ones start as a copy of a platform template below." The service (src/lib/workflows/workflowDefinitionService.ts:374) is finished and tested.
+
+Third: the AI lane is more capable than the visual lane. Jodie's workflow-tools.ts exposes create_workflow, add_workflow_version, publish_workflow_version; ui-builder-tools.ts exposes add_layout_section, add_layout_field, authoring_find_or_create_entity, authoring_add_page_widget. The chat can do what the screen cannot.
+
+Also: the stale header in crm7/src/pages/workflows/[id].tsx:1-35 still says the package "is not on npm (404)" and "crm7 cannot import it" while the file imports the component that wraps that exact package — the sibling file index.tsx header says the opposite (both are current, one is false). This is precisely the "agents forget and rebuild" vector: the next reader of [id].tsx is being told to rebuild.
+
+1. Complete inventory
+Method: route-registration grep (grep 'path="' crm7/src/App.tsx, router files per app), package-import grep (@bsuite/page-builder|schema-builder|workflow-canvas|@xyflow/react|@dnd-kit), then reading each surface's source. The other five apps were enumerated by a fanned-out search agent whose two most load-bearing claims (braden SiteEditor unrouted; BSU wraps the shared schema-builder) I re-verified by hand.
+
+Count: 27 customization surfaces across 6 apps + 3 shared engines. (Route-level: my grep of crm7's App.tsx finds 31 customization-shaped route registrations; your 23 is the same lanes counted without the picklists/custom-fields/reports-custom rows.)
+
+# Surface App / route Engine DnD/visual today? Reachable from siblings?
+
+1 Workflow list crm7 /workflows forms + DraggableCardPage list only → /workflows/:id, /dashboard only
+2 Workflow editor crm7 /workflows/:id @bsuite/workflow-canvas (xyflow) canvas, drag+connect when editable; no palette/toolbar/inspector, no fullscreen → /workflows only
+3 Workflow runs crm7 /workflows/runs forms; live engine (in-place step completion — D8-correct) no back-link only
+4 Schema Builder crm7 /settings/schema-builder @bsuite/schema-builder (xyflow) full canvas, chromeless full-bleed, Cmd+K, PNG export Cmd+K navigationTargets prop exists; crm7 passes none (page: 0 hits)
+5 Schema Builder BSU /settings/schema-builder (page src/pages/Settings/SchemaBuilder.tsx) same package yes thin wrapper
+6 Schema Builder conduit /settings/schema-builder same package yes thin wrapper
+7 Form Layouts crm7 /settings/form-layouts(+create/:id/:id/edit) dnd-kit (FormLayoutBuilder.tsx) yes — sortable sections/fields absent from persistent sidebar (src/config/navigation.ts: 0 hits); hub card only
+8 Custom Pages crm7 /settings/custom-pages(+create/:id/edit) plain forms; no layout editor at all no — metadata only; renderer (src/components/CustomPageRenderer.tsx:133) shows layout as JSON.stringify in a <pre> detail page names "the Form Layout Builder, or Jodie AI" with no link
+9 Custom fields crm7 /settings/custom-fields (+-admin) forms over tenant_field_definitions no none
+10 Picklists crm7 /settings/picklists ×4 forms no none
+11 Page canvas editor ("Edit page"/"Add element") crm7, every DraggableCardPage route @bsuite/page-builder + PageEditorLauncher + WidgetPalette (widget registry, resolveOrCreateEntity inline entity creation) yes — the estate's best round-trip exemplar AI parity via authoring_add_page_widget
+12 Comms templates crm7 /communications/templates ×3 forms + Textarea no none
+13 Document templates crm7 /documents/templates ×2 Plate.js rich editor w/ merge fields visual (text), not canvas none
+14 Progress-review templates crm7 /progress-reviews/templates ×3 forms + Textarea no none
+15 Branding (crm7) /settings/branding redirect out of the app to BSU /branding (Phase 12/CAW-V7a) — one-way; no automatic return
+16 Tenant branding BSU /branding forms on DraggableCardPage card-drag only —
+17 Platform branding BSU /admin/branding forms on DraggableCardPage card-drag only —
+18 Developer branding tier BSU /developer/branding forms no —
+19 Feature Builder BSU /developer/feature-builder own 519-line RelationshipCanvas.tsx on raw @xyflow — a third canvas yes LogicPanel.tsx:10: "React Flow workflow canvas … remain future" — a 4th canvas waiting to be wrongly built
+20 Permissions editor BSU src/pages/Admin/PermissionsEditor.tsx forms no —
+21 Nav editor BSU /developer/nav dnd-kit SortableList yes overlaps #22
+22 Route Inspector DB-nav tab BSU /developer/route-inspector forms/inline edit no writes the same tenant_navigation as #21
+23 Lead-routing rules BSU /developer/routing dnd-kit + react-grid-layout yes —
+24 Website/CMS ("site editor", live) BSU /developer/website forms + native HTML5 row drag forms-over-tables (operator ruled it FAILS D8, 2026-08-30) authors page_sections consumed read-only by braden's DynamicPage.tsx — cross-app authoring with no return path
+25 braden branding admin braden /admin/branding DraggableCardPage port card-drag "Back" navigates to unrouted /admin/dashboard (dead link)
+26 braden page builder braden /admin/page-builder @bsuite/page-builder PageGridLayout canvas mounted, empty palette — Phase 2b never built —
+27 conduit in-place page edit /candidates, /pipeline @bsuite/page-builder PageEditorLauncher yes but preview-only, persists to localStorage; comment says "publishing requires CRM7 Page Editor" links out to a different app
+Not surfaces but relevant: BSU SchemaVisualizer (read-only xyflow ER view, /developer/database); throughput and R80.4 have zero builder surfaces beyond the shared card grid (R80.4's one dnd-kit hit is tile reorder inside the calculator).
+
+The "site editor" memory item, measured today: braden's SiteEditor.tsx + SiteEditorLayout.tsx + the whole AdminLayout.tsx nav map (Site Editor, CMS, Site Settings…) are unrouted dead code — braden/src/Routes.tsx registers only /admin/auth and /admin. site_settings is a retired table: every live-code reference is a comment recording its replacement by site_metadata. The live "site editor" is BSU /developer/website (#24). So the memory line remains true in spirit (forms-over-tables, D8 fail) but the writes-to-a-missing-table half now describes dead code, not a live defect.
+
+2. Overlap and duplication
+Three-and-a-bit React Flow canvases. 21 files importing @xyflow/react in packages/schema-builder/src, 18 in packages/workflow-canvas/src (verified grep -rl | wc -l), plus BSU's RelationshipCanvas.tsx (519 lines, raw xyflow), plus read-only SchemaVisualizer. Credit where due: workflow-canvas deliberately reused schema-builder's XY_TOKEN_BINDINGS + useDocumentColorMode (via the @bsuite/schema-builder/xyflow subpath) and dagre (via /auto-layout) instead of copying. But it still duplicated:
+
+Chrome schema-builder file workflow-canvas file Verdict
+Realtime invalidation hook hooks/useRealtimeSubscription.ts hooks/useRealtimeSubscription.ts — header admits "Straight port of packages/schema-builder/…" extract
+LOD zoom bands EntityNode.tsx:47-48 (0.7/0.35) nodes/shared.ts LOD_DETAIL_VISIBLE=0.55 — "Ported from EntityNode's level-of-detail bands" extract (one useLodBands + shared thresholds)
+Node card shell EntityNode's inline class strings nodes/shared.ts cardShellClass() extract
+Floating toolbar chrome SchemaToolbar.tsx (Tidy/Fit/PNG/search) WorkflowToolbar.tsx (undo/redo/Tidy/save/publish) extract the shell + Tidy/Fit; keep publish vs PNG domain-specific
+Properties panel pattern EntityPropertiesPanel.tsx (359 ln) WorkflowInspector.tsx (193 ln) pattern-share only; fields are domain-specific
+Delete-key wiring, Controls/MiniMap/Background assembly, opening-fit clamp, absolute inset-0 sizing note SchemaCanvas.tsx:883-930, OPENING_FIT WorkflowCanvas.tsx OPENING_FIT, same block extract a CanvasFrame
+Undo/redo absent (0 hits in schema-builder src beyond unrelated names) hooks/useUndoRedo.ts (127 ln) asymmetry — move UP so schema gets it
+Cmd+K palette, PNG export, fuzzy search schema-builder only absent asymmetry — sharable
+Connection validation R-rules in workflow-canvas/src/validation/connection.ts + open registry nodes/registry.ts schema has its own inline onConnect registry pattern is the keeper
+Recommendation: a @bsuite/canvas-kit holding CanvasFrame (provider + sizing + Controls/MiniMap/Background + colorMode + token bindings + delete-key + opening-fit), useUndoRedo, useRealtimeInvalidation, useLodBands, cardShellClass, useDocumentColorMode, XY_TOKEN_BINDINGS, toolbar/panel shells. Migration cost is real: 2 package majors + 2 consumer bumps across 3 apps (crm7, BSU, conduit), plus the schema-builder /xyflow subpath must keep re-exporting from canvas-kit or workflow-canvas 0.x breaks. Do this after the crm7 wiring wins, not before — no user-visible feature depends on it, and the operator's complaints are all consumer-side. The exception worth doing early: BSU FeatureBuilder's LogicPanel must consume @bsuite/workflow-canvas, and RelationshipCanvas should be scheduled for replacement by SchemaCanvas — those are the "rebuild beside the half-wired setup" incidents in progress.
+
+Duplicated non-canvas surfaces: BSU Nav editor vs Route Inspector DB-nav tab (same tenant_navigation table, two UIs); crm7 /settings/custom-fields forms vs the schema-builder canvas (same tenant_field_definitions — package service reads it at service.ts:196,217); crm7 custom-pages lane vs the live page canvas editor (#8 vs #11 — the settings lane is the worse, forms-only sibling of a working WYSIWYG system, the exact anti-pattern).
+
+3. Round-trip failures (D8 §5, asked literally)
+Journey Leave the page? Smallest fix
+Building a form layout, need a field that doesn't exist Yes — to /settings/schema-builder or custom-fields; FormLayoutBuilder holds unsaved state in a zustand store, and there is no return path FieldCreateDialog is already a public export of @bsuite/schema-builder (index.ts). Import it into the layout builder's field palette behind "+ New field". No publish cycle.
+Designing an entity, want it on a form Yes, and no forward link from schema-builder Package already has the affordance: SchemaBuilder's navigationTargets/onNavigate Cmd+K props — crm7 passes neither (settings/schema-builder/index.tsx: 0 hits). One prop.
+Custom page → give it content Cannot be finished anywhere. Create/edit are metadata-only; detail says "Edit the layout in the Form Layout Builder, or use Jodie AI" with no link; renderer dumps JSON Short term: link + embed. Right answer: retire the lane's own editor and make "Edit page" open the existing PageEditorLauncher canvas on /custom/:slug.
+Workflow step → the entity/form it acts on No binding exists; actionKey is a free string in StepNode Inspector select fed by getSchemaEntities (once inspector is mounted at all).
+Templates ↔ workflows/pages No links either way Nav group (see below).
+Branding from crm7 Leaves the app (BSU redirect); return is manual Deliberate (CAW-V7a). Add ?return_to= handling in BSU + a back affordance; don't re-own writes.
+Copy template → edit ✅ Done right — duplicate.onSuccess navigates onto the copy ("Land the user ON the copy") —
+Advance a run ✅ Done right — in place (runs.tsx header cites D8.5 explicitly) —
+"Click the card" Templates list: only the name text is a button; the row is inert (index.tsx:271-283). "Mine" rows are full-width buttons — inconsistent siblings Make the whole <li> the click target; keep Copy as a stop-propagation button.
+Add-widget needs a new entity ✅ The exemplar — WidgetPalette → resolveOrCreateEntity creates inline This is the pattern the rest should copy.
+The interconnect layer as a whole: schema-builder ↔ form-layouts share data (getSchemaEntities + getEntityFieldDefsWithInheritance — the plumbing exists) but share zero navigation; workflows share nothing with anything. All four lanes sit in three different nav sections (AI & Automation vs Settings sidebar vs Settings-hub-only — Form Layouts is in no sidebar at all, config/navigation.ts: 0 hits, hub card only, the same defect that file's comments record fixing for Feature Flags and Custom Pages).
+
+4. World-class bar (Langflow / n8n / Retool / Figma)
+Create-from-blank: all four open a named blank canvas in ≤2 clicks. BSuite: service exists, button doesn't. Gap = 1 button.
+Drag to connect: n8n's signature move is drop-on-empty-pane opens a node picker (onConnectStart/onConnectEnd — current reactflow.dev docs cover it verbatim). The package validates connections with toast reasons (better than n8n's silent refusal) but crm7 users can't reach it. Palette drag-to-place: reactflow.dev's DnD example is native HTML5 drag + screenToFlowPosition (touch caveat — keep click-to-place, which WorkflowPalette already has and correctly defends).
+Shape language: the one pair that must differ at a glance — step vs decision — renders the identical shell (cardShellClass(selected,'rounded-lg') in both StepNode.tsx and DecisionNode.tsx; the differences are a 14px glyph and a branch list hidden below zoom 0.55). Terminator (stadium) and handoff (dashed) already differ. The fix, respecting the no-rotation constraint (documented in DecisionNode.tsx:3-9, and validated by reactflow.dev's official Shapes example: draw SVG paths inside a normally-positioned node, handles on the wrapper): keep the rectangular hit box, add a shape-cued left rail/notched SVG backdrop per kind — decision gets angled/chamfered ends (hexagon-ish backdrop) + text-primary accent, step stays a plain rectangle, terminator stays a stadium. Distinct at minimap scale, zero handle-math risk.
+Fullscreen: Langflow/n8n/Retool all have expand/maximize. BSuite: 0 occurrences of fullscreen in either package or crm7 pages (grep verified). The estate already has the pattern — the schema-builder page is full-bleed via useChromeless(); the workflow canvas sits in a 46vh max-h-[560px] card (WorkflowCanvasInner.tsx:81). React Flow needs only a sized container; a fixed inset-0 overlay toggle re-measures automatically.
+Moving between builders without losing context: Figma's model is panels-in-place, never navigation. The estate's equivalents exist piecemeal (Cmd+K palette, FieldCreateDialog, resolveOrCreateEntity) and are unwired.
+Two current-API defects found while checking the docs (both worth a live-test before fixing): (a) WorkflowHandles unmounts handles below zoom 0.55 (handles.tsx: if (!visible) return null) — reactflow.dev explicitly warns hidden handles must use visibility/opacity, never removal, or edges misrender; the opening fit clamps to 0.2–0.75, so big graphs can open below the threshold with every handle gone and connecting impossible with no explanation. (b) DecisionNode branch handles move when branches change and nothing calls useUpdateNodeInternals (0 hits in the package) — the documented requirement for dynamic handles.
+
+5. Ranked, sequenced recommendation
+All of P0 is crm7-only — no npm publish cycle. That is the deepest point of this audit: the packages are ahead of the apps.
+
+P0.1 — Mount the editor chrome. crm7/src/components/workflows/WorkflowCanvasInner.tsx: render WorkflowPalette, WorkflowToolbar, WorkflowInspector as PackageCanvas children; derive selectedNodeId from controller.nodes. Also delete the false "cannot import" header in pages/workflows/[id].tsx. Effort: S (half a day + visual pass). This alone answers "how do I connect and drag parts together", "why can't I move parts", publish, rename, undo buttons.
+
+P0.2 — "New workflow" button. pages/workflows/index.tsx: wire the already-imported createWorkflowWithDraft + starterGraph() behind a name dialog; navigate onto the result; fix the "New ones start as a copy" copy. Effort: S (hours).
+
+P0.3 — Fullscreen toggle. WorkflowCanvasInner.tsx: expand button swapping the container to fixed inset-0 z-50 (or reuse the chromeless pattern); Esc to exit. Effort: S.
+
+P0.4 — Whole-card click target on the templates list (pages/workflows/index.tsx:265-295). Effort: XS.
+
+P1.1 — One nav story. Add a "Customization" grouping (or cross-links panel) covering schema-builder / form-layouts / custom-pages / workflows / templates; put Form Layouts in the persistent sidebar (src/config/navigation.ts); pass navigationTargets + onNavigate to SchemaBuilder in pages/settings/schema-builder/index.tsx. Effort: S.
+
+P1.2 — Inline field create in the layout builder. Import FieldCreateDialog from @bsuite/schema-builder into FormLayoutBuilder's palette. Effort: M (dialog expects the package's service context — verify prop shape; still no publish).
+
+P1.3 — Decision shape language + handle-LOD fix. packages/workflow-canvas/src/nodes/{DecisionNode,StepNode,shared,handles}.tsx: SVG shape backdrops per the Shapes-example pattern; change handle LOD from unmount to visibility; add useUpdateNodeInternals on branch-count change. Needs a publish (workflow-canvas 0.3.0) + crm7 bump. Effort: M (1–2 days incl. visual pass both themes).
+
+P1.4 — Custom pages: stop the JSON dump. Either mount PageEditorLauncher on /custom/:slug and link it from the detail page, or at minimum render layout through the widget registry instead of <pre>{JSON.stringify} (src/components/CustomPageRenderer.tsx). Effort: M–L; the right shape is convergence with surface #11, not a new builder.
+
+P2 — canvas-kit extraction (section 2 list). 2 majors + 3 consumer bumps. Effort: L (a week-class refactor). Do after P0/P1 ship.
+
+P2.b — Point BSU at the packages. FeatureBuilder LogicPanel consumes @bsuite/workflow-canvas when built; plan RelationshipCanvas → SchemaCanvas. Prevents canvases 4 and 5.
+
+Traps:
+
+Do not build a workflow editor, palette, inspector, or a custom-page canvas anywhere. Every one exists. The stale [id].tsx header actively invites the rebuild — fix it in P0.1's PR.
+The publish cycle is real friction: packages are consumed from npm by standalone-built submodules; npm uses trusted publishing (tokens revoked); schema-builder's /xyflow subpath is a cross-package contract that canvas-kit must not break.
+DraggableCardPage cards wrap these pages — the estate has two autoHeight contracts with separate allowlists and 13 page-scanning tests; a fullscreen overlay that escapes the card must be checked against the DOM-layout lint.
+The editable draft vs published-version split: the detail page renders the published pointer while the controller edits the draft — when the toolbar mounts, make sure the page's "At a glance" copy ("a draft somebody is editing is never displayed here") is reconciled with an editing surface, or users will edit a draft while reading stats about the published version.
+Platform templates are read-only by design — don't "fix" dragging on them; fix the empty-tenant path (P0.2) so there's always something editable to land on.
+Key files: crm7/src/components/workflows/WorkflowCanvasInner.tsx, crm7/src/pages/workflows/{index,[id]}.tsx, crm7/src/config/navigation.ts, crm7/src/components/ui-customization/FormLayoutBuilder.tsx, crm7/src/components/CustomPageRenderer.tsx, packages/workflow-canvas/src/{components,nodes,hooks,validation}/, packages/schema-builder/src/{components/SchemaBuilder.tsx,index.ts,xyflow.ts}, business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx, business-suite-unified/src/pages/Developer/FeatureBuilder/panels/LogicPanel.tsx, braden/src/Routes.tsx (SiteEditor orphan).
+
+## 8. THE AUDIT, AND THE CLASS IT EXPOSED — 2026-09-02
+
+The operator opened the shipped builder and called it **"1/3 baked"**: no drag-and-drop node
+creation, no way to make a new workflow, every box the same shape, no full screen, and no
+connection to the other customization surfaces. A Fable-model audit of all 27 customization
+surfaces followed. Its headline was worse, and more useful, than the complaint:
+
+> **Almost everything the operator asked for was already built, published to npm, and not
+> rendered.** `@bsuite/workflow-canvas` ships `WorkflowPalette`, `WorkflowToolbar` and
+> `WorkflowInspector` as public exports. crm7 rendered `<WorkflowCanvas>` with no children.
+> `grep -rn "WorkflowPalette|WorkflowToolbar|WorkflowInspector" crm7/src` → **0**.
+
+### The systemic fix comes first
+
+`scripts/check-exported-not-mounted.mjs` (bsuite#2943) — a package may not export a component
+nobody mounts. **Typecheck, lint and tests were each structurally blind to this class**: an unused
+import is not a type error; nothing was imported so nothing was unused; the tests asserted the
+canvas got the right props and the package mock did not even declare those exports.
+
+Self-test 20/20 · live run 3 findings, 0 false positives · positive control both directions.
+BANKED = 3, which **must go to 0 in the same commit that advances the crm7 gitlink past
+crm7#2337**.
+
+### Shipped
+
+| item | where |
+|---|---|
+| editor chrome mounted (palette / toolbar / inspector) | crm7#2337 |
+| create-from-blank (`createWorkflowWithDraft` had no caller) | crm7#2337 |
+| whole-card click — stretched-link pattern | crm7#2337 |
+| full screen, with the `fullscreenchange` listener | crm7#2337 |
+| step labels show `node_label`, not the slug | crm7#2336 (merged) |
+| a link from `/workflows` to the entity builder | crm7#2337 |
+
+### Outstanding, ranked by the audit
+
+1. **P1.3** decision shape language — decision and step both render
+   `cardShellClass(selected,'rounded-lg')`. Must **not** rotate the node (breaks xyflow handle
+   hit-testing; the widest decision has four labelled branch ports). Needs a package publish.
+   Two real API defects ride along: handles **unmount** below zoom 0.55 (React Flow requires
+   `visibility`, not removal) and dynamic branch handles never call `useUpdateNodeInternals`.
+2. **P1.1** one nav story — Form Layouts is in **no sidebar at all**; `SchemaBuilder` accepts
+   `navigationTargets`/`onNavigate` and crm7 passes neither.
+3. **P1.2** inline field create — `FieldCreateDialog` is already a public export of
+   `@bsuite/schema-builder`; the layout builder sends you to another page instead.
+4. **P1.4** custom pages — the renderer dumps layout as `JSON.stringify` in a `<pre>`.
+5. **P2** `@bsuite/canvas-kit` extraction — schema-builder and workflow-canvas duplicate
+   realtime invalidation, LOD bands, card shell, toolbar chrome, delete-key wiring and the
+   opening-fit clamp. Undo/redo exists in one and not the other.
+6. **P2.b** BSU `FeatureBuilder` — `LogicPanel.tsx` says a React Flow workflow canvas "remains
+   future", i.e. **a fourth canvas is about to be built beside the published one**. This is the
+   operator's standing complaint, in writing, before it happens.
+7. The stale "cannot import" header in `crm7/src/pages/workflows/[id].tsx` (the sibling in
+   `index.tsx` was fixed; this one was missed).
+8. Website positioning — notes 141/142. The meta description reads *"Braden Group provides
+   workforce solutions including apprenticeships, traineeships, recruitment"*, and the IA is
+   `apprenticeships.tsx` / `recruitment.tsx` / `traineeships.tsx`. Structural, not copy.
 
