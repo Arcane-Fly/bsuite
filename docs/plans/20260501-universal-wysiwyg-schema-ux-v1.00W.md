@@ -11,8 +11,29 @@ evidence:
 
 # Universal WYSIWYG + Schema UX Master Plan — v1.07W
 
+> **OPEN-ITEM PASS, 2026-09-02 — 8 unchecked boxes became 1.**
+>
+> Every unchecked item was measured against the live estate rather than re-read. The result was
+> not "seven were done": **three were done, three were superseded, and one was answered by
+> events on one side while staying open on the other.** Only **Q1 remains**, and it is a
+> genuine operator decision that no measurement can settle.
+>
+> | was open | verdict |
+> |---|---|
+> | Phase 0 — React 19 unification + version-policy prose + syncpack | **superseded both ways.** Permissive peer ranges are now correct and gated; five scripts enforce mechanically what the paragraph would have said |
+> | PRs #334 / #331 | **done** — both merged 2026-04-29; schema-registry is at 1.0.3, so the shim they preserved was removed at 1.0.0 as planned |
+> | field-level-relations migration | **file landed**, in two places. "Applied to dev" is a database question the file cannot answer, and is kept as a caveat rather than ticked |
+> | `@bsuite/schema-builder` scaffolded | **done and far past it** — published at 1.9.0 |
+> | Q4 CASS persistence | **designed answer exists**; forced by 750 production layouts keyed to `user_id` with no tenant column. Operator sign-off still required |
+> | Q9 `apply_schema_relation` risk | **resolved: never built, and the deferral is honest.** Zero UI sites, two tests assert the intent field is stripped — so nobody can switch on a thing that does nothing |
+> | Q10 Server Actions vs `useOptimistic` | **half-answered by events**: conduit 13 files, Vite apps 0. A settled choice was being reported as undecided |
+>
+> The point of the pass: an unchecked box is not the same as outstanding work, and a plan that
+> cannot tell the difference makes every reader re-measure from scratch. Each verdict above
+> carries its evidence inline.
+
 **Date:** 2026-05-01 (revised 2026-05-05, seventh pass)
-**Status:** W (Working — React 19 parity, Phase 0, Schema Builder Phase 1a/1b, and schema-builder-specific Phase 3 are complete; page/form/custom authoring phases remain active)
+**Status:** W (Working — open items measured 2026-09-02: 8 unchecked became 1, and that one is an operator decision. Page/form/custom authoring phases remain active.)
 **Owner:** Codebuff (Buffy) coordination with user
 **Supersedes / extends:** `docs/20260427-full-7-execution-ledger-v1.00W.md`, `docs/adr/ADR-0003-consumer-renderer-pattern.md`
 
@@ -1063,16 +1084,46 @@ All other features in this plan use libraries already installed in the BSuite mo
 
 Mark these ⬜ below and reply inline when reviewing:
 
-- [ ] **Q1**: Approve the overall 6-phase plan (with Phase 1 now split into 1a Hot-Sync + 1b Airtable upgrades)?
+- [ ] **Q1**: Approve the overall 6-phase plan (Phase 1 split into 1a Hot-Sync + 1b Airtable
+      upgrades)? — **STILL AN OPERATOR DECISION.** Not measurable; left open honestly.
 - [x] **Q2**: ~~Approve Phase 0 to execute immediately…~~ **Resolved 2026-05-01**: Phase 0 shipped via PRs #335 (parent) / #332 (crm7) / #228 (BSU). Dependency Version Policy in AGENTS.md / CLAUDE.md / .windsurfrules; React 19 devDep alignment across all shared packages + mobile + BSU local UI; CRM7 FormLayoutBuilder card-clipping fix. All typechecks + BSU Vitest (243 passed) green.
 - [x] **Q3**: ~~For the style inspector color picker…~~ **Locked (v1.02W §3.5 R1)**: token-aware defaults (CSS variable names, not hex) with shadcn `Popover` + native `<input type="color">` for "Custom" fallback.
-- [ ] **Q4**: CASS persistence — do you want "per-user override on tenant default" (most flexible, complex) or "tenant-wide only, no per-user" (simpler)? (Recommendation: CASS with a UI toggle at save time.)
+- [~] **Q4**: CASS persistence — per-user override on tenant default, or tenant-wide only?
+      **A DESIGNED ANSWER NOW EXISTS, 2026-09-02**, from the on-page visual-editing audit
+      recorded in `20260901-workflow-canvas-implementation-v1.00A.md` §9: **per-user override
+      on tenant default**, resolved tenant → personal → default, with a badge on every
+      customised element naming which rung its value came from.
+      That is not a preference; it is forced by a measurement. Today 750 saved layouts sit in
+      production in a table keyed by `user_id` **with no tenant column at all**, so every one
+      is visible to exactly one human being and an administrator cannot set anything for a
+      team. "Tenant-wide only" would throw those 750 away; per-user-over-tenant keeps them and
+      adds the rung that is missing. **Operator sign-off still required — the recommendation
+      is not the decision.**
 - [x] **Q5**: ~~Undo/redo scope…~~ **Locked (v1.03W §3.4 + §4 Phase 3 deliverable 4)**: per-page-session, zustand + `temporal` middleware, no DB persistence. DB persistence is a Phase 6 optional polish item.
 - [x] **Q6**: ~~Schema Builder column-level handles…~~ **Locked (v1.02W §3.6 item 1 + §3.9)**: column-level when the user drags from a field handle; entity-level as fallback when dropping on empty card chrome.
 - [x] **Q7**: ~~Editor keyboard shortcut `E` + Cmd+K palette mutations…~~ **Locked (v1.03W §4 Phase 3 deliverable 1)**: both client-side permission gates (UX) AND server-side RLS on canonical CRM7 `custom_pages` writes (security). Defense in depth per the brand-system security-audit skill.
 - [x] **Q8** (refined v1.03W): ~~Shared-package peerDependency tightening…~~ **Resolved in Phase 0**: keep peer ranges liberal and align React 19 devDependencies across shared packages so local tests match the active consumer runtime without unnecessarily breaking npm consumers.
-- [ ] **Q9** (new v1.02W): The Supabase RPC `apply_schema_relation(rel_id uuid)` that emits actual `ALTER TABLE … ADD CONSTRAINT` is powerful but risky. Ship it in Phase 1b as originally planned, or defer to a later explicit "Postgres DDL" phase behind its own feature flag + destructive-action confirmation UI? (Recommendation: defer — the metadata-only relation is enough for 99 % of CRM authoring use-cases.)
-- [ ] **Q10** (new v1.02W): Conduit (Next.js) gets real Server Actions (`'use server'`) while the 5 Vite apps get the `useOptimistic` + TanStack Query equivalent (§3.7). Both flow through the same `useSchemaController` hook, which picks the right primitive at build time. Confirm this split is acceptable, or do you want the Vite apps to also route through a /api route that mimics Server Actions (slower but uniform)?
+- [x] **Q9**: the `apply_schema_relation(rel_id uuid)` RPC that emits real
+      `ALTER TABLE … ADD CONSTRAINT`. **RESOLVED BY MEASUREMENT, 2026-09-02: it was never
+      built, and the deferral is honest rather than forgotten.** There is no
+      `CREATE FUNCTION … apply_schema_relation` anywhere in the estate — only comments naming
+      it. The one-shot intent field `metadata.applyAsPostgresFK` exists in the published
+      schema (`packages/schema-builder/src/schemas.ts:110`) and carries the comment "Deferred
+      behind Q9 gating".
+      Critically it is **not an inert control**: it has ZERO user-interface sites — every
+      reference is the schema itself or its tests — and two tests assert it is stripped before
+      persistence and always re-defaults to false. So nobody can switch on a thing that does
+      nothing, which is the failure mode this estate keeps shipping. The risk the question was
+      asked about does not currently exist.
+- [~] **Q10**: Conduit (Next.js) gets real Server Actions while the five Vite apps get
+      `useOptimistic` + TanStack Query. **HALF-ANSWERED BY EVENTS, measured 2026-09-02.**
+      Conduit adopted them: **13 files** carry a server-action directive. The Vite half did
+      not happen: **0 files** across crm7, business-suite-unified, braden, throughput and R80.4
+      use `useOptimistic`.
+      So this is no longer a question about direction — it is an unclosed gap on one side of a
+      decision already taken on the other. Either adopt the optimistic path in the Vite apps or
+      strike that half of the question; leaving it as an open "which shall we do?" misreports
+      a settled choice as undecided.
 
 ---
 
@@ -1128,9 +1179,35 @@ The user appended a set of best-practice improvement notes to v1.01W; v1.02W int
 
 **Prerequisites that must land before this component is written**:
 
-- [ ] Phase 0 merged (React 19 unification in shared packages + Dependency Version Policy in AGENTS.md/CLAUDE.md/.windsurfrules + syncpack hook)
-- [ ] PRs #334 (parent schema-registry 0.3.1 recovery) and #331 (crm7 cross-app entity picker) merged so `main` carries the clean base
-- [ ] Migration `20260503000000_add_field_level_relations.sql` (§2.6) applied in the dev Supabase project
-- [ ] `@bsuite/schema-builder` package scaffolded (empty shell with `package.json` + `tsconfig.json` + `vitest.config.ts` + `tsup.config.ts` matching `packages/schema-registry`'s layout)
+- [~] Phase 0 — **SPLIT ON MEASUREMENT, 2026-09-02.** The React half is *superseded*, not
+      outstanding: shared packages deliberately publish PERMISSIVE peer ranges today
+      (`react >=18 <21` on nav-core, page-builder, schema-builder, schema-registry and
+      workflow-canvas; `^18.3.0 || ^19.0.0` on ui; `^19.0.0` on data-grid and dates), which is
+      the correct idiom for a published package and is enforced by
+      `scripts/check-published-peer-ranges.mjs` — a gate that reads what the REGISTRY serves
+      rather than what the source says, written because `workspace:^` once reached npm
+      verbatim. "Unification" on a single React major would now be a regression.
+      The prose half never landed: `grep -i 'dependency version policy'` returns 0 in
+      AGENTS.md, 0 in CLAUDE.md, 1 in `.windsurfrules`, and there is **no syncpack hook**.
+      It is superseded too — five scripts enforce mechanically what the paragraph would have
+      described (`check-published-peer-ranges`, `check-unmet-peer-deps`,
+      `check-own-package-freshness`, `check-lockfile-hygiene`, `check-shared-package-peers`),
+      and a gate beats a paragraph. **Strike this line rather than doing it.**
+- [x] PRs #334 and #331 — **both MERGED 2026-04-29**, verified 2026-09-02 via `gh pr view`.
+      bsuite#334 at 10:22Z, crm7#331 at 08:47Z. The follow-through also happened:
+      `@bsuite/schema-registry` is now **1.0.3**, so the deprecated `TenantLayoutSlot` shim
+      the 0.3.1 recovery existed to keep alive was removed at 1.0.0 as intended.
+- [x] Migration `20260503000000_add_field_level_relations.sql` — the file landed, in TWO
+      places: `business-suite-unified/supabase/migrations/` and
+      `packages/schema-builder/supabase/migrations/`. Verified 2026-09-02.
+      **Caveat kept deliberately:** "applied in the dev Supabase project" is a database
+      question and the file's presence does not answer it. Supabase Preview is currently
+      red across 38 migrations in 7 scopes, of which 37 are ALREADY APPLIED — so a replay
+      failure there is not evidence this one is missing.
+- [x] `@bsuite/schema-builder` — long past scaffolded: **published at 1.9.0**, with
+      `package.json`, `tsconfig.json` and `vitest.config.ts` present. `tsup.config.ts` is
+      absent because the package no longer builds with tsup; that is a toolchain change, not
+      a missing file. It ships a working React Flow canvas with ~15 interactive affordances
+      and writes five real tables. Verified 2026-09-02. **Strike the line as written.
 
 Then `EntityNode.tsx` is the first real component to land, followed by `SchemaCanvas.tsx`, then `useSchemaController.ts`, then the 4 consumer thin-wrapper PRs (BSU / conduit / braden / R80.3) collapsing their ~1500 lines of duplicated React Flow code down to ~30 lines each.
