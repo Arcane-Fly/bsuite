@@ -10,6 +10,11 @@ evidence:
   - packages/workflow-canvas/src/validation/connection.ts
   - packages/workflow-canvas/src/nodes/registry.ts
   - docs/design-inputs/20260901-apprentice-onboarding-journey-lucidchart-v1.00A.json
+  - crm7/src/lib/workflows/runService.ts
+  - crm7/src/pages/workflows/runs.tsx
+  - supabase/migrations/20261106000000_apprentice_competencies_person_path.sql
+  - supabase/migrations/20261107000000_platform_branding_write_policies_after_profiles.sql
+  - scripts/check-migration-collisions-across-open-prs.mjs
 ---
 
 # Workflow Canvas — Implementation Plan
@@ -104,3 +109,66 @@ conduit's queue already provides durable execution on the same Postgres.
 - **NEVER write FutureBuild Academy (`b550d66c-…`).** All 8 real apprentice placements are theirs.
 - Bundle: operator constraint. `@xyflow/react` and dagre are already paid for. Lazy-load the canvas route.
 - feature branch → PR to development → PR to main. GPG-signed. Never push main directly.
+
+## 5. STATUS — 2026-09-02
+
+### Shipped and verified live
+
+| | evidence |
+|---|---|
+| Canvas renders the apprentice workflow | 42 nodes / 41 edges in production |
+| Minimap | fixed at the render boundary — xyflow's `nodeHasDimensions` reads `measured/width/initialWidth`, never `style.width`, so the canvas drew fine while the minimap skipped every node. 0 → 42 rects |
+| `@bsuite/workflow-canvas` | 0.2.0 published (one manual bootstrap — `npm trust` requires the package to already exist), then 0.2.1 and 0.2.2 by CI through the Trusted Publisher |
+| Terminator roles | corrected in the production graph in a guarded transaction (`UPDATE 1`). A missing `role` silently became END, which declares only `FLOW_IN` |
+| `trigger_config` | `{"events": ["placement.created"]}` set — without it `workflow_emit_event` could never fire |
+| Phase 3 execution | proven end to end on the demo tenant: inserting a placement produced runs 0→1, steps 0→2, status `waiting`, first step `start` — then rolled back |
+| Runs surface | `runService.ts` + `runs.tsx` — writes go **only** through the `workflow_run_step_complete` RPC, because `authenticated` holds SELECT-only on `workflow_runs`/`workflow_run_steps` |
+
+### FutureBuild Academy — what "transitioned" actually means
+
+The operator asked for FutureBuild's 8 live placements to be transitioned, and explicitly
+overrode the standing "never write FutureBuild" constraint in §4 to do it. That override is
+recorded here because it contradicts a written constraint and must not be inferred later.
+
+**Measured, not assumed:** all 8 placements are already on the person-based model —
+8 of 8 carry `person_id`, 0 carry `apprentice_id`. FutureBuild has **zero `apprentices`
+rows**. Under the operator's ruling (*"trainee is same as apprentice, and worker is same
+without the training"*) that is the CORRECT shape, not a defect.
+
+So there is no structural migration to run. Two things were genuinely blocking:
+
+1. **Units of competency could not be linked at all.** `apprentice_competencies.apprentice_id`
+   was `NOT NULL` with an FK to `apprentices`, so recording a competency required a row
+   FutureBuild does not and should not have. Fixed by `20261106000000`, safe because the
+   table holds zero rows estate-wide.
+2. **The tenant is not opted in.** `workflow_definition_activations` gates
+   `workflow_emit_event` per tenant; only the demo tenant has a row.
+
+**Activation is rehearsed and proven, and deliberately NOT yet applied.** In a rolled-back
+transaction against production: un-activated emit started 0 runs (the opt-in holds),
+activated emit started 1 run with 2 steps at status `waiting` and first step `Start`, a
+re-emit for the same subject started 0 (`uniq_workflow_runs_live_per_subject` holds), and
+the RPC the page uses advanced it 2 → 4 steps. FutureBuild ended the rehearsal at 0 runs,
+0 activations.
+
+It waits on one thing: **the runs surface reaching production.** Activation only affects
+NEW placements, and a run started with no page to advance it sits `waiting` forever — and
+because of `uniq_workflow_runs_live_per_subject`, permanently blocks that subject from ever
+starting another. Activating before the page ships would break the thing it enables.
+
+### Deliberately NOT done, with the reason
+
+- **No backfill of runs for the existing 8.** It would create 8 unadvanceable runs that
+  permanently block those subjects, against people who were onboarded months ago, and
+  produce 8 false compliance items. Their onboarding is history, not work in progress.
+- **The other 13 tables with a `NOT NULL` FK to `apprentices` are untouched.** They hold
+  real rows; converting them is a schema decision whose blast radius belongs to the operator.
+
+### Open
+
+- crm7#2334 (development → main) carries the runs surface to production — checks running
+- bsuite#2936 `trigger_config`; bsuite#2937 competencies + gate fixes
+- bsuite gitlink for crm7 advances to crm7/**main** once #2334 lands, which also clears the
+  `Lockfile pin vs repo-declared version` failure (bsuite/development pins crm7 `3630295`,
+  whose lockfile resolves 0.2.2's predecessor 0.2.1)
+- then FutureBuild activation, then `/ops-ship-close-out`
