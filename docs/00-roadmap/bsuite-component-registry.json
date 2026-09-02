@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 188,
-  "unusedSharedComponents": 165,
+  "sharedComponents": 189,
+  "unusedSharedComponents": 166,
   "localComponentFiles": {
     "crm7": 434,
     "business-suite-unified": 117,
@@ -520,6 +520,13 @@
     },
     {
       "name": "DraggableCardPage",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "ElementScopeProvider",
       "package": "@bsuite/page-builder",
       "consumers": {},
       "consumerFiles": 0,

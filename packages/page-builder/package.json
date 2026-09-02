@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/page-builder",
-  "version": "2.5.0",
+  "version": "2.6.0",
   "description": "Shared BSuite responsive page-builder grid and layout persistence primitives",
   "type": "module",
   "license": "UNLICENSED",
