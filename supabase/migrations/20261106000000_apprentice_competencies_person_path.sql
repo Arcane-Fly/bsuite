@@ -31,7 +31,13 @@
 -- plainly that the class remains.
 -- =============================================================================
 
-BEGIN;
+-- NO EXPLICIT BEGIN/COMMIT. The applier already wraps each migration in its own
+-- transaction, so wrapping again buys nothing — and it actively costs something:
+-- a file containing its own COMMIT, when \i-ed inside a rehearsal transaction,
+-- COMMITS THAT OUTER TRANSACTION. On 2026-09-02 that turned a "run it and roll
+-- back to compare" rehearsal of this very file into a real production write. The
+-- ROLLBACK that followed had nothing left to roll back and said so, in a WARNING
+-- that is easy to read past.
 
 -- 1. The person path. Nullable, because a row may legitimately arrive either way.
 ALTER TABLE public.apprentice_competencies
@@ -90,4 +96,3 @@ COMMENT ON COLUMN public.apprentice_competencies.person_id IS
   'without the training") and this table still required an `apprentices` row. Exactly '
   'one of person_id / apprentice_id is set — see apprentice_competencies_one_subject.';
 
-COMMIT;

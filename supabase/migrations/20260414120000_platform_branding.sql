@@ -93,45 +93,74 @@ CREATE POLICY "platform_branding_select_anon"
   TO anon
   USING (true);
 
--- INSERT: platform admin only (singleton row seeded above, but allow re-seed)
-DROP POLICY IF EXISTS "platform_branding_insert" ON public.platform_branding;
-CREATE POLICY "platform_branding_insert"
-  ON public.platform_branding FOR INSERT
-  TO authenticated
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid()
-        AND platform_role IN ('developer', 'platform_admin')
-    )
-  );
+-- ---------------------------------------------------------------------------
+-- THE THREE POLICIES BELOW REFERENCE public.profiles, WHICH DOES NOT EXIST YET
+-- WHEN THIS FILE IS REPLAYED FROM SCRATCH.
+--
+-- profiles is created by business-suite-unified/20260421050000 — SEVEN DAYS
+-- LATER in version order. On production that never mattered: this migration is
+-- not in the ledger at all (it sits below the 20260611000000 floor, so the
+-- applier will never run it), and the five platform_branding policies got there
+-- by another route. They are all present on production today.
+--
+-- Where it DID matter is Supabase Preview, which replays the whole history onto
+-- a fresh branch. Every preview branch died here with
+--   ERROR: relation "public.profiles" does not exist (SQLSTATE 42P01)
+-- which is why that check has been red on every PR.
+--
+-- So the three are conditioned on profiles existing. On a replay they are
+-- skipped here and asserted by 20261107000000, which sits ABOVE the floor and
+-- therefore actually runs. On production nothing changes: this file never runs.
+-- ---------------------------------------------------------------------------
+DO $platform_branding_profiles_guard$
+BEGIN
+  IF to_regclass('public.profiles') IS NULL THEN
+    RAISE NOTICE 'public.profiles absent — deferring platform_branding write policies to 20261107000000';
+    RETURN;
+  END IF;
 
--- UPDATE: platform admin only
-DROP POLICY IF EXISTS "platform_branding_update" ON public.platform_branding;
-CREATE POLICY "platform_branding_update"
-  ON public.platform_branding FOR UPDATE
-  TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid()
-        AND platform_role IN ('developer', 'platform_admin')
-    )
-  )
-  WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.profiles
-      WHERE id = auth.uid()
-        AND platform_role IN ('developer', 'platform_admin')
-    )
-  );
+  -- INSERT: platform admin only (singleton row seeded above, but allow re-seed)
+  DROP POLICY IF EXISTS "platform_branding_insert" ON public.platform_branding;
+  CREATE POLICY "platform_branding_insert"
+    ON public.platform_branding FOR INSERT
+    TO authenticated
+    WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid()
+          AND platform_role IN ('developer', 'platform_admin')
+      )
+    );
 
--- DELETE: nobody (singleton row should never be deleted)
-DROP POLICY IF EXISTS "platform_branding_delete" ON public.platform_branding;
-CREATE POLICY "platform_branding_delete"
-  ON public.platform_branding FOR DELETE
-  TO authenticated
-  USING (false);
+  -- UPDATE: platform admin only
+  DROP POLICY IF EXISTS "platform_branding_update" ON public.platform_branding;
+  CREATE POLICY "platform_branding_update"
+    ON public.platform_branding FOR UPDATE
+    TO authenticated
+    USING (
+      EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid()
+          AND platform_role IN ('developer', 'platform_admin')
+      )
+    )
+    WITH CHECK (
+      EXISTS (
+        SELECT 1 FROM public.profiles
+        WHERE id = auth.uid()
+          AND platform_role IN ('developer', 'platform_admin')
+      )
+    );
+
+  -- DELETE: nobody (singleton row should never be deleted)
+  DROP POLICY IF EXISTS "platform_branding_delete" ON public.platform_branding;
+  CREATE POLICY "platform_branding_delete"
+    ON public.platform_branding FOR DELETE
+    TO authenticated
+    USING (false);
+END
+$platform_branding_profiles_guard$;
+
 
 COMMENT ON TABLE public.platform_branding IS
   'Tier 1 of the three-tier white-label hierarchy. Single row (id=''platform'') '
