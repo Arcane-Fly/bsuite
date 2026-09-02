@@ -87,7 +87,22 @@ export const CONSUMERS = ['crm7', 'business-suite-unified', 'conduit', 'braden',
  * and the ratchet below fails if it does not — a bank nobody lowers is a
  * permanent exemption wearing a gate's name.
  */
-export const BANKED = 3
+/*
+ * LOWERED 3 -> 0 on 2026-09-03, by the gate's own rule.
+ *
+ * The three were @bsuite/workflow-canvas's WorkflowPalette, WorkflowToolbar and
+ * WorkflowInspector: published, exported, and mounted by nobody — the defect
+ * that made the operator report the workflow builder as "1/3 baked", because a
+ * node could be panned and dragged but not ADDED, RENAMED, DELETED or PUBLISHED.
+ *
+ * crm7#2337 mounted all three as children of the canvas, and the gitlink has
+ * since advanced, so the finding count is 0. The gate then correctly refused the
+ * next commit with "the bank is STALE: 0 finding(s) remain but BANKED is 3" —
+ * which is the half of a ratchet people forget to build: a bank that only stops
+ * growth lets a fixed finding sit banked forever, and the count stops meaning
+ * anything.
+ */
+export const BANKED = 0
 
 const TEST_MARKERS = ['__tests__', '.test.', '.spec.', '.stories.', '/test/', '/tests/']
 
