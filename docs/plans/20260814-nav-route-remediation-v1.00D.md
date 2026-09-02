@@ -1,5 +1,48 @@
 # Navigation & Route Remediation Plan
 
+> ## THE WORK SHIPPED. THE VERIFICATION DID NOT. AND THE FEATURE HAS NEVER BEEN USED.
+>
+> **Re-measured 2026-09-02.** This plan is **not superseded** and its 53 unchecked boxes are
+> **not outstanding work** — all eight phases executed, eight pull requests merged, and the
+> result is live on `main`. Every unchecked box is a **verification gate**, not a build task,
+> and the section below has been read as one for a fortnight by anyone who did not scroll.
+>
+> | of the 53 boxes | |
+> |---|---|
+> | provably DONE, re-measured this pass | **21** |
+> | genuinely UNRUN — mostly live visual, Lighthouse and red-team passes on conduit and R80.4 | **24** |
+> | replaced by a better measure since | **4** |
+> | need an artefact this pass could not produce | **3** |
+> | the operator's call | **1** |
+>
+> ### The finding that matters more than any of them
+>
+> **`tenant_navigation` holds ZERO ROWS in production.**
+>
+> The database navigation overlay this plan built is fully wired: the "Add to Navigation"
+> flow exists (`RouteInspectorAddToNavDialog.tsx`), the CHECK constraint accepts all six
+> scopes, row-level security is on with four policies, and five of six apps call
+> `useTenantNavigation` — braden excluded by design, stated in the migration header.
+>
+> Every blocker was removed. **Nobody has ever added a single entry.**
+>
+> Measured live, with its own positive control in the same query: `nav_rows 0`, while
+> `tenants 7` and `custom_pages 2` — so the counter works and the zero is real.
+>
+> This is the estate's signature failure in a form no wiring gate can catch. The feature is
+> not unwired, not unreachable and not broken. It is **built, reachable, and undiscovered** —
+> and its Phase 4.1 wiring took BSU down twice to get there.
+>
+> ### One caveat carried forward, and it is a DRY item rather than a parity gap
+>
+> Mobile navigation is at behavioural parity across all six apps at 375px, but only conduit
+> and R80.4 consume the shared `MobileSidebarDrawer`. **The other four hand-roll equivalent
+> logic** — four reimplementations of a solved problem.
+>
+> **Do not re-run a phase from the text below.** Read the outcome section first; then, if you
+> need verification, the 24 unrun gates are the work, not the build.
+
+
 > **For Claude:** REQUIRED SUB-SKILL: Use `plan-executing` to implement this plan task-by-task.
 
 ---
