@@ -1,5 +1,5 @@
 {
- "generated": "2026-08-26",
+ "generated": "2026-09-02",
  "security": {
   "finding": "write-side RLS left unscoped on five crm7 tables",
   "migration": "crm7/supabase/migrations/20260917000000_close_the_read_half_of_six_always_true_policies.sql",
@@ -21,17 +21,17 @@
   "unattributable": [
    {
     "table": "award_rates",
-    "why": "No .insert/.update/.delete against award_rates exists anywhere reachable from a UI surface. src/services/importExportService.ts's importToSupabase() CAN insert/upsert into award_rates (ENTITY_TABLE_MAP.awards = 'award_rates'), but it has zero callers anywhere in the app (only its own module/tests and the services barrel) \u2014 no import wizard page wires entityType:'awards' to it. src/pages/payroll/award-rates/{index,create}.tsx (the index row most plausibly 'owning' this table by name) write to a DIFFERENT table, rate_schedules, not award_rates. This matches the migration's own admission that award_rates has 'zero live rows' and (per src/services/requoteOnRiseService.ts's comment) 'no writer anywhere in BSuite'.",
+    "why": "No .insert/.update/.delete against award_rates exists anywhere reachable from a UI surface. src/services/importExportService.ts's importToSupabase() CAN insert/upsert into award_rates (ENTITY_TABLE_MAP.awards = 'award_rates'), but it has zero callers anywhere in the app (only its own module/tests and the services barrel) — no import wizard page wires entityType:'awards' to it. src/pages/payroll/award-rates/{index,create}.tsx (the index row most plausibly 'owning' this table by name) write to a DIFFERENT table, rate_schedules, not award_rates. This matches the migration's own admission that award_rates has 'zero live rows' and (per src/services/requoteOnRiseService.ts's comment) 'no writer anywhere in BSuite'.",
     "no_writer_found": true
    },
    {
     "table": "charge_calculations",
-    "why": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX \u2014 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all \u2014 the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row.",
+    "why": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX — 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all — the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row.",
     "no_writer_found": true
    },
    {
     "table": "host_contracts",
-    "why": "Zero .from('host_contracts') calls anywhere in crm7 TS/TSX (searched both quote styles). The only two hits are (1) a code COMMENT in crm7/src/pages/contracts/index.tsx explaining that host_contracts was deliberately REMOVED from that page's aggregation at crm7#1577 ('doesn't belong on a contracts page... still live, still readable... whether it is retired or wired to whatever was meant to read it is still an open question') and (2) a matching comment in crm7/src/pages/contracts/index.test.tsx. The migration's own comment ('host_contracts is referenced by a live page, crm7/src/pages/contracts/index.tsx') is stale/incorrect against the current code \u2014 that page fetches only training_contracts and host_agreements now. host_contracts is an orphaned pricing table with no live reader or writer anywhere in crm7.",
+    "why": "Zero .from('host_contracts') calls anywhere in crm7 TS/TSX (searched both quote styles). The only two hits are (1) a code COMMENT in crm7/src/pages/contracts/index.tsx explaining that host_contracts was deliberately REMOVED from that page's aggregation at crm7#1577 ('doesn't belong on a contracts page... still live, still readable... whether it is retired or wired to whatever was meant to read it is still an open question') and (2) a matching comment in crm7/src/pages/contracts/index.test.tsx. The migration's own comment ('host_contracts is referenced by a live page, crm7/src/pages/contracts/index.tsx') is stale/incorrect against the current code — that page fetches only training_contracts and host_agreements now. host_contracts is an orphaned pricing table with no live reader or writer anywhere in crm7.",
     "no_writer_found": true
    }
   ],
@@ -41,7 +41,7 @@
    "what_is_true": "All three are is_active, tenant_scope=tenant_column entries in public.report_catalog_entities, which is the allowlist the generic bulk import/update engine at /settings/data writes through. Any tenant owner/admin can pick them from a dropdown and write rows.",
    "why_the_method_failed": "bulk_data_import/bulk_data_update resolve the target table from a DATABASE ROW and issue dynamic EXECUTE format(...). The table name is never in TypeScript. Invisible to source grep and to dry-lint's AST-based cross-app-write rule.",
    "second_order": "Cuts the other way on severity: the bulk_data_* functions are SECURITY DEFINER and never evaluate RLS, so the unscoped write policy is not in that path. Its tenant gate is _bulk_data_write_authority with server-side tenant_id stamping (pgTAP 46). The unscoped policy matters for DIRECT client writes only.",
-   "charge_calculations_and_financial_viability_snapshots": "absent from report_catalog_entities \u2014 those two remain without a bulk-engine writer",
+   "charge_calculations_and_financial_viability_snapshots": "absent from report_catalog_entities — those two remain without a bulk-engine writer",
    "method_rule": "For 'does anything write table X', ask the database first: report_catalog_entities allowlist; pg_proc.prosrc for dynamic SQL; view defs + security_invoker; pg_trigger; pg_constraint FKs; pg_policies on OTHER tables naming X. Only then read source.",
    "source": "bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep (crm7#2053 write-side RLS lane, 2026-08-26)"
   }
@@ -61,13 +61,13 @@
     {
      "file": "crm7/src/stores/awardStore.ts",
      "index_row_ids": [],
-     "note": "Exports useAwardStore(createEntityStore('award_rates', ...)) with its own doc comment 'CRM7 is READ-ONLY for this table'. Confirmed via search: useAwardStore is imported only by the barrel src/stores/index.ts \u2014 zero page/component calls it. Effectively dead code, not tied to any live index row."
+     "note": "Exports useAwardStore(createEntityStore('award_rates', ...)) with its own doc comment 'CRM7 is READ-ONLY for this table'. Confirmed via search: useAwardStore is imported only by the barrel src/stores/index.ts — zero page/component calls it. Effectively dead code, not tied to any live index row."
     }
    ],
    "owner_row_ids": [],
    "no_writer_found": false,
    "confidence": "high (corrected 2026-08-26)",
-   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' \u2014 the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
+   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' — the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
    "runtime_writer": {
     "surface": "crm7.settings.data-tools (/settings/data)",
     "mechanism": "bulk_data_import / bulk_data_update RPC resolves the target table from public.report_catalog_entities at run time and issues dynamic EXECUTE format('INSERT INTO %I.%I ...')",
@@ -83,7 +83,7 @@
    "owner_row_ids": [],
    "no_writer_found": true,
    "confidence": "high",
-   "note": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX \u2014 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all \u2014 the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row."
+   "note": "Zero occurrences of 'charge_calculations' in any crm7 .ts/.tsx file (searched language:TypeScript and language:TSX — 0 hits each; only docs/*.md and supabase/migrations/*.sql reference it). docs/plans/20260423-bsuite-gto-master-plan-v1.00W.md's ownership table names R8 as sole owner ('R8 (via charge_calculations / host_charge_rates)') with CRM7 listed only as an aspirational future reader ('CRM7 (invoicing)') that was never built. This table is not owned, read, or written by any crm7 feature at all — the RLS exposure sits on a table crm7's own app code never touches; risk should attach to R8, not to any crm7 index row."
   },
   {
    "table": "host_contracts",
@@ -92,7 +92,7 @@
    "owner_row_ids": [],
    "no_writer_found": false,
    "confidence": "high (corrected 2026-08-26)",
-   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' \u2014 the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
+   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' — the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
    "runtime_writer": {
     "surface": "crm7.settings.data-tools (/settings/data)",
     "mechanism": "bulk_data_import / bulk_data_update RPC resolves the target table from public.report_catalog_entities at run time and issues dynamic EXECUTE format('INSERT INTO %I.%I ...')",
@@ -116,7 +116,7 @@
      "index_row_ids": [
       "crm7.field-officers.incidents"
      ],
-     "note": "Confirmed: calls store.create({...}) via useWhsStore() \u2014 same underlying INSERT path as whs/incidents/new.tsx, a second live surface writing this table."
+     "note": "Confirmed: calls store.create({...}) via useWhsStore() — same underlying INSERT path as whs/incidents/new.tsx, a second live surface writing this table."
     },
     {
      "file": "crm7/src/pages/field-officers/incidents/[id]/edit.tsx",
@@ -148,7 +148,7 @@
    ],
    "no_writer_found": false,
    "confidence": "high (corrected 2026-08-26)",
-   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' \u2014 the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
+   "note": "CORRECTION: my earlier 'no writer anywhere' verdict was wrong. Source-tree search is not the authority for 'does anything write table X' — the database is. See bsuite_a_runtime_table_lookup_is_invisible_to_every_source_grep.",
    "runtime_writer": {
     "surface": "crm7.settings.data-tools (/settings/data)",
     "mechanism": "bulk_data_import / bulk_data_update RPC resolves the target table from public.report_catalog_entities at run time and issues dynamic EXECUTE format('INSERT INTO %I.%I ...')",
@@ -187,12 +187,12 @@
    ],
    "no_writer_found": false,
    "confidence": "high",
-   "note": "Single, unambiguous owner. Directly confirmed supabase.from('financial_viability_snapshots').insert({...data}) in this page \u2014 the same file the migration's header calls out by name and line for the tenant_id-from-app_metadata authorization issue that blocked scoping the write policy."
+   "note": "Single, unambiguous owner. Directly confirmed supabase.from('financial_viability_snapshots').insert({...data}) in this page — the same file the migration's header calls out by name and line for the tenant_id-from-app_metadata authorization issue that blocked scoping the write policy."
   }
  ],
  "journey_gaps": {
-  "source": "pass 5 round 5 \u2014 journey walk, not artifact enumeration",
-  "note": "These are product gaps: steps a user must perform with no surface at all. They are NOT index rows \u2014 there is no artifact to index. They belong in the backlog.",
+  "source": "pass 5 round 5 — journey walk, not artifact enumeration",
+  "note": "These are product gaps: steps a user must perform with no surface at all. They are NOT index rows — there is no artifact to index. They belong in the backlog.",
   "journey_gaps": [
    {
     "rank": 1,
@@ -319,14 +319,14 @@
   ]
  },
  "funding_ruling": {
-  "ruling": "R80.4's funding calculation is the only acceptable method of calculation. The placement-time look at funding refines a broad category estimate into an individual-specific amount \u2014 it replaces, it does not add a second set of funding. Funding is claimed from the funding body and tracked in its own ledger; it does not reduce what the host is charged.",
+  "ruling": "R80.4's funding calculation is the only acceptable method of calculation. The placement-time look at funding refines a broad category estimate into an individual-specific amount — it replaces, it does not add a second set of funding. Funding is claimed from the funding body and tracked in its own ledger; it does not reduce what the host is charged.",
   "stated_by": "Braden Lang, 2026-08-26",
   "already_encoded_in": "crm7/supabase/migrations/20260830010000_retire_funding_offsets_scheme_model.sql",
   "consequence_for_index": "claim.B.0035 reclassified from 'funding double-count defect' to 'funding-model mismatch in unwired R80.4 module'; severity high->medium; money_impact under-quote->none-in-production"
  },
  "operator_testing_findings": {
-  "source": "bsuite notes (6).docx, 2026-08-26",
-  "count": 135,
+  "source": "bsuite notes (6).docx, 2026-08-26 + operator session 2026-09-02 (workflow builder walkthrough)",
+  "count": 142,
   "repeat_offences": 26,
   "themes": [
    {
@@ -369,7 +369,7 @@
     "one_line_ask": "Ship the Airtable-style, filterable spreadsheet view that's already been researched and specced, and reuse it everywhere a list of rows appears."
    },
    {
-    "theme": "R80.4 charge-calculator values (standard rate, per-year wages, apprentice %, allowances, Adult classification) don't actually recompute from the selected award \u2014 they show fixed demo numbers",
+    "theme": "R80.4 charge-calculator values (standard rate, per-year wages, apprentice %, allowances, Adult classification) don't actually recompute from the selected award — they show fixed demo numbers",
     "finding_ids": [
      "note.056",
      "note.057",
@@ -404,7 +404,7 @@
     "one_line_ask": "Gate every platform-level admin surface to developer accounts only, and make permission checkboxes load pre-checked to actual state and persist edits."
    },
    {
-    "theme": "The D2C dark/gradient theme isn't applied consistently \u2014 pure white/black surfaces, missing gradients, and missing glows recur across every app",
+    "theme": "The D2C dark/gradient theme isn't applied consistently — pure white/black surfaces, missing gradients, and missing glows recur across every app",
     "finding_ids": [
      "note.039",
      "note.071",
@@ -477,6 +477,32 @@
     ],
     "owner_says_repeat": true,
     "one_line_ask": "Enforce the one-shot data policy end to end: entering or selecting something once should carry through to every place that needs it."
+   },
+   {
+    "theme": "Customization surfaces are built but unreachable, visually undifferentiated, and unconnected to each other — the operator's '1/3 baked' verdict",
+    "finding_ids": [
+     "note.136",
+     "note.137",
+     "note.138",
+     "note.139",
+     "note.140"
+    ],
+    "module_scope": [
+     "crm7",
+     "business-suite-unified",
+     "packages/workflow-canvas",
+     "packages/schema-builder"
+    ]
+   },
+   {
+    "theme": "The corporate website sells the wrong company — recruitment services rather than SaaS for GTOs and labour hire, and it omits the Monkey agent platforms entirely",
+    "finding_ids": [
+     "note.141",
+     "note.142"
+    ],
+    "module_scope": [
+     "braden"
+    ]
    }
   ],
   "findings": [
@@ -524,7 +550,7 @@
     ],
     "repeat_offence": false,
     "verbatim": "Failed to load resource: the server responded with a status of 503 ()",
-    "evidence": "tuybltdrdefjblnplpqo.supabase.co/functions/v1/fairwork-enhanced:1 \u2014 503"
+    "evidence": "tuybltdrdefjblnplpqo.supabase.co/functions/v1/fairwork-enhanced:1 — 503"
    },
    {
     "id": "note.004",
@@ -823,7 +849,7 @@
     "id": "note.023",
     "url": "https://suite.crm7.app/admin (licence grace seats)",
     "module": "business-suite-unified",
-    "surface": "Enterprise licence grace seats \u2014 events list",
+    "surface": "Enterprise licence grace seats — events list",
     "finding": "Grace invite events fail to load because the backing table doesn't exist.",
     "kind": "bug",
     "severity": "high",
@@ -900,7 +926,7 @@
     "url": "https://crm.crm7.app/portal/worker",
     "module": "crm7",
     "surface": "Client-to-host update propagation",
-    "finding": "Updating a client doesn't propagate to the corresponding host record \u2014 a one-shot-policy compliance bug.",
+    "finding": "Updating a client doesn't propagate to the corresponding host record — a one-shot-policy compliance bug.",
     "kind": "bug",
     "severity": "medium",
     "d8_rows": [
@@ -1053,7 +1079,7 @@
     "url": null,
     "module": "platform",
     "surface": "Multi-repo / multi-app architecture (CRM + reports as one app)",
-    "finding": "Owner is researching how to make separate repos (CRM, an Airtable-style reports app) present as one seamless app gated by subscription \u2014 comparing Vite Module Federation vs. multi-zone routing, and how each aligns with Supabase's OAuth 2.1 server. This is an open architecture question the owner is exploring, not a filed defect.",
+    "finding": "Owner is researching how to make separate repos (CRM, an Airtable-style reports app) present as one seamless app gated by subscription — comparing Vite Module Federation vs. multi-zone routing, and how each aligns with Supabase's OAuth 2.1 server. This is an open architecture question the owner is exploring, not a filed defect.",
     "kind": "architecture-question",
     "severity": "medium",
     "d8_rows": [],
@@ -1082,7 +1108,7 @@
     "url": "https://r8.crm7.app/",
     "module": "R80.4",
     "surface": "Worker type coverage",
-    "finding": "No UI option exists for workers who aren't apprentices or trainees \u2014 casual, ABN, full/part-time skilled, or labour hire.",
+    "finding": "No UI option exists for workers who aren't apprentices or trainees — casual, ABN, full/part-time skilled, or labour hire.",
     "kind": "missing-capability",
     "severity": "high",
     "d8_rows": [
@@ -1307,8 +1333,8 @@
      "D8.2"
     ],
     "repeat_offence": false,
-    "verbatim": "Every UPDATE afterwards is checked. So those rows aren't tolerated, they're frozen \u2014 and not just against rate edits. Any change to any column fails.",
-    "evidence": "CHECK (charge_rate IS NULL OR (award_rate_resolution_status IS NOT NULL AND award_rate_resolution_status <> 'unresolved')) added NOT VALID on 31 July; 12 bsuite Platform rows (unresolved, $32-45), 8 FutureBuild rows (NULL, $35-36.50) \u2014 the live problem, 1 Braden Group row (NULL, $57.30); reproduced by updating only updated_at on row 23514"
+    "verbatim": "Every UPDATE afterwards is checked. So those rows aren't tolerated, they're frozen — and not just against rate edits. Any change to any column fails.",
+    "evidence": "CHECK (charge_rate IS NULL OR (award_rate_resolution_status IS NOT NULL AND award_rate_resolution_status <> 'unresolved')) added NOT VALID on 31 July; 12 bsuite Platform rows (unresolved, $32-45), 8 FutureBuild rows (NULL, $35-36.50) — the live problem, 1 Braden Group row (NULL, $57.30); reproduced by updating only updated_at on row 23514"
    },
    {
     "id": "note.055",
@@ -1352,7 +1378,7 @@
      "D8.1"
     ],
     "repeat_offence": false,
-    "verbatim": "Wages (Per Apprenticeship year) card always displays Yr 1 - 14.725 Yr 2 - 17.67 Yr 3 \u2212 20.615 Yr 4 - $26.505 No matter what award is selected.",
+    "verbatim": "Wages (Per Apprenticeship year) card always displays Yr 1 - 14.725 Yr 2 - 17.67 Yr 3 − 20.615 Yr 4 - $26.505 No matter what award is selected.",
     "evidence": "hardcoded per-year wage values not tied to the selected award"
    },
    {
@@ -1398,7 +1424,7 @@
      "D8.1"
     ],
     "repeat_offence": false,
-    "verbatim": "WA expressly withdraws the exemption while a contract is SUSPENDED \u2014 those wages must be declared as taxable. Easy to miss on a stood-down apprentice.",
+    "verbatim": "WA expressly withdraws the exemption while a contract is SUSPENDED — those wages must be declared as taxable. Easy to miss on a stood-down apprentice.",
     "evidence": null
    },
    {
@@ -1481,14 +1507,14 @@
     "url": "https://crm.crm7.app (R80.4 charge calculator)",
     "module": "R80.4",
     "surface": "MA000036 trade selector",
-    "finding": "There is no trade selector for MA000036 \u2014 its trade list, allowance bands, and clauses are all MA000020's and don't carry over.",
+    "finding": "There is no trade selector for MA000036 — its trade list, allowance bands, and clauses are all MA000020's and don't carry over.",
     "kind": "bug",
     "severity": "high",
     "d8_rows": [
      "D8.1"
     ],
     "repeat_offence": false,
-    "verbatim": "Unacceptable: No trade selector for MA000036 \u2014 the trade list, the allowance bands and the clauses behind them are MA000020's, and they do not carry to another award.",
+    "verbatim": "Unacceptable: No trade selector for MA000036 — the trade list, the allowance bands and the clauses behind them are MA000020's, and they do not carry to another award.",
     "evidence": null
    },
    {
@@ -1527,7 +1553,7 @@
     "url": "https://d.crm.crm7.app/charge-rates/import-r8",
     "module": "crm7",
     "surface": "R8 rate import",
-    "finding": "Import UX forces the user to hand-code, and R8 itself doesn't export in that format \u2014 should pull straight from R8 instead.",
+    "finding": "Import UX forces the user to hand-code, and R8 itself doesn't export in that format — should pull straight from R8 instead.",
     "kind": "ux",
     "severity": "medium",
     "d8_rows": [
@@ -1602,7 +1628,7 @@
     "url": "https://d.r8.crm7.app/",
     "module": "R80.4",
     "surface": "Apprenticeship length / worker type options",
-    "finding": "Only 3- or 4-year apprenticeship options exist \u2014 no way to price a traineeship or a labour-hire worker.",
+    "finding": "Only 3- or 4-year apprenticeship options exist — no way to price a traineeship or a labour-hire worker.",
     "kind": "missing-capability",
     "severity": "high",
     "d8_rows": [
@@ -1662,7 +1688,7 @@
     "url": "https://d.r8.crm7.app/",
     "module": "R80.4",
     "surface": "Competency-based progression in the calculator",
-    "finding": "A \"competency based progression\" feature was added without approval and should be removed \u2014 the owner has said many times this isn't the calculator's job, since the calculation is meant to be point-in-time only.",
+    "finding": "A \"competency based progression\" feature was added without approval and should be removed — the owner has said many times this isn't the calculator's job, since the calculation is meant to be point-in-time only.",
     "kind": "bug",
     "severity": "high",
     "d8_rows": [
@@ -1677,7 +1703,7 @@
     "url": "https://d.r8.crm7.app/",
     "module": "crm7",
     "surface": "Change-of-year wage tracking",
-    "finding": "CRM7 placement records need to track apprentice/trainee change-of-year wage progression with reminders and notices to apprentice/trainee/host at wage anniversaries \u2014 but this belongs on the person/host record, not in the calculator.",
+    "finding": "CRM7 placement records need to track apprentice/trainee change-of-year wage progression with reminders and notices to apprentice/trainee/host at wage anniversaries — but this belongs on the person/host record, not in the calculator.",
     "kind": "missing-capability",
     "severity": "medium",
     "d8_rows": [
@@ -1730,7 +1756,7 @@
      "D8.3"
     ],
     "repeat_offence": true,
-    "verbatim": "Each Card e.g. CRM7 Professional, Conduit ATS\u2026 should be appropriately compliant with the D2C theme.",
+    "verbatim": "Each Card e.g. CRM7 Professional, Conduit ATS… should be appropriately compliant with the D2C theme.",
     "evidence": null
    },
    {
@@ -1753,7 +1779,7 @@
     "url": "https://suite.crm7.app/developer/*",
     "module": "platform",
     "surface": "Theme consistency across all apps",
-    "finding": "Theme consistency is a platform-wide concern \u2014 pure white/black, missing gradients, text cut off by borders, missing glows/shadows per accent colour; should be consistent even for Conduit (Next.js) despite its different stack.",
+    "finding": "Theme consistency is a platform-wide concern — pure white/black, missing gradients, text cut off by borders, missing glows/shadows per accent colour; should be consistent even for Conduit (Next.js) despite its different stack.",
     "kind": "ux",
     "severity": "high",
     "d8_rows": [
@@ -1785,7 +1811,7 @@
     "url": "https://crm.crm7.app/settings/data and https://crm.crm7.app/admin/data",
     "module": "crm7",
     "surface": "Entity field picker",
-    "finding": "Can't select all entities \u2014 e.g. picking \"person\" exposes person_id from Supabase but not the person's name, and there's no way to add the person's name as an available field.",
+    "finding": "Can't select all entities — e.g. picking \"person\" exposes person_id from Supabase but not the person's name, and there's no way to add the person's name as an available field.",
     "kind": "bug",
     "severity": "medium",
     "d8_rows": [
@@ -1906,7 +1932,7 @@
     "url": "https://crm.crm7.app (R80.4 charge calculator)",
     "module": "R80.4",
     "surface": "Hardcoded values across calculations",
-    "finding": "Every calculation should be cross-checked for hardcoded values \u2014 a crosscutting concern given how many hardcoded figures have already turned up in this calculator.",
+    "finding": "Every calculation should be cross-checked for hardcoded values — a crosscutting concern given how many hardcoded figures have already turned up in this calculator.",
     "kind": "bug",
     "severity": "high",
     "d8_rows": [
@@ -1981,7 +2007,7 @@
     "id": "note.099",
     "url": "https://crm.crm7.app/hosts/vacancies/new",
     "module": "crm7",
-    "surface": "Vacancy \u2192 job posting / host linkage",
+    "surface": "Vacancy → job posting / host linkage",
     "finding": "Unclear whether a vacancy can be posted to Conduit as a job, or linked to a specific host vs. kept generic for common roles.",
     "kind": "missing-capability",
     "severity": "medium",
@@ -2028,7 +2054,7 @@
     "url": "https://crm.crm7.app/placements/aaaaaaaa-0000-4000-8000-000000000003",
     "module": "crm7",
     "surface": "Pay rate vs. charge rate labeling",
-    "finding": "Pay rate / charge rate labeling is confusing and misleading \u2014 \"pay rate\" reads as ordinary wage while \"charge rate\" is what's billed on billable hours.",
+    "finding": "Pay rate / charge rate labeling is confusing and misleading — \"pay rate\" reads as ordinary wage while \"charge rate\" is what's billed on billable hours.",
     "kind": "ux",
     "severity": "high",
     "d8_rows": [
@@ -2043,7 +2069,7 @@
     "url": "https://r8.crm7.app/",
     "module": "R80.4",
     "surface": "\"Offline\" award list label",
-    "finding": "The 21-trade-award curated list is labeled \"Offline \u2014 no Fair Work API call\" even though the Fair Work API is actually connected via the MAPD card; also no path exists for entering an EBA, custom award, or an award outside the curated 21.",
+    "finding": "The 21-trade-award curated list is labeled \"Offline — no Fair Work API call\" even though the Fair Work API is actually connected via the MAPD card; also no path exists for entering an EBA, custom award, or an award outside the curated 21.",
     "kind": "bug",
     "severity": "medium",
     "d8_rows": [
@@ -2089,7 +2115,7 @@
     "url": "https://suite.crm7.app/ (header/branding/permissions)",
     "module": "business-suite-unified",
     "surface": "Permission checkboxes default state",
-    "finding": "Permission checkboxes should be pre-selected to what's already granted (defaulting to all-unchecked hides existing state from admins/developers); should be savable/persistent with a reset-to-default option \u2014 insisted on many times.",
+    "finding": "Permission checkboxes should be pre-selected to what's already granted (defaulting to all-unchecked hides existing state from admins/developers); should be savable/persistent with a reset-to-default option — insisted on many times.",
     "kind": "bug",
     "severity": "high",
     "d8_rows": [
@@ -2181,7 +2207,7 @@
     "url": "https://d.crm.crm7.app/engagements/create",
     "module": "crm7",
     "surface": "Hardcoded funding on engagements",
-    "finding": "Funding on the engagement is hardcoded, a violation of requirements \u2014 should reflect how R8 computes funding per individual, since engagement-level detail lets funding be allocated more precisely than R8's broad quoting defaults.",
+    "finding": "Funding on the engagement is hardcoded, a violation of requirements — should reflect how R8 computes funding per individual, since engagement-level detail lets funding be allocated more precisely than R8's broad quoting defaults.",
     "kind": "bug",
     "severity": "high",
     "d8_rows": [
@@ -2195,7 +2221,7 @@
     "id": "note.113",
     "url": "https://d.crm.crm7.app/engagements/create",
     "module": "crm7",
-    "surface": "Person record \u2194 placements/engagements",
+    "surface": "Person record ↔ placements/engagements",
     "finding": "A person's record should list all placements and engagements associated with them.",
     "kind": "missing-capability",
     "severity": "medium",
@@ -2226,7 +2252,7 @@
     "url": "https://d.crm.crm7.app/training-providers",
     "module": "crm7",
     "surface": "Training provider visibility per org",
-    "finding": "Orgs should be able to mark training providers visible/hidden for them (e.g. a Perth-metro client shouldn't be bothered by a remote-QLD provider); the \"Active\" filter is ambiguous \u2014 it should mean \"marked active by this org\", not registration status generally.",
+    "finding": "Orgs should be able to mark training providers visible/hidden for them (e.g. a Perth-metro client shouldn't be bothered by a remote-QLD provider); the \"Active\" filter is ambiguous — it should mean \"marked active by this org\", not registration status generally.",
     "kind": "missing-capability",
     "severity": "medium",
     "d8_rows": [
@@ -2302,7 +2328,7 @@
     "url": "https://crm.crm7.app/admin/data",
     "module": "crm7",
     "surface": "JSON-only workflows",
-    "finding": "Anything reachable via raw JSON should also be reachable through a non-coding UI path \u2014 a long-standing directive.",
+    "finding": "Anything reachable via raw JSON should also be reachable through a non-coding UI path — a long-standing directive.",
     "kind": "ux",
     "severity": "medium",
     "d8_rows": [
@@ -2363,7 +2389,7 @@
     "url": "https://crm.crm7.app/admin/data",
     "module": "crm7",
     "surface": "Interacting with data / import-export",
-    "finding": "Must be able to actually interact with data here (permissions allowing, always for developers) \u2014 import/export CSV/XLSX and downloadable/re-uploadable import templates are required.",
+    "finding": "Must be able to actually interact with data here (permissions allowing, always for developers) — import/export CSV/XLSX and downloadable/re-uploadable import templates are required.",
     "kind": "missing-capability",
     "severity": "medium",
     "d8_rows": [
@@ -2422,7 +2448,7 @@
     "id": "note.128",
     "url": "https://r8.crm7.app/ (general notes)",
     "module": "crm7",
-    "surface": "Leads \u2192 contact/client conversion",
+    "surface": "Leads → contact/client conversion",
     "finding": "Converting a lead should carry the relevant sections through to contact and client via the opportunity chain.",
     "kind": "missing-capability",
     "severity": "medium",
@@ -2468,7 +2494,7 @@
     "url": "https://crm.crm7.app/contracts/training/e-signatures",
     "module": "crm7",
     "surface": "Training contract e-signatures",
-    "finding": "The page doesn't make sense \u2014 training contracts are created by the State Training Authority as scanned PDFs; e-signing would need to take the STA's clean PDF and layer a customizable signature block for all parties. The same need applies to host contracts, employment contracts, WHS risk assessments, site-visit attendance, quotes, and rate/charge confirmations. The current implementation is limited and non-functional even for its narrow intended purpose.",
+    "finding": "The page doesn't make sense — training contracts are created by the State Training Authority as scanned PDFs; e-signing would need to take the STA's clean PDF and layer a customizable signature block for all parties. The same need applies to host contracts, employment contracts, WHS risk assessments, site-visit attendance, quotes, and rate/charge confirmations. The current implementation is limited and non-functional even for its narrow intended purpose.",
     "kind": "bug",
     "severity": "high",
     "d8_rows": [
@@ -2499,7 +2525,7 @@
     "url": "https://crm.crm7.app/hosts",
     "module": "crm7",
     "surface": "Card borders (final restatement)",
-    "finding": "Bottom border on cards is still doubled \u2014 raised hundreds of times.",
+    "finding": "Bottom border on cards is still doubled — raised hundreds of times.",
     "kind": "bug",
     "severity": "medium",
     "d8_rows": [
@@ -2539,6 +2565,118 @@
     "repeat_offence": true,
     "verbatim": "Likely also anything that lists rows like this needs to be brought up to the airtable style design which is still itself sub par. Take inspiration from the GaryOcean428/atmosphere setup",
     "evidence": null
+   },
+   {
+    "id": "note.136",
+    "url": "https://d.crm.crm7.app/workflows",
+    "module": "crm7",
+    "surface": "Workflows — platform template card",
+    "finding": "In 'Platform templates' only the underlined name is a button; the rest of the card is inert. 'Your workflows' makes the whole row clickable, so the two lists behave differently for the same gesture.",
+    "kind": "bug",
+    "severity": "medium",
+    "d8_rows": [
+     "D8.2",
+     "D8.7"
+    ],
+    "repeat_offence": false,
+    "verbatim": "I have to click the apprentice placement link to go through. i should be able to click the card.",
+    "evidence": "crm7/src/pages/workflows/index.tsx — the <li> is a plain element; only the name <button> carries onClick={openWorkflow}."
+   },
+   {
+    "id": "note.137",
+    "url": "https://d.crm.crm7.app/workflows",
+    "module": "crm7",
+    "surface": "Workflows — creation",
+    "finding": "There is no way to create a workflow from blank. The only affordance is 'Copy to my organisation' on a platform template. createWorkflowWithDraft() already exists in the service and is never called from the UI.",
+    "kind": "gap",
+    "severity": "high",
+    "d8_rows": [
+     "D8.2",
+     "D8.4"
+    ],
+    "repeat_offence": true,
+    "verbatim": "how do i create a new workflow?",
+    "evidence": "crm7/src/lib/workflows/workflowDefinitionService.ts:374 exports createWorkflowWithDraft; grep of the page finds no caller. Built-but-unreachable class."
+   },
+   {
+    "id": "note.138",
+    "url": "https://d.crm.crm7.app/workflows/:id",
+    "module": "crm7",
+    "surface": "Workflow canvas — node shape language",
+    "finding": "Decision nodes are visually indistinguishable from steps: DecisionNode and StepNode both render cardShellClass(selected,'rounded-lg'), differing only by a 3.5-unit lucide Diamond glyph. At normal zoom every node reads as the same box.",
+    "kind": "bug",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3"
+    ],
+    "repeat_offence": false,
+    "verbatim": "how come all boxes are the same and not showing different shaps for descisoin points?",
+    "evidence": "packages/workflow-canvas/src/nodes/{DecisionNode,StepNode}.tsx. NOTE: not rotating the node is DELIBERATE and documented — a CSS-rotated node breaks xyflow handle hit-testing and the widest decision has four labelled branch ports. The fix must not rotate the node."
+   },
+   {
+    "id": "note.139",
+    "url": "https://d.crm.crm7.app/workflows/:id",
+    "module": "crm7",
+    "surface": "Workflow canvas — fullscreen",
+    "finding": "The canvas cannot be opened full screen. A 42-node, 6-lane process is unusable in a page-embedded viewport.",
+    "kind": "gap",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.7"
+    ],
+    "repeat_offence": false,
+    "verbatim": "the workflow builder should be drag and drop and abe able to open full screen.",
+    "evidence": "Zero occurrences of fullscreen/requestFullscreen/maximise in crm7/src/pages/workflows/[id].tsx or packages/workflow-canvas/src/components/*.tsx."
+   },
+   {
+    "id": "note.140",
+    "url": "https://d.crm.crm7.app/workflows",
+    "module": "crm7,business-suite-unified",
+    "surface": "Customization surfaces — interconnection",
+    "finding": "The customization lanes do not connect. crm7 carries 23 customization-shaped routes across seven lanes (schema-builder, custom-pages, form-layouts, branding, three template editors, workflows). TWO separate React Flow canvases exist — packages/schema-builder (21 files) and packages/workflow-canvas (18) — sharing no canvas chrome. The workflow pages' only outbound navigation is /dashboard and /workflows; schema-builder and workflows never reference each other. Every cross-surface task therefore requires leaving the page.",
+    "kind": "architecture",
+    "severity": "high",
+    "d8_rows": [
+     "D8.1",
+     "D8.5",
+     "D8.6"
+    ],
+    "repeat_offence": true,
+    "verbatim": "and is it connected to the other customization features? and what overlap and complimentatruy features are there. they are all meant to be working in with one another and all accessible so i dont have to leave pages and come back. your round trip dod is sub par.",
+    "evidence": "Route enumeration of each app's App.tsx; grep of @xyflow/react by package; grep of outbound navigate()/href in the workflow pages."
+   },
+   {
+    "id": "note.141",
+    "url": "https://braden.com.au",
+    "module": "braden",
+    "surface": "Corporate website — positioning",
+    "finding": "The site presents Braden Group as a RECRUITMENT COMPANY rather than as a SaaS vendor selling to GTOs and recruitment/labour-hire companies. The audience is wrong: readers are prospective placements, not prospective customers. This is a positioning defect, not a copy tweak — it mis-sells the whole business.",
+    "kind": "positioning",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.6"
+    ],
+    "repeat_offence": false,
+    "verbatim": "my website reads like I am a recruitment company not a SAAS provider for GTO and recruitment/labour hire companies.",
+    "evidence": "Operator report 2026-09-02. Site copy not yet audited against the intended ICP (GTOs, RTOs, labour hire providers)."
+   },
+   {
+    "id": "note.142",
+    "url": "https://braden.com.au",
+    "module": "braden",
+    "surface": "Corporate website — product coverage",
+    "finding": "The site does not present the Monkey agent platforms alongside the BSuite SaaS offering. The company sells at least two product lines and the website shows neither as a product line.",
+    "kind": "positioning",
+    "severity": "high",
+    "d8_rows": [
+     "D8.3",
+     "D8.6"
+    ],
+    "repeat_offence": false,
+    "verbatim": "along with my agent platforms \"Monkey\"",
+    "evidence": "Operator report 2026-09-02. Note: the Monkey codebase is a SEPARATE project family (~/Desktop/Dev/monkey-projects) with its own memory silo; only the WEBSITE COPY describing it belongs in this repo."
    }
   ]
  },
@@ -2879,7 +3017,7 @@
    {
     "repo": "crm7",
     "number": 2058,
-    "title": "/portal has no invitation flow \u2014 clients, hosts, workers, apprentices and trainees cannot be sent their own portal",
+    "title": "/portal has no invitation flow — clients, hosts, workers, apprentices and trainees cannot be sent their own portal",
     "url": "https://github.com/GaryOcean428/crm7/issues/2058",
     "labels_applied": [
      "bug",
@@ -2968,7 +3106,7 @@
    {
     "repo": "conduit",
     "number": 577,
-    "title": "External portals (host/worker/apprentice/trainee/field-officer) need a persona-based redesign \u2014 navigation and UX are badly broken",
+    "title": "External portals (host/worker/apprentice/trainee/field-officer) need a persona-based redesign — navigation and UX are badly broken",
     "url": "https://github.com/GaryOcean428/conduit/issues/577",
     "labels_applied": [
      "bug",
@@ -2987,7 +3125,7 @@
    {
     "repo": "crm7",
     "number": 2060,
-    "title": "Placement charge-rate rows frozen by a NOT VALID CHECK constraint \u2014 21 placements across three tenants cannot be updated at all",
+    "title": "Placement charge-rate rows frozen by a NOT VALID CHECK constraint — 21 placements across three tenants cannot be updated at all",
     "url": "https://github.com/GaryOcean428/crm7/issues/2060",
     "labels_applied": [
      "bug",
@@ -3043,7 +3181,7 @@
    {
     "repo": "crm7",
     "number": 2063,
-    "title": "No caseload assignment mechanism \u2014 apprentices cannot be assigned to a subscribed user's caseload",
+    "title": "No caseload assignment mechanism — apprentices cannot be assigned to a subscribed user's caseload",
     "url": "https://github.com/GaryOcean428/crm7/issues/2063",
     "labels_applied": [
      "enhancement",
