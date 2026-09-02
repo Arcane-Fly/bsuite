@@ -7215,67 +7215,6 @@
   "dod_status": "not-evaluated"
  },
  {
-  "id": "crm7.whs.workflow",
-  "name": "WHS workflow management",
-  "module": "crm7",
-  "capability_area": "WHS & incidents",
-  "surface_type": "page",
-  "entry_point": "Nav > WHS & Compliance > Workflow",
-  "route": "/whs/workflow",
-  "code_anchors": [
-   "crm7/src/pages/whs/workflow/index"
-  ],
-  "db_objects": [],
-  "build_status": "live",
-  "ui_touched": true,
-  "doc_coverage": "documented",
-  "docs": [
-   {
-    "path": "docs/audits/20260725-dead-duplicate-code-audit-v1.00W.md",
-    "why": [
-     "route"
-    ],
-    "status": "current"
-   },
-   {
-    "path": "business-suite-unified/docs/20260316-bsu-crm7-supabase-audit-v1.00W.md",
-    "why": [
-     "route"
-    ],
-    "status": "historical"
-   },
-   {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/crm7/docs/archive/2026-04-30-references-and-troubleshooting/20260226-routes-v1.00A.md",
-    "why": [
-     "route"
-    ],
-    "status": "archived"
-   },
-   {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/crm7/20260228-crm7-page-inventory-v1.00W.md",
-    "why": [
-     "route"
-    ],
-    "status": "archived"
-   },
-   {
-    "path": "ARCHIVE/20260725-bsuite-cleanup/docs/archive/parent/2026-04-30-references-approved/20260301-crm7-page-inventory-v1.00A.md",
-    "why": [
-     "route"
-    ],
-    "status": "archived"
-   }
-  ],
-  "doc_count": 5,
-  "sibling_class": "entity-crud",
-  "sibling_count": 148,
-  "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
-  "compliance_risk": [],
-  "origin": "pass1-code-truth",
-  "notes": "",
-  "dod_status": "not-evaluated"
- },
- {
   "id": "crm7.compliance.overview",
   "name": "Compliance management overview & alerts",
   "module": "crm7",
@@ -12788,7 +12727,15 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": "not-evaluated",
+  "supersedes": [
+   {
+    "id": "crm7.whs.workflow",
+    "route": "/whs/workflow",
+    "removed": "2026-09-01",
+    "why": "The WHS workflow page was the UI over a localStorage workflow store. It was deleted with that store in the Phase 2 workflow-canvas change; its capability is this route, which reads public.workflow_definitions. Recorded here rather than left as a live row with a dangling code anchor."
+   }
+  ]
  },
  {
   "id": "crm7.portal.home",

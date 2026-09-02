@@ -67,6 +67,7 @@ import {
   workflowDefinitionOptions,
   workflowDefinitionsOptions,
   workflowDraftOptions,
+  workflowVersionOptions,
   workflowVersionsOptions,
 } from './queries.js';
 import { useUndoRedo } from './useUndoRedo.js';
@@ -208,6 +209,28 @@ export function useWorkflowController({
   const versionsQuery = useQuery(workflowVersionsOptions(supabase, definitionId));
   const draftQuery = useQuery(workflowDraftOptions(supabase, definitionId));
 
+  /*
+   * THE PUBLISHED VERSION, FOR A DEFINITION THAT HAS NO DRAFT.
+   *
+   * The seeding effect below reads the DRAFT, because editing is what this
+   * controller is for. A platform template has only a published version and no
+   * draft, so the canvas mounted and rendered an EMPTY graph — measured on
+   * production 2026-09-02: `.react-flow` present, no error, no fallback,
+   * 0 nodes against a 42-node workflow. The page around it said "6 lanes,
+   * 32 steps"; the canvas said nothing.
+   *
+   * Seeding from the published version fixes the view. What it must NOT do is
+   * make the published version writable: `seededVersionRef` is the save
+   * target, and both `flush` and the unmount cleanup refuse when it is null.
+   * So this path deliberately leaves that ref alone — a published-seeded graph
+   * has nowhere to save to, by construction rather than by a flag someone can
+   * later forget to check.
+   */
+  const publishedVersionId = draftQuery.data
+    ? null
+    : (definitionQuery.data?.current_published_version_id ?? null);
+  const publishedQuery = useQuery(workflowVersionOptions(supabase, publishedVersionId));
+
   useWorkflowRealtimeSubscription({
     client: supabase,
     tenantId,
@@ -231,6 +254,8 @@ export function useWorkflowController({
   // Which draft the local graph was seeded from. Guards against re-seeding on
   // every refetch, which would discard unsaved edits.
   const seededVersionRef = useRef<string | null>(null);
+  /* Separate from seededVersionRef ON PURPOSE — see the published seeding effect. */
+  const seededPublishedRef = useRef<string | null>(null);
   const draftRow = draftQuery.data ?? null;
 
   // Declared before the seeding effect so that effect can mark the seeded graph
@@ -246,6 +271,20 @@ export function useWorkflowController({
     // What we just read from the server is by definition already saved.
     lastScheduledRef.current = seeded;
   }, [draftRow, resetGraph]);
+
+  /*
+   * No draft: show what is PUBLISHED rather than an empty canvas. Guarded by its
+   * own ref so it seeds once, and it never touches `seededVersionRef`, so the
+   * published version cannot be written by any later edit.
+   */
+  const publishedRow = publishedQuery.data ?? null;
+  useEffect(() => {
+    if (draftRow) return;
+    if (!publishedRow) return;
+    if (seededPublishedRef.current === publishedRow.id) return;
+    seededPublishedRef.current = publishedRow.id;
+    resetGraph(publishedRow.graph ?? emptyWorkflowGraph());
+  }, [draftRow, publishedRow, resetGraph]);
 
   // --- save -----------------------------------------------------------------
   const saveMutation = useMutation({
