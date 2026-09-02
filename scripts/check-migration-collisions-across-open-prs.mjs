@@ -66,7 +66,25 @@ export function collisions(entries) {
   const out = []
   for (const [version, group] of byVersion) {
     const sources = new Set(group.map((g) => `${g.scope}#${g.pr}`))
-    if (sources.size > 1) out.push({ version, entries: group })
+    if (sources.size <= 1) continue
+    // CONTENT, not just the version string. The hazard is the applier recording a
+    // version, reaching a SECOND, DIFFERENT file at it, and silently skipping that
+    // DDL. Two PRs carrying the byte-identical file lose nothing: whichever merges
+    // first applies it, the other merges to a no-op.
+    //
+    // Measured 2026-09-02: crm7#2333 (reconcile main->development) and crm7#2331
+    // (cut from main) shared 20261102000000, 20261103000000 and 20261105000000 as
+    // IDENTICAL blobs. All three were reported as collisions demanding a renumber,
+    // which would have been wrong — one file seen on two branches. A merge-blocking
+    // gate with three false positives teaches everyone to merge through it, which is
+    // exactly when it stops catching the real thing.
+    //
+    // FAILS CLOSED: an unreadable blob is its own identity, never equal to another,
+    // so "could not compare" can never read as "identical".
+    const contents = new Set(
+      group.map((g, n) => (g.blob ? `blob:${g.blob}` : `unreadable:${g.scope}#${g.pr}:${g.file}:${n}`)),
+    )
+    if (contents.size > 1) out.push({ version, entries: group })
   }
   return out.sort((a, b) => a.version.localeCompare(b.version))
 }
@@ -89,7 +107,9 @@ function migrationsOnBranch(scope, root, branch) {
   const dir = path.join(root, scope)
   try {
     sh('git', ['fetch', 'origin', branch, '--quiet'], dir)
-    const listing = sh('git', ['ls-tree', '-r', '--name-only', 'FETCH_HEAD', 'supabase/migrations/'], dir)
+    // NOT --name-only: the blob sha is what lets collisions() tell ONE file on two
+    // branches from TWO DIFFERENT files claiming one version.
+    const listing = sh('git', ['ls-tree', '-r', 'FETCH_HEAD', 'supabase/migrations/'], dir)
     // `archive/` IS NOT A MIGRATION SET. This gate asks what the applier will RUN,
     // and `supabase db push` reads only the top level of supabase/migrations —
     // subdirectories are history, filed away, already applied.
@@ -104,9 +124,19 @@ function migrationsOnBranch(scope, root, branch) {
     // (lint-migrations-revoke-anon.mjs is the opposite case and must KEEP reading
     // archive/: a REVOKE that ran in June is still in force, so its question —
     // what privileges does the database hold — is answered by the whole history.)
-    return listing
-      ? listing.split('\n').filter(Boolean).filter((f) => !f.includes('/archive/'))
-      : []
+    if (!listing) return []
+    const out = []
+    for (const line of listing.split('\n')) {
+      if (!line) continue
+      // `<mode> <type> <sha>\t<path>` — split on the tab, then walk the left side.
+      const tab = line.indexOf('\t')
+      if (tab < 0) continue
+      const file = line.slice(tab + 1)
+      if (file.includes('/archive/')) continue
+      const meta = line.slice(0, tab).split(' ').filter(Boolean)
+      out.push({ file, blob: meta.length === 3 ? meta[2] : null })
+    }
+    return out
   } catch {
     return []
   }
@@ -124,10 +154,10 @@ function selfTest() {
 
   // THE REAL CASE, from 2026-08-27: two open PRs in ONE app claiming one version.
   const real = [
-    { scope: 'business-suite-unified', pr: 935, version: '20260928000000', file: 'a_email_signatures.sql' },
-    { scope: 'business-suite-unified', pr: 940, version: '20260928000000', file: 'b_close_escalation.sql' },
+    { scope: 'business-suite-unified', pr: 935, version: '20260928000000', file: 'a_email_signatures.sql', blob: 'aaaaaaaa' },
+    { scope: 'business-suite-unified', pr: 940, version: '20260928000000', file: 'b_close_escalation.sql', blob: 'bbbbbbbb' },
   ]
-  t('two open PRs claiming one version collide', collisions(real).length, 1)
+  t('two open PRs claiming one version with DIFFERENT content collide', collisions(real).length, 1)
 
   // NEGATIVE CONTROL: the same PR listing a file twice is NOT a collision, or the
   // gate cries wolf on every run and gets ignored.
@@ -151,6 +181,36 @@ function selfTest() {
       { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql' },
     ]).length, 1)
 
+
+  // THE 2026-09-02 FALSE POSITIVE, as a permanent case: one file, two branches,
+  // identical blob. Merging both is a no-op on the second — no DDL is lost.
+  t('two open PRs carrying the IDENTICAL blob do not collide',
+    collisions([
+      { scope: 'crm7', pr: 2333, version: '20261103000000', file: 'w.sql', blob: 'd5abd847' },
+      { scope: 'crm7', pr: 2331, version: '20261103000000', file: 'w.sql', blob: 'd5abd847' },
+    ]).length, 0)
+
+  // ...and identical content across two APPS is still one DDL, so still not a loss.
+  t('the identical blob across two apps does not collide',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: 'cafe1234' },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'x.sql', blob: 'cafe1234' },
+    ]).length, 0)
+
+  // FAIL CLOSED. An unreadable blob is never equal to anything, including another
+  // unreadable one — otherwise a tree that could not be read reports as clean.
+  t('an UNREADABLE blob still collides',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: null },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql', blob: null },
+    ]).length, 1)
+
+  // ...and one readable, one not, is still a collision.
+  t('a readable blob against an unreadable one collides',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: 'cafe1234' },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql', blob: null },
+    ]).length, 1)
   const bad = cases.filter((c) => !c.ok)
   for (const c of cases) {
     console.log(`  ${c.ok ? 'ok  ' : 'FAIL'} ${c.name}${c.ok ? '' : ` — got ${JSON.stringify(c.got)}, want ${JSON.stringify(c.want)}`}`)
@@ -171,9 +231,9 @@ function main() {
     if (prs === null) { unreadable.push(scope); continue }
     for (const pr of prs) {
       prCount++
-      for (const file of migrationsOnBranch(scope, root, pr.headRefName)) {
+      for (const { file, blob } of migrationsOnBranch(scope, root, pr.headRefName)) {
         const version = versionOf(file)
-        if (version) entries.push({ scope, pr: pr.number, branch: pr.headRefName, version, file })
+        if (version) entries.push({ scope, pr: pr.number, branch: pr.headRefName, version, file, blob })
       }
     }
   }
@@ -190,7 +250,10 @@ function main() {
   const found = collisions(entries)
   for (const c of found) {
     console.error(`::error::VERSION ${c.version} is claimed by ${new Set(c.entries.map((e) => `${e.scope}#${e.pr}`)).size} different open PRs:`)
-    for (const e of c.entries) console.error(`    ${e.scope}#${e.pr} (${e.branch})  ${e.file}`)
+    for (const e of c.entries) {
+      const b = e.blob ? e.blob.slice(0, 8) : 'UNREADABLE'
+      console.error(`    ${e.scope}#${e.pr} (${e.branch})  ${e.file}  blob=${b}`)
+    }
   }
   if (found.length) {
     console.error('')
