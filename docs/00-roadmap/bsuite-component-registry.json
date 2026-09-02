@@ -2,9 +2,9 @@
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
   "sharedComponents": 189,
-  "unusedSharedComponents": 163,
+  "unusedSharedComponents": 166,
   "localComponentFiles": {
-    "crm7": 433,
+    "crm7": 434,
     "business-suite-unified": 117,
     "conduit": 98,
     "braden": 207,
@@ -1355,11 +1355,9 @@
     {
       "name": "WorkflowInspector",
       "package": "@bsuite/workflow-canvas",
-      "consumers": {
-        "crm7": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "WorkflowNodeKindSchema",
@@ -1378,11 +1376,9 @@
     {
       "name": "WorkflowPalette",
       "package": "@bsuite/workflow-canvas",
-      "consumers": {
-        "crm7": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "WorkflowServiceError",
@@ -1401,11 +1397,9 @@
     {
       "name": "WorkflowToolbar",
       "package": "@bsuite/workflow-canvas",
-      "consumers": {
-        "crm7": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "XYPositionSchema",
