@@ -1,5 +1,58 @@
 # Estate remaining work — the consolidated register, v3
 
+> ## VERDICT PASS 2026-09-02 — the 29 unjudged rows are judged, and 63 rows now carry one
+>
+> The banner below says **"29 rows remain unjudged and are NOT counted as anything — an
+> unmeasured row is not a passing row."** They are measured now, against the checked-out trees,
+> the live Fair Work API and live production Postgres. The full table is at the end of this
+> document; the headline is:
+>
+> | | |
+> |---|---|
+> | **CONFIRMED OPEN** | **35** |
+> | Closed | 22 |
+> | Superseded | 6 |
+>
+> **Four rows were WRONG, not merely stale, and acting on them would have wasted the work:**
+>
+> 1. **W-1's second limb is false and is struck.** The register recorded *"live FWC returns 0
+>    penalty rows for MA000036"* as a fact about **Fair Work**. The Modern Awards Pay Database
+>    returns 100 rows for every award probed. `api/fwc.js` chose its subscription key with
+>    `FWC_API_KEY || FAIRWORK_API_KEY`, and `||` takes the first name **present**, not the first
+>    that **works** — a dead key permanently shadowed a working one, with no retry on the 401.
+>    **A configuration defect on our side had been written down as a property of the upstream**,
+>    and the escape hatch for 19 awards with empty penalty tables was abandoned on that basis.
+>    Fixed: R80.4#295.
+>
+> 2. **W-1's count moved.** 19 of 21 awards get an empty penalty table, not 20 of 21 — MA000036
+>    was bridged after the row was written.
+>
+> 3. **W-2's two specific claims are false and are struck.** *"19 of 21 awards have zero
+>    runtime-reachable engine modules"* and *"20 of 21 have no reachable rate constructor"*:
+>    measured per award, **zero of 21** have either. Every award now reaches its own rate
+>    module. The reachability denominator also grew — 118 of 224 reached, not 67 of 179. What
+>    remains true is the larger half: the per-award penalties, allowances, overtime, shift, leave
+>    and redundancy modules are unreachable, and `scripts/reachability.mjs` passes only because
+>    393 of 425 unreached functions sit in one allowlisted group. **The gate is green by
+>    declaration, not by wiring.**
+>
+> 4. **W-8's first three limbs closed and its fourth is worse than recorded.** The migration IS
+>    applied, the reader IS wired, and payroll tax IS state-based. But **nothing can write the
+>    columns**: 7 tenants, 1 row in `tenant_settings`, and `super_rate`, `wc_rate`, `wic_code`
+>    are NULL on all of it. Every tenant is still quoted superannuation 12% and workers'
+>    compensation 4.7%. The machinery is built, applied and wired, and **inert because no human
+>    has any way to enter a number into it.**
+>
+> **Fixed in this pass**, both found by measuring rather than re-reading:
+> **W-4** — the school-based apprentice note asserted a stage "is correct" from one limb of a
+> two-limb clause, telling the operator to quote the lower stage for 16-to-17-year-olds
+> (R80.4#296); and the FWC key defect above.
+>
+> Two rows are recorded as narrower than written (**U-12**, **M-2**), and six are superseded
+> outright. The nine documentation rows are re-verdicted too, and one new question is answered:
+> **36 of the 61 files in `docs/plans/` read as live work and are not.**
+
+
 > **VERDICT STATE, measured 2026-08-18.** This register was written as a list of
 > FINDINGS, and 43 of its 46 rows carried no verdict at all — a reader could not
 > tell which were still true. **14 are now measured against live sources** and
@@ -424,3 +477,83 @@ FWC key is dead too, or only the local one — `https://r8.crm7.app/api/fwc?path
 answers it, and the answer changes P0-4 from "rotate a key" to "the proxy is fine, fix the dev
 environment". Whether braden's `content_pages` rows carry the `tenant_id` the code filters on.
 Credential rotation. 105 of the 108 `authenticated_security_definer` advisories.
+
+---
+
+## 11. VERDICT TABLE — every row, measured 2026-09-02
+
+Each verdict was produced against live sources, and every zero carries a positive control: a
+count is a hypothesis until the method is shown to find a case known to be present. This
+register's own history records four rounds where a number moved and **every** move was the
+detector's bug rather than a change in the estate.
+
+| row | verdict | effort | evidence, in brief | what it costs |
+|---|---|---|---|---|
+| **D-1** | Confirmed Open | S | Three of four survive and still read as shipped features. business-suite-unified/docs/CONSISTENCY-REPORT.md:22 — 'BS OAuth server, cookie SSO ✅'. conduit/docs/CONSISTENCY-REPORT.md:30 — 'BS OAuth + c… | Cookie SSO was removed 2025-02-27 and is the single loudest do-not-revert guardrail in AGENTS.md. Three documents inside the estate currently present it as wor… |
+| **D-2** | Confirmed Open | S | Live: to_regclass('public.tenant_page_layouts') = null (dropped, per business-suite-unified/supabase/migrations/20260502000000_drop_tenant_page_layouts.sql). The claims survive: business-suite-unifie… | A document asserts as shipped a table whose drop migration sits in the same repository, and a sibling document instructs the deletion of the three files that a… |
+| **D-3** | Confirmed Open | S | crm7/docs/20260512-xero-node-sdk-deno-compat-decision-v1.00A.md still reads 'Status: Approved' at line 3 and, at lines 55-58, 'Decision: **Keep the raw `fetch` approach.** Do not adopt `xero-node` fo… | Three documents give three incompatible readings of the same decision, and the one marked Approved is the one production contradicts. The next person asked 'sh… |
+| **D-4** | Confirmed Open | S | Not done, and now doubly wrong. crm7/docs/20260813-documents-ux-design-v1.00D.md:503-504 still reads '**Roughly half the work is deletion.** `mail_merge_batches` (the table does not exist — every ope… | The register flagged this phrasing because it invites deletion of a table whose DDL was in the repo. That risk is now sharper, not smaller: the table is live i… |
+| **D-5** | Closed | S | Already recorded closed in the register itself ('Done 2026-08-17, verified 2026-08-27') with the correct warning attached: do not act on the 'delete' branch, which would destroy 1,637 lines of accura… | closed |
+| **D-6** | Confirmed Open | S | Largely repaired, not fully. Resolving every relative link in each docs/README.md: crm7 46 of 53 resolve, 6 dead (all pointing at ./archive/2026-04-30-* directories that no longer exist); R80.4 19 of… | 8 dead links remain, all consequences of the 2026-07-25 archive relocation that no index followed, and 7 of R80.4's documents are reachable only by listing the… |
+| **D-7** | Confirmed Open | M | All 21 mirror files still exist across the six apps, and all were touched on 2026-08-27 (PARENT-DOCS ×6) or 2026-08-29 (the other 15) — so a pass ran over them without regenerating their content. crm… | These are the most-read and least-accurate files in the estate, and they now carry a recent commit date over stale content, which is the worst combination — a … |
+| **D-8** | Closed | S | The date gap is gone. Last commit touching docs/ vs src/ in each submodule: BSU docs 2026-09-01 / src 2026-09-02; crm7 2026-08-29 / 2026-09-02; conduit 2026-08-29 / 2026-08-30; braden 2026-08-29 / 20… | closed as a date gap. The specific content omission the register named alongside it is NOT closed and is filed separately as P-1 — conduit's Cache Components a… |
+| **D-9** | Confirmed Open | M | 36 of 61. Method, in three steps against origin/main. (1) 'Presents as a live board' = the filename's version-status letter is W (Working), D (Draft) or A (Active) — never F, which memory records as … | 36 files in one directory each read as work someone still has to do. Anyone — agent or person — opening docs/plans/ to find out what is outstanding has 36 plau… |
+| **K-1** | Confirmed Open | M | business-suite-unified/src/pages/Billing.tsx:49-55 `const APP_LINE_ITEMS = [{app:'CRM7',pricePerSeat:PLAN_PRICES.basic.monthly},{app:'Conduit ATS',flatPrice:CONDUIT_PRICE.monthly},{app:'R8 Calculator… | Every paying tenant on the BSU billing page is shown a bill that no payment system produced. They are itemised for four products (CRM7, Conduit ATS, R8 Calcula… |
+| **K-3** | Closed | ? | business-suite-unified/src/pages/GTO.tsx:139-141 `export function computeOverallScore(totalChecks, compliantChecks): number \| null { if (totalChecks <= 0) return null; ... }` — the `: 95` fallback i… | closed |
+| **K-4** | Closed | ? | business-suite-unified/src/pages/Developer/Platform.tsx — `FALLBACK_EDGE_FUNCTIONS` survives only inside the comment at line 42 recording the defect; grep finds no declaration. The badge at line 324-… | closed |
+| **K-6** | Closed | ? | Both limbs verified, not just the OAuth one the register cited. Limb 1 (client registry): business-suite-unified/src/pages/Developer/RateLimits.tsx:62-67 imports `fetchOAuthClients`/`oauthClientsQuer… | closed |
+| **M-1** | Closed | S | Live: to_regclass('public.mail_merge_batches') = 'mail_merge_batches'. information_schema.columns shows 18 columns (id, tenant_id, name, template_id, document_template_id, recipient_type, recipient_i… | closed |
+| **M-2** | Superseded | S | pg_proc query across all namespaces returns NO row for r7_current_tenant_id (control: is_developer_admin returned prosecdef=true, search_path='public, auth', so the query finds real functions). But t… | closed — the register's framing ('the RLS helper for every r7_* table is null') implies the r7_* tables are unprotected or erroring. They are neither. conduit/… |
+| **M-3** | Superseded | M | to_regclass('public.mind_map_nodes') = null (still absent), and 0 CREATE TABLE for it anywhere in the estate. But the surface no longer errors: throughput/src/components/mindmap/index.tsx is now 34 l… | closed as a runtime error. The capability is still absent — a user cannot save a mind map — but the page now says so plainly instead of printing 'Could not fin… |
+| **M-4** | Superseded | M | to_regclass for both business_plans and business_plan_sections = null. throughput/src/pages/BusinessPlan.tsx now opens with a 23-line provenance header ('Business Plan page — you can draft here, but … | closed as a runtime error. Drafting works and AI Generate still calls /api/llm/completions; Save is disabled with a stated reason and a top-of-page notice says… |
+| **M-5** | Superseded | S | to_regclass('public.llm_feedback') = null; 0 mentions in any .sql in the estate. throughput/src/components/llm-panel/index.tsx now carries a 25-line header recording that useLLMFeedback.ts (read) and… | closed as a runtime error. Its header also records a second defect fixed in the same pass: llmOperations.ts had been sending every question to the model twice,… |
+| **M-6** | Superseded | S | to_regclass('public.saved_research') = null. DDL DOES exist (7 CREATE TABLE hits across the estate's .sql files — this is the positive control for the DDL scan), confirming the register's 'DDL exists… | closed as a runtime error. Saving a research result is still impossible, but the control explains itself rather than vanishing or throwing. |
+| **M-7** | Superseded | M | Supabase list_edge_functions returns 78 deployed functions; no slug 'export'. Positive control: 'bing-search' IS in that list (id 9c70543c, ACTIVE, v60), so the method finds present functions, and th… | closed as a runtime error — the three cards are visibly inert with a stated reason instead of 404ing at the gateway. |
+| **M-8** | Closed | S | to_regclass('public.dashboard_layouts') = null, and the identifier has ZERO occurrences anywhere: 0 .sql files, 0 .ts/.tsx files outside node_modules. The actual mechanism is business-suite-unified/s… | closed — there is no missing migration and no runtime error. The register row was built from plan prose that never became code. Residual, much smaller: useScop… |
+| **M-9** | Closed | S | cost_factors is a COLUMN, not a table. `select table_name, column_name, data_type from information_schema.columns where column_name='cost_factors'` returns exactly one row: host_contracts.cost_factor… | closed — this row is a detector artefact, exactly the class the register's own banner warns about: a bare identifier grep matched a column name and the follow-… |
+| **M-10** | Confirmed Open | M | Multiline-safe ripgrep over throughput/src finds 16 distinct client-referenced tables (plus 'avatars', a storage bucket) and 6 RPCs. ALL 16 exist in production — so the register's '12 referenced tabl… | An agent replaying throughput's migrations into a fresh project gets 3 of 16 tables and an app that cannot boot. Production is the only copy of that schema, so… |
+| **P-1** | Confirmed Open | S | conduit/next.config.ts:30 sets `cacheComponents: true`. conduit/docs now holds 17 markdown files; ripgrep for 'cacheComponents\|use cache\|Cache Components' across all of them returns 0 files. Positi… | The single largest architectural fact about the fastest app in the estate (0.94 mobile against crm7's 0.66, 69,708 B of rendered HTML where every other app shi… |
+| **P-2** | Closed | S | crm7/vite.config.ts:513-522 records the removal of the duplicate react-core guard by name: 'REMOVED — a SECOND, duplicate react-core guard used to sit here: id.includes('/react/') \|\| id.includes('/… | closed — with a live hazard the config itself flags at lines 414-418: if anyone sets Rolldown's `codeSplitting` option, `manualChunks` is IGNORED COMPLETELY wi… |
+| **P-3** | Confirmed Open | S | Half fixed. R80.4/package.json now has @vercel/speed-insights ^2.0.0, and it is genuinely MOUNTED, not merely installed — R80.4/src/main.tsx:2 imports SpeedInsights, :328-330 wraps it in RoutedSpeedI… | R80.4 reports Core Web Vitals but no page-view or traffic data, so a route that stops being visited — or starts erroring hard enough that nobody reaches it — l… |
+| **P-4** | Confirmed Open | M | All four still true. (1) braden/vercel.json:3 `"buildCommand": "pnpm run build:noprerender"`, so every marketing route ships an empty root. (2) braden/src/pages/Index.tsx:27 sets isLoading=true, :38 … | The worst-scoring app in the estate is also the only one whose LCP is a commercial number — it is the public marketing site. A first-time visitor waits on an a… |
+| **P-5** | Closed | M | throughput/vite.config.ts:55-59 now matches exact package boundaries — `id.includes('/node_modules/react/') \|\| '/node_modules/react-dom/' \|\| '/node_modules/scheduler/'` — replacing the bare `/rea… | closed for the substring half. The other half named in the register — vendor-bsuite bundling react-grid-layout and react-resizable eagerly for 7 lazily-loaded … |
+| **U-1** | Confirmed Open | L | Transitive import walk from R80.4/src/main.tsx (script at /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/79784fec-5832-44e5-b723-90faf04571a4/scratchpad/reach.mjs): 119 files reached, 223 non-test … | A quoting operator selecting any of 19 awards other than MA000020 or MA000036 gets an EMPTY penalty/overtime table, while clause-verified logic for that award … |
+| **U-2** | Confirmed Open | L | braden/src/Routes.tsx:193-199 registers exactly three children under /admin — `branding` (BrandingAdmin), `page-builder` (PageBuilder), `marketing` (PlatformMarketing) — then `<Route index element={<… | Nobody. That is the finding: a ~60-file content-management surface plus 9-10 admin pages compile, pass CI and ship in the braden bundle, and every URL that wou… |
+| **U-3** | Confirmed Open | M | throughput/src/components/navigation/ holds 8 files, 1,080 lines: EnhancedNavigation.tsx (264), GlobalSearch.tsx (340), MegaMenu.tsx (213), EnhancedBreadcrumbs.tsx (97), TenantSwitcher.tsx (89), Mobi… | Throughput users have no command palette, no global search, no mega-menu and no mobile bottom nav, while 1,080 lines implementing all four sit in the bundle. T… |
+| **U-4** | Confirmed Open | M | Count corrected and re-derived. Import scan for '@/components/uplift' across business-suite-unified/src finds real external importers for only 6 of the 12 doctrine primitives: TechnicalDetails (brand… | A BSU admin cannot press Cmd+K. Two BSU documents record Cmd+K as '❌ / 0 files' and will send someone to build it from scratch, unaware that 244 working lines … |
+| **U-5** | Confirmed Open | M | crm7/src/lib/pipelines/xeroPayrollAdapter.ts (435 L) — importers are its own test only (src/lib/pipelines/__tests__/xeroPayrollAdapter.test.ts:15,22). Its own header, line 5, says so: 'Coded and unit… | Two things, and the second is worse than the register recorded. First, 1,588 lines of Xero payroll integration — batching, retry-with-backoff, idempotency agai… |
+| **U-6** | Confirmed Open | M | The five modules form a closed island in throughput/src: useConversation.ts (importers: only lib/agents/baseAgent.ts, in prose) → conversationContext.ts (importers: baseAgent.ts, useConversation.ts) … | Nobody, and that is the cost: @langchain/core ^1.1.48 and @langchain/langgraph ^1.3.7 are production dependencies in throughput/package.json:47-48 carrying sup… |
+| **U-7** | Confirmed Open | M | The row's shape has changed and its count was wrong; the gap is real. EntitySelector was extracted into @bsuite/ui@1.3.0 on 2026-08-17 (AD-5), so the SOLE implementation is now node_modules/@bsuite/u… | A BSU or throughput user filling a form who needs an option that is not in the list has no way to add it from that screen — a raw `<select>` cannot search, can… |
+| **U-8** | Confirmed Open | S | conduit/src/app/admin/templates/ is 658 lines across page.tsx (22), _view.tsx (411), actions.ts (138), constants.ts (87). `grep -rn 'admin/templates'` over conduit/src returns exactly one hit and it … | A conduit recruiter who wants to edit the message templates the system sends candidates has no way to reach the editor that does exactly that. The only route i… |
+| **U-9** | Confirmed Open | S | Split row; one limb closed, the other is open and the register undercounted its class by more than half. CLOSED limb: `.bsu-gradient` is deleted — business-suite-unified/src/index.css:1068 carries th… | Low direct harm, real governance harm. Eight files implementing two components the estate's own Magic UI guide lists as Rejected Patterns are barrel-exported a… |
+| **U-10** | Confirmed Open | S | Measured in both directions, as the register's own evidence rule requires. Live production (tuybltdrdefjblnplpqo), `to_regclass` + pg_class.reltuples: report_preferences EXISTS 0 rows; invoice_batche… | Five empty tables and a dialog component that no screen opens. Nobody is harmed today because none of it runs. The cost is that crm7's schema advertises capabi… |
+| **U-11** | Confirmed Open | S | All six limbs still true in braden. (1) src/components/Projects.tsx, (2) src/components/admin/editor/DndLayoutEditor.tsx, (3) src/components/admin/StoragePolicyAudit.tsx — `grep -rn '<Projects\|<DndL… | Nobody reaches any of it, and the duplicates are an active trap: an agent told to fix a Site Editor layout bug will edit one of two same-named files with a 50%… |
+| **U-12** | Confirmed Open | S | THE CONTROL STILL HOLDS, and the zero is still real. Multiline-tolerant `grep -rzoP "from\(\s*['\"]xero_connection_health['\"]"` over crm7/src returns ZERO; the same regex on 'placements' returns crm… | The harm the row asserts is CLOSED; a narrower one is open. Nobody is now told a never-synced Xero connection is Active: two mounted crm7 pages compute and dis… |
+| **V-1** | Closed | S | The gate this defeated no longer exists. crm7/.github/workflows/ci.yml:89 now runs `pnpm run build:noprerender`, with a 17-line comment naming this exact finding and the reason; crm7/vercel.json:4 se… | closed |
+| **V-2** | Confirmed Open | S | braden/lighthouserc.json: settings.preset = "desktop" and no mobile run; assertions are `categories:performance: ["warn", {minScore:0.7}]`, `best-practices: ["warn"]`, `seo: ["warn"]`. Only `accessib… | A mobile performance regression on the public marketing site — the only page in the estate with a commercial LCP — is structurally invisible: there is no mobil… |
+| **V-3** | Closed | S | The collision is real and larger than reported — in crm7/supabase/tests/database, prefix 09 is shared by 26 files, 81 by 4, 42 by 3, 69 by 3 (69_document_provenance_origin, 69_national_qualifications… | closed — but the same step carries a different weakness worth recording: line 388 fails only `if [ "${#suites[@]}" -lt 43 ]`. With 122 suites present, 79 of th… |
+| **V-4** | Confirmed Open | S | Real figures measured today: 43 test files under throughput/src, 280 `it(`/`test(` cases. The claim survives in 2 documents at 4 places — throughput/docs/20250829-throughput-roadmap-v1.00W.md:40 ('10… | Anyone sizing throughput's test debt from its own documents is working from a figure that is 2.7x too low and roughly a year old. The 'shipped ✅' framing in UN… |
+| **V-5** | Closed | S | All four credentials ARE now wired: crm7/.github/workflows/e2e.yml:187-188 and :289-290 export CRM7_E2E_PASSWORD and CRM7_E2E_PASSWORD_TENANT_B from secrets, with the emails deliberately coming from … | closed — though one fail-open branch remains: at line 300-303, if no Playwright JSON report file exists at all, the executed-count step prints '::warning::no P… |
+| **V-6** | Closed | S | crm7/api/ai/rate-review.test.ts now has 0 executing describe.skip blocks (the single grep hit, line 80, is inside a comment reading 'every describe.skip() this suite used to carry'). The Authorizatio… | closed |
+| **V-7** | Confirmed Open | M | The audit is NOT dead — .github/workflows/prod-migration-history-audit.yml runs on `cron: '17 */6 * * *'` and `gh run list` shows six scheduled runs in the last 48h (33631062453, 33600323792, 3357764… | schema_migrations keys on version alone across every scope, so whichever applier runs first claims the row and the other migration is skipped forever, silently… |
+| **V-8** | Closed | S | Both halves are wrong now. Alerting: .github/workflows/cron-job-health-audit.yml runs on the same 6-hourly schedule; gh run list shows five consecutive runs. It is unusually well built — before trust… | closed as written. The live finding underneath it: three cron jobs are erroring on missing Supabase Vault secrets — document-retention-sweep-daily, sta-email-w… |
+| **V-9** | Closed | M | They are now tracked by a purpose-built ratchet: scripts/check-hook-suppression-ratchet.mjs with scripts/hook-suppression-baseline.json, wired to .github/workflows/hook-suppression-ratchet.yml. It se… | closed as a tracking gap. What the ratchet exposes and has banked rather than fixed: crm7 carries 54 inline + 82 file-level suppressions (eslint.config.js EXHA… |
+| **V-10** | Confirmed Open | S | `gh repo view GaryOcean428/bsuite --json defaultBranchRef` returns 'main'. GitHub's closing-keyword automation fires only when a pull request merges into the repository's DEFAULT branch. The estate's… | Issues stay open after their fix ships, so the open-issue count permanently overstates outstanding work and nobody can tell a genuinely open issue from a shipp… |
+| **W-1** | Confirmed Open | M | R80.4/charge-calculator-v9-2.tsx:5386-5390, the ONE place an award selection sets the penalty table: setPenalties( next === "MA000020" \|\| !next ? penaltiesForSector(sector) : next === "MA000036" ? … | A GTO quoting any award except commercial/general building (MA000020) or plumbing (MA000036) prices overtime, weekend, shift and public-holiday work at ordinar… |
+| **W-2** | Confirmed Open | L | I redid the transitive closure myself rather than trusting the row or the repo's gate. METHOD: start at the real browser entry point src/main.tsx (index.html:31 loads only `/src/main.tsx`); strip blo… | Rates are now reachable for all 21 awards, so a base wage prices correctly. What no user can reach is every award's own overtime, penalties, allowances, shift … |
+| **W-3** | Closed | ? | Fixed AND on main — content-tested, not inferred from the commit graph. R80.4/src/awards/allowance-catalogue.ts now carries both missing rules: :92-94 the per-award SECTOR_ALIAS map ({ MA000020: allo… | closed |
+| **W-4** | Confirmed Open | S | The row's factual claim is CONFIRMED. R80.4/src/awards/contingent-costs.ts:275-278 is the whole function and it is pure arithmetic on elapsed time: export function schoolBasedStage(yearsEmployed: num… | A school-based apprentice who attains the competency percentage before the 12-month mark is on the higher stage from that date under cl.19.7(b). The screen tel… |
+| **W-5** | Confirmed Open | M | CONFIRMED, and WORSE than the register records: it is 6 of 6 rungs unreachable, not 5 of 6. METHOD (multi-line safe, comment-stripped — a line-oriented grep misses `provenance:` and its value on diff… | Every dollar the calculator shows is indistinguishable from every other dollar. A bundled 2024-25 table figure, a live 2026-27 API figure and a number an opera… |
+| **W-6** | Closed | ? | Re-tallied from the ledgers, and my method reproduces the register's OWN positive control EXACTLY, which is how I know the two counts are comparable. Scanning all 23 files in R80.4/src/awards/coverag… | closed |
+| **W-7** | Closed | ? | Counted from CATALOGUES' own top-level keys in R80.4/src/awards/allowance-catalogue.generated.ts, not from a grep over prose: 21 keys — MA000004, MA000005, MA000008, MA000009, MA000010, MA000014, MA0… | closed |
+| **W-8** | Confirmed Open | S | Three of four limbs have closed. The fourth means no tenant is actually differentiated, so the defect stands. CLOSED — the migration is APPLIED. Live production (project tuybltdrdefjblnplpqo): inform… | Every tenant is still quoted at superannuation 12% and workers' compensation 4.7%. Workers' comp is per-employer and per-WIC code and in practice varies by sev… |
+| **W-9** | Closed | ? | All three remaining actions in the row ('publish 0.14.0, bump crm7, promote crm7 to main') are done, verified against the registry and the published artefact rather than the source. PUBLISHED: `npm v… | closed |
+| **W-10** | Closed | ? | Re-confirmed on main by content, not by ancestry. `git ls-tree -r --name-only origin/main \| grep -ci penaltycalculator` → 0. POSITIVE CONTROL on the same command: `git ls-tree -r --name-only origin/… | closed |
+| **W-11** | Confirmed Open | M | Unchanged, measured live against production (project tuybltdrdefjblnplpqo) in a single statement so the two counts cannot come from different moments: select (select count(*) from public.awards) as a… | Not a live wrong number today — nothing reads award_rates, so no quote is priced from it. The exposure is architectural and it blocks W-5's mapd_db_cache rung:… |
+| **W-12** | Confirmed Open | M | Three of the four named gaps have closed; one remains, and the repository's own issue tracker states it in those terms. CLOSED — TRAINEESHIPS. R80.4/src/awards/engagement-term.ts:81-129 defines five … | An ABN contractor — a worker engaged through their own Australian Business Number rather than as an employee — cannot be quoted at all. The operator's workarou… |
+| **W-13** | Closed | ? | Fixed end to end, and the fix is rendered rather than merely returned — a hook that distinguishes two failures nobody displays would be the same defect one level up, so I checked the consumer as well… | closed |
+
+**How to read this table.** *Confirmed open* means the defect is still present and the evidence
+column says where. *Closed* means it is fixed and the evidence names the fix. *Superseded* means
+the surface no longer exists or the row asks for something that would now be a regression — six
+rows are in that state, and doing them would make the estate worse rather than better.
