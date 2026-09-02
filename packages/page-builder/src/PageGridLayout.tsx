@@ -1,3 +1,4 @@
+import { ElementScopeProvider } from './elementScope';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
 import React, {
   startTransition,
@@ -126,6 +127,13 @@ type GridItemProps = {
   content: React.ReactNode;
   isEditing: boolean;
   label: string;
+  /**
+   * The page this card sits on. Only needed so descendants can be ADDRESSED —
+   * see elementScope.tsx. A card knows its own key; nothing inside it could
+   * previously say which page it was on, which is why no per-element property
+   * has ever been storable.
+   */
+  pageKey: string;
   onHide: (id: string) => void;
   /**
    * When true, this item's height tracks its own measured content height
@@ -232,6 +240,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   content,
   isEditing,
   label,
+  pageKey,
   onHide,
   autoHeight,
   onAutoHeightChange,
@@ -251,6 +260,21 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     // intrinsic size, independent of however many rows the item currently
     // occupies — the property that makes the auto-height loop converge to
     // a fixed point instead of oscillating (see autoHeight.ts).
+    /*
+     * The card's identity, handed down so anything inside it can be addressed.
+     *
+     * A Context.Provider renders NO DOM NODE, so this cannot affect the
+     * ResizeObserver measurement below — which matters, because a trailing
+     * margin once collapsed THROUGH the autoHeight measure wrapper and cost 32px
+     * of card overflow across 70 sites. An extra element here would have been a
+     * real risk; a provider is not one.
+     */
+    const scopedContent = (
+      <ElementScopeProvider scope={{ pageKey, cardKey: id, cardLabel: label, isEditing }}>
+        {content}
+      </ElementScopeProvider>
+    );
+
     const measureRef = useRef<HTMLDivElement | null>(null);
     const lastReportedRowsRef = useRef<number | null>(null);
     const measureRafRef = useRef<number | null>(null);
@@ -600,10 +624,10 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                */}
               {autoHeight ? (
                 <div ref={measureRef} className="flow-root">
-                  {content}
+                  {scopedContent}
                 </div>
               ) : (
-                content
+                scopedContent
               )}
             </div>
           </div>
@@ -1638,6 +1662,7 @@ export function PageGridLayout({
                   content={content}
                   isEditing={isEditing}
                   label={layerNames[layoutItem.i] || widgetMeta?.[layoutItem.i]?.label || layoutItem.i}
+                  pageKey={pageKey}
                   onHide={hideLayer}
                   autoHeight={layoutItem.autoHeight}
                   onAutoHeightChange={handleAutoHeightChange}
