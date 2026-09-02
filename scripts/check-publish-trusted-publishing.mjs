@@ -12,12 +12,26 @@
  * token — while 14 of 16 publisher workflows still passed
  * `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`.
  *
- * That leftover is not merely dead. npm tries OIDC first and falls back to the
- * token, so for a package WITHOUT a trusted publisher the run fails as the token
- * — a bare `404 Not Found - PUT`. That reads as "the token lacks permission",
- * which is the wrong conclusion, and it was drawn and reported for an entire
- * session before anyone checked how the other packages actually published. A
- * fallback that cannot work turns a precise failure into a misleading one.
+ * The leftover is dead config, and it should go — but be accurate about WHY,
+ * because the first version of this comment was not.
+ *
+ * It claimed the token fallback was what produced the misleading error. MEASURED
+ * 2026-09-02, after removing it: dispatching publish-workflow-canvas.yml with no
+ * token at all fails with the SAME message —
+ *
+ *     npm error code E404
+ *     npm error 404 Not Found - PUT .../@bsuite%2fworkflow-canvas - Not found
+ *     npm error 404  ... could not be found or you do not have permission
+ *
+ * npm returns that for "this package does not exist and you may not create it",
+ * whichever credential was offered. Removing the token did NOT change the text.
+ *
+ * What the token DID do was make a wrong reading available: "404 on PUT" plus "a
+ * token is configured" invites the conclusion "the token lacks permission", and
+ * that conclusion was drawn and reported for an entire session before anyone read
+ * `_npmUser` off the registry and saw that no @bsuite package had EVER published
+ * by token. The fallback is removed because it cannot authenticate anything, not
+ * because removing it improves the error.
  *
  * ROLE, NOT FILENAME. `publish-next.yml` matches the glob and publishes nothing —
  * it dispatches the per-package workflows and correctly holds `actions: write`
