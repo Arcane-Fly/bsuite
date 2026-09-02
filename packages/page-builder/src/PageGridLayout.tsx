@@ -1,4 +1,4 @@
-import { ElementScopeProvider } from './elementScope';
+import { ElementScopeProvider } from './elementScope.js';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
 import React, {
   startTransition,

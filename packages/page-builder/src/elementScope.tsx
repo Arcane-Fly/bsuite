@@ -56,13 +56,16 @@ export function ElementScopeProvider({
   scope: ElementScope;
   children: React.ReactNode;
 }): React.JSX.Element {
-  /* Memoised on its fields rather than on the object, or every GridItem render
-     would hand its subtree a new context value and re-render every button in
-     the card for nothing. */
+  /* Destructured FIRST, then memoised on the primitives.
+     Memoising on `scope` itself would hand the subtree a new context value on
+     every GridItem render and re-render every button in the card for nothing;
+     memoising on `scope.pageKey` and friends would need an exhaustive-deps
+     suppression, and the estate ratchets those. Pulling the fields out gets the
+     correct behaviour with no suppression at all — the lint rule was right. */
+  const { pageKey, cardKey, cardLabel, isEditing } = scope;
   const value = React.useMemo(
-    () => scope,
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [scope.pageKey, scope.cardKey, scope.cardLabel, scope.isEditing],
+    () => ({ pageKey, cardKey, cardLabel, isEditing }),
+    [pageKey, cardKey, cardLabel, isEditing],
   );
   return <ElementScopeContext.Provider value={value}>{children}</ElementScopeContext.Provider>;
 }

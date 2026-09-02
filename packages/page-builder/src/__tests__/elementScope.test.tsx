@@ -7,7 +7,7 @@ import {
   elementRef,
   parseElementRef,
   useElementScope,
-} from '../elementScope';
+} from '../elementScope.js';
 
 const scope = { pageKey: '/contacts', cardKey: 'card3', cardLabel: 'Contacts', isEditing: true };
 
