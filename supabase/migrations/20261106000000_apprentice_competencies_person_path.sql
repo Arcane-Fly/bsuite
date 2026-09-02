@@ -31,68 +31,71 @@
 -- plainly that the class remains.
 -- =============================================================================
 
--- NO EXPLICIT BEGIN/COMMIT. The applier already wraps each migration in its own
--- transaction, so wrapping again buys nothing — and it actively costs something:
--- a file containing its own COMMIT, when \i-ed inside a rehearsal transaction,
--- COMMITS THAT OUTER TRANSACTION. On 2026-09-02 that turned a "run it and roll
--- back to compare" rehearsal of this very file into a real production write. The
--- ROLLBACK that followed had nothing left to roll back and said so, in a WARNING
--- that is easy to read past.
-
--- 1. The person path. Nullable, because a row may legitimately arrive either way.
-ALTER TABLE public.apprentice_competencies
-  ADD COLUMN IF NOT EXISTS person_id uuid REFERENCES public.people (id) ON DELETE CASCADE;
-
--- 2. apprentice_id stops being mandatory. It is NOT dropped: 20 `apprentices`
---    rows exist estate-wide and a future row may still key off one.
-ALTER TABLE public.apprentice_competencies
-  ALTER COLUMN apprentice_id DROP NOT NULL;
-
--- 3. Exactly one subject, never zero and never both. Written as a CHECK rather
---    than left to convention, because "one of these two" enforced by convention
---    is how a table ends up with rows that answer to nobody.
+-- rehearsal: guarded-no-op
 --
---    `num_nonnulls` rather than a hand-written OR pair: the OR form reads as
---    correct while quietly allowing BOTH to be set.
-DO $guard$
+-- GUARDED so a from-scratch replay does not fail on it. `apprentice_competencies`
+-- is created by an earlier migration that is itself unreplayable — one of 37
+-- ALREADY-APPLIED migrations across 7 scopes that reference objects a later
+-- migration creates (measured 2026-09-02 with scripts/supabase/rehearse-migrations.mjs).
+-- Those 37 cannot be repaired by editing them: the estate forbids rewriting an
+-- applied migration, and every one of them is in the ledger.
+--
+-- This file is not in that ledger yet, so it can decline to add to the class. On
+-- production the table exists and every statement below moves the catalog census;
+-- on a fresh replay the guard returns early and nothing moves. That asymmetry is
+-- exactly what `guarded-no-op` claims.
+--
+-- EXECUTE rather than plain DDL because a DO block is the only way to make
+-- ALTER TABLE conditional — plain SQL has no IF for it.
+
+DO $apprentice_competencies_person_path$
 BEGIN
+  IF to_regclass('public.apprentice_competencies') IS NULL THEN
+    RAISE NOTICE 'apprentice_competencies absent (unreplayable history) — nothing to alter';
+    RETURN;
+  END IF;
+
+  -- 1. The person path. Nullable, because a row may legitimately arrive either way.
+  EXECUTE 'ALTER TABLE public.apprentice_competencies
+             ADD COLUMN IF NOT EXISTS person_id uuid REFERENCES public.people (id) ON DELETE CASCADE';
+
+  -- 2. apprentice_id stops being mandatory. It is NOT dropped: 20 `apprentices`
+  --    rows exist estate-wide and a future row may still key off one.
+  EXECUTE 'ALTER TABLE public.apprentice_competencies ALTER COLUMN apprentice_id DROP NOT NULL';
+
+  -- 3. Exactly one subject, never zero and never both. `num_nonnulls` rather than a
+  --    hand-written OR pair: the OR form reads as correct while quietly allowing BOTH.
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
      WHERE conname = 'apprentice_competencies_one_subject'
        AND conrelid = 'public.apprentice_competencies'::regclass
   ) THEN
-    ALTER TABLE public.apprentice_competencies
-      ADD CONSTRAINT apprentice_competencies_one_subject
-      CHECK (num_nonnulls(apprentice_id, person_id) = 1);
+    EXECUTE 'ALTER TABLE public.apprentice_competencies
+               ADD CONSTRAINT apprentice_competencies_one_subject
+               CHECK (num_nonnulls(apprentice_id, person_id) = 1)';
   END IF;
-END
-$guard$;
 
--- 4. Every FK-shaped uuid gets an index in the SAME file (estate rule A1).
-CREATE INDEX IF NOT EXISTS idx_apprentice_competencies_person_id
-  ON public.apprentice_competencies (person_id);
+  -- 4. Every FK-shaped uuid gets an index in the SAME file (estate rule A1).
+  EXECUTE 'CREATE INDEX IF NOT EXISTS idx_apprentice_competencies_person_id
+             ON public.apprentice_competencies (person_id)';
 
--- 5. A person's record of one unit is one row. NULLS NOT DISTINCT is deliberate:
---    without it every NULL person_id is distinct from every other, ON CONFLICT
---    never fires, and a re-run duplicates silently — a trap this estate has
---    already been bitten by on a nullable column in a unique constraint.
-DO $guard$
-BEGIN
+  -- 5. A person's record of one unit is one row. NULLS NOT DISTINCT is deliberate:
+  --    without it every NULL person_id is distinct from every other, ON CONFLICT
+  --    never fires, and a re-run duplicates silently.
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
      WHERE conname = 'apprentice_competencies_person_competency_unique'
        AND conrelid = 'public.apprentice_competencies'::regclass
   ) THEN
-    ALTER TABLE public.apprentice_competencies
-      ADD CONSTRAINT apprentice_competencies_person_competency_unique
-      UNIQUE NULLS NOT DISTINCT (person_id, competency_id);
+    EXECUTE 'ALTER TABLE public.apprentice_competencies
+               ADD CONSTRAINT apprentice_competencies_person_competency_unique
+               UNIQUE NULLS NOT DISTINCT (person_id, competency_id)';
   END IF;
+
+  EXECUTE $c$COMMENT ON COLUMN public.apprentice_competencies.person_id IS
+    'The person this competency belongs to. Added 2026-11-06 because the operator ruled '
+    'the person is the placement entity ("trainee is same as apprentice, worker is same '
+    'without the training") and this table still required an `apprentices` row. Exactly '
+    'one of person_id / apprentice_id is set - see apprentice_competencies_one_subject.'$c$;
 END
-$guard$;
-
-COMMENT ON COLUMN public.apprentice_competencies.person_id IS
-  'The person this competency belongs to. Added 2026-11-06 because the operator ruled '
-  'the person is the placement entity ("trainee is same as apprentice, worker is same '
-  'without the training") and this table still required an `apprentices` row. Exactly '
-  'one of person_id / apprentice_id is set — see apprentice_competencies_one_subject.';
-
+$apprentice_competencies_person_path$;

@@ -40,6 +40,14 @@
 -- ROLLBACK that followed had nothing left to roll back and said so, in a WARNING
 -- that is easy to read past.
 
+-- rehearsal: guarded-no-op
+--
+-- On PRODUCTION platform_branding and profiles both exist, and the three DROP/CREATE
+-- POLICY statements move the ACL census. On a from-scratch replay platform_branding
+-- does not exist — its creating migration is one of the 37 unreplayable applied
+-- migrations — the to_regclass guard returns early, and nothing moves. That asymmetry
+-- is precisely what this marker claims, and it is checkable in the diff.
+
 DO $assert_platform_branding_write_policies$
 BEGIN
   -- Both must exist. On a replay this file runs after 20260421050000 created
