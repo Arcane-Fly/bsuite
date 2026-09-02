@@ -427,6 +427,25 @@ function sqlStringLiteral(jsonValue) {
 export function renderSeedSql({ graph, aiContext }) {
   const graphLiteral = sqlStringLiteral(graph)
   const aiContextLiteral = sqlStringLiteral(aiContext)
+  /*
+   * TRIGGER CONFIG — without this the workflow can never RUN.
+   *
+   * workflow_emit_event only starts a run when the published version's
+   * trigger_config holds an `events` ARRAY containing the event. The seed omitted
+   * the column entirely, so it defaulted to {}. Measured on production
+   * 2026-09-02: trigger_config {}, 0 runs, 0 steps — the tables, the emitting
+   * triggers and the queue bridge were all in place and nothing could ever fire.
+   *
+   * placement.created is the event, because that is where the apprentice journey
+   * begins: the Lucidchart source opens at "Accept employment offer" once a
+   * placement exists. The emitting trigger sends exactly that string, verified
+   * against placements_emit_workflow_event in the live database.
+   *
+   * auto_start is left to its default. Activation stays per-tenant and opt-in via
+   * workflow_definition_activations, so publishing this template starts nothing
+   * for anyone until a tenant asks for it.
+   */
+  const triggerConfigLiteral = sqlStringLiteral({ events: ['placement.created'] })
   const descriptionLiteral = WORKFLOW_DESCRIPTION.replace(/'/g, "''")
 
   return `-- Seed data, not schema. Deliberately NOT a numbered migration file: this estate
@@ -478,9 +497,10 @@ BEGIN
   LIMIT 1;
 
   INSERT INTO public.workflow_definition_versions
-    (workflow_definition_id, version, status, graph, ai_context, tenant_id, published_at)
+    (workflow_definition_id, version, status, graph, ai_context, trigger_config, tenant_id, published_at)
   VALUES
-    (v_def_id, 1, 'published', ${graphLiteral}::jsonb, ${aiContextLiteral}::jsonb, NULL, now())
+    (v_def_id, 1, 'published', ${graphLiteral}::jsonb, ${aiContextLiteral}::jsonb,
+     ${triggerConfigLiteral}::jsonb, NULL, now())
   ON CONFLICT (workflow_definition_id, version) DO NOTHING;
 
   SELECT id INTO v_ver_id
