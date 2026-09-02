@@ -53,6 +53,28 @@ CREATE TABLE IF NOT EXISTS public.platform_branding (
   updated_at                TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ---------------------------------------------------------------------------
+-- EXPLICIT GRANTS, transcribed from what production already holds
+-- (information_schema.role_table_grants, read 2026-09-02):
+--   anon           SELECT
+--   authenticated  SELECT, INSERT, UPDATE, DELETE
+--   service_role   SELECT, INSERT, UPDATE, DELETE
+--
+-- Added because editing this file for the profiles-ordering fix brought it into
+-- grant-lint's "changed migrations" set and exposed that it creates a public
+-- table with no GRANT in the same migration. That is a real gap on a REPLAY —
+-- a preview branch built from history would have RLS policies on a table no role
+-- can reach. On production it never bit: this migration is below the floor and
+-- never ran, and the grants above got there by another route.
+--
+-- TRUNCATE is deliberately NOT granted. A new public table can otherwise inherit
+-- `anon` TRUNCATE from supabase_admin defaults, and TRUNCATE BYPASSES RLS — four
+-- perfect policies still leave the table truncatable.
+-- ---------------------------------------------------------------------------
+GRANT SELECT                         ON public.platform_branding TO anon;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_branding TO authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.platform_branding TO service_role;
+
 -- Seed the single platform row
 INSERT INTO public.platform_branding (id)
 VALUES ('platform')
