@@ -1,0 +1,76 @@
+name: A plan says whether it is still the plan
+
+# THE FAILURE THIS PREVENTS.
+#
+# docs/plans/ holds 61 files. Measured 2026-09-02, 31 of them present as a live
+# board and are not one: their filename carries a Working / Draft / Active status
+# letter, or they hold unchecked boxes, and nothing on their face says the work
+# has landed, and nothing has touched them since the last promotion to
+# production.
+#
+# So anyone — agent or person — opening that directory to find out what is
+# outstanding has 31 plausible answers and one correct one, and no marker
+# distinguishes them. That is how an estate rebuilds something that already
+# exists: the plan describing the half-built version reads exactly like the plan
+# describing the work still to do.
+#
+# The precedent already existed and was applied to ONE file. STATUS.md was
+# banner-repaired on 2026-08-17 with "⚠ HISTORICAL BOARD — do not plan from this
+# file", and 18 files carry `authority: none` in frontmatter. This applies it to
+# the class.
+#
+# WHY origin/main IS FETCHED. Staleness is measured against the last promotion.
+# Without that ref every plan looks stale, the count is meaningless, and the
+# checker refuses to run rather than reporting a number it cannot stand behind.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  plan-currency:
+    name: A plan says whether it is still the plan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Staleness is a git question: the checker compares each file's last
+          # commit against the last merge to main.
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          package-manager-cache: false
+
+      - name: Fetch the ref staleness is measured against
+        run: git fetch -q origin main
+
+      - name: Prove the checker can fail before trusting what it says
+        run: node scripts/check-plan-currency-markers.mjs --self-test
+
+      - name: Positive control — a planted unmarked plan must be detected
+        # The self-test only exercises strings this file wrote. Plant a real file
+        # in the real directory and require a non-zero exit, so the control tests
+        # the tree that actually ships. A gate that cannot tell "found nothing"
+        # from "checked nothing" is not a gate.
+        run: |
+          set -euo pipefail
+          probe=docs/plans/20261231-ci-positive-control-v1.00W.md
+          printf '# CI positive control\n\n- [ ] this box makes the file read as live\n' > "$probe"
+          if node scripts/check-plan-currency-markers.mjs; then
+            echo "::error::POSITIVE CONTROL FAILED — a plan with no currency marker was not detected. Clean passes from this gate mean nothing."
+            rm -f "$probe"
+            exit 1
+          fi
+          rm -f "$probe"
+          echo "positive control held: the planted plan was detected"
+
+      - name: Every plan that presents as live says whether it still is
+        run: node scripts/check-plan-currency-markers.mjs

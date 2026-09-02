@@ -1,0 +1,42 @@
+{
+  "_comment": [
+    "Plans that present as a live board, carry no currency marker, and have not been",
+    "touched since the last promotion to main. This list may only SHRINK.",
+    "A NEW one fails the gate; an entry that has since been marked or updated ALSO fails,",
+    "so it cannot become a place findings go to be forgotten.",
+    "Regenerate deliberately with --write-baseline; never to make a red run green."
+  ],
+  "unmarked": [
+    "20260302-r80-crm7-integration-audit-v1.00A.md",
+    "20260423-gto-billing-reporting-refined-plan-v1.00A.md",
+    "20260506-codehouse-parity-and-platform-360-v1.00W.md",
+    "20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md",
+    "20260513-bsuite-consolidated-hardening-v1.00W.md",
+    "20260609-production-readiness-next-steps-plan-v1.00W.md",
+    "20260701-docs-plans-closure-audit-v1.00W.md",
+    "20260703-unified-authoring-surface-plan-v1.03A.md",
+    "20260723-bsuite-documentation-program-design-v1.00D.md",
+    "20260724-bsuite-1322-region-migration-runbook-v1.00D.md",
+    "20260724-bsuite-1322-supabase-region-migration-scope-v1.00D.md",
+    "20260724-conduit-338-training-contract-status-email-ingestion-plan-v1.00D.md",
+    "20260724-email-funding-expansion-scope-v1.00D.md",
+    "20260724-recruitment-employment-handover-design-v1.00D.md",
+    "20260724-recurring-bugs-blindspots-refined-v1.00D.md",
+    "20260725-gto-persona-excellence-design-v1.00D.md",
+    "20260728-r8-as-rates-engine-architecture-v1.00D.md",
+    "20260802-d2c-theme-compliance-audit-refined-v1.00W.md",
+    "20260803-theme-conformance-dod-v1.00W.md",
+    "20260805-operator-register-completion-program-v1.00W.md",
+    "20260806-reporting-bulk-data-tiered-schema-program-v1.00D.md",
+    "20260807-data-platform-completion-program-v1.00D.md",
+    "20260810-people-organisations-onboarding-design-v1.00D.md",
+    "20260810-people-organisations-onboarding-implementation-v1.00W.md",
+    "20260811-award-engine-to-zero-refined-v1.00W.md",
+    "20260811-dataplatform-completion-refined-v1.00W.md",
+    "20260811-feature-builder-world-class-refined-v1.00W.md",
+    "20260811-post-persona-execution-refined-v1.00W.md",
+    "20260814-portals-and-surface-class-remediation-v1.00D.md",
+    "20260817-estate-completion-plan-v1.00D.md",
+    "20260827-estate-lifecycle-process-refined-v1.00D.md"
+  ]
+}
