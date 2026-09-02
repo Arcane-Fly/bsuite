@@ -480,6 +480,39 @@ Credential rotation. 105 of the 108 `authenticated_security_definer` advisories.
 
 ---
 
+## 10b. CORRECTION — V-10 re-measured 2026-09-03, and it should NOT be built
+
+**V-10 said**: `Closes #N` on a pull request merged to `development` closes nothing, because
+GitHub's closing-keyword automation only fires on the repository's DEFAULT branch — and the
+estate's mandated process is feature → development → main. That mechanism is **real and confirmed
+across all 7 repositories**: every one has `main` as its default.
+
+**But it has zero instances, and the proposed fix would have been machinery with no input.**
+
+Measured 2026-09-03 over **100 merged pull requests** — the last 40 into `bsuite/development` and
+the last 60 into `crm7/development` — scanning both title and body for
+`clos(e|es|ed) | fix(es|ed) | resolv(e|es|ed) #N`:
+
+| | |
+|---|---|
+| closing-keyword references found | **0** |
+| issues therefore missed by the automation | **0** |
+
+And the harm the row asserts does not appear either. Issues **are** being closed: **500+** closed
+in bsuite, **422** in crm7, against 65 and 85 open. Closure is happening by another route.
+
+So the fix the row invites — a workflow that parses closing keywords on push to `development` and
+closes the referenced issues — would be **a parser for a keyword nobody writes**. That is the
+estate's signature failure, built deliberately: machinery with no input, green forever, and
+counted as progress. `scripts/check-zero-consumers.mjs` exists to catch exactly that shape.
+
+**Verdict: DOWNGRADED.** Keep the mechanism recorded so nobody adopts `Closes #N` believing it
+works, and do not build the closer. If issue hygiene is later found wanting, the question to ask
+is not "why did the keyword fail" but "what links a shipped fix to its issue at all" — a different
+and larger question this row does not ask.
+
+---
+
 ## 11. VERDICT TABLE — every row, measured 2026-09-02
 
 Each verdict was produced against live sources, and every zero carries a positive control: a
