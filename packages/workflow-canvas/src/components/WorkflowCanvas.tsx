@@ -33,9 +33,10 @@ import {
 } from '@xyflow/react';
 import type { Viewport } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
+import type { WorkflowNode } from '../types.js';
 
 export interface WorkflowCanvasProps {
   controller: WorkflowController;
@@ -110,6 +111,8 @@ function WorkflowCanvasInner({
     return () => document.removeEventListener('keydown', onKeyDown);
   }, [controller, readOnly]);
 
+  const renderNodes = useMemo(() => withRenderDimensions(controller.nodes), [controller.nodes]);
+
   return (
     <div
       className={
@@ -121,7 +124,7 @@ function WorkflowCanvasInner({
           own `style` prop, so the box has to come from a div we own. */}
       <div className="absolute inset-0">
         <ReactFlow
-          nodes={controller.nodes}
+          nodes={renderNodes}
           edges={controller.edges}
           nodeTypes={controller.registry.nodeTypes}
           onNodesChange={readOnly ? undefined : controller.onNodesChange}
@@ -159,6 +162,45 @@ function WorkflowCanvasInner({
  * Public export. Owns its own `ReactFlowProvider` so a consumer page can drop it
  * anywhere without knowing about xyflow's store.
  */
+/**
+ * SIZE FOR THE MINIMAP, WITHOUT CHANGING WHAT GETS SAVED.
+ *
+ * xyflow decides whether a node is drawable from `width` / `initialWidth` /
+ * `measured` and NEVER from `style.width`:
+ *
+ *   nodeHasDimensions = (n) =>
+ *     (n.measured?.width ?? n.width ?? n.initialWidth) !== undefined && ...
+ *
+ * The canvas itself is fine either way, because the DOM element is sized by the
+ * style. The MINIMAP is not: it reads `internals.userNode` rather than the DOM
+ * and silently skips every node failing that check. Measured on production
+ * 2026-09-02 — the minimap was present, `showMiniMap` was on, and it drew ZERO
+ * rects against a 42-node graph. An empty minimap reads as broken rather than
+ * absent, and it is the only way to navigate a diagram 4720px wide.
+ *
+ * Applied HERE, at the render boundary, and deliberately not in the controller's
+ * `nodes`. Those are the nodes that get PERSISTED: `WorkflowNodeSchema` is a
+ * loose object, so width/height added there would survive serialisation and
+ * quietly change the stored graph shape on the next autosave. The stored graph
+ * keeps carrying size in `style`, exactly as the seed writes it; only the
+ * rendered node gains the two numbers xyflow needs.
+ */
+function withRenderDimensions(nodes: WorkflowNode[]): WorkflowNode[] {
+  let changed = false;
+  const out = nodes.map((node) => {
+    if (typeof node.width === 'number' && typeof node.height === 'number') return node;
+    const style = node.style as { width?: unknown; height?: unknown } | undefined;
+    const width = typeof style?.width === 'number' ? style.width : undefined;
+    const height = typeof style?.height === 'number' ? style.height : undefined;
+    if (width === undefined || height === undefined) return node;
+    changed = true;
+    return { ...node, width, height };
+  });
+  // Referential stability matters: a new array every render makes xyflow
+  // reconcile the whole graph, which loses selection and drag state.
+  return changed ? out : nodes;
+}
+
 export function WorkflowCanvas(props: WorkflowCanvasProps) {
   return (
     <ReactFlowProvider>
