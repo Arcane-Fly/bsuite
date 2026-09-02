@@ -135,16 +135,15 @@ jobs:
           PKG_VERSION: ${{ steps.version-check.outputs.version }}
 
       - name: Publish to npm
-        # Trusted Publishers (OIDC) preferred. setup-node@v5 wrote an .npmrc
-        # with `//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}` already,
-        # and npm CLI >=11.5.1 tries OIDC first when id-token: write is set
-        # — falling back to NODE_AUTH_TOKEN only if the package has not been
-        # migrated to Trusted Publishers on npmjs.com yet. The manual `.npmrc`
-        # append we used to do here bypassed OIDC entirely, so it was removed.
+        # Trusted Publishers (OIDC) is the ONLY mechanism now. npm began revoking
+        # classic tokens 2025-12-09 and finished 2026-02-03, so the NODE_AUTH_TOKEN
+        # fallback that used to sit here could no longer authenticate anything — it
+        # was removed 2026-09-02. Verified before removing: all 13 published @bsuite
+        # packages carry `_npmUser.trustedPublisher` on their latest version, and
+        # data-grid and schema-registry were already publishing with no token at all.
+        # npm CLI >=11.5.1 is required and Node 24.14.0 ships 11.9.0.
         if: steps.version-check.outputs.skip == 'false'
         run: npm publish --access public --tag "${{ steps.dist-tag.outputs.tag }}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Job summary
         if: always()

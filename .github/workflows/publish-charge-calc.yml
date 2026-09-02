@@ -150,8 +150,6 @@ jobs:
         # sigstore provenance only supports public source repos (npm E422).
         # Mirrors the publish-dates.yml fix in PR #814.
         run: npm publish --access public --tag "${{ steps.dist-tag.outputs.tag }}"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Job summary
         if: always()
