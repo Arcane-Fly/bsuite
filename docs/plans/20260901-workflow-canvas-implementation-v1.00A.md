@@ -373,6 +373,13 @@ crm7#2337**.
 | full screen, with the `fullscreenchange` listener | crm7#2337 |
 | step labels show `node_label`, not the slug | crm7#2336 (merged) |
 | a link from `/workflows` to the entity builder | crm7#2337 |
+| canvas moved to card **1 of 7** at 72vh, cap removed (was card 7, capped 560px) | crm7#2339 |
+| both workflow lists became `@bsuite/data-grid`; `<ul>`/`<ol>` count 2 -> 0 | crm7#2339 |
+| **a step row now centres and selects that step on the canvas** — it reached nothing before | crm7#2339 |
+| **P1.1** `navigationTargets`/`onNavigate` wired; 5 targets, each asserted against a real route | crm7#2339 |
+| schema builder says in English what changes elsewhere when you add a field | crm7#2339 |
+| `/reports` cells made single-line; stacked-`renderCell` class 3 -> 0 | crm7#2339 |
+| first tests for either workflow page — presence and wiring, not appearance | crm7#2339 |
 
 ### Outstanding, ranked by the audit
 
@@ -381,8 +388,10 @@ crm7#2337**.
    hit-testing; the widest decision has four labelled branch ports). Needs a package publish.
    Two real API defects ride along: handles **unmount** below zoom 0.55 (React Flow requires
    `visibility`, not removal) and dynamic branch handles never call `useUpdateNodeInternals`.
-2. **P1.1** one nav story — Form Layouts is in **no sidebar at all**; `SchemaBuilder` accepts
-   `navigationTargets`/`onNavigate` and crm7 passes neither.
+2. **P1.1** one nav story — ~~`SchemaBuilder` accepts `navigationTargets`/`onNavigate` and crm7
+   passes neither~~ **DONE, crm7#2339**: five targets, each asserted in the test against a route
+   `App.tsx` actually registers, so it cannot silently return to zero. **Still open in this item:**
+   Form Layouts is in **no sidebar at all**.
 3. **P1.2** inline field create — `FieldCreateDialog` is already a public export of
    `@bsuite/schema-builder`; the layout builder sends you to another page instead.
 4. **P1.4** custom pages — the renderer dumps layout as `JSON.stringify` in a `<pre>`.
@@ -398,3 +407,65 @@ crm7#2337**.
    workforce solutions including apprenticeships, traineeships, recruitment"*, and the IA is
    `apprenticeships.tsx` / `recruitment.tsx` / `traineeships.tsx`. Structural, not copy.
 
+Everything in:
+/home/braden/Downloads/bsuite notes.docx
+completed/addressed before you finish this plan.
+
+
+## 9. THE OPERATOR'S 2026-09-02 DIRECTIVE — visual editing, and the readability class
+
+Two reports arrived while §8 was being worked, and both are **larger than the rows in §8**.
+
+### 9.1 "everything on the page is eduitable"
+
+> "I'm sick of seeing buttons that go the full width of cards and not being able to meidify it
+> visually. same with almost every aspect of the on page customization features. half baked. shows
+> the intent but stopped short of being good let alone world class."
+
+This is not a page. It is the shape of every customization surface in the estate: built to the
+point where the intent is legible, then stopped before the control exists. A surface that
+advertises itself as customizable and then fixes a button at 100% width is **worse** than one that
+never offered.
+
+**Status: measurement and design in flight** — three read-only lanes (surface inventory against the
+eight visual properties; full-width button census and the mechanism behind it; what visual-editing
+primitives already exist), then an adversarial design pass. Hard constraints carried into that
+design, from standing rulings:
+
+- **Reuse, do not rebuild.** `DraggableCardPage`/`CanvasCard`, the React Flow canvases, the form
+  layout builder and the custom-pages widget palette already exist. A second mechanism beside any
+  of them is the exact failure this project keeps repeating.
+- **The round trip is the test.** Changing how something looks must not mean leaving the page for a
+  settings form and navigating back to look at the result.
+- **Scope must be visible** — this element / this page / everywhere — or someone makes a
+  tenant-wide change by accident.
+- **Decide, do not enumerate.** Do not expose all eight of width / height / alignment / spacing /
+  size / colour / order / visibility because they were on a list. Say which one lost, and why.
+
+### 9.2 The readability class — closed, crm7#2339
+
+> "just make sure the tax is readable not like Name column in the reports."
+
+Root cause measured, not guessed: `GridCell` renders content inside a `truncate`
+(`white-space: nowrap`) wrapper in a box of exactly `rowHeight` — default **32px**, `overflow-hidden`.
+**A cell can only ever show one line.** Three cells on `/reports` stacked two-to-four lines into it
+and were clipped mid-glyph, which reads on screen as text overlapping text.
+
+Fixed by making every cell single-line and giving each hidden field **its own sortable column** —
+nothing was dropped. Estate-wide stacked-`renderCell` count: **3 -> 0** across the 21 files that
+use `renderCell`.
+
+The rule now lives in memory, because nothing in the type system can express it: a caller writing
+`renderCell` gets no signal that block content is illegal, and typecheck, lint and tests are all
+structurally blind to it.
+
+### 9.3 The interop gap, stated plainly
+
+The operator asked whether the schema builder ties into the workflow builder. Measured: **it does
+not.** `packages/workflow-canvas/src/schemas.ts` gives **0 of 5** node kinds any entity or field
+reference. `actionKey` is a free-text string with **zero readers** anywhere in crm7 — it is
+documented as a marker for a Phase 3 execution bridge that does not exist.
+
+So a workflow step cannot act on data defined in the schema builder. Item P1.1 made the two pages
+reachable from each other; it did not make them *work together*, and saying otherwise would be the
+same false-complete this plan exists to prevent. This is the next substantive piece of work.
