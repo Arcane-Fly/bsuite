@@ -373,6 +373,13 @@ crm7#2337**.
 | full screen, with the `fullscreenchange` listener | crm7#2337 |
 | step labels show `node_label`, not the slug | crm7#2336 (merged) |
 | a link from `/workflows` to the entity builder | crm7#2337 |
+| canvas moved to card **1 of 7** at 72vh, cap removed (was card 7, capped 560px) | crm7#2339 |
+| both workflow lists became `@bsuite/data-grid`; `<ul>`/`<ol>` count 2 -> 0 | crm7#2339 |
+| **a step row now centres and selects that step on the canvas** — it reached nothing before | crm7#2339 |
+| **P1.1** `navigationTargets`/`onNavigate` wired; 5 targets, each asserted against a real route | crm7#2339 |
+| schema builder says in English what changes elsewhere when you add a field | crm7#2339 |
+| `/reports` cells made single-line; stacked-`renderCell` class 3 -> 0 | crm7#2339 |
+| first tests for either workflow page — presence and wiring, not appearance | crm7#2339 |
 
 ### Outstanding, ranked by the audit
 
@@ -381,8 +388,10 @@ crm7#2337**.
    hit-testing; the widest decision has four labelled branch ports). Needs a package publish.
    Two real API defects ride along: handles **unmount** below zoom 0.55 (React Flow requires
    `visibility`, not removal) and dynamic branch handles never call `useUpdateNodeInternals`.
-2. **P1.1** one nav story — Form Layouts is in **no sidebar at all**; `SchemaBuilder` accepts
-   `navigationTargets`/`onNavigate` and crm7 passes neither.
+2. **P1.1** one nav story — ~~`SchemaBuilder` accepts `navigationTargets`/`onNavigate` and crm7
+   passes neither~~ **DONE, crm7#2339**: five targets, each asserted in the test against a route
+   `App.tsx` actually registers, so it cannot silently return to zero. **Still open in this item:**
+   Form Layouts is in **no sidebar at all**.
 3. **P1.2** inline field create — `FieldCreateDialog` is already a public export of
    `@bsuite/schema-builder`; the layout builder sends you to another page instead.
 4. **P1.4** custom pages — the renderer dumps layout as `JSON.stringify` in a `<pre>`.
@@ -398,3 +407,146 @@ crm7#2337**.
    workforce solutions including apprenticeships, traineeships, recruitment"*, and the IA is
    `apprenticeships.tsx` / `recruitment.tsx` / `traineeships.tsx`. Structural, not copy.
 
+Everything in:
+/home/braden/Downloads/bsuite notes.docx
+completed/addressed before you finish this plan.
+
+
+## 9. THE OPERATOR'S 2026-09-02 DIRECTIVE — visual editing, and the readability class
+
+Two reports arrived while §8 was being worked, and both are **larger than the rows in §8**.
+
+### 9.1 "everything on the page is eduitable"
+
+> "I'm sick of seeing buttons that go the full width of cards and not being able to meidify it
+> visually. same with almost every aspect of the on page customization features. half baked. shows
+> the intent but stopped short of being good let alone world class."
+
+This is not a page. It is the shape of every customization surface in the estate: built to the
+point where the intent is legible, then stopped before the control exists. A surface that
+advertises itself as customizable and then fixes a button at 100% width is **worse** than one that
+never offered.
+
+**Status: MEASURED AND DESIGNED, 2026-09-02.** Three read-only lanes (surface inventory against the
+eight visual properties; full-width button census and the mechanism behind it; what visual-editing
+primitives already exist), then an adversarial design pass. Hard constraints carried into that
+design, from standing rulings:
+
+- **Reuse, do not rebuild.** `DraggableCardPage`/`CanvasCard`, the React Flow canvases, the form
+  layout builder and the custom-pages widget palette already exist. A second mechanism beside any
+  of them is the exact failure this project keeps repeating.
+- **The round trip is the test.** Changing how something looks must not mean leaving the page for a
+  settings form and navigating back to look at the result.
+- **Scope must be visible** — this element / this page / everywhere — or someone makes a
+  tenant-wide change by accident.
+- **Decide, do not enumerate.** Do not expose all eight of width / height / alignment / spacing /
+  size / colour / order / visibility because they were on a list. Say which one lost, and why.
+
+### 9.2 The readability class — closed, crm7#2339
+
+> "just make sure the tax is readable not like Name column in the reports."
+
+Root cause measured, not guessed: `GridCell` renders content inside a `truncate`
+(`white-space: nowrap`) wrapper in a box of exactly `rowHeight` — default **32px**, `overflow-hidden`.
+**A cell can only ever show one line.** Three cells on `/reports` stacked two-to-four lines into it
+and were clipped mid-glyph, which reads on screen as text overlapping text.
+
+Fixed by making every cell single-line and giving each hidden field **its own sortable column** —
+nothing was dropped. Estate-wide stacked-`renderCell` count: **3 -> 0** across the 21 files that
+use `renderCell`.
+
+The rule now lives in memory, because nothing in the type system can express it: a caller writing
+`renderCell` gets no signal that block content is illegal, and typecheck, lint and tests are all
+structurally blind to it.
+
+### 9.3 The interop gap, stated plainly
+
+The operator asked whether the schema builder ties into the workflow builder. Measured: **it does
+not.** `packages/workflow-canvas/src/schemas.ts` gives **0 of 5** node kinds any entity or field
+reference. `actionKey` is a free-text string with **zero readers** anywhere in crm7 — it is
+documented as a marker for a Phase 3 execution bridge that does not exist.
+
+So a workflow step cannot act on data defined in the schema builder. Item P1.1 made the two pages
+reachable from each other; it did not make them *work together*, and saying otherwise would be the
+same false-complete this plan exists to prevent. This is the next substantive piece of work.
+
+#### The measurement — 18 surfaces, and what the operator can actually change
+
+| property | surfaces where a person can set it |
+|---|---|
+| alignment | **0 of 18** |
+| per-element size or width (the full-width buttons) | **0 of 18** |
+| everything else | only ever at whole-**card** granularity |
+
+- **270 full-width buttons**; **236 of them sit on a page the operator can already rearrange** — so
+  the mouse obeys him on the card's outside edge and ignores him on its inside.
+- **Nothing in the estate has ever stored a per-element property** except `colSpan` on a form field.
+- **4 of the 18 surfaces write settings that nothing in the application ever renders.**
+
+#### The three that are worse than half-built — they are inert or actively wrong
+
+1. **Form Layout Builder** — a real drag-and-drop builder with a property panel whose output has
+   **zero render sites**. `resolveFormLayout` (`formLayoutService.ts:39`) is reached only by a store
+   action no component destructures. Every layout an admin builds, versions and deploys is inert.
+2. **Custom Pages** — content can never be authored through the interface at all. `savePageRevision`
+   (`customPageService.ts:124`) has **zero callers**; `custom_page_revisions` has **0 production
+   rows**. And `CustomPageRenderer.tsx:132` prints `JSON.stringify(page.layout, null, 2)` inside a
+   `<pre>` at **four live mount sites** — the Dashboard and three Contacts screens. Real users are
+   being shown raw JSON today.
+3. **Custom Fields and Picklists** — both render a `GripVertical` drag handle with a `cursor-grab`,
+   and **neither file contains any drag-and-drop code**. Order is written once at creation and can
+   never be changed. Picklists' one colour control is a free-text box in which you type an `oklch()`
+   string by hand, offered when adding an option and never when editing one.
+
+Also: **Branding is not a crm7 surface at all** — `branding.tsx:22` re-exports a component that
+does `window.location.replace` to another application on mount, with no return path. It is still
+the first Settings item in the sidebar.
+
+#### The diagnosis, in one line
+
+> The estate has **a working editor with no audience** — 750 saved layouts in production, every one
+> keyed to a single `user_id` with no tenant column, so each is visible to exactly one human being —
+> **and a publishable store with no renderer.**
+
+The fix is therefore **not another builder**. It is to give elements a name, extend the editor that
+already works down one level to reach them, and give the personal store a second rung so an admin's
+afternoon of work reaches the team.
+
+#### The plan, ordered, each step shipping on its own
+
+| # | step | effort | what he can do afterwards that he cannot do now |
+|---|---|---|---|
+| 1 | Give every element a name — a card-key/page-key context in `GridItem`, an `elementRef()` helper, `Button` reading it. **No stored styles, no visual change at rest.** | M | In edit mode, hovering shows *"Add contact button, in the Contacts card"*. The app can finally name the thing he points at. |
+| 2 | **Width, personal scope only.** `elementStyle.ts` beside `cardStyle.ts`; right-edge drag handle **plus arrow-key stepping plus a labelled numeric input**. | L | Drag the full-width *Add contact* button to a third, reload, it is still a third — or do it with the keyboard alone. |
+| 3 | The rest in the same popover: alignment, space above/below, the three named sizes and five token-bound roles already in `button.tsx`. **Colour and free height deliberately absent.** | M | A narrow, centred, quiet *Export* button under a table, without leaving the page and without an engineer. |
+| 4 | Card appearance becomes **per-card** instead of per-page: the stored value at `PageGridLayout.tsx:787` becomes a map keyed by `cardKey`, each card defaulting to today's page-wide value. | M | One card heavy-bordered, the card beside it light — what the existing seven controls have appeared to offer and never delivered. |
+| 5 | **The organisation rung.** Widen `ui_config_overrides`; resolver reads tenant override, then personal, then default; an admin-only *"Apply to everyone in this organisation"*; a badge naming which rung a value came from. | L | An admin narrows a button once and a colleague on another machine sees it narrow — **the first time any layout change in this product has affected anyone but its author.** |
+| 6 | **Stop the surfaces that lie.** Replace the JSON-dumping renderer at its four live sites; delete the prose sending people to a builder that writes a different table; wire or remove the three decorative drag handles; add `scripts/check-store-has-reader.mjs`. | M | No screen shows raw JSON, no handle moves nothing, and **CI fails the next time anyone ships a settings table with no reader.** |
+
+#### Rejected, and why — so nobody re-proposes them
+
+- **Another builder under Settings.** The estate has done this twice and both are measurably inert.
+  Building a third beside two dead ones is the operator's standing complaint, executed again.
+- **A `width` prop on each of the 270 call sites.** That is a developer editing code, not a person
+  editing a page. The pattern was already invented and already abandoned (`ActionButton.tsx:31`).
+- **Extend the free-text `custom_css` box on `tenant_branding`.** Real and sanitised, but it is
+  editing code by another name, and its scope is the whole tenant — the opposite of what is needed.
+- **Store overrides in `custom_pages.layout` or `form_layouts`.** Both have a publish path, and
+  **building on them inherits their deadness**: 0 callers, 0 revisions, 0 render sites.
+- **A fourth drag library.** `wysiwygContract.ts:24-53` already assigns each library its surface:
+  React Flow owns node graphs, react-grid-layout owns the card canvas, dnd-kit owns sortable lists.
+
+#### Risks carried forward — the first is the one that matters
+
+1. **Step 5 is the part that will get built, look finished, and be wired to nothing.** It is the
+   exact shape of every failure measured above. It does not ship without a reader and a test.
+2. **Alignment has zero precedent anywhere** (0 matches across crm7 and all three builder packages)
+   and no renderer to hang on — most likely to ship as a control that sets a value nobody reads.
+3. **DO NOT bump `LAYOUT_EPOCH`** (currently 101). Its own docblock records that 100 -> 101
+   deliberately reset every saved layout. A bump here **wipes all 750 production layouts.**
+4. **autoHeight re-measure.** Any node or margin added inside a card changes the `ResizeObserver`
+   measurement and can re-trigger the loop.
+5. **Render hot path.** `Button` renders 2,097 times in crm7 — once per row per action column on the
+   34 `EnhancedDataTable` pages. A context read plus a string build on every one is not free.
+6. **Label-derived refs orphan when a label changes.** The panel must list orphans explicitly
+   ("no longer on this page — remove"), never silently drop them.
