@@ -77,3 +77,18 @@ export {
   describeCardStyle,
 } from './cardStyle.js';
 export type { CardStyle, BorderTone, BorderStyle, Elevation } from './cardStyle.js';
+
+/*
+ * ELEMENT IDENTITY. Exported so a consumer can address one control inside a
+ * card — the prerequisite for storing any per-element property, and the reason
+ * none has ever been storable: a card has a key, the button inside it had
+ * nothing. No styling here, only the name.
+ */
+export {
+  ElementScopeProvider,
+  useElementScope,
+  elementRef,
+  describeElement,
+  parseElementRef,
+} from './elementScope.js';
+export type { ElementScope } from './elementScope.js';
