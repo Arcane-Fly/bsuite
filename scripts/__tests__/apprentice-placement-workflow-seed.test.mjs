@@ -229,6 +229,47 @@ const ALLOWED_TYPES = new Set(['step', 'decision', 'terminator', 'handoff', 'swi
 const badTypes = graph.nodes.filter((n) => !ALLOWED_TYPES.has(n.type))
 check(`every node.type is in the canvas contract vocabulary (${badTypes.length} bad)`, badTypes.length === 0)
 
+// ---------- terminator role, and why it is not cosmetic ----------
+//
+// `TerminatorNodeDataSchema` declares `role: z.enum(['start','end'])` and it is
+// REQUIRED. The seed omitted it, so the graph shipped to production was invalid
+// against the package's own schema and nothing anywhere said so.
+//
+// The cost was not a warning. `terminatorRole()` reads
+// `data.role === 'start' ? 'start' : 'end'`, so a roleless terminator silently
+// becomes an END; an end terminator declares only FLOW_IN; the Start node
+// therefore had no source handle and the edge LEAVING it could not attach.
+// Measured on production 2026-09-02: 42 of 42 nodes rendered, 40 of 41 edges,
+// and the single missing one was `e-start-accept-employment-offer` — the entry
+// into the entire process. No error appeared in the console, the network, or the
+// page.
+//
+// Asserting the ROLE alone would not have caught it, because the defect only
+// becomes visible where role meets handles. So the edge is asserted too.
+
+const terminators = graph.nodes.filter((n) => n.type === 'terminator')
+check(`2 terminators (found ${terminators.length})`, terminators.length === 2)
+
+const roleless = terminators.filter((n) => n.data?.role !== 'start' && n.data?.role !== 'end')
+check(
+  `every terminator carries role start|end (${roleless.length} without) — a missing role ` +
+    `defaults to 'end', which strips the Start node of its only source handle`,
+  roleless.length === 0,
+)
+
+const startTerm = terminators.find((n) => n.data?.role === 'start')
+check('exactly one terminator has role=start', Boolean(startTerm) &&
+  terminators.filter((n) => n.data?.role === 'start').length === 1)
+
+// The edge that vanished. Named explicitly: a count would still pass if THIS one
+// were the casualty and some other edge appeared in its place.
+const startEdges = graph.edges.filter((e) => e.source === startTerm?.id)
+check(
+  `the start terminator has an outgoing edge (${startEdges.length}) — this is the one ` +
+    `that silently disappeared in production while every count still looked right`,
+  startEdges.length >= 1,
+)
+
 // ---------- summary ----------
 
 if (failed) {

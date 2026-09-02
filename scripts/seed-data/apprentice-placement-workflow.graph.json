@@ -195,7 +195,8 @@
       },
       "data": {
         "label": "End",
-        "sourceId": "xzgq4au_wMBz"
+        "sourceId": "xzgq4au_wMBz",
+        "role": "end"
       }
     },
     {
@@ -627,7 +628,8 @@
       },
       "data": {
         "label": "Start",
-        "sourceId": "xzgqtG.ZX2~."
+        "sourceId": "xzgqtG.ZX2~.",
+        "role": "start"
       }
     },
     {
