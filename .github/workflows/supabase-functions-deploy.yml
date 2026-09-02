@@ -243,9 +243,19 @@ jobs:
           DIRS=$("${GITHUB_WORKSPACE}/scripts/verify-submodule-scopes.sh" "${GITHUB_WORKSPACE}")
           echo "dirs=${DIRS}" >> "$GITHUB_OUTPUT"
 
-      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
+      # v3 installs the CLI from the npm package rather than GitHub releases, and
+      # THAT is the fix rather than the version bump. `version: latest` on the old
+      # action resolved through the GitHub releases API UNAUTHENTICATED; on
+      # 2026-09-02 that rate-limited and turned crm7's e2e red for a reason absent
+      # from the diff. npm has no such limit, and the pin means nothing is
+      # resolved at run time at all.
+      #
+      # The comment further down about `supabase link` is a DIFFERENT incident —
+      # a strict RFC3339 check on an api-keys payload this job never reads — and
+      # is unrelated to where the binary comes from.
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
         with:
-          version: latest
+          version: 2.116.0
 
       - name: Resolve working directory
         id: resolve-dir
@@ -540,9 +550,9 @@ jobs:
     env:
       SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
     steps:
-      - uses: supabase/setup-cli@ab058987d8d6c725971f6cf9d0b5c98467e30bd1 # v1.7.1
+      - uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
         with:
-          version: latest
+          version: 2.116.0
 
       - name: Link project and list functions
         run: |
