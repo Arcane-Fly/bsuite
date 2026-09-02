@@ -172,3 +172,47 @@ starting another. Activating before the page ships would break the thing it enab
   `Lockfile pin vs repo-declared version` failure (bsuite/development pins crm7 `3630295`,
   whose lockfile resolves 0.2.2's predecessor 0.2.1)
 - then FutureBuild activation, then `/ops-ship-close-out`
+
+## 6. PHASE 4 — verified complete, 2026-09-02
+
+Measured rather than assumed, because the plan listed three items and two were already done
+by work that landed earlier in this run.
+
+| plan item | state | evidence |
+|---|---|---|
+| Fill `jodie-skills.ts` `toolIds: []` with workflow authoring tools | **DONE** | the `workflow-automation` skill carries `list_workflows`, `get_workflow`, `validate_workflow_outline`, `create_workflow`, `add_workflow_version` |
+| Workflow-shaped Zod schema; replace the `generate-workflow` 501 | **DONE** | `feature-builder-ai/index.ts` — *"generate-workflow (fully implemented — emits a workflow-canvas graph)"*. The remaining 501 is `generate-page`, a different action |
+| Fix the AI billing hole | **DONE** | `crm7/api/ai/chat.ts` imports `resolveAiEntitlement` and gates on `subscriptions.ai_addon` with an explicit **fail-closed** read: an unreachable or failed entitlement lookup is treated as *not entitled*, with a 5s abort |
+
+**A correction worth keeping:** `createWorkflowTools` first looked like an inert surface —
+grepping `api/ai/chat.ts` and `authoringDispatch.ts` for it found nothing. It is wired, via the
+barrel at `src/lib/ai/tools/index.ts:108`. Checking the two call sites a tool "should" appear in
+is not the same as checking whether it is reachable.
+
+**Still empty, and NOT workflow work:** `toolIds: []` on `mentoring` and `general-assistant`.
+Pre-existing, unrelated to this plan, and named here so the next reader does not re-derive it.
+
+## 7. Visual gate — agent-performed, 2026-09-02
+
+Account `braden@braden.com.au`, host `d.crm.crm7.app`, `build-matrix-runner.mjs` + `visual-probe.js`.
+
+- **`/workflows/runs`** — 8/8 cells PASS (light and dark × 1440/1024/768/390), 0 unknown,
+  0 console errors, 0 HTTP 4xx/5xx, no horizontal overflow.
+- **`/workflows`** — `canvasColumns` came back INCOMPLETE. The interaction test showed the
+  control reachable but producing one layout, which reads as INERT and is not: every widget
+  there is full-width, so no column count can move it. Positive control on `/dashboard`, same
+  session and viewport, gave **three distinct layouts** — the control acts. Not applicable, not
+  inert.
+- **One FAIL, fixed:** steps rendered `node_id` (`accept-employment-offer`) where `node_label`
+  held *"Accept employment offer"* on the same row. The decision input's `aria-label` carried
+  the same slug. Fixed in crm7#2336.
+
+**Two method corrections, recorded because both would have produced a false PASS:**
+
+1. Driving the theme *toggle* left all four "dark" cells reporting `measuredTheme: light`.
+   Brand tokens flip on `prefers-color-scheme`, not a class — the theme is now emulated on the
+   browser context and the page loaded fresh.
+2. The empty state alone would have passed every check. A run was created on the **demo**
+   tenant so the populated state could be inspected — which is the only reason the slug defect
+   was found — then removed, verified back to 0 runs / 0 steps.
+
