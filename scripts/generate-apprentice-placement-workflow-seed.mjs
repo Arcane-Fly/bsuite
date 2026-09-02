@@ -363,7 +363,30 @@ export function layoutGraph({ lanes, nodes, edgesRaw, rationaleNotes }) {
       extent: 'parent',
       position: { x: LANE_PADDING_X + col * COLUMN_SPACING, y: LANE_PADDING_Y },
       style: { width: NODE_WIDTH, height: NODE_HEIGHT },
-      data: { label: n.label, sourceId: n.sourceId },
+      /*
+       * A TERMINATOR MUST CARRY ITS ROLE. `TerminatorNodeDataSchema` declares
+       * `role: z.enum(['start','end'])` and it is REQUIRED — the seed omitted it,
+       * so the graph in production is invalid against the package's own schema
+       * and nothing ever said so.
+       *
+       * What that cost: `terminatorRole()` reads `data.role === 'start' ? 'start'
+       * : 'end'`, so a roleless terminator silently becomes an END, and an end
+       * terminator declares only FLOW_IN. The Start node therefore had NO source
+       * handle, and the edge leaving it — `e-start-accept-employment-offer`, the
+       * entry into the whole process — could not attach. Measured on production
+       * 2026-09-02: 42 of 42 nodes rendered and 40 of 41 edges; the one missing
+       * was that one, and no error appeared anywhere.
+       *
+       * Inferred from the label because that is what the Lucidchart source gives
+       * us, and the same label already drives `startNode` lookup above.
+       */
+      data: {
+        label: n.label,
+        sourceId: n.sourceId,
+        ...(n.type === 'terminator'
+          ? { role: /^start$/i.test(n.label.trim()) ? 'start' : 'end' }
+          : {}),
+      },
     })
   }
 
