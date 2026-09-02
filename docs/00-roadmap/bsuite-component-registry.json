@@ -2,9 +2,9 @@
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
   "sharedComponents": 188,
-  "unusedSharedComponents": 166,
+  "unusedSharedComponents": 165,
   "localComponentFiles": {
-    "crm7": 438,
+    "crm7": 434,
     "business-suite-unified": 117,
     "conduit": 98,
     "braden": 207,
@@ -1318,9 +1318,11 @@
     {
       "name": "WorkflowCanvas",
       "package": "@bsuite/workflow-canvas",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
+      "consumers": {
+        "crm7": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
     },
     {
       "name": "WorkflowEdgeSchema",
