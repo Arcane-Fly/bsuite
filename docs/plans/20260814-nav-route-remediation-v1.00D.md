@@ -1,3 +1,14 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite-platform
+evidence:
+  - docs/nav/findings.md
+  - docs/nav/build-inventory.py
+  - packages/nav-core/src/apps.ts
+  - business-suite-unified/src/components/RouteInspectorAddToNavDialog.tsx
+---
+
 # Navigation & Route Remediation Plan
 
 > ## THE WORK SHIPPED. THE VERIFICATION DID NOT. AND THE FEATURE HAS NEVER BEEN USED.
