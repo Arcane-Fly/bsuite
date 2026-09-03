@@ -49,6 +49,21 @@
 #      excluded — that backlog is owned by the history-reconciliation lane
 #      (see supabase-migrate.yml header), not this audit.
 #
+#   C. Cross-scope version collision: the same version exists as different
+#      files in more than one scope. Compared via scripts/lib/migration-
+#      collision-compare.mjs (whole-line comments and blank lines stripped,
+#      the `-- @sync-boundary-below` convention honoured) and checked against
+#      scripts/migration-collision-allowlist.txt — see
+#      scripts/audit-prod-migration-history.mjs's own header for the full
+#      rule (bsuite J7, 2026-09-03: this class used to compare raw bytes and
+#      never read the allowlist, false-failing four already-reviewed,
+#      comment-only pairs).
+#
+#      CLASS C NEEDS NO DATABASE — it only reads local files — so it ALSO
+#      runs on every pull_request via the `pr-file-only-class-c` job below,
+#      independent of the scheduled/dispatch job that needs live DB access
+#      for classes A and B.
+#
 # MIGRATION_FLOOR below must be kept in sync with supabase-migrate.yml's
 # MIGRATION_FLOOR env var by hand — GitHub Actions has no cross-workflow env
 # import. Last synced 2026-07-28 against supabase-migrate.yml value
@@ -73,6 +88,35 @@
 name: Production Migration History Audit
 
 on:
+  # Class C (cross-scope version collision) reads only local files — no
+  # database, no secrets — so it is safe to run on every PR that could
+  # introduce or change a collision, on the merge RESULT rather than waiting
+  # up to 6 hours for the next schedule tick. Classes A and B assert against
+  # the live ledger/catalogue and stay off `pull_request` entirely; see the
+  # `if:` guards on the two jobs below.
+  pull_request:
+    branches: [main, development]
+    paths:
+      - '**/supabase/migrations/**.sql'
+      - 'scripts/audit-prod-migration-history.mjs'
+      - 'scripts/lib/migration-collision-compare.mjs'
+      - 'scripts/migration-collision-allowlist.txt'
+      - 'scripts/migration-harmless-duplicates-baseline.json'
+      - '.github/workflows/prod-migration-history-audit.yml'
+      # BARE GITLINK PATHS — same shape and same reason as migration-version-
+      # collision-lint.yml's own comment: the six SUBMODULES reach the parent
+      # only as a pointer bump (a gitlink, not files), so the glob above can
+      # only ever match root and packages/schema-builder. Without these, a PR
+      # that only advances a submodule gitlink — carrying a migration this
+      # scan needs to see — would never trigger it. Keep all such lists in
+      # the estate in step (migration-version-collision-lint.yml,
+      # supabase-migrate.yml, inline-eslint-rule-parity.yml).
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
   workflow_dispatch: {}
   schedule:
     # Every 6 hours. The prior crm7 incarnation ran once daily and never
@@ -111,6 +155,10 @@ env:
 jobs:
   production-audit:
     name: Production migration history drift
+    # Classes A and B need the live ledger/catalogue and real secrets — never
+    # run them from a pull_request event. `pull_request` only exists on this
+    # workflow for the file-only Class C job below.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Guard — require project ref
@@ -251,3 +299,41 @@ jobs:
           MIGRATION_FLOOR: ${{ env.MIGRATION_FLOOR }}
           MIGRATION_SCOPE_DIRS: ${{ env.MIGRATION_SCOPE_DIRS }}
         run: node scripts/audit-prod-migration-history.mjs
+
+  pr-file-only-class-c:
+    name: Class C (version collision) — file-only, no DB
+    # The mirror image of production-audit's guard: this job exists ONLY for
+    # the pull_request trigger. On schedule/dispatch, production-audit above
+    # already covers Class C as part of its full A+B+C run — running it again
+    # here would be duplicate work for no new coverage.
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (with submodules — every scope must be scanned)
+        uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24.14.0'
+          package-manager-cache: false
+
+      # Prove the comparator can still fail before trusting a pass — the same
+      # discipline that caught this job's own reason for existing: a checker
+      # that has only ever been seen failing (or, here, never actually run at
+      # all) is not a checker.
+      - name: Self-test the comparison logic
+        run: node scripts/audit-prod-migration-history.mjs --self-test
+
+      # No database, no secrets: Class C compares LOCAL files against each
+      # other and against scripts/migration-collision-allowlist.txt only.
+      - name: Class C — cross-scope version collision (file-only)
+        env:
+          MIGRATION_FLOOR: ${{ env.MIGRATION_FLOOR }}
+          MIGRATION_SCOPE_DIRS: ${{ env.MIGRATION_SCOPE_DIRS }}
+        run: node scripts/audit-prod-migration-history.mjs --file-only

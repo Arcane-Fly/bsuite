@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 189,
-  "unusedSharedComponents": 163,
+  "sharedComponents": 190,
+  "unusedSharedComponents": 164,
   "localComponentFiles": {
     "crm7": 433,
     "business-suite-unified": 117,
@@ -485,6 +485,13 @@
     },
     {
       "name": "CardStyleThickBorder",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "CustomPageView",
       "package": "@bsuite/page-builder",
       "consumers": {},
       "consumerFiles": 0,
