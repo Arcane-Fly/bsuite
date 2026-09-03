@@ -85,6 +85,7 @@
     }
   },
   "_schedule": {
+    "unit": "hand-rolled <table>/<Table> RENDER SITES (sum of apps.*.handRolled), not files; per_week is render sites per week",
     "origin_count": 192,
     "origin_date": "2026-09-03",
     "current_count": 192,

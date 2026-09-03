@@ -31,12 +31,20 @@
  *   node scripts/estate-align.mjs            # report
  *   node scripts/estate-align.mjs --strict   # non-zero exit on any violation (CI)
  *   node scripts/estate-align.mjs --json
+ *
+ * ESTATE_ALIGN_ROOT — the estate root to reconcile (default: this repo). Exists so --self-test
+ * can spawn this script against a temp fixture estate (index + register + verdicts + baselines)
+ * and assert exit codes through the real entry point, without touching the committed files.
+ * Never set it in CI.
  */
-import { existsSync, readFileSync, readdirSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const ROOT = process.env.ESTATE_ALIGN_ROOT ? resolve(process.env.ESTATE_ALIGN_ROOT) : REPO_ROOT
 const INDEX_PATH = join(ROOT, 'docs/00-roadmap/bsuite-feature-index.json')
 const GAPS_PATH = join(ROOT, 'docs/00-roadmap/journey-gap-register.json')
 const VERDICTS_PATH = join(ROOT, 'docs/00-roadmap/operator-notes-verdicts.json')
@@ -562,9 +570,9 @@ if (process.argv.includes('--self-test')) {
   t('register: ignores non-rows', parseRegister('| ID | v | a | s | app | c |\n|---|---|---|---|---|---|').length, 0)
   t('register: dedupes a repeated id', parseRegister('| D-1 | a | b | c | d | e |\n| D-1 | a | b | c | d | e |').length, 1)
   // The module-relative tolerance, asserted against a path that really exists in this repo.
-  t('anchor: repo-relative resolves', anchorResolves(ROOT, 'scripts/estate-align.mjs', 'scripts'), true)
-  t('anchor: module-relative resolves via the module field', anchorResolves(ROOT, 'src', 'crm7'), true)
-  t('anchor: a genuine miss still fails', anchorResolves(ROOT, 'src/definitely/not/here', 'crm7'), false)
+  t('anchor: repo-relative resolves', anchorResolves(REPO_ROOT, 'scripts/estate-align.mjs', 'scripts'), true)
+  t('anchor: module-relative resolves via the module field', anchorResolves(REPO_ROOT, 'src', 'crm7'), true)
+  t('anchor: a genuine miss still fails', anchorResolves(REPO_ROOT, 'src/definitely/not/here', 'crm7'), false)
   // ---- E. sibling-class closure, both directions ----
   const cls = (id, sibling_class, state) => ({ id, sibling_class, dod_status: state })
   t('sibling: an approved row with an unevaluated sibling is a violation',
@@ -645,6 +653,74 @@ if (process.argv.includes('--self-test')) {
   t('verdict: registered FALLING below the bank fails (the register may have gone blind)',
     verdictViolations([{ id: 'D-1' }], [{ id: 'D-1' }], { unverdicted: 0, registered: 2 }, new Date('2026-08-26T00:00:00Z'))
       .some((v) => v.check === 'F-verdict' && /blind/.test(v.detail)), true)
+
+  /*
+   * ENTRY-POINT cases — review 2026-09-03 (bsuite#2970), rule 6: the helper cases
+   * above call verdictViolations() with literals; none of them proves that
+   * `--strict` EXITS 1 when a register row has no verdict. These spawn this script
+   * against a temp fixture estate via ESTATE_ALIGN_ROOT (index + register +
+   * verdicts + both baselines) and assert the exit code. The committed files are
+   * never read or written; the fixture is removed afterwards.
+   */
+  const fixture = mkdtempSync(join(tmpdir(), 'c2-estate-'))
+  try {
+    const put = (rel, obj) => { mkdirSync(dirname(join(fixture, rel)), { recursive: true }); writeFileSync(join(fixture, rel), typeof obj === 'string' ? obj : `${JSON.stringify(obj, null, 1)}\n`) }
+    // D-63 sits in the 2026-08-25 range (age > 7 days today and forever after);
+    // D-160 is the 2026-09-03 single-row addendum.
+    const index = [
+      { id: 'crm7.a', module: 'crm7', capability_area: 'A', route: '/a', code_anchors: ['docs'], dod_status: 'not-evaluated' },
+      { id: 'crm7.b', module: 'crm7', capability_area: 'B', route: '/b', code_anchors: ['docs'], dod_status: { state: 'approved', evidence: 'e' } },
+    ]
+    const register = '| D-63 | "one" | ask one | /a | CRM7 | ux |\n| D-160 | "two" | ask two | /b | CRM7 | ux |\n'
+    const reset = () => {
+      put('docs/00-roadmap/bsuite-feature-index.json', index)
+      put('docs/20260825-operator-notes-register-fixture-v1.00W.md', register)
+      put('docs/00-roadmap/journey-gap-register.json', { journey_gaps: [] })
+      put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-63', verdict: 'DONE' }, { id: 'D-160', verdict: 'DONE' }])
+      put('docs/.dod-unevaluated-baseline.json', { not_evaluated: 1, total_rows: 2, banked_date: '2026-09-03' })
+      put('scripts/operator-verdict-baseline.json', { unverdicted: 0, registered: 2, banked: '2026-09-03' })
+    }
+    const run = (...args) => {
+      const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), ...args], { encoding: 'utf8', env: { ...process.env, ESTATE_ALIGN_ROOT: fixture } })
+      return { code: r.status, out: `${r.stdout}${r.stderr}` }
+    }
+    const entry = (n, r, code, re) => cases.push({ n, ok: r.code === code && re.test(r.out), a: `exit ${r.code}\n${r.out}`, e: `exit ${code} matching ${re}` })
+
+    reset()
+    entry('ENTRY: clean fixture estate, --strict → exit 0 "no invariant violations"', run('--strict'), 0, /no invariant violations/)
+
+    reset()
+    put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-63', verdict: 'DONE' }]) // D-160 loses its verdict: a RISE 0 -> 1
+    entry('ENTRY: a register row with no verdict (D-160) → F-verdict "ROSE 0 -> 1", exit 1', run('--strict'), 1, /F-verdict[\s\S]*unverdicted ROSE 0 -> 1/)
+
+    reset()
+    put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-160', verdict: 'DONE' }]) // D-63 (registered 2026-08-25) unverdicted
+    put('scripts/operator-verdict-baseline.json', { unverdicted: 1, registered: 2, banked: '2026-09-03' }) // banked, so ONLY the age limb fires
+    entry('ENTRY: D-63 registered 2026-08-25 with no verdict, count banked → F-verdict-age by id, exit 1', run('--strict'), 1, /F-verdict-age[\s\S]*D-63 registered 2026-08-25 \(\d+ days ago\)/)
+
+    reset()
+    put('docs/00-roadmap/operator-notes-verdicts.json', []) // both unverdicted, bank says 0
+    put('scripts/operator-verdict-baseline.json', { unverdicted: 2, registered: 2, banked: '2026-09-03' })
+    put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-63', verdict: 'DONE' }, { id: 'D-160', verdict: 'DONE' }]) // now both verdicted: unbanked FALL 2 -> 0
+    entry('ENTRY: unverdicted FELL without a re-bank → exit 1 with the --update-baseline remedy', run('--strict'), 1, /unverdicted FELL 2 -> 0[\s\S]*--update-baseline/)
+
+    reset()
+    put('docs/.dod-unevaluated-baseline.json', { not_evaluated: 1, total_rows: 3, banked_date: '2026-09-03' })
+    entry('ENTRY: dod total_rows banked ABOVE the live index → "total_rows FELL", exit 1', run('--strict'), 1, /total_rows FELL 3 -> 2/)
+
+    reset()
+    put('docs/.dod-unevaluated-baseline.json', { not_evaluated: 0, total_rows: 2, banked_date: '2026-09-03' })
+    entry('ENTRY: not-evaluated ROSE above the bank → exit 1', run('--strict'), 1, /not-evaluated ROSE 0 -> 1/)
+
+    reset()
+    rmSync(join(fixture, 'scripts/operator-verdict-baseline.json'))
+    entry('ENTRY: no verdict baseline → violation naming the --update-baseline remedy, exit 1', run('--strict'), 1, /no baseline at scripts\/operator-verdict-baseline\.json/)
+
+    reset()
+    entry('ENTRY: non-strict report on a clean fixture → exit 0', run(), 0, /estate-align: 2 indexed feature\(s\)/)
+  } finally {
+    rmSync(fixture, { recursive: true, force: true })
+  }
 
   const bad = cases.filter((c) => !c.ok)
   for (const b of bad) console.error(`FAIL ${b.n}: expected ${JSON.stringify(b.e)}, got ${JSON.stringify(b.a)}`)

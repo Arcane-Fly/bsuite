@@ -28,9 +28,11 @@
  * Standard: docs/20260822-knowledge-classification-standard-v1.00A.md
  */
 
-import { readFileSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
-import { execFileSync } from 'node:child_process';
+import { readFileSync, existsSync, readdirSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 import { isNavigational, isPointerFile } from './lib/doc-conventions.mjs';
 
 const KINDS = ['law', 'obligation', 'decision', 'standard', 'plan', 'record'];
@@ -121,9 +123,74 @@ const FLOOR_TESTS = [
   { n: 'floor after 4 weeks is origin - 4*per_week', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03', per_week: 15 }, new Date('2026-10-01T00:00:00Z')) === 115 },
   { n: 'floor never goes negative — floors at 0', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03', per_week: 15 }, new Date('2030-01-01T00:00:00Z')) === 0 },
   { n: 'missing origin_date returns null (caller must treat as FAILURE, never a silent pass)', f: () => scheduledFloor({ origin_count: 175, origin_date: null, per_week: 15 }) === null },
+  // THE NaN HOLE (review 2026-09-03, bsuite#2970): `175 > NaN` is false, so a
+  // baseline missing origin_count or per_week used to print "floor holds." and
+  // exit 0. Every schedule field is now checked; the helper never returns NaN.
+  { n: 'missing origin_count returns null, never NaN', f: () => scheduledFloor({ origin_date: '2026-09-03', per_week: 15 }) === null },
+  { n: 'missing per_week returns null, never NaN', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03' }) === null },
+  { n: 'a STRING per_week ("15") is non-numeric and returns null', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03', per_week: '15' }) === null },
+  { n: 'scheduleUnarmed names every missing field', f: () => JSON.stringify(scheduleUnarmed({ origin_date: '2026-09-03' })) === '["origin_count","per_week"]' },
+  { n: 'scheduleUnarmed names a non-numeric field', f: () => JSON.stringify(scheduleUnarmed({ origin_count: 'x', origin_date: '2026-09-03', per_week: 15 })) === '["origin_count"]' },
+  { n: 'scheduleUnarmed names an unparseable origin_date', f: () => JSON.stringify(scheduleUnarmed({ origin_count: 1, origin_date: 'yesterday', per_week: 1 })) === '["origin_date"]' },
+  { n: 'scheduleUnarmed is empty on a complete schedule', f: () => scheduleUnarmed({ origin_count: 175, origin_date: '2026-09-03', per_week: 15 }).length === 0 },
   { n: 'denominator fall is caught', f: () => denominatorFell(290, 300) === true },
   { n: 'denominator rise is not a fall', f: () => denominatorFell(310, 300) === false },
   { n: 'denominator equality is not a fall', f: () => denominatorFell(300, 300) === false },
+];
+
+/*
+ * ENTRY-POINT self-tests — review 2026-09-03 (bsuite#2970), rule 6: a gate must
+ * prove it can fail THROUGH THE SAME ENTRY POINT CI runs, not through a helper
+ * called with literals. Each case spawns THIS script as a child process against
+ * a temp fixture tree (a `docs/` with 25 files, 5 of them unclassified — above
+ * the 20-doc positive control) and a temp baseline, and asserts the EXIT CODE.
+ * The baseline lives at `docs/.classification-baseline.json` RELATIVE TO CWD, so
+ * running the child with cwd=<fixture> can never touch the committed one.
+ */
+function classificationFixture() {
+  const root = mkdtempSync(join(tmpdir(), 'c2-classification-'));
+  mkdirSync(join(root, 'docs'), { recursive: true });
+  for (let i = 0; i < 20; i++) {
+    writeFileSync(join(root, 'docs', `20260101-classified-${i}-v1.00F.md`),
+      '---\nkind: record\nauthority: none\nowner: bsuite\n---\n# classified\n');
+  }
+  for (let i = 0; i < 5; i++) {
+    writeFileSync(join(root, 'docs', `20260102-unclassified-${i}-v1.00W.md`), '# no frontmatter\n');
+  }
+  return root;
+}
+function daysAgoIso(n) { return new Date(Date.now() - n * 86400000).toISOString().slice(0, 10); }
+function runEntryPoint(root, baseline, cliArgs) {
+  if (baseline !== null) writeFileSync(join(root, 'docs', '.classification-baseline.json'), `${JSON.stringify(baseline, null, 2)}\n`);
+  else rmSync(join(root, 'docs', '.classification-baseline.json'), { force: true });
+  const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), ...cliArgs], { cwd: root, encoding: 'utf8' });
+  return { code: r.status, out: `${r.stdout}${r.stderr}` };
+}
+const TODAY = new Date().toISOString().slice(0, 10);
+const CLEAN = { origin_count: 5, origin_date: TODAY, current_count: 5, current_date: TODAY, scanned: 25, per_week: 1 };
+const ENTRY_POINT_TESTS = [
+  { n: 'ENTRY: clean fixture, --check-floor → exit 0 "floor holds"',
+    b: CLEAN, a: ['--check-floor'], code: 0, out: /floor holds/ },
+  { n: 'ENTRY: origin_date 3 weeks back at 1/week (floor 2 < live 5), --check-floor → exit 1 FLOOR BREACHED',
+    b: { ...CLEAN, origin_date: daysAgoIso(21) }, a: ['--check-floor'], code: 1, out: /FLOOR BREACHED: 5 > 2/ },
+  { n: 'ENTRY: origin_date missing, --check-floor → exit 1 SCHEDULE UNARMED: origin_date',
+    b: { ...CLEAN, origin_date: undefined }, a: ['--check-floor'], code: 1, out: /SCHEDULE UNARMED: origin_date/ },
+  { n: 'ENTRY: origin_count missing, --check-floor → exit 1 SCHEDULE UNARMED: origin_count (was "floor today: NaN … floor holds." exit 0)',
+    b: { ...CLEAN, origin_count: undefined }, a: ['--check-floor'], code: 1, out: /SCHEDULE UNARMED: origin_count/ },
+  { n: 'ENTRY: per_week missing, --check-floor → exit 1 SCHEDULE UNARMED: per_week',
+    b: { ...CLEAN, per_week: undefined }, a: ['--check-floor'], code: 1, out: /SCHEDULE UNARMED: per_week/ },
+  { n: 'ENTRY: per_week non-numeric ("1"), --check-floor → exit 1 SCHEDULE UNARMED: per_week',
+    b: { ...CLEAN, per_week: '1' }, a: ['--check-floor'], code: 1, out: /SCHEDULE UNARMED: per_week/ },
+  { n: 'ENTRY: no baseline file at all, --check-floor → exit 1 SCHEDULE UNARMED',
+    b: null, a: ['--check-floor'], code: 1, out: /SCHEDULE UNARMED/ },
+  { n: 'ENTRY: PR path, clean fixture → exit 0 "ratchet ok"',
+    b: CLEAN, a: [], code: 0, out: /ratchet ok/ },
+  { n: 'ENTRY: PR path, baseline current_count below the live count → exit 1 RATCHET BROKEN',
+    b: { ...CLEAN, current_count: 4 }, a: [], code: 1, out: /RATCHET BROKEN/ },
+  { n: 'ENTRY: PR path, baseline current_count above the live count → exit 1 RE-BANK REQUIRED',
+    b: { ...CLEAN, current_count: 6 }, a: [], code: 1, out: /RE-BANK REQUIRED/ },
+  { n: 'ENTRY: PR path, banked scanned above the live denominator → exit 1 SCANNED LESS THAN BANKED',
+    b: { ...CLEAN, scanned: 30 }, a: [], code: 1, out: /SCANNED LESS THAN BANKED/ },
 ];
 
 if (process.argv.includes('--self-test')) {
@@ -140,7 +207,19 @@ if (process.argv.includes('--self-test')) {
     console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${t.n}`);
     if (!ok) bad++;
   }
-  console.log(`\n  ${SELF_TESTS.length + FLOOR_TESTS.length - bad}/${SELF_TESTS.length + FLOOR_TESTS.length} self-tests pass`);
+  const fixture = classificationFixture();
+  try {
+    for (const t of ENTRY_POINT_TESTS) {
+      const r = runEntryPoint(fixture, t.b === null ? null : JSON.parse(JSON.stringify(t.b)), t.a);
+      const ok = r.code === t.code && t.out.test(r.out);
+      console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${t.n}`);
+      if (!ok) { bad++; console.log(`        exit ${r.code}, wanted ${t.code}; output:\n${r.out.replace(/^/gm, '        | ')}`); }
+    }
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+  const total = SELF_TESTS.length + FLOOR_TESTS.length + ENTRY_POINT_TESTS.length;
+  console.log(`\n  ${total - bad}/${total} self-tests pass (${ENTRY_POINT_TESTS.length} through the CLI entry point against a temp fixture; fixture removed)`);
   process.exit(bad ? 1 : 0);
 }
 
@@ -217,11 +296,29 @@ if (changedDocs.length) {
  * silent pass — a floor nobody can compute is not a floor. It is deliberately NOT a
  * failure on the ordinary PR path, which must stay exactly the rise/fall check it was.
  */
-export function scheduledFloor({ origin_count, origin_date, per_week }, today = new Date()) {
-  if (!origin_date) return null;
+export function scheduledFloor(schedule, today = new Date()) {
+  if (scheduleUnarmed(schedule).length) return null;
+  const { origin_count, origin_date, per_week } = schedule;
   const start = new Date(`${origin_date}T00:00:00Z`).getTime();
   const weeks = Math.max(0, Math.floor((today.getTime() - start) / (7 * 24 * 60 * 60 * 1000)));
   return Math.max(0, origin_count - per_week * weeks);
+}
+
+/*
+ * EVERY schedule field, not only origin_date — review 2026-09-03 (bsuite#2970).
+ * With origin_count or per_week missing the arithmetic above yields NaN, and
+ * `live > NaN` is false, so --check-floor printed "floor today: NaN … floor
+ * holds." and exited 0: the exact silent pass the header forbids, in the nightly
+ * lane where nobody looks. Returns the NAMES of the fields that are missing or
+ * non-numeric (origin_date: missing or not a parseable date); empty means armed.
+ */
+export function scheduleUnarmed(schedule) {
+  const bad = [];
+  if (!schedule || typeof schedule !== 'object') return ['origin_count', 'origin_date', 'per_week'];
+  if (typeof schedule.origin_count !== 'number' || !Number.isFinite(schedule.origin_count)) bad.push('origin_count');
+  if (typeof schedule.origin_date !== 'string' || !schedule.origin_date || Number.isNaN(new Date(`${schedule.origin_date}T00:00:00Z`).getTime())) bad.push('origin_date');
+  if (typeof schedule.per_week !== 'number' || !Number.isFinite(schedule.per_week)) bad.push('per_week');
+  return bad;
 }
 
 /** A scan that examined fewer docs than it did when banked has gone blind, not clean. */
@@ -279,8 +376,15 @@ if (args.includes('--check-floor')) {
   // NIGHTLY-ONLY. Never invoked on the PR path — see estate-alignment.yml's
   // schedule-gated job. The floor is a schedule commitment, not a per-PR gate.
   const b = loadBaseline();
-  if (!b || !b.origin_date) {
-    console.error(`SCHEDULE UNARMED: ${!b ? `no baseline at ${BASELINE}` : 'baseline carries no origin_date'} — the floor has nothing to decay from.`);
+  if (!b) {
+    console.error(`SCHEDULE UNARMED: no baseline at ${BASELINE} — the floor has nothing to decay from.`);
+    process.exit(1);
+  }
+  // Every field, by name — a floor computed from a missing origin_count or
+  // per_week is NaN, and NaN "holds" against any live count (review bsuite#2970).
+  const unarmed = scheduleUnarmed(b);
+  if (unarmed.length) {
+    for (const f of unarmed) console.error(`SCHEDULE UNARMED: ${f} — missing or non-numeric in ${BASELINE}; the floor cannot be computed.`);
     process.exit(1);
   }
   const floor = scheduledFloor(b, new Date());
