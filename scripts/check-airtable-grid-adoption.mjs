@@ -456,6 +456,82 @@ if (process.argv.includes('--self-test')) {
       run([]), 1, /missing onRowClick ROSE 0 -> 1/);
     rmSync(join(fixture, 'crm7/src/pages/Planted.tsx'));
 
+    /*
+     * DOCUMENTED EXCEPTIONS (C8, 2026-09-04): a file missing onRowClick with a
+     * RECORDED reason in the baseline must NOT count toward the ceiling, but a
+     * bad or contradicted exception must still fail — an exception is a claim,
+     * and a false claim is worse than no claim at all.
+     */
+    write('crm7/src/pages/Exempt.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} />\n");
+    const setExceptions = (exceptions) => {
+      const doc = JSON.parse(readFileSync(baselinePath, 'utf8'));
+      doc.dataGridOnRowClick.crm7.exceptions = exceptions;
+      writeFileSync(baselinePath, JSON.stringify(doc, null, 2));
+    };
+    // Establish the exception FIRST, then bank — a real-world exception is
+    // added and committed together, so the ceiling never registers Exempt.tsx
+    // as a countable gap at all (ceiling stays 0, not "1 excused down to 0").
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'A genuinely explained reason with real content, not a placeholder.' }]);
+    run(['--update-baseline']);
+    expect('ENTRY: a documented exception with a REAL reason does not count toward the ceiling → exit 0',
+      run([]), 0, /grid adoption OK/);
+
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: '' }]);
+    expect('ENTRY: a documented exception with an EMPTY reason → exit 1 (no real reason recorded)',
+      run([]), 1, /has no real reason recorded/);
+
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'n/a' }]);
+    expect('ENTRY: a documented exception with a SHORT placeholder reason → exit 1',
+      run([]), 1, /has no real reason recorded/);
+
+    // Restore a real reason before the contradiction case, so the ONLY thing
+    // under test there is "wired AND excepted", not a reason problem too.
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'A genuinely explained reason with real content, not a placeholder.' }]);
+    write('crm7/src/pages/Exempt.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} onRowClick={open} />\n");
+    expect('ENTRY: an exception that ALSO has onRowClick → exit 1 (contradiction — stale exception)',
+      run([]), 1, /is a documented exception AND has onRowClick/);
+
+    rmSync(join(fixture, 'crm7/src/pages/Exempt.tsx'));
+    setExceptions([]);
+    run(['--update-baseline']);
+
+    /*
+     * A THIRD staleness (bsuite#3027 review): an exception naming a file that
+     * no longer exists. The measurement loop only visits files it finds on
+     * disk, so a vanished exception path is invisible to the walk — nothing
+     * marks it missing, nothing marks it contradicted. Before this fix the
+     * run exited 0 and reported "holds" while a documented claim pointed at
+     * nothing.
+     */
+    write('crm7/src/pages/Exempt.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} />\n");
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'A genuinely explained reason with real content, not a placeholder.' }]);
+    run(['--update-baseline']);
+    rmSync(join(fixture, 'crm7/src/pages/Exempt.tsx')); // the file is gone; the exception entry is not
+    expect('ENTRY: an exception naming a file that no longer exists → exit 1 (stale exception, not "holds")',
+      run([]), 1, /does not exist\. The exception is stale/);
+    setExceptions([]);
+    run(['--update-baseline']);
+
+    /*
+     * MISSING vs MALFORMED baseline (bsuite#3027 review, Copilot thread): a
+     * baseline that fails to READ (ENOENT) is legitimately "no baseline yet"
+     * — the fixture's own first call above already exercises this and must
+     * keep succeeding. A baseline that EXISTS but fails to PARSE is a
+     * different failure entirely and must never be treated the same way, or
+     * a corrupted file gets silently overwritten by the next --update-baseline
+     * instead of being investigated.
+     */
+    const badPath = join(fixture, 'malformed', 'baseline.json');
+    mkdirSync(dirname(badPath), { recursive: true });
+    writeFileSync(badPath, '{ this is not json');
+    expect('ENTRY: a baseline file that EXISTS but is not valid JSON → exit 2, refuses to treat it as "no baseline"',
+      run([], { AIRTABLE_GRID_BASELINE: badPath }), 2, /is not valid JSON/);
+    const noPath = join(fixture, 'absent', 'baseline.json');
+    mkdirSync(dirname(noPath), { recursive: true });
+    expect('ENTRY: a baseline path with no file at all → exit 0 via --update-baseline (genuinely "no baseline yet")',
+      run(['--update-baseline'], { AIRTABLE_GRID_BASELINE: noPath }), 0, /banked:/);
+    rmSync(noPath, { force: true });
+
     // A new hand-rolled table is a RISE.
     write('crm7/src/pages/d.tsx', '<table/>\n');
     expect('ENTRY: planted hand-rolled table → exit 1 "hand-rolled tables ROSE 2 -> 3"',
@@ -641,6 +717,39 @@ function hasRowLevelClickThrough(text) {
   return false;
 }
 
+// Read EARLY: the exception mechanism below needs the prior baseline while
+// still measuring (to tell a documented exception from a real gap), not only
+// at verify time.
+//
+// MISSING and MALFORMED are different failures, and collapsing them into one
+// catch block treats them the same — bsuite#3027 review: a baseline file that
+// exists but fails to parse (truncated write, a bad hand-edit, disk
+// corruption) was silently read as "no baseline yet", the same path a
+// genuinely first-ever run takes. The first case should bank fresh data over
+// nothing; the second should never write anything on top of content nobody
+// can currently read — that is how a corrupt baseline gets silently replaced
+// and the corruption goes unnoticed.
+let existingBaseline = null;
+let baselineFileContents = null;
+try {
+  baselineFileContents = readFileSync(BASELINE, 'utf8');
+} catch (err) {
+  if (err.code !== 'ENOENT') {
+    console.error(`FAIL: could not read ${relative(ROOT, BASELINE)}: ${err.code || err.message}. This is not "no baseline" — investigate before running --update-baseline.`);
+    process.exit(2);
+  }
+  // ENOENT: no baseline file exists yet. Legitimate on a first-ever run and on
+  // the self-test fixture's first --reset-schedule/--update-baseline call.
+}
+if (baselineFileContents !== null) {
+  try {
+    existingBaseline = JSON.parse(baselineFileContents);
+  } catch (err) {
+    console.error(`FAIL: ${relative(ROOT, BASELINE)} exists but is not valid JSON (${err.message}). A malformed baseline is not "no baseline" — fix or restore the file before running --update-baseline, which would otherwise silently replace unreadable content.`);
+    process.exit(2);
+  }
+}
+
 const measured = {};
 const clickThroughByApp = {};
 const dataGridByApp = {};
@@ -662,6 +771,9 @@ for (const app of APPS) {
    */
   const dataGridFiles = [];
   const missingOnRowClick = [];
+  const exceptionStillMissing = [];
+  const contradictions = [];
+  const priorExceptionPaths = new Set((existingBaseline?.dataGridOnRowClick?.[app]?.exceptions ?? []).map((e) => e.path));
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const t = countTables(text);
@@ -673,12 +785,39 @@ for (const app of APPS) {
     if (usesDataGrid(text)) {
       const rel = relative(ROOT, file);
       dataGridFiles.push(rel);
-      if (!hasRowClick(text)) missingOnRowClick.push(rel);
+      if (!hasRowClick(text)) {
+        if (priorExceptionPaths.has(rel)) {
+          exceptionStillMissing.push(rel);
+        } else {
+          missingOnRowClick.push(rel);
+        }
+      } else if (priorExceptionPaths.has(rel)) {
+        // Wired anyway, or the reason no longer holds — either way the
+        // exception is stale documentation of a gap that no longer exists.
+        contradictions.push(rel);
+      }
     }
   }
   measured[app] = { handRolled, dataGrid, files: sites.length, filesScanned: files.length };
   clickThroughByApp[app] = clickThrough.sort();
-  dataGridByApp[app] = { total: dataGridFiles.length, missing: missingOnRowClick.length, missingFiles: missingOnRowClick.sort() };
+  /*
+   * `missing` EXCLUDES documented exceptions — a file with a recorded reason
+   * is not a gap to close, it is a judgement already made. Contrast with the
+   * comment two blocks up ("driving it to 0"): that predates any exception
+   * mechanism, written when EVERY DataGrid file was assumed convertible to
+   * onRowClick. C8 (2026-09-04) found seven that structurally cannot resolve
+   * to a single record — a report-builder result row, an audit-log event, a
+   * table whose every action already lives in a per-row button. "0" and
+   * "0 net of documented exceptions" are different claims; this baseline
+   * now makes the second one, explicitly, per file.
+   */
+  dataGridByApp[app] = {
+    total: dataGridFiles.length,
+    missing: missingOnRowClick.length,
+    missingFiles: missingOnRowClick.sort(),
+    exceptionStillMissing: exceptionStillMissing.sort(),
+    exceptionContradictions: contradictions.sort(),
+  };
 }
 
 /*
@@ -702,13 +841,6 @@ const REASON = reasonIdx !== -1 ? cliArgs[reasonIdx + 1] : null;
 // Read first: --update-baseline needs the prior baseline to union the protected
 // set, and a missing one on a verify run is a hard failure below rather than a
 // silent 0.
-let existingBaseline = null;
-try {
-  existingBaseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
-} catch {
-  existingBaseline = null;
-}
-
 const totalNow = APPS.reduce((sum, a) => sum + measured[a].handRolled, 0);
 
 if (resettingSchedule) {
@@ -722,7 +854,16 @@ if (resettingSchedule) {
     ...(existingBaseline || {}),
     apps: measured,
     clickThrough: Object.fromEntries(APPS.map((a) => [a, [...new Set([...(existingBaseline?.clickThrough?.[a] ?? []), ...clickThroughByApp[a]])].sort()])),
-    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [a, { ceiling: dataGridByApp[a].missing, total: dataGridByApp[a].total }])),
+    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [
+      a,
+      {
+        ceiling: dataGridByApp[a].missing,
+        total: dataGridByApp[a].total,
+        // Hand-curated judgement, never derived by this script: carried forward
+        // VERBATIM. A reason belongs to the file's nature, not to any one scan.
+        exceptions: existingBaseline?.dataGridOnRowClick?.[a]?.exceptions ?? [],
+      },
+    ])),
     _schedule: {
       unit: SCHEDULE_UNIT,
       origin_count: totalNow,
@@ -805,7 +946,16 @@ if (updating) {
      * count that may only shrink (owned by C8, driving it to 0) — a separate,
      * wider dimension from `clickThrough` above, which stays scoped to files
      * that had row-level click-through BEFORE conversion. */
-    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [a, { ceiling: dataGridByApp[a].missing, total: dataGridByApp[a].total }])),
+    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [
+      a,
+      {
+        ceiling: dataGridByApp[a].missing,
+        total: dataGridByApp[a].total,
+        // Hand-curated judgement, never derived by this script: carried forward
+        // VERBATIM. A reason belongs to the file's nature, not to any one scan.
+        exceptions: existingBaseline?.dataGridOnRowClick?.[a]?.exceptions ?? [],
+      },
+    ])),
     _schedule: {
       unit: SCHEDULE_UNIT,
       origin_count: priorSchedule?.origin_count ?? totalNow,
@@ -884,6 +1034,46 @@ for (const app of APPS) {
         'banked. If you wired onRowClick, run --update-baseline.',
     );
   }
+
+  /*
+   * A DOCUMENTED EXCEPTION IS A CLAIM ABOUT THE FILE, and claims go stale.
+   * Two ways that happens, and each needs a different fix — conflating them
+   * would tell someone to "wire onRowClick" on a file that already has it.
+   */
+  const exceptions = wasDG?.exceptions ?? [];
+  for (const ex of exceptions) {
+    if (!ex.reason || ex.reason.trim().length < 15) {
+      problems.push(`${app} dataGridOnRowClick.exceptions: ${ex.path} has no real reason recorded (need 15+ characters).`);
+    }
+    /*
+     * A THIRD staleness: the exception names a file that is GONE — deleted or
+     * renamed. The measurement loop above only visits files it actually finds
+     * on disk, so a vanished exception path is invisible to it: it never
+     * counts as missing (the file isn't there to check), never contradicts
+     * (same reason), and never appears anywhere else. Reviewed 2026-09-04:
+     * that silence read as "holds" — the run exited 0 while a documented
+     * claim pointed at nothing. Checked here, directly, rather than inferred
+     * from the file's absence from any list the walk produced.
+     */
+    try {
+      statSync(join(ROOT, ex.path));
+    } catch {
+      problems.push(
+        `${app} dataGridOnRowClick.exceptions: ${ex.path} does not exist. The exception is stale — ` +
+          'the file was deleted or renamed. Remove the entry (or update the path) with --update-baseline.',
+      );
+    }
+  }
+  for (const rel of nowDG.exceptionContradictions ?? []) {
+    problems.push(
+      `${rel} is a documented exception AND has onRowClick. Either the wiring is unnecessary duplication ` +
+        'or the exception is stale — remove the exception entry with --update-baseline if the file was wired on purpose.',
+    );
+  }
+  // A file that is a documented exception AND still lacks onRowClick is the
+  // expected, PASSING state — that is the entire point of an exception. It
+  // is excluded from `missing` in the measurement loop already; nothing to
+  // check here.
 }
 
 /*
