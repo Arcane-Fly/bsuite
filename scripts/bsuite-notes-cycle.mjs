@@ -21,15 +21,21 @@
  *   1 CAPTURE    newest export -> paragraphs + image manifest -> docs/intake/<sha>/
  *   2 DELTA      set-difference against the last captured export
  *   3 RECONCILE  delta -> operator-notes register -> feature index -> journey gaps -> issues
+ *   4 STRICT     every paragraph in the latest capture is either registered or dispositioned,
+ *                and the count that is NEITHER is banked as a two-way ratchet (below)
  *
  * A REMOVED PARAGRAPH IS A FINDING. He appends; he does not usually delete. If a paragraph
  * vanishes, that is either an edit (which breaks set-difference as a delta model and needs
  * saying) or a genuine retraction. Either way it is surfaced, never silently dropped.
  *
- *   node scripts/bsuite-notes-cycle.mjs                 # capture + delta, report only
- *   node scripts/bsuite-notes-cycle.mjs --write         # commit the intake, register the delta
- *   node scripts/bsuite-notes-cycle.mjs --strict        # exit 1 if the LATEST capture has any
- *                                                        # paragraph with no registered_as (see below)
+ *   node scripts/bsuite-notes-cycle.mjs                    # capture + delta, report only
+ *   node scripts/bsuite-notes-cycle.mjs --write            # commit the intake, register the delta
+ *   node scripts/bsuite-notes-cycle.mjs --strict           # exit 1 if the untriaged count ROSE
+ *                                                          # above the bank, or FELL without a
+ *                                                          # re-bank, or a manifest entry is
+ *                                                          # malformed (see STRICT below)
+ *   node scripts/bsuite-notes-cycle.mjs --update-baseline  # bank the current untriaged count
+ *   node scripts/bsuite-notes-cycle.mjs --self-test
  *   node scripts/bsuite-notes-cycle.mjs --json
  *
  * --strict IS A RUN-START GATE, NOT A CI CHECK — PI ruling 2026-09-03 (audit §7, A5).
@@ -38,36 +44,108 @@
  * workflows and must not be wired there. It is meant to be run BY THE PI AT THE START OF A
  * SESSION (the commencement-prompt doc already says "run this first" in prose; this makes the
  * check that prose implies mechanically checkable, though invoking it is still the PI's own
- * action, never a hook — see the memory this PR's PR body cites for why a SessionStart hook was
- * considered and rejected here).
+ * action, never a hook — a SessionStart hook was considered and rejected, see bsuite#2970).
  *
- * `registered_as` maps a paragraph's hash to the D-id whose register "Verbatim" quote is a
- * literal substring of that paragraph — i.e., that paragraph's own words are what the register
- * row quotes. This is deliberately a SUBSTRING match, not a semantic one: a register row that
- * SYNTHESISES several paragraphs into one ask, or paraphrases rather than quotes, will not match
- * even though the paragraph genuinely was accounted for. Measured on the two captures already in
- * docs/intake/: only ~9% of paragraphs (34/378 and 36/400) directly quote-match a register row.
- * `--strict` is expected to be LOUDLY RED on today's estate — that red is the true, previously
- * invisible fact that most captured paragraphs have not yet been triaged into a register row, not
- * a bug in the matcher. Closing that gap is intake triage work, out of this PR's scope.
+ * `--strict` REFUSES to run in the same invocation as `--write`: a fresh capture must not be
+ * able to certify itself green on the run that created it.
+ *
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ * STRICT — per-paragraph disposition and the untriaged ratchet (PI ruling 2026-09-03, adopting
+ * the bsuite#2970 review's proposal)
+ * ═══════════════════════════════════════════════════════════════════════════════════════════
+ *
+ * As first shipped, --strict failed on every paragraph with no `registered_as`. On the only real
+ * data it will ever see that was 364 of 400 — red on day one, red by design, and a gate that
+ * cannot go green without work declared out of scope is the never-satisfiable class this estate
+ * forbids. It would have been run once, seen red, and never run again.
+ *
+ * So, per paragraph hash (sha256, 12 hex — the same prefix length as the capture's own
+ * `sha256_prefix`) in the capture's MANIFEST.json, EXACTLY ONE of:
+ *
+ *   registered_as[hash] = "D-n"     derived: the register row whose "Verbatim" quote is a
+ *                                   substring of the paragraph after NORMALISING both sides
+ *                                   (collapse whitespace, smart quotes -> ASCII, case-fold).
+ *                                   Still a substring match, not a semantic one: a row that
+ *                                   SYNTHESISES several paragraphs or paraphrases will not match.
+ *                                   Recomputed live against the current register on every
+ *                                   --strict run, unioned with the manifest's frozen map, so a
+ *                                   row registered AFTER the capture still counts.
+ *
+ *   disposition[hash] = one of      human-entered, by the triage lane (never by this script):
+ *     "not-an-ask"                    prose that asks for nothing (a heading, a musing)
+ *     "pasted-agent-output"           an agent's reply pasted back into the Doc
+ *     "date"                          a bare date / session marker
+ *     "screenshot-caption"            text that only labels an image
+ *     "duplicate-of:<hash>"           the same ask as another paragraph, by its 12-hex hash
+ *
+ * A paragraph with NEITHER is UNTRIAGED. A paragraph with BOTH, or with a disposition outside
+ * the vocabulary, or a duplicate-of pointing at a hash not in the capture, is a MANIFEST DEFECT
+ * and fails --strict by itself.
+ *
+ * THE UNTRIAGED COUNT IS BANKED in scripts/notes-cycle-untriaged-baseline.json as
+ * {untriaged, paragraphs, banked} — a TWO-WAY ratchet, the same primitive every other C2/A5
+ * gate uses: a RISE fails ("triage the new paragraphs, do not re-bank"); an UNBANKED FALL fails
+ * with the --update-baseline remedy (so an improvement is looked at, not assumed); a live
+ * `paragraphs` denominator BELOW the bank fails as "scanned less than banked" (the capture
+ * shrank or the walk went blind). Green today at whatever the normalised count is; it can only
+ * shrink. The triage debt is visible in the baseline rather than swallowed.
+ *
+ * Measured 2026-09-03 on capture 20260903-a7ae581fe24b: 400 paragraphs, 36 map by raw
+ * substring, 40 after normalising (+4: D-13, D-15, D-147, D-148 — curly apostrophes and a fused
+ * heading), 0 dispositioned, 360 untriaged and banked.
+ *
+ * Environment (for --self-test fixtures only; never set in normal use):
+ *   NOTES_CYCLE_ROOT        estate root holding docs/intake, docs/*operator-notes-register*.md,
+ *                           docs/00-roadmap/bsuite-feature-index.json and
+ *                           scripts/notes-cycle-untriaged-baseline.json (default: this repo)
+ *   NOTES_CYCLE_DOWNLOADS   directory holding `bsuite notes*.docx` (default: ~/Downloads)
  */
-import { execFileSync } from 'node:child_process'
+import { execFileSync, spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { existsSync, mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs'
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const ROOT = process.env.NOTES_CYCLE_ROOT ? resolve(process.env.NOTES_CYCLE_ROOT) : REPO_ROOT
 const INTAKE = join(ROOT, 'docs/intake')
-const DOWNLOADS = join(process.env.HOME || '/home/braden', 'Downloads')
+const DOWNLOADS = process.env.NOTES_CYCLE_DOWNLOADS
+  ? resolve(process.env.NOTES_CYCLE_DOWNLOADS)
+  : join(process.env.HOME || '/home/braden', 'Downloads')
+const UNTRIAGED_BASELINE = join(ROOT, 'scripts/notes-cycle-untriaged-baseline.json')
+const UNTRIAGED_BASELINE_REL = 'scripts/notes-cycle-untriaged-baseline.json'
+const REMEDY = 'node scripts/bsuite-notes-cycle.mjs --update-baseline'
 
 const WRITE = process.argv.includes('--write')
 const AS_JSON = process.argv.includes('--json')
 const STRICT = process.argv.includes('--strict')
+const UPDATE_BASELINE = process.argv.includes('--update-baseline')
+const SELF_TEST = process.argv.includes('--self-test')
 
-/** A paragraph's stable identity in registered_as maps — same prefix length as the capture's own sha256_prefix. */
+/** The disposition vocabulary. `duplicate-of:<hash>` is validated separately. */
+export const DISPOSITIONS = ['not-an-ask', 'pasted-agent-output', 'date', 'screenshot-caption']
+
+/** A paragraph's stable identity in registered_as / disposition maps — same prefix length as the capture's own sha256_prefix. */
 export function paragraphHash(text) {
   return createHash('sha256').update(text).digest('hex').slice(0, 12)
+}
+
+/*
+ * NORMALISE BEFORE MATCHING — bsuite#2970 review. The Doc is typed in Google Docs, which
+ * substitutes curly quotes and apostrophes; the register is typed in markdown by an agent
+ * reading that Doc, which often does not. `Why can't I import units?` did not substring-match
+ * `Why can’t I import units?`, and a heading fused onto its first sentence ("Training HoursAgain,
+ * should be…") did not match a quote that began at "Again". Collapse whitespace, map the
+ * typographic quote family to ASCII, case-fold. Nothing semantic.
+ */
+export function normaliseText(s) {
+  return String(s)
+    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase()
 }
 
 /** Register rows, verbatim-quote only — a local, minimal parser (not estate-align.mjs's: that
@@ -91,15 +169,70 @@ export function parseRegisterVerbatims(text) {
   return out
 }
 
-/** { [paragraphHash]: D-id } for every paragraph whose text CONTAINS a register row's verbatim
- *  quote. A substring match, not a semantic one — see the header comment on why that undercounts. */
-export function matchRegisteredAs(paragraphs, registerRows) {
+/** { [paragraphHash]: D-id } for every paragraph whose NORMALISED text contains a register row's
+ *  NORMALISED verbatim quote. A substring match, not a semantic one — see the header on why that
+ *  undercounts. Pass `normalise: false` to get the raw-substring map (reported alongside, so the
+ *  gain from normalising is visible). */
+export function matchRegisteredAs(paragraphs, registerRows, { normalise = true } = {}) {
   const map = {}
+  const rows = registerRows.map((r) => ({ id: r.id, q: normalise ? normaliseText(r.quote) : r.quote }))
   for (const p of paragraphs) {
-    const hit = registerRows.find((r) => p.includes(r.quote))
+    const hay = normalise ? normaliseText(p) : p
+    const hit = rows.find((r) => p.includes(r.q) || hay.includes(r.q))
     if (hit) map[paragraphHash(p)] = hit.id
   }
   return map
+}
+
+/*
+ * THE STRICT VERDICT, as a pure function so the self-test can drive it with literals AND the
+ * entry-point cases can drive it through the CLI. Returns { untriaged, registered, dispositioned,
+ * defects[], violations[] } — `violations` is what fails the gate.
+ */
+export function strictVerdict({ paragraphs, registeredAs, disposition, baseline }) {
+  const hashes = paragraphs.map(paragraphHash)
+  const inCapture = new Set(hashes)
+  const defects = []
+  let registered = 0
+  let dispositioned = 0
+  let untriaged = 0
+  for (const h of hashes) {
+    const reg = Object.prototype.hasOwnProperty.call(registeredAs, h)
+    const dis = Object.prototype.hasOwnProperty.call(disposition, h)
+    if (reg && dis) defects.push(`${h}: has BOTH registered_as (${registeredAs[h]}) and disposition (${disposition[h]}) — exactly one is allowed`)
+    if (dis) {
+      const d = String(disposition[h])
+      if (d.startsWith('duplicate-of:')) {
+        const target = d.slice('duplicate-of:'.length)
+        if (!inCapture.has(target)) defects.push(`${h}: duplicate-of:${target} names a hash that is not in this capture`)
+        else if (target === h) defects.push(`${h}: duplicate-of itself`)
+      } else if (!DISPOSITIONS.includes(d)) {
+        defects.push(`${h}: disposition "${d}" is not one of ${DISPOSITIONS.join(' | ')} | duplicate-of:<hash>`)
+      }
+    }
+    if (reg) registered++
+    else if (dis) dispositioned++
+    else untriaged++
+  }
+  for (const h of Object.keys(disposition)) {
+    if (!inCapture.has(h)) defects.push(`disposition[${h}] names a paragraph hash that is not in this capture`)
+  }
+
+  const violations = []
+  for (const d of defects) violations.push(`MANIFEST DEFECT: ${d}`)
+  if (!baseline) {
+    violations.push(`no baseline at ${UNTRIAGED_BASELINE_REL} — run \`${REMEDY}\` to bank ${untriaged} untriaged of ${paragraphs.length} paragraphs`)
+  } else {
+    if (untriaged > baseline.untriaged) {
+      violations.push(`untriaged ROSE ${baseline.untriaged} -> ${untriaged}. New paragraphs need a register row or a disposition, not a re-bank.`)
+    } else if (untriaged < baseline.untriaged) {
+      violations.push(`untriaged FELL ${baseline.untriaged} -> ${untriaged} without being banked. Run \`${REMEDY}\`.`)
+    }
+    if (paragraphs.length < baseline.paragraphs) {
+      violations.push(`SCANNED LESS THAN BANKED: ${paragraphs.length} paragraph(s) in the latest capture, baseline banked ${baseline.paragraphs}. The capture shrank or the read went blind — investigate before trusting ${untriaged}.`)
+    }
+  }
+  return { untriaged, registered, dispositioned, paragraphs: paragraphs.length, defects, violations }
 }
 
 function sh(cmd, a, cwd) {
@@ -188,7 +321,146 @@ function registeredIds() {
   return { path: p, max }
 }
 
+/* ------------------------------- self-test ------------------------------- */
+if (SELF_TEST) {
+  const cases = []
+  const t = (n, a, e) => cases.push({ n, ok: JSON.stringify(a) === JSON.stringify(e), a, e })
+  t('newestExport returns null on a missing dir', newestExport('/nonexistent/xyz'), null)
+
+  // ---- registered_as: the substring matcher, PI ruling 2026-09-03 (audit §7, A5) ----
+  t('parseRegisterVerbatims: reads the quote out of a real row',
+    parseRegisterVerbatims('| D-1 | "emails, cant be opened and read." | x | y | z | w |'),
+    [{ id: 'D-1', quote: 'emails, cant be opened and read.' }])
+  t('parseRegisterVerbatims: skips a malformed row (fewer than 6 cells)',
+    parseRegisterVerbatims('| D-2 — label | *"a quote"* |').length, 0)
+  t('matchRegisteredAs: a paragraph that CONTAINS the verbatim quote maps to that id',
+    matchRegisteredAs(['he said: "emails, cant be opened" today'], [{ id: 'D-1', quote: 'emails, cant be opened' }]),
+    { [paragraphHash('he said: "emails, cant be opened" today')]: 'D-1' })
+  t('matchRegisteredAs: a paragraph with NO matching quote gets no entry',
+    Object.keys(matchRegisteredAs(['totally unrelated text'], [{ id: 'D-1', quote: 'emails, cant be opened' }])).length, 0)
+  t('paragraphHash: stable and 12 hex chars', /^[0-9a-f]{12}$/.test(paragraphHash('x')), true)
+
+  // ---- normalisation (bsuite#2970 review) ----
+  t('normaliseText: curly apostrophe -> ASCII', normaliseText('can\u2019t'), "can't")
+  t('normaliseText: curly double quotes -> ASCII', normaliseText('\u201Cx\u201D'), '"x"')
+  t('normaliseText: whitespace collapses and case folds', normaliseText('  Why   Can\u2019t\nI  '), "why can't i")
+  t('matchRegisteredAs: a curly-apostrophe paragraph matches a straight-apostrophe quote (the D-15 case)',
+    Object.values(matchRegisteredAs(['Why can\u2019t I import units? Should be pulled from the TGA API'], [{ id: 'D-15', quote: "Why can't I import units?" }])), ['D-15'])
+  t('matchRegisteredAs: normalise:false is the raw substring matcher and does NOT match it',
+    Object.keys(matchRegisteredAs(['Why can\u2019t I import units?'], [{ id: 'D-15', quote: "Why can't I import units?" }], { normalise: false })).length, 0)
+  t('matchRegisteredAs: the hash is of the ORIGINAL paragraph, never the normalised text',
+    Object.keys(matchRegisteredAs(['Why can\u2019t I import units?'], [{ id: 'D-15', quote: "why can't i import units?" }])), [paragraphHash('Why can\u2019t I import units?')])
+
+  // ---- strictVerdict: exactly one of registered_as | disposition; two-way ratchet ----
+  const P = ['alpha ask', 'beta ask', 'gamma ask']
+  const [ha, hb, hc] = P.map(paragraphHash)
+  const bank = (untriaged, paragraphs = 3) => ({ untriaged, paragraphs, banked: '2026-09-03' })
+  t('strict: registered + dispositioned + untriaged partition the capture',
+    (() => { const v = strictVerdict({ paragraphs: P, registeredAs: { [ha]: 'D-1' }, disposition: { [hb]: 'not-an-ask' }, baseline: bank(1) }); return [v.registered, v.dispositioned, v.untriaged, v.violations.length] })(), [1, 1, 1, 0])
+  t('strict: untriaged at the bank is clean',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: {}, baseline: bank(3) }).violations, [])
+  t('strict: untriaged RISING above the bank fails, naming triage not re-bank',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: {}, baseline: bank(2) }).violations.some((v) => /ROSE 2 -> 3/.test(v) && /not a re-bank/.test(v)), true)
+  t('strict: untriaged FALLING without a re-bank fails with the --update-baseline remedy',
+    strictVerdict({ paragraphs: P, registeredAs: { [ha]: 'D-1' }, disposition: {}, baseline: bank(3) }).violations.some((v) => /FELL 3 -> 2/.test(v) && v.includes(REMEDY)), true)
+  t('strict: paragraphs BELOW the banked denominator fails as scanned-less-than-banked',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: {}, baseline: bank(3, 4) }).violations.some((v) => /SCANNED LESS THAN BANKED/.test(v)), true)
+  t('strict: no baseline is a violation naming the remedy, not a silent pass',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: {}, baseline: null }).violations.some((v) => /no baseline/.test(v) && v.includes(REMEDY)), true)
+  t('strict: every vocabulary word is accepted',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: { [ha]: 'not-an-ask', [hb]: 'pasted-agent-output', [hc]: 'date' }, baseline: bank(0) }).violations, [])
+  t('strict: screenshot-caption and a valid duplicate-of are accepted',
+    strictVerdict({ paragraphs: P, registeredAs: { [ha]: 'D-1' }, disposition: { [hb]: 'screenshot-caption', [hc]: `duplicate-of:${ha}` }, baseline: bank(0) }).violations, [])
+  t('strict: a disposition outside the vocabulary is a MANIFEST DEFECT',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: { [ha]: 'meh' }, baseline: bank(2) }).violations.some((v) => /MANIFEST DEFECT/.test(v) && /not one of/.test(v)), true)
+  t('strict: BOTH registered_as and disposition on one hash is a MANIFEST DEFECT',
+    strictVerdict({ paragraphs: P, registeredAs: { [ha]: 'D-1' }, disposition: { [ha]: 'date' }, baseline: bank(2) }).violations.some((v) => /has BOTH/.test(v)), true)
+  t('strict: duplicate-of a hash outside the capture is a MANIFEST DEFECT',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: { [ha]: 'duplicate-of:000000000000' }, baseline: bank(2) }).violations.some((v) => /not in this capture/.test(v)), true)
+  t('strict: duplicate-of itself is a MANIFEST DEFECT',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: { [ha]: `duplicate-of:${ha}` }, baseline: bank(2) }).violations.some((v) => /itself/.test(v)), true)
+  t('strict: a disposition keyed by a hash not in the capture is a MANIFEST DEFECT',
+    strictVerdict({ paragraphs: P, registeredAs: {}, disposition: { ffffffffffff: 'date' }, baseline: bank(3) }).violations.some((v) => /not in this capture/.test(v)), true)
+
+  /*
+   * ENTRY-POINT cases (bsuite#2970 review, rule 6): spawn this script against a fixture estate
+   * (NOTES_CYCLE_ROOT) with a tiny real .docx in NOTES_CYCLE_DOWNLOADS and assert exit codes.
+   * The committed intake, register and baseline are never read or written; the fixture is
+   * removed afterwards.
+   */
+  const fixture = mkdtempSync(join(tmpdir(), 'c2-notes-'))
+  try {
+    const dl = join(fixture, 'downloads')
+    mkdirSync(dl, { recursive: true })
+    mkdirSync(join(fixture, 'docs/00-roadmap'), { recursive: true })
+    mkdirSync(join(fixture, 'scripts'), { recursive: true })
+    const paras = ['emails, cant be opened and read.', 'Why can\u2019t I import units? Should be pulled from the TGA API', 'Tuesday', 'a fourth ask nobody registered']
+    const docxPy = `
+import sys, zipfile, json
+paras = json.loads(sys.argv[2])
+body = "".join('<w:p><w:r><w:t>%s</w:t></w:r></w:p>' % p.replace("&","&amp;").replace("<","&lt;") for p in paras)
+xml = '<?xml version="1.0" encoding="UTF-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>%s</w:body></w:document>' % body
+with zipfile.ZipFile(sys.argv[1], "w") as z:
+    z.writestr("word/document.xml", xml)
+`
+    execFileSync('python3', ['-c', docxPy, join(dl, 'bsuite notes.docx'), JSON.stringify(paras)])
+    writeFileSync(join(fixture, 'docs/20260825-operator-notes-register-fixture-v1.00W.md'),
+      '| D-1 | "emails, cant be opened and read." | open | /c | CRM7 | ux |\n| D-15 | "Why can\'t I import units?" | tga | /t | CRM7 | ux |\n')
+    writeFileSync(join(fixture, 'docs/00-roadmap/bsuite-feature-index.json'), '[]\n')
+    const run = (...args) => {
+      const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), ...args], {
+        encoding: 'utf8', env: { ...process.env, NOTES_CYCLE_ROOT: fixture, NOTES_CYCLE_DOWNLOADS: dl },
+      })
+      return { code: r.status, out: `${r.stdout}${r.stderr}` }
+    }
+    const entry = (n, r, code, re) => cases.push({ n, ok: r.code === code && re.test(r.out), a: `exit ${r.code}\n${r.out}`, e: `exit ${code} matching ${re}` })
+    const baselinePath = join(fixture, 'scripts/notes-cycle-untriaged-baseline.json')
+    const manifestPath = () => { const d = readdirSync(join(fixture, 'docs/intake')).sort(); return join(fixture, 'docs/intake', d[d.length - 1], 'MANIFEST.json') }
+
+    entry('ENTRY: --strict together with --write is refused, exit 1', run('--strict', '--write'), 1, /refuses to run with --write/)
+    entry('ENTRY: --strict with no capture on disk → exit 1', run('--strict'), 1, /no capture on disk/)
+    entry('ENTRY: --write captures the fixture docx → exit 0, 4 paragraphs, 2 registered_as by the NORMALISED matcher', run('--write'), 0, /4 paragraphs[\s\S]*registered_as-mapped: 2 \(raw substring 1, \+1 after normalising\)/)
+    entry('ENTRY: --strict with no baseline → exit 1 naming the --update-baseline remedy', run('--strict'), 1, /no baseline at scripts\/notes-cycle-untriaged-baseline\.json[\s\S]*--update-baseline/)
+    entry('ENTRY: --update-baseline banks untriaged 2 of 4 → exit 0', run('--update-baseline'), 0, /BANKED: untriaged=2 paragraphs=4/)
+    entry('ENTRY: banked baseline is the {untriaged, paragraphs, banked} shape',
+      { code: (() => { const b = JSON.parse(readFileSync(baselinePath, 'utf8')); return b.untriaged === 2 && b.paragraphs === 4 && /^\d{4}-\d{2}-\d{2}$/.test(b.banked) ? 0 : 1 })(), out: 'shape' }, 0, /shape/)
+    entry('ENTRY: --strict at the bank → exit 0 STRICT OK', run('--strict'), 0, /STRICT OK/)
+    // Disposition the bare date: untriaged falls 2 -> 1 without a re-bank.
+    const m = JSON.parse(readFileSync(manifestPath(), 'utf8'))
+    m.disposition = { [paragraphHash('Tuesday')]: 'date' }
+    writeFileSync(manifestPath(), `${JSON.stringify(m, null, 1)}\n`)
+    entry('ENTRY: a disposition added, untriaged FELL 2 -> 1 unbanked → exit 1 with the remedy', run('--strict'), 1, /untriaged FELL 2 -> 1[\s\S]*--update-baseline/)
+    entry('ENTRY: re-bank → exit 0', run('--update-baseline'), 0, /BANKED: untriaged=1 paragraphs=4/)
+    entry('ENTRY: --strict green again after the re-bank', run('--strict'), 0, /STRICT OK/)
+    // A disposition outside the vocabulary is a manifest defect.
+    m.disposition = { [paragraphHash('Tuesday')]: 'date', [paragraphHash('a fourth ask nobody registered')]: 'shrug' }
+    writeFileSync(manifestPath(), `${JSON.stringify(m, null, 1)}\n`)
+    entry('ENTRY: an out-of-vocabulary disposition → MANIFEST DEFECT, exit 1', run('--strict'), 1, /MANIFEST DEFECT[\s\S]*"shrug" is not one of/)
+    // Bank says 0 but 1 is untriaged: a RISE.
+    m.disposition = { [paragraphHash('Tuesday')]: 'date' }
+    writeFileSync(manifestPath(), `${JSON.stringify(m, null, 1)}\n`)
+    writeFileSync(baselinePath, `${JSON.stringify({ untriaged: 0, paragraphs: 4, banked: '2026-09-03' }, null, 2)}\n`)
+    entry('ENTRY: untriaged ROSE above the bank → exit 1, "not a re-bank"', run('--strict'), 1, /untriaged ROSE 0 -> 1[\s\S]*not a re-bank/)
+    // Bank claims a bigger capture than exists.
+    writeFileSync(baselinePath, `${JSON.stringify({ untriaged: 1, paragraphs: 9, banked: '2026-09-03' }, null, 2)}\n`)
+    entry('ENTRY: paragraphs below the banked denominator → SCANNED LESS THAN BANKED, exit 1', run('--strict'), 1, /SCANNED LESS THAN BANKED: 4 paragraph\(s\)[\s\S]*banked 9/)
+  } finally {
+    rmSync(fixture, { recursive: true, force: true })
+  }
+
+  const bad = cases.filter((c) => !c.ok)
+  for (const b of bad) console.error(`FAIL ${b.n}\n  expected ${JSON.stringify(b.e)}\n  got      ${JSON.stringify(b.a)}`)
+  if (bad.length) process.exit(1)
+  console.log(`bsuite-notes-cycle --self-test: OK (${cases.length} cases, 13 through the CLI entry point against a temp estate + temp docx; fixture removed)`)
+  process.exit(0)
+}
+
 /* ------------------------------- run ------------------------------- */
+if (STRICT && WRITE) {
+  console.error('FAIL: --strict refuses to run with --write. A capture must not certify itself on the run that created it — run --write, then --strict.')
+  process.exit(1)
+}
+
 const report = { phases: {} }
 
 // PHASE 1 — CAPTURE
@@ -204,17 +476,23 @@ const captureId = `${stamp}-${sha}`
 report.phases.capture = { source: src.f, sourceBytes: statSync(src.p).size, paragraphs: paragraphs.length, images, captureId }
 
 const dest = join(INTAKE, captureId)
+let writeMatchNote = null
 if (WRITE && !existsSync(join(dest, 'paragraphs.txt'))) {
   mkdirSync(dest, { recursive: true })
   writeFileSync(join(dest, 'paragraphs.txt'), paragraphs.join('\n---\n'))
   const registerAtWriteTime = registeredIds()
   const registerRows = registerAtWriteTime.path ? parseRegisterVerbatims(readFileSync(registerAtWriteTime.path, 'utf8')) : []
+  const registeredAs = matchRegisteredAs(paragraphs, registerRows)
+  const rawCount = Object.keys(matchRegisteredAs(paragraphs, registerRows, { normalise: false })).length
+  writeMatchNote = `registered_as-mapped: ${Object.keys(registeredAs).length} (raw substring ${rawCount}, +${Object.keys(registeredAs).length - rawCount} after normalising)`
   writeFileSync(join(dest, 'MANIFEST.json'), JSON.stringify({
     source: src.f, capturedAt: new Date(src.m).toISOString(), paragraphs: paragraphs.length,
     images, sha256_prefix: sha,
     note: 'Extracted TEXT only. The 24-37 MB .docx binary is deliberately not committed; ~/Downloads is volatile and this is what survives it.',
-    registered_as: matchRegisteredAs(paragraphs, registerRows),
-    registered_as_note: 'paragraph hash (sha256, 12 hex) -> D-id, where that D-id\'s register Verbatim quote is a literal substring of the paragraph. A substring match, not semantic — see this script\'s header comment.',
+    registered_as: registeredAs,
+    registered_as_note: 'paragraph hash (sha256, 12 hex) -> D-id, where that D-id\'s register Verbatim quote is a substring of the paragraph after normalising both (whitespace, smart quotes, case). Frozen at write time; --strict recomputes live and unions. Not semantic — see this script\'s header comment.',
+    disposition: {},
+    disposition_note: 'paragraph hash -> one of not-an-ask | pasted-agent-output | date | screenshot-caption | duplicate-of:<hash>, entered by the triage lane for paragraphs that are NOT asks. Exactly one of registered_as / disposition per hash. See the script header.',
   }, null, 1) + '\n')
 }
 
@@ -252,6 +530,7 @@ else {
   console.log(`bsuite-notes-cycle · ${WRITE ? 'WRITE' : 'DRY RUN (pass --write to capture)'}`)
   console.log(`\n1 CAPTURE   ${src.f}`)
   console.log(`            ${paragraphs.length} paragraphs, ${images} images -> docs/intake/${captureId}/`)
+  if (writeMatchNote) console.log(`            ${writeMatchNote}`)
   console.log(`\n2 DELTA     vs ${report.phases.delta.comparedAgainst}`)
   console.log(`            +${added.length} new, -${removed.length} removed`)
   if (removed.length) {
@@ -274,9 +553,10 @@ else {
   console.log(`  then \`node scripts/estate-align.mjs --strict\`.`)
 }
 
-// PHASE 4 — STRICT (PI ruling 2026-09-03, audit §7, A5). A run-start gate the PI invokes
-// manually — see the header comment for why it cannot be a CI or SessionStart hook.
-if (STRICT) {
+// PHASE 4 — STRICT / --update-baseline (PI ruling 2026-09-03, audit §7, A5; disposition +
+// ratchet shape per the bsuite#2970 review). A run-start gate the PI invokes manually — see the
+// header for why it cannot be a CI or SessionStart hook.
+if (STRICT || UPDATE_BASELINE) {
   const latest = latestCaptureDir()
   if (!latest) {
     console.error('STRICT FAIL: no capture on disk to check — run --write at least once first.')
@@ -284,41 +564,40 @@ if (STRICT) {
   }
   const manifest = JSON.parse(readFileSync(join(INTAKE, latest, 'MANIFEST.json'), 'utf8'))
   const latestParas = readFileSync(join(INTAKE, latest, 'paragraphs.txt'), 'utf8').split('\n---\n').filter(Boolean)
-  const registeredAs = manifest.registered_as || {}
-  const missing = latestParas.filter((p) => !(paragraphHash(p) in registeredAs))
-  console.log(`\n4 STRICT    capture ${latest}: ${latestParas.length} paragraph(s), ` +
-    `${latestParas.length - missing.length} registered_as-mapped, ${missing.length} not yet triaged into a register row`)
-  if (missing.length) {
-    console.error(`\nSTRICT FAIL: ${missing.length} of ${latestParas.length} paragraph(s) in ${latest} have no registered_as.`)
-    console.error('These are captured but not yet accounted for in any register row (see the header comment —')
-    console.error('a paraphrased or synthesised row will not substring-match, so this undercounts true coverage,')
-    console.error('never overcounts it).')
+  // registered_as is DERIVED: the frozen map from write time, unioned with a live normalised
+  // match against the register as it stands now, so a row registered after the capture counts.
+  const registerRows = reg.path ? parseRegisterVerbatims(readFileSync(reg.path, 'utf8')) : []
+  const live = matchRegisteredAs(latestParas, registerRows)
+  const liveRaw = matchRegisteredAs(latestParas, registerRows, { normalise: false })
+  const registeredAs = { ...(manifest.registered_as || {}), ...live }
+  const disposition = manifest.disposition || {}
+  const baseline = existsSync(UNTRIAGED_BASELINE) ? JSON.parse(readFileSync(UNTRIAGED_BASELINE, 'utf8')) : null
+  const v = strictVerdict({ paragraphs: latestParas, registeredAs, disposition, baseline })
+
+  console.log(`\n4 STRICT    capture ${latest}: ${v.paragraphs} paragraph(s); ${v.registered} registered_as ` +
+    `(${Object.keys(liveRaw).length} by raw substring, +${Object.keys(live).length - Object.keys(liveRaw).length} after normalising, ` +
+    `${Object.keys(manifest.registered_as || {}).length} frozen in the manifest), ${v.dispositioned} dispositioned, ${v.untriaged} untriaged` +
+    (baseline ? ` (banked ${baseline.untriaged} of ${baseline.paragraphs})` : ' (no bank)'))
+
+  if (UPDATE_BASELINE) {
+    if (v.defects.length) {
+      for (const d of v.defects) console.error(`  MANIFEST DEFECT: ${d}`)
+      console.error('FAIL: refusing to bank over a defective manifest — fix the entries above first.')
+      process.exit(1)
+    }
+    const banked = { untriaged: v.untriaged, paragraphs: v.paragraphs, banked: new Date().toISOString().slice(0, 10) }
+    writeFileSync(UNTRIAGED_BASELINE, `${JSON.stringify(banked, null, 2)}\n`)
+    console.log(`BANKED: untriaged=${banked.untriaged} paragraphs=${banked.paragraphs} -> ${UNTRIAGED_BASELINE_REL}`)
+    process.exit(0)
+  }
+  if (v.violations.length) {
+    console.error(`\nSTRICT FAIL (${v.violations.length}):`)
+    for (const x of v.violations) console.error(`  - ${x}`)
+    console.error('\nA paragraph is triaged when its hash carries EXACTLY ONE of registered_as (a register row quotes it) or')
+    console.error('disposition (not-an-ask | pasted-agent-output | date | screenshot-caption | duplicate-of:<hash>) in the')
+    console.error(`capture's MANIFEST.json. The untriaged count may only shrink; bank a genuine fall with \`${REMEDY}\`.`)
     process.exit(1)
   }
-  console.log('STRICT OK: every paragraph in the latest capture maps to a register row.')
-}
-
-if (process.argv.includes('--self-test')) {
-  const cases = []
-  const t = (n, a, e) => cases.push({ n, ok: JSON.stringify(a) === JSON.stringify(e) })
-  t('newestExport returns null on a missing dir', newestExport('/nonexistent/xyz'), null)
-
-  // ---- registered_as: the substring matcher, PI ruling 2026-09-03 (audit §7, A5) ----
-  t('parseRegisterVerbatims: reads the quote out of a real row',
-    parseRegisterVerbatims('| D-1 | "emails, cant be opened and read." | x | y | z | w |'),
-    [{ id: 'D-1', quote: 'emails, cant be opened and read.' }])
-  t('parseRegisterVerbatims: skips a malformed row (fewer than 6 cells)',
-    parseRegisterVerbatims('| D-2 — label | *"a quote"* |').length, 0)
-  t('matchRegisteredAs: a paragraph that CONTAINS the verbatim quote maps to that id',
-    matchRegisteredAs(['he said: "emails, cant be opened" today'], [{ id: 'D-1', quote: 'emails, cant be opened' }]),
-    { [paragraphHash('he said: "emails, cant be opened" today')]: 'D-1' })
-  t('matchRegisteredAs: a paragraph with NO matching quote gets no entry',
-    Object.keys(matchRegisteredAs(['totally unrelated text'], [{ id: 'D-1', quote: 'emails, cant be opened' }])).length, 0)
-  t('paragraphHash: stable and 12 hex chars', /^[0-9a-f]{12}$/.test(paragraphHash('x')), true)
-
-  const bad = cases.filter((c) => !c.ok)
-  for (const b of bad) console.error(`FAIL ${b.n}`)
-  if (bad.length) process.exit(1)
-  console.log(`bsuite-notes-cycle --self-test: OK (${cases.length} cases)`)
+  console.log(`STRICT OK: untriaged holds at the bank (${v.untriaged}); every other paragraph is registered or dispositioned.`)
 }
 process.exit(0)

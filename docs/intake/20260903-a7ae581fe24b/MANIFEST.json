@@ -43,5 +43,7 @@
   "a4e3ed93ae95": "D-146",
   "7782255e7f9e": "D-152"
  },
- "registered_as_note": "paragraph hash (sha256, 12 hex) -> D-id, where that D-id's register Verbatim quote is a literal substring of the paragraph. A substring match, not semantic — see scripts/bsuite-notes-cycle.mjs header comment. Backfilled 2026-09-03 from docs/20260825-operator-notes-register-d1-d103-v1.00W.md."
+ "registered_as_note": "paragraph hash (sha256, 12 hex) -> D-id, where that D-id's register Verbatim quote is a substring of the paragraph after normalising both (whitespace, smart quotes, case). Frozen at write time (36 raw-substring matches); --strict recomputes live and unions. Not semantic — see scripts/bsuite-notes-cycle.mjs header.",
+ "disposition": {},
+ "disposition_note": "paragraph hash -> one of not-an-ask | pasted-agent-output | date | screenshot-caption | duplicate-of:<hash>, entered by the triage lane for paragraphs that are NOT asks. Exactly one of registered_as / disposition per hash. See scripts/bsuite-notes-cycle.mjs header."
 }
