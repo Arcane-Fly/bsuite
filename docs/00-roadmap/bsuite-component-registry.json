@@ -7,7 +7,7 @@
     "crm7": 447,
     "business-suite-unified": 119,
     "conduit": 98,
-    "braden": 207,
+    "braden": 208,
     "throughput": 91,
     "R80.4": 6
   },
@@ -771,11 +771,12 @@
       "consumers": {
         "crm7": 1,
         "business-suite-unified": 1,
+        "braden": 1,
         "throughput": 1,
         "R80.4": 1
       },
-      "consumerFiles": 4,
-      "consumingApps": 4
+      "consumerFiles": 5,
+      "consumingApps": 5
     },
     {
       "name": "VERSION_JSON_PATH",
