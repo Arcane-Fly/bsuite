@@ -200,11 +200,6 @@ ALLOWLIST=(
   # post-dates this allowlist, so the rule started firing on a file that was
   # correct the whole time.
   'throughput/api/llm/_shared/auth.ts:*'
-  # ---- R80.4 serverless FWC proxy: first scanned 2026-09-04 when the pathspecs
-  # became any-depth. Its fallback chain reads the VITE_-aliased URL on the
-  # server (R5); the canonical rename to SUPABASE_URL is an R80.4 change
-  # (corrective-run FOLLOW 43), after which this entry drops out.
-  'R80.4/api/fwc.js:*'
   # ---- crm7 server-side AI tools (edge functions, process.env is correct) ----
   'crm7/src/lib/ai/tools/ui-builder-tools.ts:*'
   'crm7/src/lib/ai/tools/ui-builder-tools.test.ts:*'

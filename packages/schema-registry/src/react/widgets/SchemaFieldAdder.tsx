@@ -63,7 +63,7 @@ export function SchemaFieldAdderWidget({
       <button
         type="button"
         disabled
-        className="rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground"
+        className="rounded-md border border-dashed border-border-interactive px-2 py-1 text-xs text-muted-foreground"
         title="Awaiting W1-C migration (add_tenant_field_definition RPC)"
       >
         {widgetProps.button_label} (disabled)
@@ -105,7 +105,7 @@ export function SchemaFieldAdderWidget({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="rounded-md border border-dashed border-border px-2 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
+        className="rounded-md border border-dashed border-border-interactive px-2 py-1 text-xs text-muted-foreground hover:border-primary hover:text-primary"
         data-widget="SchemaFieldAdder"
       >
         {widgetProps.button_label}

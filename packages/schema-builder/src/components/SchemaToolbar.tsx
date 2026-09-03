@@ -94,7 +94,7 @@ export function SchemaToolbar({
             onSearchChange(e.target.value)
           }
           aria-label="Search entities"
-          className="h-8 w-[180px] rounded-md border border-border bg-card pl-7 pr-2 text-xs text-foreground placeholder:text-text-subtle focus:border-role-primary focus:outline-none focus:ring-1 focus:ring-ring"
+          className="h-8 w-[180px] rounded-md border border-border-interactive bg-card pl-7 pr-2 text-xs text-foreground placeholder:text-text-subtle focus:border-role-primary focus:outline-none focus:ring-1 focus:ring-ring"
         />
         {hasResultCount ? (
           <div className="mt-1 text-[10px] text-muted-foreground" role="status">

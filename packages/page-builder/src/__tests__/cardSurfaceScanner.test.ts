@@ -476,7 +476,7 @@ describe('nested-chrome (V-C5) — a card inside the grid item\'s own card', () 
       'src/pages/clean-control.tsx',
       `export const P = () => (
         <CanvasCard cardKey="a">
-          <button className="bg-muted border border-border rounded-lg px-4 py-2">Filter</button>
+          <button className="bg-muted border border-border-interactive rounded-lg px-4 py-2">Filter</button>
         </CanvasCard>
       )`,
     );
