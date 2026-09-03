@@ -21,6 +21,12 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { execFileSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
+import { compareRatchet, writeBaseline } from './lib/ratchet.mjs'
+
+const SELF = fileURLToPath(import.meta.url)
+const BASELINE_FILE = 'docs/.supersession-baseline.json'
 
 if (process.argv.includes('--self-test')) {
   const PROSE = /[Ss]upersedes?\s+(?:it|this)?[^\n]{0,120}?([0-9]{8}-[A-Za-z0-9.-]+\.md)/
@@ -37,7 +43,63 @@ if (process.argv.includes('--self-test')) {
   let bad = 0
   for (const [n, ok] of checks) if (!ok) { console.error(`  SELF-TEST FAIL: ${n}`); bad++ }
   console.log(`  self-test: ${bad ? `${bad} FAILED` : `${checks.length}/${checks.length} pass`}`)
-  process.exit(bad ? 1 : 0)
+
+  // ── fixture ratchet self-test — proves the RATCHET, not just the regex ──
+  //
+  // The checks above pin what the PROSE detector matches. They never proved the
+  // gate can actually FAIL a build — before 2026-09-03 this script had exactly
+  // one process.exit, guarded by --self-test itself, so wiring it into a
+  // workflow unchanged would have produced an always-green check regardless of
+  // findings. This invokes THIS SAME FILE as a subprocess over a fixture tree:
+  // first to bank a clean baseline, then to prove a planted `supersedes:`
+  // declaration breaks the equality ratchet, then that a clean fixture (with a
+  // matching bank) passes again.
+  const fixtureChecks = []
+  const fcheck = (name, ok) => fixtureChecks.push([name, ok])
+  const dir = fs.mkdtempSync(path.join(tmpdir(), 'doc-supersession-selftest-'))
+  try {
+    fs.mkdirSync(path.join(dir, 'docs'), { recursive: true })
+    // DELIBERATELY DIFFERENT SLUGS — same-slug is its OWN supersession signal
+    // (tested separately in the estate), and if these shared one the fixture's
+    // "clean" baseline would already carry a finding before anything is planted.
+    const older = path.join(dir, 'docs', '20260101-topic-a-v1.00F.md')
+    const newer = path.join(dir, 'docs', '20260102-topic-b-v1.00F.md')
+    fs.writeFileSync(older, '# Topic A\n\nIndependent content.\n')
+    fs.writeFileSync(newer, '# Topic B\n\nA plain doc, not yet declaring supersession.\n')
+
+    const run = () => {
+      try { execFileSync('node', [SELF], { cwd: dir, encoding: 'utf8', stdio: 'pipe' }); return 0 }
+      catch (e) { return e.status ?? 1 }
+    }
+    const bank = () => {
+      try { execFileSync('node', [SELF, '--update-baseline'], { cwd: dir, encoding: 'utf8', stdio: 'pipe' }); return 0 }
+      catch (e) { return e.status ?? 1 }
+    }
+
+    fcheck('unarmed ratchet does not pass', run() !== 0)
+    fcheck('--update-baseline exits 0', bank() === 0)
+    fcheck('--update-baseline wrote the baseline file', fs.existsSync(path.join(dir, BASELINE_FILE)))
+    fcheck('clean fixture passes once banked', run() === 0)
+
+    // PLANT A VIOLATION: the newer doc declares it supersedes the older one.
+    fs.writeFileSync(newer, '---\nsupersedes:\n  - 20260101-topic-a-v1.00F.md\n---\n\n# Topic B\n')
+    fcheck('planted supersession declaration fails the equality ratchet', run() !== 0)
+
+    // Remove the violation -> back to the banked count -> passes.
+    fs.writeFileSync(newer, '# Topic B\n\nA plain doc, not yet declaring supersession.\n')
+    fcheck('restored-clean fixture passes again', run() === 0)
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true })
+  }
+
+  let fbad = 0
+  for (const [name, ok] of fixtureChecks) {
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${name}`)
+    if (!ok) fbad++
+  }
+  console.log(`\n  ${fixtureChecks.length - fbad}/${fixtureChecks.length} fixture ratchet self-tests pass`)
+
+  process.exit(bad || fbad ? 1 : 0)
 }
 
 
@@ -57,7 +119,16 @@ function walk(dir) {
     else if (x.name.endsWith('.md')) docs.push(p)
   }
 }
-for (const r of roots) if (fs.existsSync(r)) walk(r)
+// Tracked PER ROOT so the presence guard can require a minimum document count
+// per app — the same split this scan already computes, not a second walk that
+// could disagree with it.
+const perRoot = {}
+for (const r of roots) {
+  if (!fs.existsSync(r)) { perRoot[r] = 0; continue }
+  const before = docs.length
+  walk(r)
+  perRoot[r] = docs.length - before
+}
 
 const dateOf = (p) => { const m = path.basename(p).match(/^(\d{8})-/); return m ? m[1] : null }
 const slugOf = (p) => {
@@ -189,3 +260,27 @@ for (const [p, fs2] of rows) {
   console.log(`  [${st ?? '-'}] ${sigs.padEnd(20)} ${p}`)
   for (const f of fs2.slice(0, 2)) if (f.by !== p) console.log(`         by ${f.by}`)
 }
+
+// ── THE SUPERSESSION RATCHET — EQUALITY, both directions. ──────────────────
+//
+// Unlike the dangling-link count next door, this is not a submodule-content
+// artefact a routine gitlink bump should be exempt from re-banking — it is a
+// direct count of DOCUMENTS this repo's own docs/ trees carry, and slack
+// between the committed number and the measured one lets it drift back
+// unnoticed (bsuite D-87). A fall must be re-banked, not merely tolerated.
+if (process.argv.includes('--update-baseline')) {
+  writeBaseline(BASELINE_FILE, { findings: rows.length, scanned: docs.length, perRoot, banked: new Date().toISOString().slice(0, 10) })
+  console.log(`\n  banked ${rows.length} findings / ${docs.length} scanned to ${BASELINE_FILE}`)
+  process.exit(0)
+}
+
+const ratchet = compareRatchet({
+  file: BASELINE_FILE,
+  findings: rows.length,
+  scanned: docs.length,
+  mode: 'equality',
+  label: 'supersession',
+  scriptPath: 'scripts/audit-doc-supersession.mjs',
+})
+console.log(`\n${ratchet.message}`)
+if (!ratchet.ok) process.exit(1)

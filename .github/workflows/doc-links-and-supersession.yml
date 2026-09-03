@@ -1,0 +1,126 @@
+name: Doc links, source paths and supersession (advisory)
+
+# bsuite audit §7 C1 — two gates measured all week and wired to NOTHING.
+#
+# check-docs-links-and-pins.mjs (dangling markdown links / stale pins) and
+# audit-doc-supersession.mjs (which documents another document says it
+# supersedes) both ran cleanly from a terminal for months. Neither was
+# referenced by any .github/workflows file, and neither had more than ONE
+# process.exit in its entire source — the one guarding against an empty
+# checkout. Wiring either into a workflow unchanged would have produced an
+# always-green check regardless of findings: a gate invoked by nothing is not
+# a gate, and a gate that cannot fail is a log line with a cron schedule.
+#
+# ADVISORY, NOT REQUIRED — deliberately, for now. The dangling-link count is
+# partly a function of which commit of each PRIVATE submodule this checkout
+# lands on; this repo's own worktrees cannot check out those submodules to
+# measure a trustworthy number (that measurement needs a populated checkout,
+# which only CI reliably has). So THIS PR ships the workflow and the ratchet
+# logic with NO baseline committed, lands it here first, then reads
+# TOTAL FINDINGS and the scanned-document count off THIS WORKFLOW's own first
+# run and commits the two baselines in a follow-up commit on the same PR.
+# Only once that second commit's run is green does the context string get
+# handed to whoever writes branch protection — this workflow does not do
+# that itself.
+#
+# NO `paths:` FILTER — the same two reasons every estate-wide doc gate here
+# records. The corpus lives partly inside SUBMODULE gitlinks, which no path
+# filter can see; and a path-filtered check never reports on a PR that misses
+# the filter, which is how a required check deadlocks a merge forever. This
+# workflow is not required (yet), so that second hazard does not currently
+# apply here — the filter is still omitted, because the day it DOES become
+# required is not a day anyone should also have to remember to touch this file.
+
+on:
+  pull_request:
+    branches: [main, development]
+  push:
+    branches: [main, development]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: doc-links-and-supersession-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  doc-links-and-supersession:
+    name: Dangling links, source paths and supersession
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The submodules are PRIVATE repos. The default GITHUB_TOKEN cannot
+          # clone them — a 404, not a permission error — so every cross-app
+          # link and every submodule doc would read as absent and every
+          # finding below would be false. Same fallback chain every other
+          # submodule-consuming workflow in this repo uses.
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      # LOUD, not silent, when the PAT is the reason the tree is incomplete —
+      # a bare checkout failure from a missing/expired PAT already aborts the
+      # job before this step runs, but a PARTIAL checkout (some submodules
+      # populated, some not) would otherwise reach the guards below silently.
+      - name: Refuse to run on an incomplete submodule checkout
+        run: |
+          missing=""
+          for app in crm7 conduit business-suite-unified R80.4 braden throughput; do
+            [ -d "$app/docs" ] || missing="$missing $app"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::submodule checkout incomplete: PAT missing?$missing"
+            echo "  BSUITE_CROSS_REPO_PAT was absent or lacks 'repo: read' on:$missing"
+            echo "  Every doc gate below reads these six apps' docs/ dirs directly; a"
+            echo "  partial checkout must fail loudly, never scan a partial tree and"
+            echo "  call it clean."
+            exit 1
+          fi
+          echo "submodule checkout: all six app docs/ dirs present."
+
+      - name: Refuse to scan an empty tree (shared guard)
+        run: scripts/assert-app-trees-present.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # scripts/assert-app-trees-present.sh passes an app whose src/ checked
+      # out even if its docs/ did not. Every gate below reads docs/
+      # specifically, so this second, docs-specific guard is not redundant —
+      # see the script's own header for the measured gap.
+      - name: Self-test the docs-specific presence guard (proves it can fail)
+        run: node scripts/assert-docs-trees-present.mjs --self-test
+      - name: Docs-specific presence and volume guard
+        run: node scripts/assert-docs-trees-present.mjs
+
+      - name: Self-test the shared ratchet primitive (proves it can fail)
+        run: node scripts/lib/ratchet.mjs --self-test
+
+      - name: Self-test the dangling-link guard (proves it can fail)
+        run: node scripts/check-docs-links-and-pins.mjs --self-test
+      - name: Dangling markdown links and stale @bsuite pins (monotonic ceiling)
+        run: node scripts/check-docs-links-and-pins.mjs
+
+      - name: Self-test the supersession guard (proves it can fail)
+        run: node scripts/audit-doc-supersession.mjs --self-test
+      - name: Which documents are superseded (equality ratchet)
+        run: node scripts/audit-doc-supersession.mjs
+
+      # REPORT-ONLY — neither carries a ratchet. Each names something the two
+      # gates above do not: this one suggests a RENAME target for a dangling
+      # link by fuzzy filename match (its own header: "REPORTS ONLY... a human
+      # or a follow-up pass applies"), and it already refuses to pass silently
+      # over zero coverage (SystemExit(2) if it scanned zero files or links).
+      - name: Suggest renames for dangling doc links (report-only)
+        run: python3 scripts/check-docs-renamed-links.py
+
+      # REPORT-ONLY. Inline code-path references inside backticks — a doc
+      # saying "see `src/services/foo.ts`" — are invisible to the markdown
+      # LINK checker above and to the evidence: citation checker in
+      # doc-citations.yml; this is the only gate that reads them. No ratchet
+      # yet: PROPOSED (spec-declared-unbuilt) and MOVED/AMBIGUOUS/GONE need a
+      # judgement call this PR does not make.
+      - name: Inline source-path references (report-only)
+        run: node scripts/check-docs-source-paths.mjs
