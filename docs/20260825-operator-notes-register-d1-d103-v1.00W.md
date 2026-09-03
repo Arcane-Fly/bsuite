@@ -338,3 +338,12 @@ Not a docx export: sent to the PI session (`claude-code-bsuite-pi`) mid-turn on 
 | ID | Verbatim (his words) | Asks for | Surface | App | Category |
 |---|---|---|---|---|---|
 | D-160 | "note there are people using the app in production i.e. actual clients so stage all work to development branch and then ensure their is a platform notice and refresh to update prompt so they dont lose work on rebuilds." | Every app shows an in-app new-version notice with a refresh-to-update prompt so a signed-in user saves before a rebuild replaces the running build (never an automatic reload); all work staged to `development`; production promotions scheduled, never incidental | every app shell (one shared implementation) | ALL six | process + ux |
+
+## Addendum — D-161 and D-162, from the operator's chat directives of 2026-09-03 15:49 AWST
+
+Not a docx export: two asks the operator put to the email-p0 lane in chat on 3 September, relayed to the PI over the bsuite inbox (6003495c, 0fcd55e2). The PI did not see the verbatim text; the wording below is the lane's relay and is marked as such. Same basis as D-140 to D-145 and D-160 (a transcript source). Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+
+| ID | Wording (as relayed; not verbatim) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-161 | "can't reset the page layout" / "can't reset to defaults in the page editor" | Reset to Default findable from the page editor without hunting | page-builder edit toolbar (today: three clicks deep in the layers popover) | crm7 (shared page-builder) | customisation / D8.3 clarity |
+| D-162 | SMS recipients must resolve mobiles from any record that holds one and from groups: all contacts at a host, a tagged group, a client, a lead, an opportunity; one-shot, never retyped | a recipient picker that reaches every mobile the estate already holds, by record and by group | compose sheet / RecipientPicker | crm7 | one-shot DRY / communications |

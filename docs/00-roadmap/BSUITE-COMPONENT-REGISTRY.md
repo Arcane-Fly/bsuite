@@ -18,7 +18,7 @@ A shared component nothing imports is not a library — it is dead code with a v
 
 | App | Local component files |
 |---|---|
-| crm7 | 442 |
+| crm7 | 443 |
 | business-suite-unified | 117 |
 | conduit | 98 |
 | braden | 207 |
