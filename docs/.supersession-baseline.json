@@ -1,0 +1,15 @@
+{
+  "findings": 10,
+  "scanned": 471,
+  "perRoot": {
+    "docs": 296,
+    "crm7/docs": 52,
+    "braden/docs": 22,
+    "business-suite-unified/docs": 28,
+    "conduit/docs": 16,
+    "throughput/docs": 29,
+    "R80.4/docs": 27
+  },
+  "banked": "2026-09-03",
+  "note": "findings/scanned banked from CI (run 33711813359) per PI ruling — that job's own log, after the always()-step fix, was the first execution in which this gate's step actually ran (the previous run's fail-fast bug skipped it entirely). perRoot is this worktree's own per-root walk (470 total vs CI's 471 — development gained one doc between the two checkouts, the same PR-merge-commit effect seen on the other two baselines)."
+}
