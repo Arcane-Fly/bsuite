@@ -71,6 +71,20 @@ run G3 "no palette bypass in app source" bash -c '
   [ "$c3" -eq 0 ] || { echo "C3 palette bypasses: $c3"; exit 1; }'
 run G4 "no app redeclares a package token" scripts/audit-token-ownership.sh
 run G10 "no silently-dropped utilities" scripts/audit-invalid-utilities.sh
+# C10 — a used class token that Tailwind never REGISTERS is a different failure
+# from G10's "utility Tailwind DROPS": here the class parses and Tailwind would
+# happily emit it, but nothing in the @theme cascade names the custom property
+# it needs, so the build produces no rule at all. Measured live (F-58/D-149):
+# business-suite-unified alone carried 540 such occurrences at first measure
+# (551 once template-literal classNames were scanned; 381 after BSU#1106
+# registered the shell tokens), crm7 8, throughput 249 — three apps, not the
+# one the original narrow "bg-shell" audit found.
+# UNLIKE ITS NEIGHBOURS ABOVE, this gate needs each app's own `pnpm install`
+# already done (it builds the app's real CSS via its own installed tailwindcss)
+# and reaches the network via `npx --yes @tailwindcss/cli@<version>` — the same
+# precondition the B:$a / T:$a build-and-test gates below already assume, not a
+# new one this gate introduces.
+run C10 "every used class token has an emitted rule (ratchet)" node scripts/check-css-classes-emitted.mjs
 run G12 "no AA-tuned text token carries an opacity modifier" scripts/check-dimmed-text-tokens.sh
 run G13 "fill-token-as-text does not grow" scripts/check-fill-token-as-text.sh
 # R1 — the per-page checklist in § 2 of the DoD pointed at scripts/audit-routes.sh
