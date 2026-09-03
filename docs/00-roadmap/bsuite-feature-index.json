@@ -41366,7 +41366,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "41 assertions, all passing under node --test. NOTE: there is no casual-penalty-convention.ts - the test exercises calculate.ts, text-normalise.ts and round.ts, which it imports. The row's anchor names the TEST; that is not a missing implementation. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-rule-registry",
@@ -41489,7 +41492,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Normalises analysis/allowance_trace_*.json (5 awards: MA000010/020/025/036/089) \u2014 the trace JSON is stated as the single source of truth, code hand-transcribes nothing.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/registry.ts (201 lines) and clause-rules.ts both resolve; clause-rules carries 85 assertions, all passing. GAP RECORDED: registry.ts has NO test file of its own. Its only coverage is indirect, through clause-rules.test.ts which imports it. Named here rather than left implied. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.apprentice-ladder-manifest",
@@ -41527,7 +41533,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Fixed a defect where the UI's own hand-typed PCT_AWARDS table only covered 7 of the 21 modelled awards and silently showed the wrong award's shape for the other 14.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/apprentice-ladder-manifest.ts + suite: 12 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.rate-source-provenance",
@@ -41586,7 +41595,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Tenant DB rate-cache sync (mapd_db_cache) and DB-stored enterprise agreements (db_instrument) are named/typed as a contract but marked 'reserved' / future BSuite port work, not implemented in this repo.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/rate-source.ts + suite: 21 assertions, all passing. Related shipped work today: R80.4 'say where each dollar came from' (a21ad19), which is on #301 awaiting promotion. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.supported-wage-system",
@@ -41623,7 +41635,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "One award-agnostic module rather than 20 near-duplicate copies; MA000020 has no SWS schedule.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/supported-wage-system.ts + suite: 19 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.inclement-weather",
@@ -41660,7 +41675,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Requires an operator-supplied weather-exposure estimate rather than inventing a frequency; distinguishes cost-share-of-payroll from billable-uplift (a ~5-point gap at the cap).",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/inclement-weather.ts + suite: 56 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.national-training-wage",
@@ -41706,7 +41724,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "LOOP.md calls this 'THE HIGHEST-LEVERAGE SINGLE MODULE' \u2014 one module covers the trainee path for 69 awards rather than duplicating it per award.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/national-training-wage.ts + suite: 43 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.funding-programs-placement",
@@ -41765,7 +41786,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Deliberately has NO eligibility evaluator by operator ruling \u2014 programs/conditions are free text the operator writes and reads, never parsed or blocked on.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/funding-programs.ts + suite: 20 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-queue-coverage-gate",
@@ -42475,7 +42499,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "LOOP.md D14: 'NO REGEX' is a standing house rule enforced via text-normalise.ts helpers used throughout.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/round.ts (22 assertions) and text-normalise.ts (99 assertions) both resolve, both suites passing - 121 assertions between them, the heaviest pair in this class. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.tools.corpus-and-analysis-scripts",
