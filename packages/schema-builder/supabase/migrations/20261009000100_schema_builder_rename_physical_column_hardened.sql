@@ -17,7 +17,6 @@
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
 
-BEGIN;
 
 -- ---------------------------------------------------------------------------
 -- 1. THE REGISTRY. This is the fix for the escalation described in the header.
@@ -441,4 +440,3 @@ comment on function public.rename_physical_column(uuid, uuid, text, boolean) is
   '{ executed:false, reason:''no_physical_table'' } for any unregistered entity, '
   'which the UI already handles by falling back to the metadata-only rename.';
 
-COMMIT;
