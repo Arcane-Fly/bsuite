@@ -14681,7 +14681,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "| pass-6 correction: this is the RUNTIME WRITER for any table listed is_active in report_catalog_entities. It resolves the target table from a DB row and issues dynamic EXECUTE format('INSERT INTO %I.%I'), so the table name never appears in TypeScript \u2014 invisible to every source grep and to packages/dry-lint's AST-based cross-app-write rule. award_rates, host_contracts and whs_records are all is_active here.",
-  "dod_status": "not-evaluated",
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "crm7#2353 + #2359 + #2366. D8 COMPLETE on d.crm.crm7.app signed in: 4 cells (1440/768 x light/dark) 0 FAIL 0 WARN, page-loaded asserted; canvasColumns evaluated by interaction (12->4->24->12->6, 6 SURVIVED a full reload). Opening view went 14 columns with 5 system to 6 with 1, then to 6 with 0 after the bare-id and Scope-collision fixes. D9 FALSE: data_import_jobs holds 1 row, tenant 00000000-0000-0000-0000-000000000e2e (E2E fixture) - no real tenant has used this surface. Closer: first real import by a live tenant."
+  },
   "operator_audit": [
    {
     "register_id": "D-79",
