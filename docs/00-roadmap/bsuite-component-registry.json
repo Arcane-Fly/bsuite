@@ -2,13 +2,13 @@
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
   "sharedComponents": 195,
-  "unusedSharedComponents": 169,
+  "unusedSharedComponents": 168,
   "localComponentFiles": {
     "crm7": 443,
     "business-suite-unified": 117,
     "conduit": 98,
     "braden": 207,
-    "throughput": 89,
+    "throughput": 91,
     "R80.4": 5
   },
   "components": [
@@ -768,9 +768,11 @@
     {
       "name": "UpdateAvailableBanner",
       "package": "@bsuite/nav-core",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
+      "consumers": {
+        "throughput": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
     },
     {
       "name": "VERSION_JSON_PATH",

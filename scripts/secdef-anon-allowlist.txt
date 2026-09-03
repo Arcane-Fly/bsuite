@@ -89,4 +89,3 @@ redeem_host_agreement_signature(text,text,text,text,text,text)  # crm7 hostAgree
 # all yields a note, never a failure: a partial replay may simply not have built
 # it, and that is not evidence of anything.
 
-is_developer_admin()  # FIXED BY braden migration 20261115000000_revoke_is_developer_admin_from_public.sql — DELETE THIS LINE once the braden gitlink carrying it lands on development. Postgres' default PUBLIC EXECUTE was never revoked across ~10 CREATE/DROP cycles; all real callers (2 edge functions, 4 RLS policies) are authenticated-only.
