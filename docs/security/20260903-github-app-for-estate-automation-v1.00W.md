@@ -1,3 +1,13 @@
+---
+kind: standard
+authority: operator
+owner: bsuite
+evidence:
+  - .github/workflows/consumer-lockfile-reach.yml
+  - .github/workflows/advance-submodule-pointers.yml
+  - docs/00-roadmap/operator-notes-verdicts.json
+---
+
 # GitHub App for estate automation (D-169)
 
 **Status:** runbook, kind: procedure. Authority: operator ruling 2026-09-03 18:1x AWST ("API is legacy") recorded as

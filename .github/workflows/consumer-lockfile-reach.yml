@@ -83,7 +83,7 @@ jobs:
       - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
         # The App path runs once the operator has registered the App and set
         # vars.BSUITE_GITHUB_APP_CLIENT_ID + secrets.BSUITE_GITHUB_APP_PRIVATE_KEY on
-        # this repository (docs/security/github-app-runbook.md). Until then the
+        # this repository (docs/security/20260903-github-app-for-estate-automation-v1.00W.md). Until then the
         # step is skipped and the token expressions below fall through to the PAT;
         # the fallback is deleted once the first App-authored commit reads
         # verification.verified=true (the guard further down proves it).
