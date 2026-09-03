@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/schema-registry",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Tenant schema, page layout, and navigation hooks for BSuite consumer apps",
   "type": "module",
   "publishConfig": {

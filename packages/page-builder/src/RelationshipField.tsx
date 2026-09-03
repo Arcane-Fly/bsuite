@@ -264,7 +264,7 @@ export function RelationshipField({
               : undefined
           }
           aria-label={ariaLabel ?? label}
-          className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-60"
+          className="w-full rounded-md border border-border-interactive bg-background px-2 py-1.5 text-sm text-foreground disabled:opacity-60"
           value={query}
           placeholder={placeholder}
           disabled={disabled}
