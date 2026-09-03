@@ -73,8 +73,8 @@ Each item: `id`, `kind` (`gate` a CI check name that must be required and green 
 | A4 | hub lane (audit PI) | | open | advisory, transcript-sourced (ruling 9) |
 | A5 | pi | #2970 | open | 160/160 judged; registered_at on every row; F-verdict banked at 0 |
 | C1 | pi | #2968 | **done** | merged c18efaaf after review + fix-forward; advisory workflow; tool-written baselines |
-| C2 | pi | #2970 | open | 7 review issues fixed forward; merging with development |
-| C3 | db-worker (crm7 clone + parent observer) | #2985, crm7#2363 | open | fix-forward pushed; enforcer before merge |
+| C2 | pi | #2970 | **done** | merged 41b12223 after 7 review issues fixed forward |
+| C3 | db-worker (crm7 clone + parent observer) | #2985 ✓, crm7#2363 ✓ | **done** | enforcer merge-ready 17:40 (blocker reproduced pre-fix on real pg_cron 1.6.4, closed by a real worker; pgTAP 20/20, 11 fail under sabotage); merged 2ad25440 + f2a6744c; D9 closes on the first production check-in after the crm7 applier; F1/F2 in FOLLOW |
 | C4 | hub lane (audit PI) | | open | d93866d: dod-gate.py kill switch, per-hook marker, fixtures |
 | C5 | pi worker | #2988 | **done** | merged 3f11ddf0; dev 29 / main 32 required contexts; meta-gate wired |
 | C6 | hub lane (audit PI) | | open | item 4 amendments adopted (fb57b988) |
@@ -86,10 +86,10 @@ Each item: `id`, `kind` (`gate` a CI check name that must be required and green 
 | J7 | pi | #2971 | **done** | merged 364fd281; Fable review PASS; Class C green on every PR |
 | GITLINK | pi | #2969, #2978, #2987, #2989 | **done** | pointers on app mains; registers regenerated in-PR (precedent) |
 | N1 | pi | #2974 | **done** | nav-core 1.3.0 merged 1910dbd6; publishes on the next parent promotion |
-| N2 | pi + main + app workers | #2976, throughput#465 ✓ | open | throughput adopted + passed on d.ideas; crm7/BSU lanes running |
-| DOD1 | pi + every lane | | open | DoD enforced across lanes (operator 15:56); retro enforcers running |
-| DOD2 | pi + every lane | | open | bot review threads addressed before merge (operator 16:21); 20 routed |
-| FOLLOW | pi | | open | follow-up list from reviews and enforcer runs (8 items) |
+| N2 | pi + main + app workers | #2976 ✓, throughput#465 ✓, throughput#467, crm7#2373, BSU#1119 | open | throughput adopted + passed on d.ideas, promotes 18:00 (#467); crm7#2373 and BSU#1119 opened by the adoption lanes (enforcer before merge); conduit/braden/R80.4 next per R10 |
+| DOD1 | pi + every lane | | open | enforcer runs recorded in lanes/dod/: #2990 SEND_BACK→fixed→merged 002053bc; C3 merge-ready→merged; throughput#465 merge-ready→merged; BSU#1117 SEND_BACK 17:20 (six gaps, core stands); R80.4#301 SEND_BACK 17:37 (two gaps, both closed by 17:45, flip pending); retro gates on C5/C7/lockfiles/grok; verdict recording unfrozen by #2990 (first writeback #2995) |
+| DOD2 | pi + every lane | | open | bot threads addressed before merge (operator 16:21): #2990 1/1, #2994 2/2 (both upheld against the PI), R80.4#302 2/2 + #301 3/3 answered by #302, C3 4/4 + 1/1, BSU#1117 3/3; open: crm7#2372 2, throughput#466 2 |
+| FOLLOW | pi | | open | (1) generator: recompute sibling_count on regeneration (148 stale on 146 rows); (2) C3 F1: assert unhealthy_jobs holds no cron-watchdog-every-15m by name; F2 suite 91 header; (3) AppShell root unbounded (D-167, @bsuite/ui class, D8 per consumer); (4) R80.4 Jodie gate tells a signed-in person to sign in (D-166); (5) plan-currency marker on 20260901-workflow-canvas-implementation-v1.00A.md (red on development since #2948); (6) lockfile pin reach clears on tonight's gitlink advances; (7) estate probe: wait for the subject, never networkidle (d.r8 lazy chunk), and theme via the app's own key (colorScheme emulation inert on data-theme apps); (8) original 8 items stand |
 
 ## Stopping conditions
 
@@ -100,7 +100,7 @@ Each item: `id`, `kind` (`gate` a CI check name that must be required and green 
 ## Tasks
 
 - [ ] A1 to A5 shipped with evidence
-- [ ] C1 to C10 shipped with evidence
+- [ ] C1 to C10 shipped with evidence (C1, C2, C3, C5, C7, C10 done; C4/C6/C8/C9 per their rows)
 - [x] J7 shipped with evidence (#2971, 364fd281)
 - [ ] Phase red-teamed by two independent models; `gate_report.py` APPROVE recorded here
 
