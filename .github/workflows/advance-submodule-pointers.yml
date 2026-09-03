@@ -46,6 +46,32 @@ jobs:
     name: Advance submodule pointers
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
+        # The App path runs once the operator has registered the App and set
+        # vars.BSUITE_GITHUB_APP_CLIENT_ID + secrets.BSUITE_GITHUB_APP_PRIVATE_KEY on
+        # this repository (docs/security/github-app-runbook.md). Until then the
+        # step is skipped and the token expressions below fall through to the PAT;
+        # the fallback is deleted once the first App-authored commit reads
+        # verification.verified=true (the guard further down proves it).
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: write
+          permission-pull-requests: write
+          permission-metadata: read
+
       - name: Checkout parent AND the submodules it must read
         uses: actions/checkout@v5
         with:
@@ -71,7 +97,7 @@ jobs:
           # config too, so the script's own `git fetch` inside them works. Same
           # fallback chain every other submodule-consuming workflow here uses.
           submodules: true
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - name: Refuse to scan an empty tree
@@ -227,7 +253,7 @@ jobs:
           # to github.token keeps the workflow runnable in a fork or wherever the PAT
           # is absent — it will fail the same way there, loudly, rather than silently
           # doing nothing.
-          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
         run: |
           set -euo pipefail
           BR=chore/auto-advance-submodule-pointers
