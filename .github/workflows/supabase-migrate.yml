@@ -469,7 +469,7 @@ jobs:
             # the SQL text.
             psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" <<'SQL'
             INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;
-            SQL
+          SQL
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.sql" ! -name "*.nontx.sql" -print0 | sort -z)
@@ -579,7 +579,7 @@ jobs:
             # the SQL text.
             psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" <<'SQL'
             INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;
-            SQL
+          SQL
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.nontx.sql" -print0 | sort -z)
