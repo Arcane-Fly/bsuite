@@ -96,29 +96,34 @@ for _sub in $ALL_SUBMODULES; do
 done
 
 # Source globs scanned per app — keep in sync with the workflow file.
+# `:(glob)` is deliberate: a DEFAULT git pathspec treats `src/**/*.ts` as
+# fnmatch without FNM_PATHNAME, so it needs a second slash and silently skips
+# every file directly under src/ or api/ (19 root-level src files and
+# R80.4/api/fwc.js were never scanned before 2026-09-04). With `:(glob)`,
+# `**` is any depth including zero.
 # We intentionally restrict to runtime source (src/, app/, pages/, api/, supabase/functions/)
 # so that .env.example, docs/, coverage/, README.md, archive/, and similar do not trigger.
 SRC_GLOBS=(
-  'src/**/*.ts'
-  'src/**/*.tsx'
-  'src/**/*.js'
-  'src/**/*.jsx'
-  'src/**/*.mjs'
-  'src/**/*.cjs'
-  'app/**/*.ts'
-  'app/**/*.tsx'
-  'app/**/*.js'
-  'app/**/*.jsx'
-  'pages/**/*.ts'
-  'pages/**/*.tsx'
-  'pages/**/*.js'
-  'pages/**/*.jsx'
-  'api/**/*.ts'
-  'api/**/*.tsx'
-  'api/**/*.js'
-  'api/**/*.jsx'
-  'supabase/functions/**/*.ts'
-  'supabase/functions/**/*.js'
+  ':(glob)src/**/*.ts'
+  ':(glob)src/**/*.tsx'
+  ':(glob)src/**/*.js'
+  ':(glob)src/**/*.jsx'
+  ':(glob)src/**/*.mjs'
+  ':(glob)src/**/*.cjs'
+  ':(glob)app/**/*.ts'
+  ':(glob)app/**/*.tsx'
+  ':(glob)app/**/*.js'
+  ':(glob)app/**/*.jsx'
+  ':(glob)pages/**/*.ts'
+  ':(glob)pages/**/*.tsx'
+  ':(glob)pages/**/*.js'
+  ':(glob)pages/**/*.jsx'
+  ':(glob)api/**/*.ts'
+  ':(glob)api/**/*.tsx'
+  ':(glob)api/**/*.js'
+  ':(glob)api/**/*.jsx'
+  ':(glob)supabase/functions/**/*.ts'
+  ':(glob)supabase/functions/**/*.js'
 )
 
 # R4's scope: CLIENT source only — everything above EXCEPT edge functions.
@@ -348,6 +353,29 @@ run_git_grep() {
   ( cd "$repo" && git grep -nE "$pattern" -- "$@" 2>/dev/null ) || true
 }
 
+
+# A Vite app may declare a serverless runtime beside its client bundle
+# (`vercel.json` -> `functions: { "api/**/*.ts": ... }`). Files under such a
+# directory run on the server: `process.env.SUPABASE_*` is the canonical read
+# there (AGENTS.md §Environment Variables, "Server-side (API routes)"), so R1
+# exempts them by DECLARATION rather than by a per-file allowlist entry that has
+# to be added after the rule fires on a file that was correct the whole time
+# (crm7/api/*, throughput/api/llm/_shared/auth.ts, crm7/api/ai/_shared/usageWriter.ts).
+serverless_dirs_for() {
+  local app="$1"
+  [ -f "$app/vercel.json" ] || return 0
+  node -e '
+    const fs = require("fs");
+    let cfg; try { cfg = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); } catch { process.exit(0); }
+    const dirs = new Set();
+    for (const glob of Object.keys(cfg.functions || {})) {
+      const top = glob.split("/")[0];
+      if (top && !top.includes("*") && !top.includes("{")) dirs.add(top);
+    }
+    process.stdout.write([...dirs].join("|"));
+  ' "$app/vercel.json"
+}
+
 # ---- R1: Vite-app source must NOT read process.env.SUPABASE_* ----
 check_r1() {
   local issues=""
@@ -358,6 +386,11 @@ check_r1() {
     matches=$(run_git_grep "$app" \
       'process\.env\.(SUPABASE_URL|SUPABASE_ANON_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_SERVICE_ROLE_KEY)' \
       "${SRC_GLOBS[@]}" | filter_matches "$prefix")
+    local serverless
+    serverless=$(serverless_dirs_for "$app")
+    if [ -n "$serverless" ] && [ -n "$matches" ]; then
+      matches=$(printf '%s\n' "$matches" | grep -vE "^${app}/(${serverless})/" || true)
+    fi
     if [ -n "$matches" ]; then
       issues="${issues}${matches}"$'\n'
     fi

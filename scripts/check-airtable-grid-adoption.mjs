@@ -58,14 +58,75 @@
  * Read the numbers as "render sites a person must convert", nothing more.
  *
  * Usage:
- *   node scripts/check-airtable-grid-adoption.mjs            # verify
- *   node scripts/check-airtable-grid-adoption.mjs --update   # bank
+ *   node scripts/check-airtable-grid-adoption.mjs                    # verify (PR path)
+ *   node scripts/check-airtable-grid-adoption.mjs --update-baseline  # bank (--update still accepted)
+ *   node scripts/check-airtable-grid-adoption.mjs --reset-schedule --reason "<why>"  # re-arm the floor
+ *   node scripts/check-airtable-grid-adoption.mjs --check-floor      # NIGHTLY ONLY — never a PR check
+ *
+ * Environment:
+ *   AIRTABLE_GRID_SCAN_ROOT   the tree to scan (default: this repo) — see the comment on ROOT
+ *   AIRTABLE_GRID_BASELINE    the baseline file to read AND write (default:
+ *                             scripts/airtable-grid-adoption-baseline.json). Exists so a fixture run
+ *                             (--self-test, a scratch scan) can bank into a temp file; without it
+ *                             `--update-baseline` against a scan root wrote the COMMITTED baseline
+ *                             (review 2026-09-03, bsuite#2970). Never set it in CI.
  */
-import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { readdirSync, readFileSync, statSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+/*
+ * SCHEDULED FLOOR — PI ruling 2026-09-03 (audit §7, C2).
+ *
+ * The per-app rise/fall ratchet below only ever refuses a RISE and demands a
+ * re-bank on an unbanked FALL; nothing makes the estate-wide hand-rolled count
+ * actually shrink over time. `_schedule.origin_count` decays by `per_week` from
+ * `_schedule.origin_date`, evaluated ONLY by a nightly, non-required job (see
+ * estate-alignment.yml) — never a PR check. A missing or non-numeric schedule
+ * field under --check-floor is a FAILURE ("schedule unarmed"), not a silent pass.
+ *
+ * UNIT: origin_count and the floor count hand-rolled RENDER SITES (Σ handRolled),
+ * not files (Σ files) — 192 sites across 138 files on 2026-09-03. per_week is
+ * therefore "render sites per week". The first bank labelled it "files/week";
+ * review bsuite#2970 caught the mismatch.
+ */
+export function scheduledFloor(schedule, today = new Date()) {
+  if (scheduleUnarmed(schedule).length) return null;
+  const { origin_count, origin_date, per_week } = schedule;
+  const start = new Date(`${origin_date}T00:00:00Z`).getTime();
+  const weeks = Math.max(0, Math.floor((today.getTime() - start) / (7 * 24 * 60 * 60 * 1000)));
+  return Math.max(0, origin_count - per_week * weeks);
+}
+
+/*
+ * EVERY schedule field, not only origin_date — review 2026-09-03 (bsuite#2970).
+ * With origin_count or per_week missing the arithmetic above yields NaN, and
+ * `live > NaN` is false, so --check-floor printed "floor today: NaN … floor
+ * holds." and exited 0. Returns the NAMES of the fields that are missing or
+ * non-numeric (origin_date: missing or unparseable); empty means armed.
+ */
+export function scheduleUnarmed(schedule) {
+  const bad = [];
+  if (!schedule || typeof schedule !== 'object') return ['origin_count', 'origin_date', 'per_week'];
+  if (typeof schedule.origin_count !== 'number' || !Number.isFinite(schedule.origin_count)) bad.push('origin_count');
+  if (typeof schedule.origin_date !== 'string' || !schedule.origin_date || Number.isNaN(new Date(`${schedule.origin_date}T00:00:00Z`).getTime())) bad.push('origin_date');
+  if (typeof schedule.per_week !== 'number' || !Number.isFinite(schedule.per_week)) bad.push('per_week');
+  return bad;
+}
+
+/** A scan that examined fewer files than it did when banked has gone blind, not clean. */
+export function denominatorFell(scannedNow, bankedScanned) {
+  return scannedNow < bankedScanned;
+}
+
+/* PI ruling 2026-09-03: 6 hand-rolled RENDER SITES per week, estate-wide sum, from origin 192. */
+const GRID_PER_WEEK = 6;
+/* Written into `_schedule.unit` so the baseline names what origin_count/per_week count. */
+const SCHEDULE_UNIT = 'hand-rolled <table>/<Table> RENDER SITES (sum of apps.*.handRolled), not files; per_week is render sites per week';
 /*
  * The tree to scan. Normally the repo this script lives in.
  *
@@ -77,13 +138,17 @@ const HERE = dirname(fileURLToPath(import.meta.url));
  * the wrong tree and spent weeks reading a red gate as merely red.
  *
  * Point it at a directory of the apps checked out at their gitlink SHAs to bank
- * numbers CI can actually reproduce. The BASELINE path is deliberately NOT
- * affected: the baseline belongs to the repo, not to the tree being measured.
+ * numbers CI can actually reproduce. The BASELINE path is NOT derived from it:
+ * the baseline belongs to the repo, not to the tree being measured. It IS
+ * overridable separately via AIRTABLE_GRID_BASELINE, so a fixture run can bank
+ * into a temp file instead of the committed one.
  */
 const ROOT = process.env.AIRTABLE_GRID_SCAN_ROOT
   ? resolve(process.env.AIRTABLE_GRID_SCAN_ROOT)
   : resolve(HERE, '..');
-const BASELINE = join(HERE, 'airtable-grid-adoption-baseline.json');
+const BASELINE = process.env.AIRTABLE_GRID_BASELINE
+  ? resolve(process.env.AIRTABLE_GRID_BASELINE)
+  : join(HERE, 'airtable-grid-adoption-baseline.json');
 
 const APPS = ['crm7', 'business-suite-unified', 'conduit', 'braden', 'throughput'];
 
@@ -269,6 +334,251 @@ if (process.argv.includes('--self-test')) {
       failed += 1;
     }
   }
+
+  /*
+   * THE onRowClick CEILING — PI ruling 2026-09-03 (audit §7, C2): the requirement
+   * now covers EVERY file importing @bsuite/data-grid, not only the banked
+   * pre-conversion clickThrough set. A file rendering DataGrid with no onRowClick
+   * MUST count toward the ceiling — this is the exact "planted onRowClick-less
+   * DataGrid file" case, through the same usesDataGrid()/hasRowClick() the live
+   * per-app scan calls on every file it walks.
+   */
+  const ceilingCases = [
+    ['<DataGrid columns={c} data={d} />', true, 'a planted DataGrid file with NO onRowClick counts against the ceiling'],
+    ['<DataGrid columns={c} data={d} onRowClick={open} />', false, 'a DataGrid file WITH onRowClick does not count against the ceiling'],
+    ['<table><tr><td>x</td></tr></table>', false, 'a hand-rolled table with no DataGrid does not count — this ceiling is DataGrid-scoped'],
+  ];
+  for (const [source, expectedMissing, why] of ceilingCases) {
+    const got = usesDataGrid(source) && !hasRowClick(source);
+    if (got !== expectedMissing) {
+      console.error(`SELF-TEST FAIL: ${why} — expected ${expectedMissing}, got ${got}`);
+      failed += 1;
+    }
+  }
+
+  /*
+   * SCHEDULED-FLOOR self-tests, through the SAME `scheduledFloor()` the live
+   * --check-floor path calls: 0 weeks equals origin, N weeks subtracts
+   * N*per_week, the floor never goes negative, missing origin_date fails.
+   */
+  const floorCases = [
+    ['floor at 0 weeks equals origin', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2026-09-03T00:00:00Z')) === 192],
+    ['floor after 1 week is origin - per_week', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2026-09-10T00:00:00Z')) === 186],
+    ['floor after 5 weeks is origin - 5*per_week', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2026-10-08T00:00:00Z')) === 162],
+    ['floor never goes negative — floors at 0', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2035-01-01T00:00:00Z')) === 0],
+    ['missing origin_date returns null (caller must treat as FAILURE)', scheduledFloor({ origin_count: 192, origin_date: null, per_week: 6 }) === null],
+    // THE NaN HOLE (review bsuite#2970): 192 > NaN is false, so these used to "hold".
+    ['missing origin_count returns null, never NaN', scheduledFloor({ origin_date: '2026-09-03', per_week: 6 }) === null],
+    ['missing per_week returns null, never NaN', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03' }) === null],
+    ['a STRING per_week is non-numeric and returns null', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: '6' }) === null],
+    ['scheduleUnarmed names every missing field', JSON.stringify(scheduleUnarmed({ origin_date: '2026-09-03' })) === '["origin_count","per_week"]'],
+    ['scheduleUnarmed is empty on a complete schedule', scheduleUnarmed({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }).length === 0],
+    ['denominator fall is caught', denominatorFell(90, 95) === true],
+    ['denominator rise is not a fall', denominatorFell(100, 95) === false],
+    ['denominator equality is not a fall', denominatorFell(95, 95) === false],
+  ];
+  for (const [why, ok] of floorCases) {
+    if (!ok) {
+      console.error(`SELF-TEST FAIL: ${why}`);
+      failed += 1;
+    }
+  }
+
+  /*
+   * IMPORT-SCOPE predicate (review bsuite#2970, rule 5): the ceiling covers
+   * every file that IMPORTS @bsuite/data-grid, whether or not it renders a
+   * literal <DataGrid tag. Negative controls: prose naming the package, and a
+   * different package sharing the prefix, must NOT count.
+   */
+  const importCases = [
+    ["import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} />", true, 'the ordinary import + tag'],
+    ["import { DataGrid as Grid } from '@bsuite/data-grid';\n<Grid columns={c} />", true, 'an ALIASED import with no literal <DataGrid tag — the case the tag-only predicate missed'],
+    ['import type { ColumnDef } from "@bsuite/data-grid";', true, 'a type-only import still binds the file to the package'],
+    ["import '@bsuite/data-grid/styles.css';", true, 'a side-effect subpath import'],
+    ["export { DataGrid } from '@bsuite/data-grid';", true, 'a re-export is an import'],
+    ['// the @bsuite/data-grid package is documented here', false, 'a COMMENT naming the package is not an import'],
+    ["import { x } from '@bsuite/data-grid-legacy';", false, 'a different package sharing the prefix'],
+    ['<DataGrid columns={c} />', true, 'a bare tag with no import line still counts (tag OR import)'],
+    ['<table><tr><td/></tr></table>', false, 'a hand-rolled table neither imports nor renders'],
+  ];
+  for (const [source, expected, why] of importCases) {
+    const got = usesDataGrid(source);
+    if (got !== expected) {
+      console.error(`SELF-TEST FAIL: ${why} — expected ${expected}, got ${got}`);
+      failed += 1;
+    }
+  }
+
+  /*
+   * ENTRY-POINT self-tests — review 2026-09-03 (bsuite#2970), rule 6. Each case
+   * spawns THIS script as a child process with AIRTABLE_GRID_SCAN_ROOT pointing
+   * at a temp app tree and AIRTABLE_GRID_BASELINE at a temp baseline, and asserts
+   * the EXIT CODE. The committed baseline is never read or written here; the
+   * temp tree is removed afterwards.
+   */
+  const fixture = mkdtempSync(join(tmpdir(), 'c2-grid-'));
+  let entryCount = 0;
+  try {
+    const write = (rel, text) => { mkdirSync(dirname(join(fixture, rel)), { recursive: true }); writeFileSync(join(fixture, rel), text); };
+    // A tree with two hand-rolled render sites in crm7 and one converted DataGrid file WITH onRowClick.
+    write('crm7/src/pages/a.tsx', '<Table><TableRow onClick={f}><TableCell/></TableRow></Table>\n');
+    write('crm7/src/pages/b.tsx', '<table><tr><td/></tr></table>\n');
+    write('crm7/src/pages/c.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} onRowClick={open} />\n");
+    for (const app of ['business-suite-unified', 'conduit', 'braden', 'throughput']) write(`${app}/src/x.tsx`, 'export const X = () => null;\n');
+    const baselinePath = join(fixture, 'baseline.json');
+    const run = (args, env = {}) => {
+      const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), ...args], {
+        encoding: 'utf8',
+        env: { ...process.env, AIRTABLE_GRID_SCAN_ROOT: fixture, AIRTABLE_GRID_BASELINE: baselinePath, ...env },
+      });
+      return { code: r.status, out: `${r.stdout}${r.stderr}` };
+    };
+    const committedBefore = readFileSync(BASELINE, 'utf8');
+    const entryCases = [];
+    const expect = (why, r, code, re) => entryCases.push([why, r.code === code && re.test(r.out), r]);
+
+    expect('ENTRY: --reset-schedule --reason banks a fixture baseline into the TEMP path → exit 0',
+      run(['--reset-schedule', '--reason', 'self-test fixture']), 0, /SCHEDULE RESET/);
+    expect('ENTRY: committed baseline byte-identical after the fixture bank (AIRTABLE_GRID_BASELINE honoured)',
+      { code: readFileSync(BASELINE, 'utf8') === committedBefore ? 0 : 1, out: 'compared' }, 0, /compared/);
+    expect('ENTRY: clean fixture, PR path → exit 0',
+      run([]), 0, /grid adoption OK/);
+    expect('ENTRY: clean fixture, --check-floor → exit 0 "floor holds"',
+      run(['--check-floor']), 0, /floor holds/);
+
+    // Plant an onRowClick-less DataGrid file (the grid case the review names).
+    write('crm7/src/pages/Planted.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} />\n");
+    expect('ENTRY: planted onRowClick-less DataGrid file → exit 1 "missing onRowClick ROSE 0 -> 1"',
+      run([]), 1, /missing onRowClick ROSE 0 -> 1/);
+    // Aliased import, no literal tag — must count under the widened predicate.
+    write('crm7/src/pages/Planted.tsx', "import { DataGrid as Grid } from '@bsuite/data-grid';\n<Grid columns={c} data={d} />\n");
+    expect('ENTRY: planted ALIASED import with no <DataGrid tag and no onRowClick → exit 1 (import-scope)',
+      run([]), 1, /missing onRowClick ROSE 0 -> 1/);
+    rmSync(join(fixture, 'crm7/src/pages/Planted.tsx'));
+
+    /*
+     * DOCUMENTED EXCEPTIONS (C8, 2026-09-04): a file missing onRowClick with a
+     * RECORDED reason in the baseline must NOT count toward the ceiling, but a
+     * bad or contradicted exception must still fail — an exception is a claim,
+     * and a false claim is worse than no claim at all.
+     */
+    write('crm7/src/pages/Exempt.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} />\n");
+    const setExceptions = (exceptions) => {
+      const doc = JSON.parse(readFileSync(baselinePath, 'utf8'));
+      doc.dataGridOnRowClick.crm7.exceptions = exceptions;
+      writeFileSync(baselinePath, JSON.stringify(doc, null, 2));
+    };
+    // Establish the exception FIRST, then bank — a real-world exception is
+    // added and committed together, so the ceiling never registers Exempt.tsx
+    // as a countable gap at all (ceiling stays 0, not "1 excused down to 0").
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'A genuinely explained reason with real content, not a placeholder.' }]);
+    run(['--update-baseline']);
+    expect('ENTRY: a documented exception with a REAL reason does not count toward the ceiling → exit 0',
+      run([]), 0, /grid adoption OK/);
+
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: '' }]);
+    expect('ENTRY: a documented exception with an EMPTY reason → exit 1 (no real reason recorded)',
+      run([]), 1, /has no real reason recorded/);
+
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'n/a' }]);
+    expect('ENTRY: a documented exception with a SHORT placeholder reason → exit 1',
+      run([]), 1, /has no real reason recorded/);
+
+    // Restore a real reason before the contradiction case, so the ONLY thing
+    // under test there is "wired AND excepted", not a reason problem too.
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'A genuinely explained reason with real content, not a placeholder.' }]);
+    write('crm7/src/pages/Exempt.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} onRowClick={open} />\n");
+    expect('ENTRY: an exception that ALSO has onRowClick → exit 1 (contradiction — stale exception)',
+      run([]), 1, /is a documented exception AND has onRowClick/);
+
+    rmSync(join(fixture, 'crm7/src/pages/Exempt.tsx'));
+    setExceptions([]);
+    run(['--update-baseline']);
+
+    /*
+     * A THIRD staleness (bsuite#3027 review): an exception naming a file that
+     * no longer exists. The measurement loop only visits files it finds on
+     * disk, so a vanished exception path is invisible to the walk — nothing
+     * marks it missing, nothing marks it contradicted. Before this fix the
+     * run exited 0 and reported "holds" while a documented claim pointed at
+     * nothing.
+     */
+    write('crm7/src/pages/Exempt.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} />\n");
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'A genuinely explained reason with real content, not a placeholder.' }]);
+    run(['--update-baseline']);
+    rmSync(join(fixture, 'crm7/src/pages/Exempt.tsx')); // the file is gone; the exception entry is not
+    expect('ENTRY: an exception naming a file that no longer exists → exit 1 (stale exception, not "holds")',
+      run([]), 1, /does not exist\. The exception is stale/);
+    setExceptions([]);
+    run(['--update-baseline']);
+
+    /*
+     * MISSING vs MALFORMED baseline (bsuite#3027 review, Copilot thread): a
+     * baseline that fails to READ (ENOENT) is legitimately "no baseline yet"
+     * — the fixture's own first call above already exercises this and must
+     * keep succeeding. A baseline that EXISTS but fails to PARSE is a
+     * different failure entirely and must never be treated the same way, or
+     * a corrupted file gets silently overwritten by the next --update-baseline
+     * instead of being investigated.
+     */
+    const badPath = join(fixture, 'malformed', 'baseline.json');
+    mkdirSync(dirname(badPath), { recursive: true });
+    writeFileSync(badPath, '{ this is not json');
+    expect('ENTRY: a baseline file that EXISTS but is not valid JSON → exit 2, refuses to treat it as "no baseline"',
+      run([], { AIRTABLE_GRID_BASELINE: badPath }), 2, /is not valid JSON/);
+    const noPath = join(fixture, 'absent', 'baseline.json');
+    mkdirSync(dirname(noPath), { recursive: true });
+    expect('ENTRY: a baseline path with no file at all → exit 0 via --update-baseline (genuinely "no baseline yet")',
+      run(['--update-baseline'], { AIRTABLE_GRID_BASELINE: noPath }), 0, /banked:/);
+    rmSync(noPath, { force: true });
+
+    // A new hand-rolled table is a RISE.
+    write('crm7/src/pages/d.tsx', '<table/>\n');
+    expect('ENTRY: planted hand-rolled table → exit 1 "hand-rolled tables ROSE 2 -> 3"',
+      run([]), 1, /hand-rolled tables ROSE 2 -> 3/);
+    rmSync(join(fixture, 'crm7/src/pages/d.tsx'));
+
+    // Denominator falls: delete a scanned file.
+    rmSync(join(fixture, 'throughput/src/x.tsx'));
+    expect('ENTRY: a scanned file deleted → exit 1 "files scanned FELL 1 -> 0"',
+      run([]), 1, /files scanned FELL 1 -> 0/);
+    write('throughput/src/x.tsx', 'export const X = () => null;\n');
+
+    // Schedule edits, on the TEMP baseline only.
+    const b = () => JSON.parse(readFileSync(baselinePath, 'utf8'));
+    const putSchedule = (s) => { const j = b(); j._schedule = s; writeFileSync(baselinePath, `${JSON.stringify(j, null, 2)}\n`); };
+    const armed = b()._schedule;
+    putSchedule({ ...armed, origin_date: new Date(Date.now() - 21 * 86400000).toISOString().slice(0, 10), per_week: 1 });
+    expect('ENTRY: origin 3 weeks back at 1/week (floor 0 < live 2), --check-floor → exit 1 FLOOR BREACHED',
+      run(['--check-floor']), 1, /FLOOR BREACHED: 2 > 0/);
+    putSchedule({ ...armed, origin_date: undefined });
+    expect('ENTRY: origin_date missing, --check-floor → exit 1 SCHEDULE UNARMED: origin_date',
+      run(['--check-floor']), 1, /SCHEDULE UNARMED: origin_date/);
+    putSchedule({ ...armed, origin_count: undefined });
+    expect('ENTRY: origin_count missing, --check-floor → exit 1 SCHEDULE UNARMED: origin_count (was NaN, exit 0)',
+      run(['--check-floor']), 1, /SCHEDULE UNARMED: origin_count/);
+    putSchedule({ ...armed, per_week: undefined });
+    expect('ENTRY: per_week missing, --check-floor → exit 1 SCHEDULE UNARMED: per_week (was NaN, exit 0)',
+      run(['--check-floor']), 1, /SCHEDULE UNARMED: per_week/);
+    putSchedule({ ...armed, per_week: '1' });
+    expect('ENTRY: per_week non-numeric, --check-floor → exit 1 SCHEDULE UNARMED: per_week',
+      run(['--check-floor']), 1, /SCHEDULE UNARMED: per_week/);
+    expect('ENTRY: --reset-schedule without --reason → exit 1',
+      run(['--reset-schedule']), 1, /requires --reason/);
+    expect('ENTRY: committed baseline STILL byte-identical after every fixture run',
+      { code: readFileSync(BASELINE, 'utf8') === committedBefore ? 0 : 1, out: 'compared' }, 0, /compared/);
+
+    for (const [why, ok, r] of entryCases) {
+      if (!ok) {
+        console.error(`SELF-TEST FAIL: ${why} — exit ${r.code}\n${String(r.out).replace(/^/gm, '    | ')}`);
+        failed += 1;
+      }
+    }
+    entryCount = entryCases.length;
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+
   if (failed > 0) {
     console.error(`\nSELF-TEST FAILED (${failed}). The counter is broken; its numbers must not be believed.`);
     process.exit(2);
@@ -277,10 +587,12 @@ if (process.argv.includes('--self-test')) {
     cases.filter((c) => c[1] === 0).length +
     gridCases.filter((c) => c[1] === 0).length +
     clickCases.filter((c) => c[1] === false).length +
-    convCases.filter((c) => c[1] === false).length;
+    convCases.filter((c) => c[1] === false).length +
+    ceilingCases.filter((c) => c[1] === false).length +
+    importCases.filter((c) => c[1] === false).length;
+  const totalControls = cases.length + gridCases.length + clickCases.length + convCases.length + ceilingCases.length + floorCases.length + importCases.length + entryCount;
   console.log(
-    `self-test OK — ${cases.length + gridCases.length + clickCases.length + convCases.length} controls, ` +
-      `including ${negatives} that must NOT count.`,
+    `self-test OK — ${totalControls} controls, including ${negatives} that must NOT count and ${entryCount} through the CLI entry point against a temp scan root + temp baseline (removed; committed baseline untouched).`,
   );
   process.exit(0);
 }
@@ -303,8 +615,25 @@ if (process.argv.includes('--self-test')) {
  * evidence is GONE — a detector that recomputes the list would forget the file
  * ever had the capability, which is precisely when it needs to remember.
  */
+/*
+ * IMPORT OR TAG — review 2026-09-03 (bsuite#2970), rule 5.
+ *
+ * The PI ruling covers every file that IMPORTS `@bsuite/data-grid`. Detecting
+ * only a literal `<DataGrid` JSX tag left a file outside the ceiling if it
+ * consumed the package any other way — aliased (`import { DataGrid as Grid }`),
+ * passed as a component reference, wrapped. Measured 2026-09-03 the two sets
+ * coincide in crm7 (22 import, 22 render the tag, 0 either-only), so the banked
+ * 17 of 22 does not move; the predicate is widened so it CANNOT diverge later.
+ *
+ * `importsDataGrid` matches the specifier `@bsuite/data-grid` (and any subpath
+ * `@bsuite/data-grid/…`) inside quotes after `from` or as a bare side-effect
+ * import — a comment that merely names the package does not import it.
+ */
+function importsDataGrid(text) {
+  return /\b(?:from|import)\s*['"]@bsuite\/data-grid(?:\/[^'"]*)?['"]/.test(text);
+}
 function usesDataGrid(text) {
-  return countDataGrid(text) > 0;
+  return importsDataGrid(text) || countDataGrid(text) > 0;
 }
 /*
  * The PROP, not the word.
@@ -388,8 +717,42 @@ function hasRowLevelClickThrough(text) {
   return false;
 }
 
+// Read EARLY: the exception mechanism below needs the prior baseline while
+// still measuring (to tell a documented exception from a real gap), not only
+// at verify time.
+//
+// MISSING and MALFORMED are different failures, and collapsing them into one
+// catch block treats them the same — bsuite#3027 review: a baseline file that
+// exists but fails to parse (truncated write, a bad hand-edit, disk
+// corruption) was silently read as "no baseline yet", the same path a
+// genuinely first-ever run takes. The first case should bank fresh data over
+// nothing; the second should never write anything on top of content nobody
+// can currently read — that is how a corrupt baseline gets silently replaced
+// and the corruption goes unnoticed.
+let existingBaseline = null;
+let baselineFileContents = null;
+try {
+  baselineFileContents = readFileSync(BASELINE, 'utf8');
+} catch (err) {
+  if (err.code !== 'ENOENT') {
+    console.error(`FAIL: could not read ${relative(ROOT, BASELINE)}: ${err.code || err.message}. This is not "no baseline" — investigate before running --update-baseline.`);
+    process.exit(2);
+  }
+  // ENOENT: no baseline file exists yet. Legitimate on a first-ever run and on
+  // the self-test fixture's first --reset-schedule/--update-baseline call.
+}
+if (baselineFileContents !== null) {
+  try {
+    existingBaseline = JSON.parse(baselineFileContents);
+  } catch (err) {
+    console.error(`FAIL: ${relative(ROOT, BASELINE)} exists but is not valid JSON (${err.message}). A malformed baseline is not "no baseline" — fix or restore the file before running --update-baseline, which would otherwise silently replace unreadable content.`);
+    process.exit(2);
+  }
+}
+
 const measured = {};
 const clickThroughByApp = {};
+const dataGridByApp = {};
 let examinedFiles = 0;
 for (const app of APPS) {
   const src = join(ROOT, app, 'src');
@@ -399,6 +762,18 @@ for (const app of APPS) {
   let dataGrid = 0;
   const sites = [];
   const clickThrough = [];
+  /*
+   * onRowClick CEILING — PI ruling 2026-09-03 (audit §7, C2): every file
+   * importing @bsuite/data-grid, not only the pre-conversion clickThrough set
+   * below. `missingOnRowClick` is banked as a ceiling that may only shrink
+   * (owned by C8, driving it to 0); a file that later loses onRowClick is a
+   * RISE and fails the PR path exactly like the narrower clickThrough check.
+   */
+  const dataGridFiles = [];
+  const missingOnRowClick = [];
+  const exceptionStillMissing = [];
+  const contradictions = [];
+  const priorExceptionPaths = new Set((existingBaseline?.dataGridOnRowClick?.[app]?.exceptions ?? []).map((e) => e.path));
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const t = countTables(text);
@@ -407,9 +782,42 @@ for (const app of APPS) {
     dataGrid += d;
     if (t > 0) sites.push(relative(ROOT, file));
     if (hasRowLevelClickThrough(text)) clickThrough.push(relative(ROOT, file));
+    if (usesDataGrid(text)) {
+      const rel = relative(ROOT, file);
+      dataGridFiles.push(rel);
+      if (!hasRowClick(text)) {
+        if (priorExceptionPaths.has(rel)) {
+          exceptionStillMissing.push(rel);
+        } else {
+          missingOnRowClick.push(rel);
+        }
+      } else if (priorExceptionPaths.has(rel)) {
+        // Wired anyway, or the reason no longer holds — either way the
+        // exception is stale documentation of a gap that no longer exists.
+        contradictions.push(rel);
+      }
+    }
   }
-  measured[app] = { handRolled, dataGrid, files: sites.length };
+  measured[app] = { handRolled, dataGrid, files: sites.length, filesScanned: files.length };
   clickThroughByApp[app] = clickThrough.sort();
+  /*
+   * `missing` EXCLUDES documented exceptions — a file with a recorded reason
+   * is not a gap to close, it is a judgement already made. Contrast with the
+   * comment two blocks up ("driving it to 0"): that predates any exception
+   * mechanism, written when EVERY DataGrid file was assumed convertible to
+   * onRowClick. C8 (2026-09-04) found seven that structurally cannot resolve
+   * to a single record — a report-builder result row, an audit-log event, a
+   * table whose every action already lives in a per-row button. "0" and
+   * "0 net of documented exceptions" are different claims; this baseline
+   * now makes the second one, explicitly, per file.
+   */
+  dataGridByApp[app] = {
+    total: dataGridFiles.length,
+    missing: missingOnRowClick.length,
+    missingFiles: missingOnRowClick.sort(),
+    exceptionStillMissing: exceptionStillMissing.sort(),
+    exceptionContradictions: contradictions.sort(),
+  };
 }
 
 /*
@@ -423,15 +831,78 @@ if (examinedFiles === 0) {
   process.exit(2);
 }
 
-const updating = process.argv.includes('--update');
+const cliArgs = process.argv.slice(2);
+const updating = cliArgs.includes('--update') || cliArgs.includes('--update-baseline');
+const resettingSchedule = cliArgs.includes('--reset-schedule');
+const checkingFloor = cliArgs.includes('--check-floor');
+const reasonIdx = cliArgs.indexOf('--reason');
+const REASON = reasonIdx !== -1 ? cliArgs[reasonIdx + 1] : null;
 
-// Read first: --update needs the prior baseline to union the protected set, and
-// a missing one on a verify run is a hard failure below rather than a silent 0.
-let existingBaseline = null;
-try {
-  existingBaseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
-} catch {
-  existingBaseline = null;
+// Read first: --update-baseline needs the prior baseline to union the protected
+// set, and a missing one on a verify run is a hard failure below rather than a
+// silent 0.
+const totalNow = APPS.reduce((sum, a) => sum + measured[a].handRolled, 0);
+
+if (resettingSchedule) {
+  if (!REASON) {
+    console.error('FAIL: --reset-schedule requires --reason "<text>" — _schedule.origin_* is a schedule commitment and must not move silently.');
+    process.exit(1);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const priorSchedule = existingBaseline?._schedule;
+  const banked = {
+    ...(existingBaseline || {}),
+    apps: measured,
+    clickThrough: Object.fromEntries(APPS.map((a) => [a, [...new Set([...(existingBaseline?.clickThrough?.[a] ?? []), ...clickThroughByApp[a]])].sort()])),
+    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [
+      a,
+      {
+        ceiling: dataGridByApp[a].missing,
+        total: dataGridByApp[a].total,
+        // Hand-curated judgement, never derived by this script: carried forward
+        // VERBATIM. A reason belongs to the file's nature, not to any one scan.
+        exceptions: existingBaseline?.dataGridOnRowClick?.[a]?.exceptions ?? [],
+      },
+    ])),
+    _schedule: {
+      unit: SCHEDULE_UNIT,
+      origin_count: totalNow,
+      origin_date: today,
+      current_count: totalNow,
+      current_date: today,
+      scanned: examinedFiles,
+      per_week: priorSchedule?.per_week ?? GRID_PER_WEEK,
+    },
+  };
+  writeFileSync(BASELINE, `${JSON.stringify(banked, null, 2)}\n`);
+  console.log(`SCHEDULE RESET. reason: ${REASON}`);
+  console.log(`  new origin: ${banked._schedule.origin_count} hand-rolled render sites across ${banked._schedule.scanned} files scanned, from ${banked._schedule.origin_date}, ${banked._schedule.per_week} render sites/week`);
+  process.exit(0);
+}
+
+if (checkingFloor) {
+  // NIGHTLY-ONLY. Never invoked on the PR path — see estate-alignment.yml's
+  // schedule-gated job. The floor is a schedule commitment, not a per-PR gate.
+  const sched = existingBaseline?._schedule;
+  if (!sched) {
+    console.error('SCHEDULE UNARMED: no _schedule block in the baseline — the floor has nothing to decay from.');
+    process.exit(1);
+  }
+  // Every field, by name — a floor computed from a missing origin_count or
+  // per_week is NaN, and NaN "holds" against any live count (review bsuite#2970).
+  const unarmed = scheduleUnarmed(sched);
+  if (unarmed.length) {
+    for (const f of unarmed) console.error(`SCHEDULE UNARMED: ${f} — missing or non-numeric in _schedule; the floor cannot be computed.`);
+    process.exit(1);
+  }
+  const floor = scheduledFloor(sched, new Date());
+  console.log(`hand-rolled render sites: ${totalNow} (examined ${examinedFiles} files); floor today: ${floor} (origin ${sched.origin_count} render sites on ${sched.origin_date}, ${sched.per_week} render sites/week)`);
+  if (totalNow > floor) {
+    console.error(`FLOOR BREACHED: ${totalNow} > ${floor}.`);
+    process.exit(1);
+  }
+  console.log('floor holds.');
+  process.exit(0);
 }
 
 /*
@@ -453,12 +924,14 @@ function unionClickThrough(app) {
 }
 
 if (updating) {
+  const priorSchedule = existingBaseline?._schedule;
   const banked = {
     _doc:
       'Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. ' +
-      'Written by scripts/check-airtable-grid-adoption.mjs --update. Fails on any RISE (a new hand-rolled ' +
-      'table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind ' +
-      'cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.',
+      'Written by scripts/check-airtable-grid-adoption.mjs --update-baseline. Fails on any RISE (a new ' +
+      'hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher ' +
+      'that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the ' +
+      'Airtable style.',
     _measured: `${examinedFiles} .tsx files examined across ${APPS.length} apps`,
     _clickThroughDoc:
       'Files that HAD row-level click-through to a record. Recorded by PATH because a conversion ' +
@@ -468,6 +941,30 @@ if (updating) {
       'this capability." The set is a UNION and only grows.',
     apps: measured,
     clickThrough: Object.fromEntries(APPS.map((a) => [a, unionClickThrough(a)])),
+    /* PI ruling 2026-09-03 (audit §7, C2): the onRowClick requirement now covers
+     * EVERY file importing @bsuite/data-grid. `ceiling` is banked here as the
+     * count that may only shrink (owned by C8, driving it to 0) — a separate,
+     * wider dimension from `clickThrough` above, which stays scoped to files
+     * that had row-level click-through BEFORE conversion. */
+    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [
+      a,
+      {
+        ceiling: dataGridByApp[a].missing,
+        total: dataGridByApp[a].total,
+        // Hand-curated judgement, never derived by this script: carried forward
+        // VERBATIM. A reason belongs to the file's nature, not to any one scan.
+        exceptions: existingBaseline?.dataGridOnRowClick?.[a]?.exceptions ?? [],
+      },
+    ])),
+    _schedule: {
+      unit: SCHEDULE_UNIT,
+      origin_count: priorSchedule?.origin_count ?? totalNow,
+      origin_date: priorSchedule?.origin_date ?? null,
+      current_count: totalNow,
+      current_date: new Date().toISOString().slice(0, 10),
+      scanned: examinedFiles,
+      per_week: priorSchedule?.per_week ?? GRID_PER_WEEK,
+    },
   };
   writeFileSync(BASELINE, `${JSON.stringify(banked, null, 2)}\n`);
   console.log(`banked: ${JSON.stringify(measured)}`);
@@ -476,7 +973,7 @@ if (updating) {
 
 const baseline = existingBaseline;
 if (!baseline) {
-  console.error(`FAIL: no baseline at ${relative(ROOT, BASELINE)}. Run with --update to bank the current counts.`);
+  console.error(`FAIL: no baseline at ${relative(ROOT, BASELINE)}. Run with --update-baseline to bank the current counts.`);
   process.exit(2);
 }
 
@@ -485,7 +982,7 @@ for (const app of APPS) {
   const now = measured[app];
   const was = baseline.apps?.[app];
   if (!was) {
-    problems.push(`${app}: not in the baseline. Run --update.`);
+    problems.push(`${app}: not in the baseline. Run --update-baseline.`);
     continue;
   }
   if (now.handRolled > was.handRolled) {
@@ -496,9 +993,87 @@ for (const app of APPS) {
   } else if (now.handRolled < was.handRolled) {
     problems.push(
       `${app}: hand-rolled tables FELL ${was.handRolled} -> ${now.handRolled} without being banked. ` +
-        'If you converted them, run --update. If you did not, this gate has gone blind — find out which.',
+        'If you converted them, run --update-baseline. If you did not, this gate has gone blind — find out which.',
     );
   }
+
+  /*
+   * THE DENOMINATOR MUST NOT SHRINK EITHER — PI ruling 2026-09-03 (audit §7, C2).
+   * `handRolled` alone cannot tell "the app got cleaner" from "the walk found
+   * fewer files" — a scan that examines less of the tree than it did when banked
+   * has gone blind, not clean, and is refused rather than believed.
+   */
+  if (was.filesScanned !== undefined && denominatorFell(now.filesScanned, was.filesScanned)) {
+    problems.push(
+      `${app}: files scanned FELL ${was.filesScanned} -> ${now.filesScanned} (below the bank). The scan may ` +
+        'have gone blind — investigate before trusting the hand-rolled count. If the app tree genuinely ' +
+        'shrank, run --update-baseline.',
+    );
+  }
+
+  /*
+   * THE onRowClick CEILING — every DataGrid-importing file, not only the
+   * pre-conversion clickThrough set (checked separately below). A rise is a
+   * regression (a converted file lost onRowClick, or a NEW DataGrid file was
+   * added without it); an unbanked fall must be looked at like any other
+   * ratchet improvement, not assumed.
+   */
+  const nowDG = dataGridByApp[app];
+  const wasDG = baseline.dataGridOnRowClick?.[app];
+  if (!wasDG) {
+    problems.push(`${app}: dataGridOnRowClick not in the baseline. Run --update-baseline.`);
+  } else if (nowDG.missing > wasDG.ceiling) {
+    problems.push(
+      `${app}: DataGrid files missing onRowClick ROSE ${wasDG.ceiling} -> ${nowDG.missing} ` +
+        `(${nowDG.missingFiles.slice(0, 5).join(', ')}${nowDG.missingFiles.length > 5 ? ', …' : ''}). ` +
+        'Every @bsuite/data-grid render site needs onRowClick wired.',
+    );
+  } else if (nowDG.missing < wasDG.ceiling) {
+    problems.push(
+      `${app}: DataGrid files missing onRowClick FELL ${wasDG.ceiling} -> ${nowDG.missing} without being ` +
+        'banked. If you wired onRowClick, run --update-baseline.',
+    );
+  }
+
+  /*
+   * A DOCUMENTED EXCEPTION IS A CLAIM ABOUT THE FILE, and claims go stale.
+   * Two ways that happens, and each needs a different fix — conflating them
+   * would tell someone to "wire onRowClick" on a file that already has it.
+   */
+  const exceptions = wasDG?.exceptions ?? [];
+  for (const ex of exceptions) {
+    if (!ex.reason || ex.reason.trim().length < 15) {
+      problems.push(`${app} dataGridOnRowClick.exceptions: ${ex.path} has no real reason recorded (need 15+ characters).`);
+    }
+    /*
+     * A THIRD staleness: the exception names a file that is GONE — deleted or
+     * renamed. The measurement loop above only visits files it actually finds
+     * on disk, so a vanished exception path is invisible to it: it never
+     * counts as missing (the file isn't there to check), never contradicts
+     * (same reason), and never appears anywhere else. Reviewed 2026-09-04:
+     * that silence read as "holds" — the run exited 0 while a documented
+     * claim pointed at nothing. Checked here, directly, rather than inferred
+     * from the file's absence from any list the walk produced.
+     */
+    try {
+      statSync(join(ROOT, ex.path));
+    } catch {
+      problems.push(
+        `${app} dataGridOnRowClick.exceptions: ${ex.path} does not exist. The exception is stale — ` +
+          'the file was deleted or renamed. Remove the entry (or update the path) with --update-baseline.',
+      );
+    }
+  }
+  for (const rel of nowDG.exceptionContradictions ?? []) {
+    problems.push(
+      `${rel} is a documented exception AND has onRowClick. Either the wiring is unnecessary duplication ` +
+        'or the exception is stale — remove the exception entry with --update-baseline if the file was wired on purpose.',
+    );
+  }
+  // A file that is a documented exception AND still lacks onRowClick is the
+  // expected, PASSING state — that is the entire point of an exception. It
+  // is excluded from `missing` in the measurement loop already; nothing to
+  // check here.
 }
 
 /*
@@ -519,7 +1094,7 @@ for (const app of APPS) {
       // guessed at: a rename that silently drops the file from the set is
       // indistinguishable from a conversion that dropped the navigation.
       problems.push(
-        `${rel} is in the click-through set but cannot be read. If it moved, re-bank with --update in ` +
+        `${rel} is in the click-through set but cannot be read. If it moved, re-bank with --update-baseline in ` +
           'the same commit; if it was deleted, say so there too. Do not let it fall out silently.',
       );
       continue;
@@ -538,7 +1113,6 @@ for (const app of APPS) {
   }
 }
 
-const totalNow = APPS.reduce((sum, a) => sum + measured[a].handRolled, 0);
 const gridNow = APPS.reduce((sum, a) => sum + measured[a].dataGrid, 0);
 
 if (problems.length > 0) {
@@ -556,6 +1130,14 @@ console.log(
   `click-through: ${protectedFiles} file(s) protected, ${protectedFiles - stillHandRolled} converted and ` +
     `keeping onRowClick, ${stillHandRolled} not yet converted.`,
 );
+{
+  const dgTotal = APPS.reduce((sum, a) => sum + dataGridByApp[a].total, 0);
+  const dgMissing = APPS.reduce((sum, a) => sum + dataGridByApp[a].missing, 0);
+  console.log(
+    `onRowClick ceiling (every @bsuite/data-grid file, not only pre-conversion click-through): ` +
+      `${dgMissing} of ${dgTotal} DataGrid file(s) missing onRowClick (ceiling holds; owned by C8, may only shrink).`,
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * --classify — report WHAT the remaining count is made of. Verdict-neutral.
