@@ -14,5 +14,5 @@
   "scanned": 12,
   "banked_at": "2026-09-03",
   "owner": "R10 adoption PRs",
-  "_doc": "Hosts that do NOT yet serve /version.json (the nav-core versionJsonPlugin output). Written by scripts/check-version-json-served.mjs --update-baseline; the list only shrinks: a host that starts serving is removed in the PR whose gitlink carries the adopting app, and a host reappearing here fails the gate. As of 2026-09-03 18:03 AWST ideas.crm7.app and d.ideas.crm7.app serve it (throughput, D-160 first adopter); the hosts listed here are the remaining non-serving ones until their apps adopt per R10."
+  "_doc": "Hosts that do NOT yet serve /version.json (the nav-core versionJsonPlugin output). Written by scripts/check-version-json-served.mjs --update-baseline, which refuses to grow the list; the gate itself only checks that every host OUTSIDE this list serves the file and that the banked count is exact. Adding a host here by hand is not detected by the gate and would mask that host's failure: never do it; a host leaves this list in the PR whose gitlink carries the adopting app. As of 2026-09-03 18:03 AWST ideas.crm7.app and d.ideas.crm7.app serve it (throughput, D-160 first adopter); the hosts listed here are the remaining non-serving ones until their apps adopt per R10."
 }

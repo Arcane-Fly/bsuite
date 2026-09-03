@@ -112,6 +112,11 @@ export const CONSUMERS = ['crm7', 'business-suite-unified', 'conduit', 'braden',
  * anything.
  */
 /*
+ * LOWERED 1 -> 0 on 2026-09-03 (D-160 step 4/5): UpdateAvailableBanner is now
+ * mounted on throughput main 189fb127 (AppUpdateNotice.tsx:38), so the one
+ * banked finding is gone and the ratchet's stale-bank rule requires the
+ * bank to drop in the same PR that carries the pointer (bsuite#3003).
+ *
  * RAISED 0 -> 1 on 2026-09-03 (D-160 step 1, nav-core 1.3.0; BRIEF_COMMON_PHASE1
  * + d160-v2-rulings R10: "1 nav-core 1.3.0 ... 4 throughput ... 9 R80.4").
  *
