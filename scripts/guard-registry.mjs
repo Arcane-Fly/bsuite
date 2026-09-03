@@ -1687,6 +1687,31 @@ export const GUARDS = [
       'parseable JSON") rather than silently passing — another good ' +
       'citizen, filed rather than executed.',
   },
+
+  {
+    id: 'parent-check-secdef-grants',
+    label: 'SECURITY DEFINER functions reachable by anon/PUBLIC + RLS-no-policy table bank',
+    repo: '.',
+    command: ['node', 'scripts/supabase/check-secdef-grants.mjs', '--db-url', '$REHEARSAL_DB_URL'],
+    ciWorkflow: '.github/workflows/supabase-migration-rehearsal.yml',
+    mode: 'skip',
+    skipReason:
+      'Needs a Postgres database to read pg_proc/pg_class ACLs from — there is ' +
+      'nothing to scan without one, so a credential-free run would be scanning ' +
+      'zero objects, which this guard treats as a hard failure ("scanned less ' +
+      'than banked") rather than a pass. CI supplies one two ways: the ' +
+      'disposable `supabase db start` container in supabase-migration-rehearsal.yml ' +
+      '(intent — a migration that would introduce the defect) and the live ' +
+      'pooler in prod-rls-policy-drift-audit.yml (fact — a DROP+CREATE that ' +
+      're-granted PUBLIC without any migration to rehearse). Verified by hand ' +
+      'on 2026-09-03 against a throwaway postgres:17 container seeded to the ' +
+      "estate's shape (8 SECURITY DEFINER functions, 14 RLS-no-policy tables): " +
+      'a clean pass prints "check 1 (PUBLIC EXECUTE on SECURITY DEFINER): ' +
+      '{findings: 0, scanned: 8}" and each of the five failure modes was ' +
+      'observed to exit 1 — an unlisted anon grant, a 15th RLS-no-policy ' +
+      'table, an anon TRUNCATE on a banked table, a planted PUBLIC-executable ' +
+      'function (--self-test), and a scanned count below the floor.',
+  },
 ]
 
 export function findGuard(id) {
@@ -1711,7 +1736,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 72
+export const GUARD_FLOOR = 73
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 

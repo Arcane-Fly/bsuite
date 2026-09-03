@@ -1,0 +1,54 @@
+# SECURITY DEFINER functions in schema `public` that may be executed by `anon`.
+#
+# Read by scripts/supabase/check-secdef-grants.mjs (checks 1 and 2).
+#
+# FORMAT
+#   <function>(<identity arg types, comma separated, no spaces>)   # why anon needs it
+#
+# The signature is rendered as
+#   proname || '(' || replace(pg_get_function_identity_arguments(oid), ', ', ',') || ')'
+# — never regprocedure, whose output gains a `public.` prefix when search_path
+# does not contain public, which would silently match nothing here.
+#
+# A line without a `#` reason is a HARD FAILURE, not a warning. An allowlist
+# entry whose justification is missing is indistinguishable from one nobody
+# reviewed, and this file's whole value is that every line was argued for once.
+#
+# THE RULE THIS FILE ENCODES
+# ──────────────────────────
+# Anon reachability is legitimate only for the token-redemption / consent /
+# signing class: a function reached from an unauthenticated portal route, whose
+# ONLY key is a high-entropy token the caller must already possess, and which
+# fails closed when that token is absent, expired or already redeemed.
+#
+# Every entry below carries a NAMED `anon` grant preceded by an explicit
+# `REVOKE EXECUTE ... FROM PUBLIC` in its own migration (the estate's template is
+# crm7 supabase/migrations/archive/20260812070000_portal_invite_mint_accept.sql
+# lines 294-296). Named-and-revoked is the shape that belongs here. Reachable by
+# PUBLIC is never allowed — see the PENDING section at the foot of this file.
+#
+# Census taken live against tuybltdrdefjblnplpqo on 2026-09-03: exactly 8
+# SECURITY DEFINER functions in `public` were anon-executable. The 7 below hold a
+# named anon grant and NO PUBLIC grant. The 8th, is_developer_admin(), was the
+# inverse — PUBLIC grant, no named anon grant — and is being revoked.
+
+get_charge_rate_quote_signing_context(text)  # crm7 chargeRateQuoteSigning.ts: renders the quote a client is about to sign, keyed on the signing token alone
+get_host_agreement_signing_context(text)  # crm7 hostAgreementSigning.ts: renders the host agreement a host employer is about to sign, keyed on the signing token alone
+portal_invite_accept(text)  # crm7 portalInvite.ts: redeems a single-use portal invite token and provisions the account; the token IS the authorisation
+r7_redeem_talent_pool_consent(text)  # conduit redeemConsent.ts: records a candidate's talent-pool consent from an emailed consent link
+r7_submit_public_application(uuid,text,text,text,text,text,text,text,text,text,text,text,text,boolean,boolean,text,text,boolean,boolean,text,boolean,boolean,boolean,text,text,text,text)  # conduit submitApplication.ts: the public job-application form; unauthenticated by definition
+redeem_charge_rate_quote_signature(text,text,text,text,text,text)  # crm7 chargeRateQuoteSigning.ts: writes the counter-signature, keyed on the same one-time token
+redeem_host_agreement_signature(text,text,text,text,text,text)  # crm7 hostAgreementSigning.ts: writes the host's signature, keyed on the same one-time token
+
+# SECTION: PENDING-PUBLIC-EXECUTE
+#
+# A RATCHET, NOT AN ALLOWLIST. Each line is a SECURITY DEFINER function that is
+# currently EXECUTE-able by PUBLIC on some database this gate runs against, and
+# for which the fix is already written. The list may only SHRINK. Adding a line
+# is not a way to make this gate pass — it is an admission that needs a migration
+# named on the same line.
+#
+# The checker reports any entry here that is NO LONGER violating and tells you to
+# delete it, so a fixed line cannot quietly become a permanent exemption.
+
+is_developer_admin()  # FIXED BY braden migration 20261115000000_revoke_is_developer_admin_from_public.sql — DELETE THIS LINE once the braden gitlink carrying it lands on development. Postgres' default PUBLIC EXECUTE was never revoked across ~10 CREATE/DROP cycles; all real callers (2 edge functions, 4 RLS policies) are authenticated-only.

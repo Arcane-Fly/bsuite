@@ -406,6 +406,50 @@ jobs:
             echo '</details>'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # ── THE CLASS ASSERTION ────────────────────────────────────────────────
+      # The replay above proves each migration APPLIES. It says nothing about
+      # what the resulting catalog EXPOSES. Those are different questions, and
+      # the second one has a default answer nobody chooses: Postgres grants
+      # EXECUTE to PUBLIC on every new function, so a SECURITY DEFINER function
+      # becomes anon-reachable by having no grant statement written for it.
+      #
+      # public.is_developer_admin() sat that way through roughly ten CREATE/DROP
+      # cycles — every migration that touched it wrote a GRANT, none wrote a
+      # REVOKE — and no gate in this estate could see it, because a migration
+      # that applies cleanly is exactly what that defect looks like.
+      #
+      # A DROP + CREATE restores the default, so this is drift, not a one-time
+      # fix. It runs here, after the replay, against the same disposable database
+      # the replay just built.
+      - name: Self-test the guard (proves it can fail)
+        run: |
+          set -o pipefail
+          node scripts/supabase/check-secdef-grants.mjs \
+            --db-url "$REHEARSAL_DB_URL" --self-test \
+            --min-functions "$SECDEF_MIN_FUNCTIONS" --min-tables "$SECDEF_MIN_TABLES" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          # Floors, not equality checks: this substrate is a baseline dump plus a
+          # replay and its object count legitimately differs from production
+          # (measured 2026-09-03: production carries 282 SECURITY DEFINER
+          # functions and 442 RLS-enabled tables in `public`). They exist to catch
+          # an EMPTY or WRONG database, which is the only way this assertion could
+          # report a false clean. The step prints the observed counts, so these can
+          # be tightened later against evidence rather than guessed upward now.
+          SECDEF_MIN_FUNCTIONS: '50'
+          SECDEF_MIN_TABLES: '200'
+
+      - name: Assert no SECURITY DEFINER function in public is PUBLIC-executable
+        run: |
+          set -o pipefail
+          node scripts/supabase/check-secdef-grants.mjs \
+            --db-url "$REHEARSAL_DB_URL" \
+            --min-functions "$SECDEF_MIN_FUNCTIONS" --min-tables "$SECDEF_MIN_TABLES" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+        env:
+          SECDEF_MIN_FUNCTIONS: '50'
+          SECDEF_MIN_TABLES: '200'
+
       - name: Stop disposable database
         if: always()
         run: supabase stop --no-backup || true
