@@ -348,9 +348,9 @@ Not a docx export: two asks the operator put to the email-p0 lane in chat on 3 S
 | D-161 | "can't reset the page layout" / "can't reset to defaults in the page editor" | Reset to Default findable from the page editor without hunting | page-builder edit toolbar (today: three clicks deep in the layers popover) | crm7 (shared page-builder) | customisation / D8.3 clarity |
 | D-162 | SMS recipients must resolve mobiles from any record that holds one and from groups: all contacts at a host, a tagged group, a client, a lead, an opportunity; one-shot, never retyped | a recipient picker that reaches every mobile the estate already holds, by record and by group | compose sheet / RecipientPicker | crm7 | one-shot DRY / communications |
 
-## Addendum — D-163 to D-172, findings raised on 2026-09-03 by the lanes' own gates
+## Addendum — D-163 to D-173, findings raised on 2026-09-03 by the lanes' own gates
 
-Not operator asks: ten class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+Not operator asks: eleven class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
 
 | ID | Finding (source) | Asks for | Surface | App | Category |
 |---|---|---|---|---|---|
@@ -364,3 +364,4 @@ Not operator asks: ten class findings surfaced by the corrective run's reviews a
 | D-170 | braden and crm7 took the same migration version (20261115000000) the same afternoon; one shared ledger; caught only by the parent gitlink gate after braden promoted | renumbered to 20261118000000 (braden#587); app-repo CI runs the cross-scope check | every app repo's migration PR CI, plus the parent collision gate | 6 app repos (0 run it) | migration ledger integrity |
 | D-171 | /communications/mail-merge still asks for a recipient type and can create a batch addressing nobody (enforcer on crm7#2365) | build it out on the #2365 picker; never delete | crm7 mail-merge page | every recipient-picking surface (9, 8 done) | unbuilt route |
 | D-172 | a nameless ledger row for 20261118000000 made the applier skip the braden REVOKE; anon still executes is_developer_admin() (applier run 33754188700, effect check 20:20) | REVOKE moves forward under 20261119000000 (braden#589) and the effect is verified; every lane asked who wrote the row; the applier refuses nameless rows | every app's migrations, the parent applier, the production ledger | estate-wide (one shared ledger) | migration ledger integrity / production write discipline |
+| D-173 | braden production carries 4 of the 17 policies its migrations declare around is_developer_admin(); admin_users has zero policies (PI read-only check 20:40) | diff pg_policies against the migration files, prove admin_users' grants, reconcile forward under a fresh version, effect check per policy | every braden table with RLS; admin_users | braden (class: every app whose pre-floor history was never re-applied) | RLS integrity / production drift |
