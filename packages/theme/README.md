@@ -115,7 +115,7 @@ The `resolvedTheme` always returns `'light'` or `'dark'` — use this when you n
 All 11 canonical electric colours are available as palette tokens, but consumer UI should bind to role/shadcn tokens. Palette names are presentational; roles are the stable contract for white-labelling.
 
 **The values live in `src/css/vars.css` and `src/css/braden.css`, and only there.**
-This table gives each role's *binding* and the line that owns it, deliberately not
+This table gives each role's _binding_ and the line that owns it, deliberately not
 the literal. Until 2026-09-03 it carried literals, and three of its five rows were
 the pre-0.7.0 contract: it advertised error as purple `oklch(0.568 0.202 283.1)`
 with "coral/red must not be semantic error/destructive" — the exact rule the
