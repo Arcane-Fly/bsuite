@@ -1125,5 +1125,19 @@
     "verdict": "PARTIAL",
     "evidence": "PARTIAL - only crm7 handles a post-deploy stale build, and it does so by reloading: src/App.tsx:1155 listens for vite:preloadError and calls purgeStaleAppCachesThenReload (an automatic reload is the loss the ask forbids), VitePWA registerType 'autoUpdate' (vite.config.ts:286), contract test src/__tests__/sw-stale-chunk-recovery-contract.test.ts. business-suite-unified, conduit, braden, R80.4, throughput: no service worker, no preloadError handler, no notice (grep of each app's origin/development tree for needRefresh|registerSW|useRegisterSW|vite:preloadError|new version is available|refresh to update|deploymentId: 0 hits). No app shows a 'new version available, save then refresh' notice; the shared shell packages/ui/src/app-shell.tsx has no such slot. Vercel: no Skew Protection or Rolling Releases configured (audit §9 Vercel row).",
     "whereLooked": "Register D-160 (operator chat directive 2026-09-03 10:48 AWST, not a docx export). Audit §9 Vercel row; §7 has no step for it until this row | class: every app shell; 6 apps (5 Vite SPAs, 1 Next.js), counted by package.json and grep on origin/development | regression: no | repeat: no, first raise | judged 2026-09-03 10:55 by claude-code-bsuite-pi; design scout in flight; precedent precedent__bsuite__20260903__live_clients_stage_to_development_and_notify_before_refresh; promotions to main held until the notice ships"
+  },
+  {
+    "id": "D-161",
+    "registered_at": "2026-09-03",
+    "verdict": "PARTIAL",
+    "evidence": "PARTIAL - the control exists and works on production (probed 2026-09-03 ~15:55 AWST by the email-p0 lane as an end-to-end user: pencil -> Edit this page layout -> Columns, cards & layers -> Reset to Default -> dialog 'Reset page layout?' -> the stored layout returned to defaults), but it sits three clicks deep inside the layers popover, which is why the operator could not find it. Fix (page-builder lease, PI): surface Reset to Default on the edit toolbar itself with the same confirm dialog; D8.3 (clear from the screen alone) is the failing limb, not wiring. Source: operator chat 2026-09-03 15:49 AWST as relayed by the email-p0 lane (inbox 6003495c, 0fcd55e2); verbatim not captured by the PI.",
+    "whereLooked": "crm7 src/components/page-builder (DraggableCardPage toolbar, layers popover); production probe by the email-p0 lane"
+  },
+  {
+    "id": "D-162",
+    "registered_at": "2026-09-03",
+    "verdict": "OPEN",
+    "evidence": "OPEN - build: SMS recipients must resolve mobiles from ANY record that holds one (apprentice, host employer contact, client, lead, opportunity, person) and from GROUPS (all contacts at a host, a tagged group, a client, a lead, an opportunity), one-shot, never retyped. Owner: the email-p0 lane on the crm7#2357/#2365 stack (crm7#2365 feat/sms-recipients-from-records-and-groups opened 16:19 AWST). DoD-gated with D8 (round-trip: choosing a group never leaves the compose sheet). Source: operator chat 2026-09-03 15:49 AWST as relayed by the email-p0 lane (inbox 6003495c); verbatim not captured by the PI.",
+    "whereLooked": "crm7 src/components/communications/mail/RecipientPicker.tsx, src/services/recipientSearchService.ts"
   }
 ]
