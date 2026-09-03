@@ -83,3 +83,9 @@ node scripts/check-required-contexts-producible.mjs --update-baseline
 
 The gate reads the **newest** file per branch by the date in the filename; older dumps stay
 because they are the rollback for the write that superseded them.
+
+**Two writes on the same day** share one filename, so the before-state of the second is the
+*previous commit of that file*, not a second file — `git log -p docs/security/branch-protection/`
+is the record. That is what happened on 2026-09-03: the first commit of `main-20260903.json` holds
+the 30-context state before `align` and `Every gitlink sits on its app's own main` were appended,
+and the second holds the 32-context state after.
