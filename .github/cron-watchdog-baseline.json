@@ -1,0 +1,24 @@
+{
+  "_comment": [
+    "THE DENOMINATORS FOR THE pg_cron DEAD-MAN'S SWITCH.",
+    "",
+    "public.pg_cron_watchdog_check() records how many cron.job rows it examined and how",
+    "many public.cron_job_manifest rows it judged them against. Both are equality-checked",
+    "against this file by scripts/check-cron-watchdog-checkin.mjs, because a fresh check-in",
+    "over a shrunken sweep is the most convincing false pass available: 'checked nothing'",
+    "and 'found nothing' produce the same green tick without a denominator.",
+    "",
+    "A count that FELL means something disappeared. A count that ROSE means something was",
+    "added and this file was not raised to match — which is the correct moment to declare",
+    "it in public.cron_job_manifest too, or the watchdog will already be calling it an",
+    "unknown_job. Update BOTH, in the same change, or neither.",
+    "",
+    "Measured 2026-09-03 against tuybltdrdefjblnplpqo:",
+    "  SELECT count(*) FROM cron.job;                   -> 24, +1 for cron-watchdog-every-15m = 25",
+    "  SELECT count(*) FROM public.cron_job_manifest;   -> 27 (25 scheduled + 2 unscheduled_expected)"
+  ],
+  "jobs_examined": 25,
+  "manifest_rows": 27,
+  "measured": "2026-09-03",
+  "source_migration": "crm7/supabase/migrations/20261116000000_pg_cron_watchdog_checkins.sql"
+}
