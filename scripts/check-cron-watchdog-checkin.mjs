@@ -23,13 +23,14 @@
  * database, no secrets and no network.
  *
  * ---------------------------------------------------------------------------
- * THE FIVE WAYS IT ALARMS
+ * THE SIX WAYS IT ALARMS
  * ---------------------------------------------------------------------------
  *   no_checkin         the table is empty
  *   stale              the newest check-in is older than --max-age-minutes
  *   unhealthy          the newest check-in carries healthy = false
  *   denominator_drift  jobs_examined or manifest_rows no longer equals the bank
  *   unreadable_checkin ran_at could not be parsed at all
+ *   clock_skew         ran_at is more than a minute in the future
  *
  * A sixth case is handled by the workflow rather than here: the table not
  * EXISTING, which means the crm7 migration has not reached production and there
@@ -110,6 +111,7 @@ export const TITLES = {
   no_checkin: 'no check-in has ever been recorded',
   unreadable_checkin: 'the newest check-in has an unreadable timestamp',
   stale: 'the watchdog has stopped checking in',
+  clock_skew: 'the newest check-in is dated in the future',
   denominator_drift: 'the watchdog denominators no longer match the bank',
   unhealthy: 'a scheduled control is unhealthy',
   healthy: 'healthy',
@@ -165,6 +167,28 @@ export function verdict(checkin, bank, opts) {
   // and is never what the decision is made on.
   const ageSeconds = Math.floor((now.getTime() - ranAt.getTime()) / 1000)
   const ageMinutes = Math.floor(ageSeconds / 60)
+
+  // A CHECK-IN FROM THE FUTURE IS NOT A FRESH ONE.
+  //
+  // If the runner's clock is behind the database's, the age goes NEGATIVE, and
+  // a negative age is comfortably inside any threshold — so the staleness limb
+  // reports "fresh" for a row whose timestamp it cannot actually trust, and
+  // would go on doing so however old the newest real check-in got. A tolerance
+  // of a minute absorbs ordinary NTP jitter; beyond that it is a finding about
+  // the clocks, and it is named as one rather than dressed up as health.
+  if (ageSeconds < -60) {
+    return {
+      alarm: true,
+      klass: 'clock_skew',
+      reason: 'the newest check-in is dated in the future',
+      detail:
+        `ran_at is ${ranAt.toISOString()}, ${Math.abs(ageMinutes)} minute(s) AHEAD of this ` +
+        'runner. Freshness cannot be judged against a clock that disagrees, so this is ' +
+        'reported rather than read as a fresh check-in. Compare the database clock with the ' +
+        'runner clock before trusting any verdict here.',
+      ageMinutes,
+    }
+  }
 
   // STALENESS FIRST. A stale check-in's CONTENT is history, and reporting
   // "healthy" from a three-hour-old row is exactly the failure being closed.
@@ -233,7 +257,7 @@ export function verdict(checkin, bank, opts) {
     klass: 'healthy',
     reason: 'healthy',
     detail:
-      `Check-in ${ageMinutes} minute(s) old; ${checkin.jobs_examined} cron job(s) examined ` +
+      `Check-in ${Math.max(0, ageMinutes)} minute(s) old; ${checkin.jobs_examined} cron job(s) examined ` +
       `against ${checkin.manifest_rows} manifest row(s); nothing unhealthy, nothing missing, ` +
       'no http-layer failure.',
     ageMinutes,
@@ -357,6 +381,24 @@ function selfTest() {
     true,
   )
 
+  // A FUTURE-DATED CHECK-IN ALARMS INSTEAD OF READING AS FRESH.
+  check(
+    'a check-in an hour in the future alarms',
+    verdict(healthyRow({ ran_at: '2026-09-03T09:00:00Z' }), BANK, o).alarm,
+    true,
+  )
+  check(
+    '...as clock_skew, not as healthy',
+    verdict(healthyRow({ ran_at: '2026-09-03T09:00:00Z' }), BANK, o).klass,
+    'clock_skew',
+  )
+  check(
+    'a check-in 30 seconds in the future is ordinary jitter and does not alarm',
+    verdict(healthyRow({ ran_at: '2026-09-03T08:00:30Z' }), BANK, o).alarm,
+    false,
+  )
+  check('class clock_skew has a stable issue title', typeof TITLES.clock_skew === 'string', true)
+
   // A THRESHOLD THAT IS NOT A NUMBER IS A USAGE ERROR, NOT A DISABLED CHECK.
   const rejects = (v) => {
     try { parseMaxAgeMinutes(v); return false } catch { return true }
@@ -380,7 +422,7 @@ function selfTest() {
 
   console.log(
     failures === 0
-      ? `\ncheck-cron-watchdog-checkin: ${20 + 3 + 14} self-test(s) passed`
+      ? `\ncheck-cron-watchdog-checkin: ${20 + 3 + 14 + 4} self-test(s) passed`
       : `\ncheck-cron-watchdog-checkin: ${failures} self-test(s) FAILED`,
   )
   return failures === 0 ? 0 : 1
