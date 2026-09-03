@@ -214,8 +214,18 @@ function listMigrationTree(dir, ref) {
  * `baseBranch` is the PR's own declared base (almost always `development`,
  * occasionally `main` for a hotfix) — read from the PR itself via
  * `gh pr list`'s `baseRefName`, never assumed.
+ *
+ * THROWS if `baseBranch` is missing, rather than folding into the
+ * catch-all below and returning `[]`. This file's whole posture is
+ * fail-closed (an unreadable scope is not an empty one, see `openPrHeads`);
+ * a PR with no resolvable base would otherwise report "adds nothing" and a
+ * real added migration on it goes unseen — the FOLLOW (2026-09-04) fix
+ * trading a false positive for a false negative rather than a loud failure.
  */
-function migrationsAddedByBranch(scope, root, branch, baseBranch) {
+function migrationsAddedByBranch(scope, root, branch, baseBranch, prNumber) {
+  if (!baseBranch) {
+    throw new Error(`${scope}#${prNumber} (${branch}): no baseRefName from gh pr list — cannot resolve a merge-base, refusing to report an empty added-set`)
+  }
   const dir = path.join(root, scope)
   try {
     sh('git', ['fetch', 'origin', branch, baseBranch, '--quiet'], dir)
@@ -345,6 +355,21 @@ function selfTest() {
   t('extractFloor strips a trailing comment', extractFloor('  MIGRATION_FLOOR: "20260611000000"  # raised 2026-06-10\n'), '20260611000000')
   t('extractFloor returns null when the key is absent', extractFloor('env:\n  SOMETHING_ELSE: 1\n'), null)
   t('extractFloor rejects a non-numeric value', extractFloor('  MIGRATION_FLOOR: latest\n'), null)
+
+  // FAIL CLOSED on a missing baseRefName: this must THROW, naming the PR, not
+  // return [] — a silent [] reads as "this PR adds nothing", which is a false
+  // negative on exactly the kind of PR this scan cannot properly evaluate.
+  {
+    let threw = null
+    try {
+      migrationsAddedByBranch('crm7', '/nonexistent', 'some-branch', undefined, 4242)
+    } catch (err) {
+      threw = err
+    }
+    t('a missing baseBranch throws rather than silently returning []', threw !== null, true)
+    t('the thrown error names the scope and PR number',
+      threw ? threw.message.includes('crm7#4242') : false, true)
+  }
 
   // ---------------------------------------------------------------------
   // migrationsAddedByBranch — THE ACTUAL BUG. A real disposable repo and the
@@ -537,7 +562,19 @@ function main() {
       // needs this full set to know which PRs it must actively CLEAR a stale
       // status from, not just which ones it has a fresh verdict for.
       allOpenPrs.push({ scope, pr: pr.number, sha: pr.headRefOid })
-      for (const { file, blob } of migrationsAddedByBranch(scope, root, pr.headRefName, pr.baseRefName)) {
+      let added
+      try {
+        added = migrationsAddedByBranch(scope, root, pr.headRefName, pr.baseRefName, pr.number)
+      } catch (err) {
+        // FAIL CLOSED, same posture as an unreadable scope above: a PR this
+        // scan could not properly evaluate is an ABSENT result, not a clean
+        // one — reporting nothing for it would be a false negative, not a
+        // false positive, and this scan has already shipped one of those.
+        console.error(`::error::${(err && err.message) || err}`)
+        unreadable.push(`${scope}#${pr.number}`)
+        continue
+      }
+      for (const { file, blob } of added) {
         const version = versionOf(file)
         if (!version) continue
         // Sub-floor versions were applied long before either PR existed — the
