@@ -52963,15 +52963,15 @@
  },
  {
   "id": "crm7.platform.pwa-install",
-  "name": "Installable app (PWA) and update prompt",
+  "name": "Installable app (PWA) and stale-tab update notice",
   "module": "crm7",
   "capability_area": "Navigation & app shell",
   "surface_type": "component",
-  "entry_point": "browser install prompt / update toast",
+  "entry_point": "browser install prompt / non-reloading update notice (D-160; anchors repointed 2026-09-03 after crm7#2373 removed usePWA.ts and PWAUpdatePrompt.tsx)",
   "route": null,
   "code_anchors": [
-   "crm7/src/hooks/usePWA.ts",
-   "crm7/src/components/pwa/PWAUpdatePrompt.tsx"
+   "crm7/src/components/pwa/InstallPrompt.tsx",
+   "crm7/src/components/platform/AppUpdateNotice.tsx"
   ],
   "db_objects": [],
   "build_status": "live",
