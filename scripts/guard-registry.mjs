@@ -823,7 +823,7 @@ export const GUARDS = [
     ciWorkflow: '.github/workflows/theme-conformance.yml',
     mode: 'run',
     evidence:
-      '"crm7: 8 finding(s), 1639 file(s) scanned, 2254 class(es) emitted" … ' +
+      '"crm7: 10 finding(s), 1650 file(s) scanned, 2265 class(es) emitted" … ' +
       '"business-suite-unified: 381 finding(s), 432 file(s) scanned, 1717 ' +
       'class(es) emitted" … "throughput: 249 finding(s), 181 file(s) scanned" ' +
       '(2026-09-03 after the template-literal className fix and BSU #1106, six ' +

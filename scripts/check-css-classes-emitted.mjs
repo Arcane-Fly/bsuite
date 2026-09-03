@@ -51,7 +51,9 @@
  * #1106 (the four shell tokens registered in @theme): 381 / 432 files.
  *
  * The same run found 8 in crm7 (text-text-primary ×2, a dead `text-md` size
- * utility ×5, border-shell ×1) and 227 in throughput (249 once template-literal
+ * utility ×5, border-shell ×1; 10 once the crm7 gitlink moved to main d5499128
+ * — crm7#2354's mail client added `bg-error-bg` ×2, a token no @theme block
+ * registers, the exact class this gate exists to catch) and 227 in throughput (249 once template-literal
  * classNames were scanned — the +22 are the same border-light-border /
  * dark-accent-* family in `className={`…`}` attributes) — a stale
  * border-light-border / dark:border-dark-border / dark-accent-* family with
