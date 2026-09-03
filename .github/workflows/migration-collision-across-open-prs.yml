@@ -72,7 +72,63 @@ jobs:
       - name: Self-test the collision logic
         run: node scripts/check-migration-collisions-across-open-prs.mjs --self-test
 
+      - name: Self-test the status reporter
+        run: node scripts/post-migration-collision-status.mjs --self-test
+
+      # `continue-on-error` so the REPORTING step below still runs on a failing scan —
+      # which is the only run where reporting matters. The verdict is re-raised at the
+      # end, so the job's own conclusion is unchanged.
       - name: Scan every open PR branch across all six submodules
+        id: scan
+        continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
-        run: node scripts/check-migration-collisions-across-open-prs.mjs
+        run: |
+          set +e
+          node scripts/check-migration-collisions-across-open-prs.mjs --json > collisions.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
+
+      # THE POINT OF THIS WORKFLOW, AND WHAT IT WAS MISSING.
+      #
+      # This gate has been correct and unheeded. Run 33755776728 at 12:32:12Z on
+      # 2026-09-03 failed naming crm7#2377 and business-suite-unified#1121 as both
+      # claiming 20261119000000, and prescribing the renumber. crm7#2377 merged at
+      # 12:53Z — twenty-one minutes later — because a scheduled run's failure appears
+      # on no PR, blocks no merge, and notifies nobody.
+      #
+      # It cannot become an app-repo `pull_request` check instead: an app PR raises no
+      # parent event, and (measured 2026-09-03) none of the six apps holds a cross-repo
+      # credential, so an app workflow cannot see its siblings. The parent already sees
+      # everything; it just had no way to speak into the app's PR. A commit status is
+      # that way. Make `migration-collision/cross-scope` a required check on each app to
+      # turn this from a notice into a block.
+      - name: Report the verdict onto each app PR, where the merge button is
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ ! -s collisions.json ]; then
+            echo "::warning::the scan produced no JSON — reporting nothing rather than reporting all-clear"
+            exit 0
+          fi
+          node scripts/post-migration-collision-status.mjs collisions.json
+
+      # Re-raise the scan's verdict. Without this the job would go green on a collision
+      # simply because the reporting step succeeded at reporting one.
+      # The scan's own exit code distinguishes what failed, and this step must not
+      # collapse that distinction. exit 1 is a real collision (the outcome this workflow
+      # is FOR); exit 2 is an unreadable scope — a broken credential or an absent
+      # submodule tree — which is an infrastructure failure, not a collision, and saying
+      # "a collision is open" for it sends the reader chasing the wrong thing entirely.
+      - name: Fail if the scan found a collision or could not run
+        if: steps.scan.outcome == 'failure'
+        run: |
+          case "${{ steps.scan.outputs.exit_code }}" in
+            1) echo "::error::a cross-scope migration collision is open — see the scan step above" ;;
+            2) echo "::error::the scan could not list open PRs for one or more scopes — this is NOT a collision, it is an unreadable scope (credential or checkout). See the scan step above." ;;
+            *) echo "::error::the scan step failed with exit ${{ steps.scan.outputs.exit_code }} — see the scan step above" ;;
+          esac
+          exit 1
