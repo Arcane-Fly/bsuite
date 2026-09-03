@@ -147,10 +147,11 @@ to do damage.
 - **BSU has four documents asserting it is the canonical page-builder author surface.** ADR-0001
   dropped `tenant_page_layouts` and removed `/developer/pages` three months ago. The drop migration
   sits in the same repo as the docs claiming the feature.
-- **Three BSU documents and one conduit document describe cookie SSO as a shipped feature.** It was
-  removed 2025-02-27 and is the single loudest do-not-revert guardrail in `AGENTS.md`. Documents
-  inside the estate are currently pointing agents at the exact regression the guardrail exists to
-  prevent.
+- **~~Three BSU documents and one conduit document describe cookie SSO as a shipped feature.~~**
+  **CLOSED 2026-09-03 (D-1).** All four fixed — business-suite-unified#1104 and conduit#676 (merged) —
+  and the class is now gated: `scripts/check-no-cookie-sso.mjs` scans documentation as well as code and
+  runs blocking in `guard-self-reporting.yml`. Until then it ran in **no workflow at all**, which is why
+  the estate's loudest do-not-revert guardrail could be contradicted in writing for four months.
 - **crm7's ADR on `xero-node` (Status: Accepted, "do not adopt") is contradicted by shipped code** —
   `xero-invoice-submit/index.ts:24` imports `xero-node@15.0.1` — and a second crm7 doc describes
   that same ADR as explaining *why* the SDK is used. Three documents, three incompatible readings.
@@ -277,7 +278,7 @@ is SUPERSEDED and should stop appearing in remaining-work lists.
 | **Card/grid layout** | **`DraggableCardPage` on react-grid-layout via `@bsuite/page-builder`** | `PageGridPage`; every fixed inner CSS grid inside a single `CanvasCard` |
 | **Nav generation** | **`@bsuite/nav-core@0.9.1`** — braden is a first-class `BSUITE_APP_KEYS` member as of 0.9.0 | every local nav generation |
 | **Theme** | **`@bsuite/theme`** — `braden-css` for braden, `preset-v4.css` + `css` for the D2C five. braden's 2026-08-10 red-error ruling wins over the estate purple mandate *for braden only* | standalone local token forks; the 2026-07-23 "defer, don't swap" decision (reversed 2026-08-03) |
-| **Auth** | **BS OAuth 2.1 PKCE via `@bsuite/auth@0.2.8`** (exact-pinned) | cookie SSO — and note **four documents across BSU and conduit still describe it as shipped** |
+| **Auth** | **BS OAuth 2.1 PKCE via `@bsuite/auth@0.2.8`** (exact-pinned) | cookie SSO — ~~four documents across BSU and conduit still describe it as shipped~~ **all four fixed 2026-09-03 (D-1), and a full-tree gate now blocks any document asserting it** |
 | **Bot protection (braden)** | **Cloudflare Turnstile**, wired at both public forms and allowlisted in CSP | Vercel BotID (never landed). braden's bot-protection doc concludes the site has none — wrong |
 | **Lead capture (braden)** | **`contact/EnhancedContactForm` + `useEnhancedContactForm` + `useTurnstile` → BSU `lead-capture`** | the landing-section `ContactForm`/`Contact` shell; `useContactForm.handleFormSubmit` (the only path omitting `turnstile_token`, always overridden) |
 | **AI models** | **`xai/grok-4.3` primary, `zai/glm-5.2` fallback** — crm7 and throughput agree exactly. Provider prefix is **`zai/`, not `glm/`** | `AGENTS.md`'s `xai/grok-4.20-reasoning`; every doc naming Grok 4.1 |
@@ -522,7 +523,7 @@ detector's bug rather than a change in the estate.
 
 | row | verdict | effort | evidence, in brief | what it costs |
 |---|---|---|---|---|
-| **D-1** | Confirmed Open | S | Three of four survive and still read as shipped features. business-suite-unified/docs/CONSISTENCY-REPORT.md:22 — 'BS OAuth server, cookie SSO ✅'. conduit/docs/CONSISTENCY-REPORT.md:30 — 'BS OAuth + c… | Cookie SSO was removed 2025-02-27 and is the single loudest do-not-revert guardrail in AGENTS.md. Three documents inside the estate currently present it as wor… |
+| **D-1** | **Closed 2026-09-03** | S | All four sites fixed and the class gated. business-suite-unified/docs/CONSISTENCY-REPORT.md:22 (PR #1104); conduit/docs/CONSISTENCY-REPORT.md:30, UNIFIED-ROADMAP.md:14 and FEATURE-SURFACE.md:29 (conduit#676, MERGED); docs/20260427-conduit-auth-doctrine-investigation-v1.00F.md banner-marked as historical rather than rewritten. Method: all 2780 markdown files in the estate greped for cookie-SSO mentions, then each classified by whether it ASSERTS or FORBIDS — the earlier counts of 2 and 3 were the instance, not the class. | Closed by bsuite#2957, which also found the real hole: there was NO full-tree cookie-SSO check anywhere. scripts/check-no-cookie-sso.mjs existed, passed, and was invoked by no workflow at all (10 of 82 check-* scripts are in that state); the PR drift scanner covers only ADDED diff lines. The gate now runs blocking in guard-self-reporting.yml and scans docs as well as code, so a document can no longer assert cookie SSO is shipped. |
 | **D-2** | Confirmed Open | S | Live: to_regclass('public.tenant_page_layouts') = null (dropped, per business-suite-unified/supabase/migrations/20260502000000_drop_tenant_page_layouts.sql). The claims survive: business-suite-unifie… | A document asserts as shipped a table whose drop migration sits in the same repository, and a sibling document instructs the deletion of the three files that a… |
 | **D-3** | Confirmed Open | S | crm7/docs/20260512-xero-node-sdk-deno-compat-decision-v1.00A.md still reads 'Status: Approved' at line 3 and, at lines 55-58, 'Decision: **Keep the raw `fetch` approach.** Do not adopt `xero-node` fo… | Three documents give three incompatible readings of the same decision, and the one marked Approved is the one production contradicts. The next person asked 'sh… |
 | **D-4** | Confirmed Open | S | Not done, and now doubly wrong. crm7/docs/20260813-documents-ux-design-v1.00D.md:503-504 still reads '**Roughly half the work is deletion.** `mail_merge_batches` (the table does not exist — every ope… | The register flagged this phrasing because it invites deletion of a table whose DDL was in the repo. That risk is now sharper, not smaller: the table is live i… |

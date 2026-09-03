@@ -18,6 +18,25 @@ owner: bsuite
 > restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
 > looks current and is still broken. Authority: `docs/README.md`.
 
+> **THE COOKIE-SSO FINDING BELOW IS HISTORICAL — recorded 2026-09-03.** This
+> investigation found, correctly for 2026-04-27, that conduit shared a sign-in session
+> with the other apps through a browser cookie (`business_suite_auth`) scoped to the
+> whole `.crm7.app` family of addresses. **That scheme has since been removed.** Every
+> app now signs in through BS OAuth 2.1 PKCE + JWKS, and conduit's own cookies are
+> confined to conduit's own address with no `domain=` override — which is a different
+> thing wearing a similar name. Authority: [`AUTH_CANONICAL.md`](../AUTH_CANONICAL.md)
+> ("DO NOT REVERT TO COOKIE SSO", effective 2025-02-27), which states in terms that
+> conduit *"was previously documented as 'delegated UI / cookie SSO only' — that was
+> incorrect."* Measured on this tree 2026-09-03: `node scripts/check-no-cookie-sso.mjs`
+> reports zero occurrences across all six app source trees. The finding is left
+> unedited below, for the same reason the R80.3 paths are: a record that is quietly
+> corrected stops being a record.
+>
+> *Acronyms:* **SSO** = single sign-on, signing in once and being recognised by the
+> other apps. **PKCE** = Proof Key for Code Exchange, the standard that lets an app
+> prove a sign-in came from it without holding a shared secret. **JWKS** = JSON Web Key
+> Set, the published keys used to check a sign-in token is genuine.
+
 ---
 
 ## Verdict
@@ -142,7 +161,7 @@ The migration was authored 7+ weeks ago (2026-03-03) and reinforced 4 days ago (
 
 ### Where the doctrine is correct
 
-- ✅ `bsuite_decisions` #5: *"Conduit remains Supabase SSR/native auth only"* — the **mechanism** is Supabase native (cookie-SSO via `@supabase/ssr`). True.
+- ✅ `bsuite_decisions` #5: *"Conduit remains Supabase SSR/native auth only"* — the **mechanism** is Supabase native (cookie-SSO via `@supabase/ssr`). True. <!-- cookie-sso-audit-ok: historical finding; see the 2026-09-03 banner at the top of this file -->
 - ✅ Parent `CLAUDE.md` (`/home/braden/Desktop/Dev/bsuite/CLAUDE.md`): *"Conduit uses `@supabase/ssr` server-managed cookies and does not participate"* in BS OAuth. True.
 - ✅ All four CLAUDE.md OAuth-client tables (parent + per-project) correctly omit Conduit. True.
 
