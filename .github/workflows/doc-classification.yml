@@ -95,9 +95,43 @@ jobs:
           # which rename git failed to pair up.
           #
           # `-M` pairs them, so a rename lands in neither ADDED nor MODIFIED.
-          ADDED=$(git diff -M --name-only --diff-filter=A "$BASE" HEAD -- 'docs/**/*.md')
-          MODIFIED=$(git diff -M --name-only --diff-filter=M "$BASE" HEAD -- 'docs/**/*.md')
-          RENAMED=$(git diff -M --name-only --diff-filter=R "$BASE" HEAD -- 'docs/**/*.md')
+
+          # POSITIVE CONTROL FOR THE PATHSPEC ITSELF.
+          # A gate that cannot tell "matched nothing" from "nothing to match" is not a
+          # gate. This asserts the pathspec still reaches a document living directly in
+          # `docs/` — the case the old one could never see. Field-count, not a regex
+          # (regex is forbidden in assertions): a path with exactly two `/`-separated
+          # fields is `docs/<name>.md`.
+          REACHED=$(git ls-files -- ':(glob)docs/**/*.md' | awk -F/ 'NF==2' | wc -l)
+          if [ "$REACHED" -eq 0 ]; then
+            echo "::error::the docs pathspec reaches ZERO root-level docs/*.md files."
+            echo "  That is what this gate was silently doing before 2026-09-03."
+            echo "  Do not 'fix' this by deleting the control — fix the pathspec."
+            exit 1
+          fi
+          echo "pathspec control: reaches $REACHED root-level docs/*.md file(s)"
+          # THE PATHSPEC NEEDS `:(glob)`, AND WITHOUT IT THIS GATE SAW NOTHING.
+          #
+          # In a default git pathspec `**` is not gitignore's "any depth" — it is two
+          # wildcards with a literal `/` between them, so `docs/**/*.md` requires at
+          # least one intermediate directory and NEVER matches a document sitting
+          # directly in `docs/`. That is where most of this estate's documents live.
+          #
+          # Measured 2026-09-03 against a branch changing exactly one root-level doc
+          # (`docs/20260731-frontend-layout-zindex-standards-v1.00W.md`):
+          #
+          #     docs/**/*.md          -> 0 files
+          #     :(glob)docs/**/*.md   -> 1 file
+          #
+          # The job log read `enforcing on: <none>` and the step went green, which is
+          # why nobody noticed: a gate that matches nothing is indistinguishable from a
+          # gate over a clean tree.
+          #
+          # `docs/*.md` also happens to work, because a DEFAULT pathspec's `*` crosses
+          # `/`. It is not used here: relying on that surprise is what produced the bug.
+          ADDED=$(git diff -M --name-only --diff-filter=A "$BASE" HEAD -- ':(glob)docs/**/*.md')
+          MODIFIED=$(git diff -M --name-only --diff-filter=M "$BASE" HEAD -- ':(glob)docs/**/*.md')
+          RENAMED=$(git diff -M --name-only --diff-filter=R "$BASE" HEAD -- ':(glob)docs/**/*.md')
           [ -n "$RENAMED" ] && echo "renamed, not treated as new: $(echo "$RENAMED" | wc -w) doc(s)"
 
           ENFORCE="$ADDED"
