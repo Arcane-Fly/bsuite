@@ -83,7 +83,12 @@ jobs:
         continue-on-error: true
         env:
           GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
-        run: node scripts/check-migration-collisions-across-open-prs.mjs --json > collisions.json
+        run: |
+          set +e
+          node scripts/check-migration-collisions-across-open-prs.mjs --json > collisions.json
+          code=$?
+          echo "exit_code=$code" >> "$GITHUB_OUTPUT"
+          exit $code
 
       # THE POINT OF THIS WORKFLOW, AND WHAT IT WAS MISSING.
       #
@@ -113,8 +118,17 @@ jobs:
 
       # Re-raise the scan's verdict. Without this the job would go green on a collision
       # simply because the reporting step succeeded at reporting one.
-      - name: Fail if any collision stands
+      # The scan's own exit code distinguishes what failed, and this step must not
+      # collapse that distinction. exit 1 is a real collision (the outcome this workflow
+      # is FOR); exit 2 is an unreadable scope — a broken credential or an absent
+      # submodule tree — which is an infrastructure failure, not a collision, and saying
+      # "a collision is open" for it sends the reader chasing the wrong thing entirely.
+      - name: Fail if the scan found a collision or could not run
         if: steps.scan.outcome == 'failure'
         run: |
-          echo "::error::a cross-scope migration collision is open — see the scan step above"
+          case "${{ steps.scan.outputs.exit_code }}" in
+            1) echo "::error::a cross-scope migration collision is open — see the scan step above" ;;
+            2) echo "::error::the scan could not list open PRs for one or more scopes — this is NOT a collision, it is an unreadable scope (credential or checkout). See the scan step above." ;;
+            *) echo "::error::the scan step failed with exit ${{ steps.scan.outputs.exit_code }} — see the scan step above" ;;
+          esac
           exit 1

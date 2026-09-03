@@ -156,7 +156,8 @@ function main() {
     } catch (err) {
       // One unpostable PR must not hide the others.
       failed++
-      console.error(`::warning::could not post status to ${pr.scope}#${pr.pr}: ${String(err.message).slice(0, 200)}`)
+      const msg = (err && err.message) || String(err)
+      console.error(`::warning::could not post status to ${pr.scope}#${pr.pr}: ${msg.slice(0, 200)}`)
     }
   }
   console.log(`post-migration-collision-status: ${posted} posted, ${failed} could not be posted`)
