@@ -89,6 +89,10 @@ jobs:
         # verification.verified=true (the guard further down proves it).
         id: app-token
         if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
+        # A half-configured App (client id set, private key missing or wrong)
+        # must not take the job down: the step is non-fatal and the next step
+        # says so loudly; the token expressions then fall through to the PAT.
+        continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
@@ -105,6 +109,11 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
           permission-metadata: read
+
+      - name: Say so if the App token could not be minted (falling through to the PAT)
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && steps.app-token.outcome != 'success' }}
+        run: |
+          echo "::warning title=GitHub App token not minted::BSUITE_GITHUB_APP_CLIENT_ID is set but the token step did not succeed (outcome: ${{ steps.app-token.outcome }}). Check secrets.BSUITE_GITHUB_APP_PRIVATE_KEY and the App installation; this run falls through to the PAT (D-169)."
 
       - name: Checkout parent + submodules
         uses: actions/checkout@v5
