@@ -231,17 +231,27 @@ SELECT c.relname, r.rolname, a.privilege_type
  GROUP BY c.relname, r.rolname, a.privilege_type
  ORDER BY 1, 2, 3`;
 
+const SQL_ALL_SECDEF = `
+SELECT p.proname || '(' || coalesce((
+         SELECT string_agg(format_type(t, NULL), ',' ORDER BY o)
+           FROM unnest(p.proargtypes) WITH ORDINALITY AS u(t, o)
+       ), '') || ')'
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+ WHERE n.nspname = 'public' AND p.prosecdef
+ ORDER BY 1`;
+
 const SQL_COUNT_SECDEF = `SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.prosecdef`;
 const SQL_COUNT_RLS_TABLES = `SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' AND c.relrowsecurity`;
 
-function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet = false }) {
+function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet = false, lists = null }) {
   const say = (s) => { if (!quiet) console.log(s); };
   const failures = [];
   const notes = [];
 
-  const anon = parseAllowlist(ANON_ALLOWLIST);
-  const pending = parseAllowlist(ANON_ALLOWLIST, { section: 'PENDING-PUBLIC-EXECUTE' });
-  const bank = parseAllowlist(RLS_BANK);
+  const anon = lists?.anon ?? parseAllowlist(ANON_ALLOWLIST);
+  const pending = lists?.pending ?? parseAllowlist(ANON_ALLOWLIST, { section: 'PENDING-PUBLIC-EXECUTE' });
+  const bank = lists?.bank ?? parseAllowlist(RLS_BANK);
   for (const p of [...anon.problems, ...pending.problems, ...bank.problems]) {
     failures.push(`allowlist entry without a reason — ${p}`);
   }
@@ -276,10 +286,32 @@ function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet =
       `then GRANT to the named roles that actually call it.`,
     );
   }
+  // A PENDING entry that has stopped violating is a FAILURE, not a note.
+  //
+  // The exemption exists only for as long as its cause does. Left as a note, the
+  // line survives the migration that fixed it and quietly becomes a permanent
+  // hole: the next function to acquire a PUBLIC grant under that same name would
+  // be waved straight through by an exemption nobody re-argued. So the gate goes
+  // red until the line is deleted, which is the only moment anyone is guaranteed
+  // to be looking.
+  //
+  // ABSENT IS NOT FIXED. If the function is not on this database at all, no
+  // conclusion is available — a partial replay simply may not have built it — so
+  // that is a note. Only a function that EXISTS and is no longer PUBLIC-executable
+  // proves the exemption has outlived its cause.
+  const allSecdef = new Set(rows(dbUrl, SQL_ALL_SECDEF).map((r) => r[0]));
   for (const p of pendingSet) {
-    if (!publicExec.includes(p)) {
-      notes.push(`PENDING entry no longer violating — DELETE it from ${path.relative(REPO, ANON_ALLOWLIST)}: ${p}`);
+    if (publicExec.includes(p)) continue;
+    if (!allSecdef.has(p)) {
+      notes.push(`PENDING entry names a function absent from this database — no conclusion drawn: ${p}`);
+      continue;
     }
+    failures.push(
+      `PENDING exemption has outlived its cause: ${p} exists and is NO LONGER PUBLIC-executable.\n` +
+      `    DELETE its line from ${path.relative(REPO, ANON_ALLOWLIST)} (section PENDING-PUBLIC-EXECUTE). ` +
+      `An exemption kept past its fix is a standing hole: the next function to acquire a PUBLIC ` +
+      `grant under this name would be waved through by a line nobody re-argued.`,
+    );
   }
 
   /* 2 — named anon EXECUTE must be allowlisted */
@@ -359,13 +391,31 @@ function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet =
 
 /* ───────────────────────── self-tests ───────────────────────── */
 
+// TWO planted functions, and the second one is the point.
+//
+// `zz_secdef_gate_selftest_named` declares NAMED parameters, because that is the
+// shape the estate's real migrations use and the shape that broke this gate on
+// its first real run: pg_get_function_identity_arguments() renders them as
+// `(p_token text)`, which matches no allowlist entry, while the allowlist and
+// every other message says `(text)`. A fixture of bare-typed functions cannot
+// reproduce that, so the rendering path went untested until production data
+// tested it. It is exercised in CI now.
 const PLANT = `
 CREATE SCHEMA IF NOT EXISTS public;
 CREATE OR REPLACE FUNCTION public.zz_secdef_gate_selftest()
 RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $fn$ SELECT true $fn$;
--- deliberately issue NO revoke: this is the exact defect shape, the Postgres default.
+CREATE OR REPLACE FUNCTION public.zz_secdef_gate_selftest_named(p_token text, p_count integer)
+RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $fn$ SELECT true $fn$;
+-- deliberately issue NO revoke on either: this is the exact defect shape, the
+-- Postgres default that nobody chooses.
 `;
-const UNPLANT = `DROP FUNCTION IF EXISTS public.zz_secdef_gate_selftest();`;
+const UNPLANT = `
+DROP FUNCTION IF EXISTS public.zz_secdef_gate_selftest();
+DROP FUNCTION IF EXISTS public.zz_secdef_gate_selftest_named(text, integer);`;
+
+// The signature the checker MUST render for the named-parameter plant: types
+// only, comma separated, no spaces, no schema prefix, no parameter names.
+const PLANT_NAMED_SIG = 'zz_secdef_gate_selftest_named(text,integer)';
 
 // Loopback-only. It really creates the function, so it must never run anywhere
 // that is not a disposable database.
@@ -376,42 +426,84 @@ function selfTest(dbUrl, opts) {
     process.exit(2);
   }
 
+  const namesPlant = (r) => r.failures.filter((f) => f.includes('zz_secdef_gate_selftest')).length;
+  const fail = (msg) => { console.error(`::error::self-test: ${msg}`); process.exit(1); };
+
+  // CASE 1 — the detector fires, by exactly the right amount, and stops.
+  //
   // The baseline is deliberately NOT required to be clean. This runs against a
   // replayed substrate that may carry real findings of its own, and "the gate
   // already fails here" must not be confused with "the gate cannot fail". What
-  // is asserted is the DELTA: planting the violation must add a finding naming
-  // the plant, and removing it must take that finding away again.
+  // is asserted is the DELTA.
   psql(dbUrl, UNPLANT);
   const before = runChecks(dbUrl, { ...opts, quiet: true });
-  const namesPlant = (r) => r.failures.filter((f) => f.includes('zz_secdef_gate_selftest')).length;
-  console.log(`self-test: baseline carries ${before.failures.length} finding(s), ${namesPlant(before)} of them naming the plant`);
-  if (namesPlant(before) !== 0) {
-    console.error('::error::self-test: the plant is already reported before it was planted. The detector is matching something else.');
-    process.exit(1);
-  }
+  console.log(`self-test: baseline carries ${before.failures.length} finding(s), ${namesPlant(before)} of them naming a plant`);
+  if (namesPlant(before) !== 0) fail('a plant is already reported before it was planted. The detector is matching something else.');
 
-  console.log('self-test: planting a SECURITY DEFINER function with the Postgres default ACL (no REVOKE) — the gate MUST report it');
+  console.log('self-test 1: planting TWO SECURITY DEFINER functions with the Postgres default ACL (no REVOKE) — one bare-typed, one with NAMED parameters');
   psql(dbUrl, PLANT);
   const during = runChecks(dbUrl, { ...opts, quiet: true });
-  psql(dbUrl, UNPLANT);
-  if (namesPlant(during) !== 1) {
-    console.error('::error::self-test: the planted violation was NOT detected. The gate cannot fail, so its clean verdicts are worthless.');
-    process.exit(1);
+  if (namesPlant(during) !== 2) fail(`expected both plants to be reported, got ${namesPlant(during)}. The gate cannot fail, so its clean verdicts are worthless.`);
+  if (during.failures.length !== before.failures.length + 2) {
+    fail(`planting two violations moved the finding count from ${before.failures.length} to ${during.failures.length}. The detector is not measuring what it claims.`);
   }
-  if (during.failures.length !== before.failures.length + 1) {
-    console.error(`::error::self-test: planting one violation moved the finding count from ${before.failures.length} to ${during.failures.length}. The detector is not measuring what it claims.`);
-    process.exit(1);
-  }
-  console.log('  planted violation: detected, and it moved the count by exactly one — PASS');
 
-  console.log('self-test: removing the plant must restore the baseline exactly');
+  // The named-parameter plant must be reported by its TYPE signature. This is
+  // the assertion that would have caught the first real run's failure: a gate
+  // that renders `(p_token text)` matches no allowlist entry and reports the
+  // whole estate as unlisted.
+  const named = during.failures.find((f) => f.includes('zz_secdef_gate_selftest_named'));
+  if (!named || !named.includes(PLANT_NAMED_SIG)) {
+    fail(
+      `the named-parameter plant was not rendered as ${PLANT_NAMED_SIG}. ` +
+      `Reported instead: ${named ? named.split('\n')[0] : '(nothing)'}. ` +
+      `Parameter names or a schema prefix in the signature mean NO allowlist entry can ever match.`,
+    );
+  }
+  console.log(`  both plants detected; named parameters rendered as ${PLANT_NAMED_SIG} — PASS`);
+
+  // CASE 2 — a PENDING entry SUPPRESSES a live violation.
+  const pendingLive = {
+    ...opts,
+    quiet: true,
+    lists: {
+      pending: { entries: [{ payload: PLANT_NAMED_SIG, reason: 'self-test fixture' }], problems: [] },
+    },
+  };
+  const suppressed = runChecks(dbUrl, pendingLive);
+  if (suppressed.failures.some((f) => f.includes(PLANT_NAMED_SIG) && f.includes('grants EXECUTE to PUBLIC'))) {
+    fail('a PENDING entry did not suppress its own violation — the exemption mechanism does not work.');
+  }
+  console.log('self-test 2: a PENDING entry suppresses its live violation — PASS');
+
+  // CASE 3 — THE RATCHET. Once the cause is fixed, the exemption must FAIL.
+  psql(dbUrl, `REVOKE EXECUTE ON FUNCTION public.zz_secdef_gate_selftest_named(text, integer) FROM PUBLIC;`);
+  const outlived = runChecks(dbUrl, pendingLive);
+  const ratchet = outlived.failures.find((f) => f.includes('outlived its cause') && f.includes(PLANT_NAMED_SIG));
+  if (!ratchet) {
+    fail(
+      `a PENDING entry whose function is no longer PUBLIC-executable did NOT fail. ` +
+      `The exemption would outlive its cause and become a permanent hole.`,
+    );
+  }
+  console.log('self-test 3: a PENDING entry whose cause is fixed FAILS, naming it — PASS');
+
+  // CASE 4 — absent is not fixed.
+  psql(dbUrl, UNPLANT);
+  const absent = runChecks(dbUrl, pendingLive);
+  if (absent.failures.some((f) => f.includes('outlived its cause') && f.includes(PLANT_NAMED_SIG))) {
+    fail('a PENDING entry naming an ABSENT function was reported as fixed. A partial replay may simply not have built it — that is not evidence.');
+  }
+  console.log('self-test 4: a PENDING entry naming an absent function draws no conclusion — PASS');
+
+  // CASE 5 — cleanup restores the baseline exactly.
   const after = runChecks(dbUrl, { ...opts, quiet: true });
   if (namesPlant(after) !== 0 || after.failures.length !== before.failures.length) {
-    console.error(`::error::self-test: after cleanup the gate reports ${after.failures.length} finding(s) (baseline was ${before.failures.length}). The detector is not reporting the plant.`);
-    process.exit(1);
+    fail(`after cleanup the gate reports ${after.failures.length} finding(s) (baseline was ${before.failures.length}). The detector is not reporting the plant.`);
   }
-  console.log('  after cleanup: back to baseline — PASS');
-  console.log('\nself-test PASSED: the gate was seen to fail on a planted violation, by exactly one finding, and to stop failing when it was removed.');
+  console.log('self-test 5: removing the plants restores the baseline exactly — PASS');
+
+  console.log('\nself-test PASSED: the gate fires on planted violations by exactly the right amount, renders named parameters as types, honours a PENDING exemption, FAILS when that exemption outlives its cause, draws no conclusion from an absent function, and goes quiet when the plants are removed.');
 }
 
 // Safe against any database, production included: everything happens inside one

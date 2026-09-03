@@ -58,10 +58,22 @@
 # refresh protocol, and a rule about who may refresh it, or it becomes a warning everyone
 # silences. Tracked on crm7#1540.
 #
-# THIS IS NOT FAILED BY DEFAULT. It emits ::warning:: and a job-summary table. A finding
-# here is a question ("was this intended?"), not a defect, and a control that cries wolf
-# is a control people switch off. The job fails only if it cannot CONNECT — a green run
-# must mean "checked", never "could not check".
+# WHICH STEPS FAIL, AND WHY THEY DIFFER
+#
+# Step A (identity-scoped policies still applying to PUBLIC) IS NOT FAILED BY DEFAULT. It
+# emits ::warning:: and a job-summary table. A finding there is a question ("was this
+# intended?"), not a defect, and a control that cries wolf is a control people switch off.
+#
+# Step C (SECURITY DEFINER functions reachable by anon or PUBLIC) DOES fail the job, and
+# the difference is not inconsistency. A policy scoped TO PUBLIC may be deliberate and only
+# a human can say; a SECURITY DEFINER function executable by PUBLIC has already been ruled
+# on — every legitimate case is enumerated by name, with a reason, in
+# scripts/secdef-anon-allowlist.txt. A finding there is therefore not a question but an
+# unlisted grant or an exemption that has outlived its cause, and both are defects.
+#
+# EITHER WAY, the job still fails if it cannot CONNECT, and step C additionally refuses to
+# report a clean result from a database carrying implausibly few objects ("scanned less than
+# banked"). A green run must mean "checked", never "could not check".
 
 name: Production RLS Policy Drift Audit
 
