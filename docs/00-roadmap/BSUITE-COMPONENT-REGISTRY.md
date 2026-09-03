@@ -21,7 +21,7 @@ A shared component nothing imports is not a library — it is dead code with a v
 | crm7 | 447 |
 | business-suite-unified | 119 |
 | conduit | 98 |
-| braden | 207 |
+| braden | 208 |
 | throughput | 91 |
 | R80.4 | 6 |
 
@@ -208,9 +208,9 @@ A shared component nothing imports is not a library — it is dead code with a v
 | `PageGridLayout` | @bsuite/page-builder | 6 | crm7, business-suite-unified, conduit, braden, throughput |
 | `BSUITE_APP_METADATA` | @bsuite/nav-core | 6 | crm7, business-suite-unified, conduit, braden, throughput, R80.4 |
 | `DataUnavailable` | @bsuite/ui | 5 | crm7, business-suite-unified, throughput |
+| `UpdateAvailableBanner` | @bsuite/nav-core | 5 | crm7, business-suite-unified, braden, throughput, R80.4 |
 | `DataGrid` | @bsuite/data-grid | 4 | crm7 |
 | `AppSwitcher` | @bsuite/nav-core | 4 | business-suite-unified, conduit, throughput, R80.4 |
-| `UpdateAvailableBanner` | @bsuite/nav-core | 4 | crm7, business-suite-unified, throughput, R80.4 |
 | `SchemaBuilder` | @bsuite/schema-builder | 3 | crm7, business-suite-unified, conduit |
 | `AppShell` | @bsuite/ui | 2 | business-suite-unified, throughput |
 | `EntitySelector` | @bsuite/ui | 2 | crm7, conduit |

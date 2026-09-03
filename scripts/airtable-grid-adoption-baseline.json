@@ -1,6 +1,6 @@
 {
   "_doc": "Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. Written by scripts/check-airtable-grid-adoption.mjs --update-baseline. Fails on any RISE (a new hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.",
-  "_measured": "1501 .tsx files examined across 5 apps",
+  "_measured": "1502 .tsx files examined across 5 apps",
   "_clickThroughDoc": "Files that HAD row-level click-through to a record. Recorded by PATH because a conversion destroys the <TableRow onClick> evidence. Any file here that renders a DataGrid must pass onRowClick, or the conversion turned a working navigation into a dead list. Operator ask 2026-08-28: \"make sure table that currently enable click through to a record still maintain this capability.\" The set is a UNION and only grows.",
   "apps": {
     "crm7": {
@@ -25,7 +25,7 @@
       "handRolled": 13,
       "dataGrid": 0,
       "files": 13,
-      "filesScanned": 221
+      "filesScanned": 222
     },
     "throughput": {
       "handRolled": 1,
@@ -64,24 +64,58 @@
   },
   "dataGridOnRowClick": {
     "crm7": {
-      "ceiling": 17,
-      "total": 22
+      "ceiling": 0,
+      "total": 22,
+      "exceptions": [
+        {
+          "path": "crm7/src/components/admin/BrowseDataTab.tsx",
+          "reason": "Browses any of 84 catalogued entities dynamically; a row's shape and identity change with the operator's entity selection, so there is no single fixed detail route a click could resolve to. The interaction model IS in-grid cell editing (\"click a cell, change it, undo it\"), not row navigation to elsewhere."
+        },
+        {
+          "path": "crm7/src/components/reports/ReportBuilder.tsx",
+          "reason": "Catalog-driven report builder over 20 entities, 199 fields, 34 joins; a result row can be a grouped/aggregated projection across joined entities with no single backing record, so there is structurally no fixed destination to navigate to."
+        },
+        {
+          "path": "crm7/src/components/reports/ReportTable.tsx",
+          "reason": "Shared paginated results table for W2 template-driven reports; rows are whatever the selected report template projects (same polymorphic-row reasoning as ReportBuilder), so no fixed detail route exists."
+        },
+        {
+          "path": "crm7/src/pages/apprentices/[id]/aass-registrations.tsx",
+          "reason": "Append-only compliance log (create-only mutation, no update path anywhere in the app); no per-registration detail page exists anywhere, and every field the record has is already visible in the row itself."
+        },
+        {
+          "path": "crm7/src/pages/apprentices/[id]/placements.tsx",
+          "reason": "Every row action (advance/suspend/terminate/transfer) is served by an explicit transition-dialog button already in the row; this table never had click-through even before its DataGrid conversion, and the transition dialog IS the record's interaction surface."
+        },
+        {
+          "path": "crm7/src/pages/contacts/tags/index.tsx",
+          "reason": "A row is a synthetic aggregate -- a distinct tag NAME derived from a Set across all contacts' free-text tags -- not a persisted record with its own id or detail page. The only action is delete, already served by the row's own action column."
+        },
+        {
+          "path": "crm7/src/pages/settings/tenant-switch-audit.tsx",
+          "reason": "Read-only audit trail of super-admin tenant-switch EVENTS (crm7#1153); a switch event is an immutable historical fact fully represented by its row with no per-event detail page anywhere, and every column is editable:false."
+        }
+      ]
     },
     "business-suite-unified": {
       "ceiling": 0,
-      "total": 0
+      "total": 0,
+      "exceptions": []
     },
     "conduit": {
       "ceiling": 0,
-      "total": 0
+      "total": 0,
+      "exceptions": []
     },
     "braden": {
       "ceiling": 0,
-      "total": 0
+      "total": 0,
+      "exceptions": []
     },
     "throughput": {
       "ceiling": 0,
-      "total": 0
+      "total": 0,
+      "exceptions": []
     }
   },
   "_schedule": {
@@ -90,7 +124,7 @@
     "origin_date": "2026-09-03",
     "current_count": 192,
     "current_date": "2026-09-03",
-    "scanned": 1501,
+    "scanned": 1502,
     "per_week": 6
   }
 }

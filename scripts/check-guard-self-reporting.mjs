@@ -117,6 +117,11 @@ const DENOMINATOR_NOUNS = [
   // not a change to make as a side effect of an unrelated lane.
   'case\\(s\\)', 'reference\\(s\\)', 'directive\\(s\\)', 'issue\\(s\\)',
   'directives?', 'issues?', 'mentions?', 'keywords?',
+  // ADDED 2026-09-04 (H2, work-at-risk sweep). Neither noun existed anywhere
+  // in this list — a guard whose honest clean-pass line reads "examined 14
+  // branch(es) across 7 repo(s)" would have been classified as silent.
+  // Additive only, per the policy stated above this list.
+  'branch\\(es\\)', 'branches?', 'repo\\(s\\)', 'repos?',
 ]
 // REGEX IS FORBIDDEN IN THIS ESTATE — hand-written scanners, AST walks, real
 // tokenisers (Tier 2 doctrine). The first version of this classifier composed
