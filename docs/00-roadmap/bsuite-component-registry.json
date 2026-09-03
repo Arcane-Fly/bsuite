@@ -4,7 +4,7 @@
   "sharedComponents": 195,
   "unusedSharedComponents": 168,
   "localComponentFiles": {
-    "crm7": 443,
+    "crm7": 447,
     "business-suite-unified": 119,
     "conduit": 98,
     "braden": 207,
@@ -769,11 +769,12 @@
       "name": "UpdateAvailableBanner",
       "package": "@bsuite/nav-core",
       "consumers": {
+        "crm7": 1,
         "business-suite-unified": 1,
         "throughput": 1
       },
-      "consumerFiles": 2,
-      "consumingApps": 2
+      "consumerFiles": 3,
+      "consumingApps": 3
     },
     {
       "name": "VERSION_JSON_PATH",

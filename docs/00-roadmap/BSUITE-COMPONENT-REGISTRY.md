@@ -18,7 +18,7 @@ A shared component nothing imports is not a library — it is dead code with a v
 
 | App | Local component files |
 |---|---|
-| crm7 | 443 |
+| crm7 | 447 |
 | business-suite-unified | 119 |
 | conduit | 98 |
 | braden | 207 |
@@ -210,11 +210,11 @@ A shared component nothing imports is not a library — it is dead code with a v
 | `DataUnavailable` | @bsuite/ui | 5 | crm7, business-suite-unified, throughput |
 | `DataGrid` | @bsuite/data-grid | 4 | crm7 |
 | `AppSwitcher` | @bsuite/nav-core | 4 | business-suite-unified, conduit, throughput, R80.4 |
+| `UpdateAvailableBanner` | @bsuite/nav-core | 3 | crm7, business-suite-unified, throughput |
 | `SchemaBuilder` | @bsuite/schema-builder | 3 | crm7, business-suite-unified, conduit |
 | `AppShell` | @bsuite/ui | 2 | business-suite-unified, throughput |
 | `EntitySelector` | @bsuite/ui | 2 | crm7, conduit |
 | `MobileSidebarDrawer` | @bsuite/nav-core | 2 | conduit, R80.4 |
-| `UpdateAvailableBanner` | @bsuite/nav-core | 2 | business-suite-unified, throughput |
 | `DialogContent` | @bsuite/ui | 1 | business-suite-unified |
 | `DialogDescription` | @bsuite/ui | 1 | business-suite-unified |
 | `DialogFooter` | @bsuite/ui | 1 | business-suite-unified |

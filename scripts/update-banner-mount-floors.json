@@ -2,7 +2,7 @@
   "_doc": "Per-app floors for real JSX mounts of <UpdateAvailableBanner/> imported from @bsuite/nav-core. Written by scripts/check-update-banner-mounted.mjs --update-baseline. A count below floor fails; a count above floor without --update-baseline fails (the floor is a ratchet: bank the rise). target is the R7 adoption goal (1 per app, 2 for R80.4 LiveShell + static branch) and is reported, not enforced as a hard fail until floors catch up. Owner: R10 adoption PRs (D-160 step 2).",
   "floors": {
     "business-suite-unified": 1,
-    "crm7": 0,
+    "crm7": 1,
     "conduit": 0,
     "braden": 0,
     "R80.4": 0,
