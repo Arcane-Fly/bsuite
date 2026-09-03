@@ -58,10 +58,22 @@
 # refresh protocol, and a rule about who may refresh it, or it becomes a warning everyone
 # silences. Tracked on crm7#1540.
 #
-# THIS IS NOT FAILED BY DEFAULT. It emits ::warning:: and a job-summary table. A finding
-# here is a question ("was this intended?"), not a defect, and a control that cries wolf
-# is a control people switch off. The job fails only if it cannot CONNECT — a green run
-# must mean "checked", never "could not check".
+# WHICH STEPS FAIL, AND WHY THEY DIFFER
+#
+# Step A (identity-scoped policies still applying to PUBLIC) IS NOT FAILED BY DEFAULT. It
+# emits ::warning:: and a job-summary table. A finding there is a question ("was this
+# intended?"), not a defect, and a control that cries wolf is a control people switch off.
+#
+# Step C (SECURITY DEFINER functions reachable by anon or PUBLIC) DOES fail the job, and
+# the difference is not inconsistency. A policy scoped TO PUBLIC may be deliberate and only
+# a human can say; a SECURITY DEFINER function executable by PUBLIC has already been ruled
+# on — every legitimate case is enumerated by name, with a reason, in
+# scripts/secdef-anon-allowlist.txt. A finding there is therefore not a question but an
+# unlisted grant or an exemption that has outlived its cause, and both are defects.
+#
+# EITHER WAY, the job still fails if it cannot CONNECT, and step C additionally refuses to
+# report a clean result from a database carrying implausibly few objects ("scanned less than
+# banked"). A green run must mean "checked", never "could not check".
 
 name: Production RLS Policy Drift Audit
 
@@ -79,6 +91,25 @@ jobs:
     name: Production RLS policy drift
     runs-on: ubuntu-latest
     steps:
+      # Steps A and B were pure inline SQL and needed no working tree, so this
+      # workflow had no checkout at all. Step C runs a checked-in script, so the
+      # tree has to be here — without this the script is simply absent and the
+      # step dies on "Cannot find module", which reads like a broken scanner
+      # rather than a missing checkout.
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v5
+        with:
+          node-version-file: '.node-version'
+          # This job installs no dependencies; without pnpm on PATH the default
+          # package-manager cache is a hard failure. Same reason
+          # supabase-migration-rehearsal.yml disables it.
+          package-manager-cache: false
+
       - name: Guard — require project ref
         env:
           SUPABASE_PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
@@ -200,3 +231,69 @@ jobs:
           echo "$OUT" | grep -q '^HIT=1$'   || { echo "::error::Detector did not fire on a constructed positive. The query is broken and the clean result above is meaningless."; exit 1; }
           echo "$OUT" | grep -q '^STILL=1$' || { echo "::error::Detector also matched a correctly scoped policy. It would flag everything, which is the same as flagging nothing."; exit 1; }
           echo "✓ Fired on the bad shape, ignored the good one, rolled back."
+
+      # ── C — anon/PUBLIC reachability of SECURITY DEFINER functions ──────────
+      #
+      # WHY A LIVE SCAN AND NOT ONLY THE REHEARSAL
+      # ──────────────────────────────────────────
+      # supabase-migration-rehearsal.yml runs the same assertion after replaying
+      # every scope onto a disposable database, which catches a migration that
+      # would INTRODUCE the defect. It cannot catch the defect ARRIVING any other
+      # way, and this class has two such ways:
+      #
+      #   * Postgres restores EXECUTE-to-PUBLIC on every DROP + CREATE. A function
+      #     recreated in Studio, or by a hotfix run by hand, is publicly executable
+      #     again the moment it is replaced — with no migration to rehearse.
+      #   * The rehearsal is path-filtered to migration paths and submodule
+      #     gitlinks. A change that re-grants without touching a migration file
+      #     never triggers it at all.
+      #
+      # So the rehearsal gates the INTENT and this gates the FACT. They run the
+      # same checker against different substrates on purpose.
+      #
+      # This workflow is `workflow_dispatch` + `schedule` only — it has no
+      # pull_request trigger — so it is PR-safe by construction and its secrets
+      # are never exposed to a fork.
+      - name: C — SECURITY DEFINER functions reachable by anon or PUBLIC
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+          # Production floors, measured 2026-09-03: 282 SECURITY DEFINER functions
+          # and 442 RLS-enabled tables in `public`. Set well below those so normal
+          # growth or removal never trips them, but far above zero so a connection
+          # to the wrong database — or an empty one — refuses to report "clean".
+          SECDEF_MIN_FUNCTIONS: '200'
+          SECDEF_MIN_TABLES: '400'
+        run: |
+          set -euo pipefail
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+
+          # Prove the detector fires BEFORE trusting a clean verdict from it. The
+          # plant lives inside a transaction that is rolled back, and the script
+          # re-checks afterwards that nothing survived, so this is safe to run
+          # against production.
+          node scripts/supabase/check-secdef-grants.mjs --db-url "$DB_URL" --self-test-tx
+
+          set +e
+          node scripts/supabase/check-secdef-grants.mjs \
+            --db-url "$DB_URL" --substrate live \
+            --min-functions "$SECDEF_MIN_FUNCTIONS" \
+            --min-tables "$SECDEF_MIN_TABLES" > secdef-scan.txt 2>&1
+          RC=$?
+          set -e
+          cat secdef-scan.txt
+
+          {
+            echo "## C — SECURITY DEFINER reachability (live)"
+            echo
+            echo '```'
+            cat secdef-scan.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          if [ "$RC" != "0" ]; then
+            echo "::error::Live drift: a SECURITY DEFINER function in public is executable by PUBLIC or by an un-allowlisted anon grant, or an RLS-no-policy table grew or gained a client grant. See the job summary."
+            exit 1
+          fi
+          echo "C: 0 finding(s)"
