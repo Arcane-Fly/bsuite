@@ -376,14 +376,38 @@ function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet =
     return { failures, notes, scannedFunctions, scannedTables };
   }
   const grants = rows(dbUrl, SQL_RLS_BANK_GRANTS);
-  say(`check 4 (grants on RLS-no-policy tables): {findings: ${grants.length}, scanned: ${observed.length}}`);
+  const bankedGrants = grants.filter(([t]) => banked.has(t));
+  say(
+    `check 4 (grants on RLS-no-policy tables): {findings: ${grants.length}, scanned: ${observed.length}}` +
+    ` (${bankedGrants.length} on banked tables, ${grants.length - bankedGrants.length} on unbanked)`,
+  );
+  // The remediation differs by whether the table is BANKED, so the message must
+  // too. "These tables are fail-closed by design" is a claim about intent, and it
+  // is only true of a table someone banked with a reason. For an UNBANKED table
+  // the fail-closed shape is exactly what is in question — check 3 has already
+  // reported it as possibly accidental — so telling the reader to REVOKE would be
+  // prescribing a remedy for a diagnosis nobody has made.
   for (const [tbl, role, priv] of grants) {
-    failures.push(
-      `RLS-no-policy table carries a client-role grant: public.${tbl} -> ${role || 'PUBLIC'} ${priv}\n` +
-      `    These tables are fail-closed by design and are read only through SECURITY DEFINER ` +
-      `functions. Add "REVOKE ${priv} ON public.${tbl} FROM ${role || 'PUBLIC'};" to its migration. ` +
-      `(A table created under permissive default privileges can inherit TRUNCATE this way.)`,
-    );
+    const who = role || 'PUBLIC';
+    if (banked.has(tbl)) {
+      failures.push(
+        `BANKED fail-closed table carries a client-role grant: public.${tbl} -> ${who} ${priv}\n` +
+        `    ${path.relative(REPO, RLS_BANK)} records this table as deliberately unreachable — RLS on, ` +
+        `zero policies, every read and write through a SECURITY DEFINER function — so this grant ` +
+        `contradicts its own bank entry. Add "REVOKE ${priv} ON public.${tbl} FROM ${who};" to its ` +
+        `migration. (A table created under permissive default privileges can inherit TRUNCATE this ` +
+        `way, and TRUNCATE is not row-scoped, so RLS does not bound it.)`,
+      );
+    } else {
+      failures.push(
+        `UNBANKED table has RLS with zero policies AND a client-role grant: public.${tbl} -> ${who} ${priv}\n` +
+        `    Check 3 has already reported this table as not banked. Do NOT assume it is fail-closed by ` +
+        `design — this combination is equally consistent with a misconfiguration: RLS switched on and ` +
+        `the policy never written, leaving a grant that now denies every row. Decide which it is first. ` +
+        `If the table SHOULD be reachable, add the policy it is missing. If it should not, bank it in ` +
+        `${path.relative(REPO, RLS_BANK)} with the reason AND revoke the grant.`,
+      );
+    }
   }
 
   return { failures, notes, scannedFunctions, scannedTables };
@@ -400,11 +424,27 @@ function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet =
 // every other message says `(text)`. A fixture of bare-typed functions cannot
 // reproduce that, so the rendering path went untested until production data
 // tested it. It is exercised in CI now.
+// DROP before CREATE, never bare CREATE OR REPLACE.
+//
+// `CREATE OR REPLACE FUNCTION` PRESERVES the existing function's ACL. If a
+// same-named function already existed — a previous interrupted run, or anything
+// that happened to collide — the "plant" would inherit that ACL instead of the
+// Postgres default, so it might not be PUBLIC-executable at all. The self-test
+// would then assert that the detector stayed quiet about a function that was
+// never a violation, and report PASS having proved nothing. A self-test that can
+// silently stop testing is worse than none, because it launders the very
+// assumption the gate rests on.
+//
+// DROP guarantees the object is new, so its proacl is NULL and the default
+// (EXECUTE to PUBLIC) applies. That is asserted explicitly after planting rather
+// than assumed — see assertPlantIsPublicExecutable().
 const PLANT = `
 CREATE SCHEMA IF NOT EXISTS public;
-CREATE OR REPLACE FUNCTION public.zz_secdef_gate_selftest()
+DROP FUNCTION IF EXISTS public.zz_secdef_gate_selftest();
+DROP FUNCTION IF EXISTS public.zz_secdef_gate_selftest_named(text, integer);
+CREATE FUNCTION public.zz_secdef_gate_selftest()
 RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $fn$ SELECT true $fn$;
-CREATE OR REPLACE FUNCTION public.zz_secdef_gate_selftest_named(p_token text, p_count integer)
+CREATE FUNCTION public.zz_secdef_gate_selftest_named(p_token text, p_count integer)
 RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $fn$ SELECT true $fn$;
 -- deliberately issue NO revoke on either: this is the exact defect shape, the
 -- Postgres default that nobody chooses.
@@ -412,6 +452,37 @@ RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $fn$ S
 const UNPLANT = `
 DROP FUNCTION IF EXISTS public.zz_secdef_gate_selftest();
 DROP FUNCTION IF EXISTS public.zz_secdef_gate_selftest_named(text, integer);`;
+
+// Reads the SAME predicate check 1 uses, restricted to the plants. The point is
+// to prove the fixture carries the defect before asking whether the detector
+// sees it: "the detector stayed quiet" and "there was nothing to see" are
+// otherwise indistinguishable, and only one of them is a passing test.
+const SQL_PLANT_IS_PUBLIC_EXECUTABLE = `
+SELECT p.proname
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+ WHERE n.nspname = 'public'
+   AND p.proname LIKE 'zz_secdef_gate_selftest%'
+   AND EXISTS (
+     SELECT 1
+       FROM aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+      WHERE a.grantee = 0 AND a.privilege_type = 'EXECUTE'
+   )
+ ORDER BY 1`;
+
+function assertPlantIsPublicExecutable(dbUrl, expected) {
+  const got = rows(dbUrl, SQL_PLANT_IS_PUBLIC_EXECUTABLE).map((r) => r[0]);
+  const missing = expected.filter((n) => !got.includes(n));
+  if (missing.length > 0) {
+    console.error(
+      `::error::self-test: the planted function(s) ${missing.join(', ')} are NOT PUBLIC-executable, ` +
+      `so they do not carry the defect this gate detects. Whatever the detector says next would ` +
+      `prove nothing. (CREATE OR REPLACE preserves an existing ACL — the plant must be DROPped first.)`,
+    );
+    process.exit(1);
+  }
+  return got;
+}
 
 // The signature the checker MUST render for the named-parameter plant: types
 // only, comma separated, no spaces, no schema prefix, no parameter names.
@@ -442,6 +513,8 @@ function selfTest(dbUrl, opts) {
 
   console.log('self-test 1: planting TWO SECURITY DEFINER functions with the Postgres default ACL (no REVOKE) — one bare-typed, one with NAMED parameters');
   psql(dbUrl, PLANT);
+  const plantedPublic = assertPlantIsPublicExecutable(dbUrl, ['zz_secdef_gate_selftest', 'zz_secdef_gate_selftest_named']);
+  console.log(`  fixture verified: ${plantedPublic.join(', ')} really are PUBLIC-executable, so they carry the defect under test`);
   const during = runChecks(dbUrl, { ...opts, quiet: true });
   if (namesPlant(during) !== 2) fail(`expected both plants to be reported, got ${namesPlant(during)}. The gate cannot fail, so its clean verdicts are worthless.`);
   if (during.failures.length !== before.failures.length + 2) {
@@ -510,23 +583,70 @@ function selfTest(dbUrl, opts) {
 // transaction that is rolled back. Proves the DETECTOR fires; it does not
 // exercise the allowlist plumbing the way --self-test does.
 function selfTestTx(dbUrl) {
+  // A NAME THAT CANNOT PRE-EXIST, plus DROP IF EXISTS.
+  //
+  // `CREATE OR REPLACE FUNCTION` preserves an existing function's ACL, so a
+  // colliding name would hand us a "plant" that is not PUBLIC-executable at all,
+  // and the self-test would report PASS having proved nothing.
+  //
+  // A unique name closes a SECOND hole that DROP alone does not. If a same-named
+  // function existed BEFORE the transaction, it legitimately comes back when the
+  // transaction rolls back — and the post-rollback "did the plant survive?" check
+  // then fires a false alarm about a function it never planted. Measured: with a
+  // pre-existing zz_secdef_gate_selftest_tx() this refused with "the planted
+  // function SURVIVED the rollback" against a database that was behaving
+  // perfectly. Unique per run, the question becomes unambiguous.
+  const tag = `${process.pid.toString(36)}${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+  const fn = `zz_secdef_gate_selftest_tx_${tag}`.slice(0, 63);
+
+  // Two assertions, in this order, and the order is the point:
+  //   PLANTED= the fixture really does carry the defect (PUBLIC EXECUTE)
+  //   DETECT=  the detector then sees it
+  // Without the first, "the detector stayed quiet" and "there was nothing to
+  // see" are indistinguishable, and only one of them is a passing test.
+  const detector = SQL_PUBLIC_EXECUTE.replace('ORDER BY 1', `AND p.proname = '${fn}' ORDER BY 1`);
   const sql = `
 BEGIN;
-CREATE OR REPLACE FUNCTION public.zz_secdef_gate_selftest()
+DROP FUNCTION IF EXISTS public.${fn}();
+CREATE FUNCTION public.${fn}()
 RETURNS boolean LANGUAGE sql SECURITY DEFINER SET search_path = public AS $fn$ SELECT true $fn$;
-${SQL_PUBLIC_EXECUTE.replace('ORDER BY 1', "AND p.proname = 'zz_secdef_gate_selftest' ORDER BY 1")};
+SELECT 'PLANTED=' || count(*)
+  FROM pg_proc p
+  JOIN pg_namespace n ON n.oid = p.pronamespace
+ WHERE n.nspname = 'public'
+   AND p.proname = '${fn}'
+   AND EXISTS (
+     SELECT 1 FROM aclexplode(coalesce(p.proacl, acldefault('f', p.proowner))) a
+      WHERE a.grantee = 0 AND a.privilege_type = 'EXECUTE'
+   );
+SELECT 'DETECT=' || count(*) FROM (${detector}) d;
 ROLLBACK;`;
+
   const out = psql(dbUrl, sql);
-  if (!out.includes('zz_secdef_gate_selftest')) {
-    console.error('::error::self-test-tx: the detector did NOT fire on a function planted with the Postgres default ACL. The clean verdict above means nothing.');
+
+  if (!out.includes('PLANTED=1')) {
+    console.error(
+      `::error::self-test-tx: the planted function public.${fn} is NOT PUBLIC-executable, so it does ` +
+      `not carry the defect this gate detects. A quiet detector would prove nothing. Refusing to certify.`,
+    );
     process.exit(1);
   }
-  const still = rows(dbUrl, `SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='zz_secdef_gate_selftest'`);
+  if (!out.includes('DETECT=1')) {
+    console.error(
+      `::error::self-test-tx: the detector did NOT fire on public.${fn}, which IS PUBLIC-executable. ` +
+      `The clean verdict from this gate means nothing.`,
+    );
+    process.exit(1);
+  }
+
+  // Unambiguous now: this name existed nowhere before this process chose it, so
+  // anything left behind is a genuine rollback failure.
+  const still = rows(dbUrl, `SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.proname='${fn}'`);
   if (still.length !== 0) {
-    console.error('::error::self-test-tx: the planted function SURVIVED the rollback. Refusing to continue against this database.');
+    console.error(`::error::self-test-tx: public.${fn} SURVIVED the rollback. Refusing to continue against this database.`);
     process.exit(1);
   }
-  console.log('self-test-tx PASSED: detector fired on a planted PUBLIC-EXECUTE function inside a rolled-back transaction, and the plant left nothing behind.');
+  console.log(`self-test-tx PASSED: public.${fn} was verified PUBLIC-executable, the detector fired on it inside a rolled-back transaction, and the plant left nothing behind.`);
 }
 
 /* ───────────────────────── main ───────────────────────── */
