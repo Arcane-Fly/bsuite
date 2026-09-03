@@ -1,3 +1,13 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite
+evidence:
+  - .github/workflows/dom-layout-lint.yml
+  - docs/00-roadmap/operator-notes-verdicts.json
+review_by: 2026-12-01
+---
+
 # Frontend Layout & Z-Index Standards
 
 **Status:** Working · **Relocated:** 2026-07-31
