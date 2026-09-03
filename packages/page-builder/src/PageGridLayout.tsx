@@ -1293,7 +1293,7 @@ export function PageGridLayout({
                   aria-pressed={layoutCols === columnCount}
                   className={cn(
                     'px-2 py-0.5 rounded text-xs font-medium transition-colors border',
-                    'bg-muted text-muted-foreground border-border',
+                    'bg-muted text-muted-foreground border-border-interactive',
                     'hover:bg-muted/80 hover:text-foreground',
                     'data-[active]:bg-primary data-[active]:text-primary-foreground data-[active]:border-primary',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
@@ -1454,7 +1454,7 @@ export function PageGridLayout({
                         onClick={() => showLayer(key, meta?.defaultSize)}
                         className={cn(
                           'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
-                          'bg-muted text-muted-foreground border-border',
+                          'bg-muted text-muted-foreground border-border-interactive',
                           'hover:bg-muted/80 hover:text-foreground hover:border-primary/60',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                         )}
