@@ -848,9 +848,9 @@
   },
   {
     "id": "D-148",
-    "verdict": "UNVERIFIABLE",
-    "evidence": "subOrg = 0). AdminBranding.tsx tenant picker = getTenants({limit:200}) line 361, not filtered to the caller's chain. Read side cascades via parent walk (20261005000000 LOOP). braden reads its own tenant_id NULL row (BrandingAdmin.tsx:102-112) - Branding.tsx (1,209 lines) edits caller's own tenant_branding only (lines 398-431), AccessGuard white_label (726). No sub-org fan-out control (grep parent_tenant",
-    "whereLooked": "Register D-148. Audit F-57, F6/F4. BSU#320 closed (parent_tenant_id + hierarchical resolve), #507 closed | class: PARTIAL | regression: every tenant-scoped console with a sub-org dimension; 6 (branding, nav, features, permissions, custom pages, templates per audit F4); grep for a sub-org scope selector per console | repeat: no | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI"
+    "verdict": "PARTIAL",
+    "evidence": "PARTIAL - Branding.tsx (1,209 lines) edits the caller's own tenant_branding only (lines 398-431, AccessGuard white_label at 726); no sub-organisation fan-out control exists (grep parent_tenant|subOrg = 0); AdminBranding.tsx's tenant picker lists every tenant (getTenants limit 200) rather than the caller's parent_tenant_id chain. BSU#320 (parent_tenant_id + hierarchical resolve) and #507 are closed, so the resolver exists and the fan-out control does not.",
+    "whereLooked": "register D-148; audit F-57, steps F6 and F4; BSU#320 closed, BSU#507 closed | class: every tenant with sub-organisations | regression: no | repeat: no | judged 2026-09-03 by audit lane L12 (Fable via hermes); recorded by the PI"
   },
   {
     "id": "D-149",
@@ -878,9 +878,9 @@
   },
   {
     "id": "D-153",
-    "verdict": "UNVERIFIABLE",
-    "evidence": "form_fields = 0). Snippet issued from Developer/Embed.tsx:351 and crm7 settings/organization.tsx:727. braden uses its own EnhancedContactForm - Two embeds with two fixed field sets: crm7/public/embed/lead-form.html:42-57 (6 fields), BSU Embed/LeadForm.tsx:45-66 (4 fields). No field config anywhere (grep embed_fields",
-    "whereLooked": "Register D-153. Audit F-60, step G5. No issue | class: NOT-DONE | regression: every lead form; 3 (2 embeds + braden form) over 6 union fields; one tenant-owned field schema consumed by all | repeat: no | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI"
+    "verdict": "NOT-DONE",
+    "evidence": "NOT-DONE - two embeds with two fixed field sets: crm7/public/embed/lead-form.html:42-57 (6 fields) and business-suite-unified Embed/LeadForm.tsx:45-66 (4 fields); no field configuration anywhere (grep embed_fields|form_fields = 0); the snippet is issued from Developer/Embed.tsx:351, inside the developer portal he asked it to be outside of.",
+    "whereLooked": "register D-153; audit F-60, step G5; no issue | class: every embed and the braden form (2 embeds + 1 form) | regression: no | repeat: no | judged 2026-09-03 by audit lane L12 (Fable via hermes); recorded by the PI"
   },
   {
     "id": "D-154",
