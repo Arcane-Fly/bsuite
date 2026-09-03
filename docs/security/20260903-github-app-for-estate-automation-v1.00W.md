@@ -5,6 +5,7 @@ owner: bsuite
 evidence:
   - .github/workflows/consumer-lockfile-reach.yml
   - .github/workflows/advance-submodule-pointers.yml
+  - .github/workflows/migration-collision-across-open-prs.yml
   - docs/00-roadmap/operator-notes-verdicts.json
 ---
 
@@ -43,9 +44,12 @@ checks this), the PAT fallback is deleted from the two writers and the PAT is re
 
 | use | workflows | first |
 |---|---|---|
-| write (PUT /contents, `gh pr create`) | 2: `consumer-lockfile-reach.yml`, `advance-submodule-pointers.yml` | this PR |
+| write (PUT /contents, `gh pr create`, `gh api POST /statuses`) | 3: `consumer-lockfile-reach.yml`, `advance-submodule-pointers.yml`, `migration-collision-across-open-prs.yml` | this PR |
 | read (checkout of private submodules) | 61 | after the writers prove signed |
 | app repositories | 0 | none |
 
 Count reproduced by `grep -l 'secrets.BSUITE_CROSS_REPO_PAT' .github/workflows/*.yml | wc -l` (63) and by grepping
-for `PUT`/`gh pr create` (2).
+for `PUT`/`gh pr create`/`gh api --method POST .*statuses` (3). The third writer
+(`migration-collision-across-open-prs.yml`, added by bsuite#3017) authenticates its `post-migration-collision-status.mjs`
+step with `BSUITE_CROSS_REPO_PAT || github.token` to POST a commit status onto each app PR it judges — a write to a
+different app repository than the one the workflow runs in, which is exactly the cross-repo shape this document is about.
