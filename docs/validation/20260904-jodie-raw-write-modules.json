@@ -1,0 +1,8 @@
+{
+  "measured_at": "2026-09-04T07:55:00+08:00",
+  "what": "AI tool modules that still write straight to PostgREST instead of through a registered write intent",
+  "command": "for app in crm7 conduit; do grep -rlE \"method: *'(POST|PATCH|PUT|DELETE)'|\\.insert\\(|\\.update\\(|\\.upsert\\(\" $app/src/lib/ai/tools/*.ts | grep -v '\\.test\\.ts$'; done | wc -l",
+  "raw_write_modules": 20,
+  "by_app": { "crm7": 16, "conduit": 4 },
+  "target": 0
+}
