@@ -9,7 +9,7 @@
     "conduit": 98,
     "braden": 207,
     "throughput": 91,
-    "R80.4": 5
+    "R80.4": 6
   },
   "components": [
     {
@@ -771,10 +771,11 @@
       "consumers": {
         "crm7": 1,
         "business-suite-unified": 1,
-        "throughput": 1
+        "throughput": 1,
+        "R80.4": 1
       },
-      "consumerFiles": 3,
-      "consumingApps": 3
+      "consumerFiles": 4,
+      "consumingApps": 4
     },
     {
       "name": "VERSION_JSON_PATH",
