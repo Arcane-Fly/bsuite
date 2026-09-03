@@ -126,6 +126,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
 import { execFileSync } from 'node:child_process'
+import { compareForCollision, parseAllowlist, ALLOWLIST_RELATIVE_PATH } from './lib/migration-collision-compare.mjs'
 
 /**
  * Every scope the applier's matrix deploys from. Two live in the parent tree
@@ -146,7 +147,6 @@ const SUBMODULE_SCOPES = [
   { name: 'R80.4', dir: 'supabase/migrations' },
 ]
 
-const ALLOWLIST_RELATIVE_PATH = 'scripts/migration-collision-allowlist.txt'
 const APPLIER_WORKFLOW_RELATIVE_PATH = '.github/workflows/supabase-migrate.yml'
 const DEFAULT_SUBMODULE_BRANCH = 'development'
 
@@ -194,9 +194,24 @@ export function isApplierVisible(relativePath) {
  *
  * `entries` are `{ scope, version, blob, file }`. `blob` is the git object id
  * of the file's CONTENT, so equality of blob is byte-equality of the migration
- * — that is the whole basis of rule 1.
+ * — the cheap first pass of rule 1.
+ *
+ * WHEN BLOBS DIFFER, THAT IS NOT NECESSARILY A REAL COLLISION (bsuite J7,
+ * 2026-09-03). A comment-only difference — a header noting which copy is
+ * canonical, or the `-- rehearsal: already-enforced` marker
+ * scripts/supabase/rehearse-migrations.mjs reads — gives every copy a
+ * DIFFERENT blob SHA despite being the same DDL. `readContent`, when
+ * supplied, is used to break the tie with the SAME comparator every other
+ * migration-collision gate in this estate uses
+ * (scripts/lib/migration-collision-compare.mjs), so a comment-only pair
+ * lands in `identical` here too instead of falling through to the
+ * floor/allowlist path. `readContent` is optional and this function stays
+ * pure without it (self-testable with no git access) — a missing or failing
+ * read just means the tie-break is skipped and the group falls through to
+ * the existing floor/allowlist checks, which is the same fail-safe direction
+ * blob-only comparison already had.
  */
-export function classify({ entries, floor, allowlist }) {
+export function classify({ entries, floor, allowlist, readContent }) {
   const groups = new Map()
   for (const e of entries) {
     if (!groups.has(e.version)) groups.set(e.version, [])
@@ -215,8 +230,23 @@ export function classify({ entries, floor, allowlist }) {
     // Rule 1 before rule 2: an identical-content duplicate is benign at any
     // height, and reporting it as "waived by the floor" would misdescribe it.
     if (new Set(group.map((g) => g.blob)).size === 1) {
-      identical.push({ version, group })
+      identical.push({ version, group, reason: 'byte-identical' })
       continue
+    }
+
+    if (readContent) {
+      const [anchor, ...rest] = group
+      const anchorContent = readContent(anchor)
+      const allCommentOnly =
+        anchorContent != null &&
+        rest.every((g) => {
+          const c = readContent(g)
+          return c != null && compareForCollision(anchorContent, c).equal
+        })
+      if (allCommentOnly) {
+        identical.push({ version, group, reason: 'comment-only-difference' })
+        continue
+      }
     }
 
     // Rule 2. Same string comparison the applier uses:
@@ -250,34 +280,10 @@ export function classify({ entries, floor, allowlist }) {
   return { identical, subFloor, violations, allowlisted }
 }
 
-/** Shared with check-migration-version-collisions.mjs — same file, same rules. */
-export function parseAllowlist(text) {
-  const allowed = new Map()
-  for (const raw of text.split('\n')) {
-    const line = raw.trim()
-    if (!line || line.startsWith('#')) continue
-    let i = 0
-    while (i < line.length && line[i] >= '0' && line[i] <= '9') i++
-    const version = line.slice(0, i)
-    let rest = line.slice(i).trim()
-    if (version.length === 0 || !rest) continue
-
-    let expectedFiles = null
-    if (rest.startsWith('n=')) {
-      let j = 2
-      while (j < rest.length && rest[j] >= '0' && rest[j] <= '9') j++
-      const digits = rest.slice(2, j)
-      const atBoundary = j === rest.length || rest[j] === ' ' || rest[j] === '\t'
-      if (digits.length && atBoundary) {
-        expectedFiles = Number(digits)
-        rest = rest.slice(j).trim()
-      }
-    }
-    if (!rest) continue
-    allowed.set(version, { reason: rest, expectedFiles })
-  }
-  return allowed
-}
+// parseAllowlist moved to scripts/lib/migration-collision-compare.mjs
+// (bsuite J7, 2026-09-03) — was byte-for-byte duplicated here and in
+// check-migration-version-collisions.mjs; both now import the one shared
+// implementation (imported at the top of this file).
 
 /**
  * Read MIGRATION_FLOOR from the applier workflow rather than hardcoding a third
@@ -376,9 +382,17 @@ function readScopeFromRef({ repoDir, ref, scopeDir, scopeName }) {
     if (!isApplierVisible(rel)) continue
     const version = versionOf(rel)
     if (!version) continue
-    entries.push({ scope: scopeName, version, blob, file: rel })
+    // repoDir travels WITH the entry so a later `git cat-file -p <blob>` can
+    // run against the repo that actually holds this object — a submodule's
+    // blob does not exist in the parent's object store, and vice versa.
+    entries.push({ scope: scopeName, version, blob, file: rel, repoDir })
   }
   return entries
+}
+
+/** `git cat-file -p <blob>` in the entry's OWN repo — a comment-only-diff tie-break, read lazily. */
+function readEntryContent(entry) {
+  return gitOrNull(['cat-file', '-p', entry.blob], entry.repoDir)
 }
 
 /** Each submodule's configured branch from .gitmodules, defaulting to `development`. */
@@ -527,6 +541,52 @@ function selfTest() {
         allowlist: noAllowlist,
       })
       return r.violations.length === 0 && r.identical.length === 1
+    },
+  ])
+
+  // bsuite J7, 2026-09-03: a comment-only difference gives every copy a
+  // DIFFERENT blob (a blob SHA is content-addressed), so rule 1's cheap
+  // byte-equality check alone would send this group to the floor/allowlist
+  // path. With `readContent` supplied, the tie-break via
+  // scripts/lib/migration-collision-compare.mjs classifies it as `identical`
+  // instead — the same real defect this whole extraction fixes in
+  // audit-prod-migration-history.mjs, reproduced here for THIS gate.
+  cases.push([
+    'a comment-only difference (different blobs) is IDENTICAL when readContent is supplied',
+    () => {
+      const body = 'CREATE TABLE public.workflow_definitions (id uuid primary key);\n'
+      const content = {
+        aaaa: `-- canonical header\n${body}`,
+        bbbb: `-- DIFFERENT header, rationale only\n-- and a second line\n${body}`,
+      }
+      const r = classify({
+        entries: [
+          mk('crm7', '20261103000000', 'aaaa', '20261103000000_workflow_definitions.sql'),
+          mk('business-suite-unified', '20261103000000', 'bbbb', '20261103000000_workflow_definitions.sql'),
+        ],
+        floor: FLOOR,
+        allowlist: noAllowlist,
+        readContent: (e) => content[e.blob],
+      })
+      return r.violations.length === 0 && r.identical.length === 1 && r.identical[0].reason === 'comment-only-difference'
+    },
+  ])
+
+  // ...and WITHOUT readContent, the same group falls through to rule 2/3 as
+  // before — proving the tie-break is additive, not a silent behaviour
+  // change for callers that do not supply it (self-tests above this one).
+  cases.push([
+    'the same comment-only group WITHOUT readContent falls through to the allowlist path',
+    () => {
+      const r = classify({
+        entries: [
+          mk('crm7', '20261103000000', 'aaaa', '20261103000000_workflow_definitions.sql'),
+          mk('business-suite-unified', '20261103000000', 'bbbb', '20261103000000_workflow_definitions.sql'),
+        ],
+        floor: FLOOR,
+        allowlist: noAllowlist,
+      })
+      return r.identical.length === 0 && r.violations.length === 1
     },
   ])
 
@@ -998,7 +1058,12 @@ const allowlist = parseAllowlist(
   fs.existsSync(allowlistPath) ? fs.readFileSync(allowlistPath, 'utf8') : '',
 )
 
-const { identical, subFloor, violations, allowlisted } = classify({ entries, floor, allowlist })
+const { identical, subFloor, violations, allowlisted } = classify({
+  entries,
+  floor,
+  allowlist,
+  readContent: readEntryContent,
+})
 
 console.log('Scopes read (submodules at their own branch tip, NOT the parent gitlink):')
 for (const n of notes) console.log(`  ${n}`)
