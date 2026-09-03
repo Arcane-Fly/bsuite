@@ -5,15 +5,34 @@ name: Explicit GRANT lint (Supabase Data API readiness)
 # in the same migration. This workflow scans PR-delta migrations and
 # fails the check if any new CREATE TABLE public.<x> lacks a matching
 # GRANT statement.
+#
+# NO `paths:` FILTER — removed 2026-09-03 (C5), and the removal IS the change.
+#
+# This workflow was fully wired and correct, ran on the right branches, and
+# could not block a single merge: it was in neither branch's
+# required_status_checks list. Adding it there while it was path-filtered would
+# have been worse than leaving it out. GitHub does not START a workflow whose
+# `paths:` the PR's changeset misses, so on a docs-only or gitlink-only PR the
+# context never reports — and a required context that never reports leaves the
+# PR on "Expected — waiting for status to be reported" with every visible check
+# green, forever. The estate has already lost merges to that exact shape
+# (memory: "a PATH-FILTERED required check can NEVER report — 4 of 12 never
+# ran"; a job-level `if:` reports SKIPPED, which does not satisfy a required
+# context either).
+#
+# The filter is therefore gone and the SCRIPT does the cheap thing instead: it
+# lists the PR's changed files and exits 0 in well under a second when none of
+# them is a migration, stating how many files it examined rather than printing
+# a bare "clean" that cannot tell an empty scan from a clean one. An empty diff
+# — which means the base ref never resolved — now exits 2 rather than 0.
+#
+# scripts/check-required-contexts-producible.mjs fails the build if anyone
+# re-adds a `paths:` filter here while this context is required.
 
 on:
   pull_request:
     branches: [main, development]
-    paths:
-      - '**/supabase/migrations/**.sql'
-      - 'packages/db/migrations/**.sql'
-      - 'scripts/explicit-grant-lint.sh'
-      - '.github/workflows/explicit-grant-lint.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,17 +41,33 @@ jobs:
   grant-lint:
     runs-on: ubuntu-latest
     env:
-      BASE_REF: ${{ github.base_ref }}
+      BASE_REF: ${{ github.base_ref || github.ref_name }}
     steps:
       - name: Checkout (full history required for diff)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: Ensure base ref is available
+      # actions/checkout@v4 with fetch-depth: 0 already fetches
+      # `+refs/heads/*:refs/remotes/origin/*`, so `origin/<base>` normally
+      # resolves. "Normally" is not a guarantee to build a required gate on:
+      # the old step here fetched `main:main` (a LOCAL branch) while the script
+      # was handed `origin/main`, so the two only ever agreed by accident of
+      # checkout's default refspec. Ask for the remote-tracking ref by name.
+      - name: Ensure the base ref resolves as a remote-tracking ref
         run: |
-          git fetch origin "${BASE_REF}:${BASE_REF}" || true
+          set -euo pipefail
+          git fetch --no-tags --prune origin "+refs/heads/${BASE_REF}:refs/remotes/origin/${BASE_REF}" \
+            || git fetch --no-tags origin "${BASE_REF}" \
+            || true
+          git rev-parse --verify "origin/${BASE_REF}" >/dev/null
+
+      # A gate that has never been seen to fail is not a gate. This runs the
+      # SAME awk detector the real scan uses, over a fixture with a planted
+      # `CREATE TABLE public.x` and no GRANT, and asserts exit 1 — then four
+      # clean fixtures and asserts exit 0.
+      - name: Self-test the guard (proves it can fail)
+        run: bash scripts/explicit-grant-lint.sh --self-test
 
       - name: Run explicit GRANT lint
-        run: |
-          bash scripts/explicit-grant-lint.sh "origin/${BASE_REF}"
+        run: bash scripts/explicit-grant-lint.sh "origin/${BASE_REF}"

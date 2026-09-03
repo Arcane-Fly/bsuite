@@ -1718,6 +1718,36 @@ export const GUARDS = [
   },
 
   {
+    id: 'required-contexts-producible',
+    label: 'Every required status check is one some PR can actually report',
+    repo: '.',
+    command: ['node', 'scripts/check-required-contexts-producible.mjs'],
+    ciWorkflow: '.github/workflows/guard-self-reporting.yml',
+    mode: 'ratchet',
+    notes:
+      'A required context nobody can produce blocks every merge into that branch, ' +
+      'silently: GitHub waits for a status that never arrives while every visible ' +
+      'check is green. Three ways to get there, all seen here — a workflow with a ' +
+      '`paths:` filter that a PR misses, a job-level `if:` that reports SKIPPED ' +
+      '(SKIPPED does not satisfy a required context), and a job renamed out from ' +
+      'under a context string still sitting in branch protection. This reads the ' +
+      'COMMITTED dumps under docs/security/branch-protection/ rather than the live ' +
+      'API, so it needs no token and the rollback for every protection write stays ' +
+      'in git history. It does NOT assert that the dump still matches live ' +
+      'protection — re-dump in the PR that writes it.',
+    evidence:
+      'Clean pass states "examined N required context(s) across M branch dump(s) ' +
+      '... against J job(s) in W workflow file(s); F finding(s)" — 61 / 2 / 129 / ' +
+      '105 / 0 on development+main at 2026-09-03, after `align` was appended to ' +
+      'both branches and `Every gitlink sits on its app\'s own main` to main. ' +
+      '--self-test covers 11 cases: clean, stale context, path filter, ' +
+      'job-level if:, branches:, branches-ignore:, a types: list omitting both ' +
+      'opened and synchronize, a matrix job\'s bare name, its parenthesised ' +
+      'form, and a structural case asserting a `- run: |` body does not swallow ' +
+      'the step keys after it.',
+  },
+
+  {
     id: 'parent-check-secdef-grants',
     label: 'SECURITY DEFINER functions reachable by anon/PUBLIC + RLS-no-policy table bank',
     repo: '.',
@@ -1770,7 +1800,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 82
+export const GUARD_FLOOR = 83
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
