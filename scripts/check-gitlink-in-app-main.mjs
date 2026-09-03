@@ -46,11 +46,10 @@
  *    remote inside this job, specifically so a stale or unrelated local
  *    checkout of the submodule cannot produce a false pass.
  *  - It does NOT run against `development`. The parent's development gitlinks
-* It does NOT run against development: the parent's development gitlinks track each app's
-* MAIN as well (precedent parent-gitlinks-track-submodule-main-not-development); the gate is
-* scoped to main-bound PRs because that is where a development-only pointer becomes shipped,
-* not because development gitlinks are expected to sit off their app's main.
- *    — running this rule there would refuse every ordinary development gitlink.
+ *    track each app's MAIN as well (precedent
+ *    parent-gitlinks-track-submodule-main-not-development); this gate is scoped
+ *    to main-bound PRs because that is where a development-only pointer becomes
+ *    shipped, not because development gitlinks are expected off their app's main.
  *  - It does NOT resolve anything. A refusal names the app and the two SHAs; a
  *    human decides whether to re-point to the app's main or wait for that app's
  *    own promotion.
