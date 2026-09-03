@@ -565,7 +565,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:366",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:385",
       "note": "→ /"
     },
     {
@@ -592,7 +592,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:265",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:267",
       "note": null
     },
     {
@@ -619,7 +619,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:532",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:551",
       "note": null
     },
     {
@@ -646,7 +646,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:298",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:300",
       "note": null
     },
     {
@@ -673,7 +673,61 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:313",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:332",
+      "note": null
+    },
+    {
+      "app": "bsu",
+      "path": "/admin/features",
+      "route_file": "business-suite-unified/src/components/AppContent.tsx",
+      "component": "AdminFeatures",
+      "component_file": "business-suite-unified/src/pages/Admin/AdminFeatures.tsx",
+      "layout": "AppShell",
+      "auth": {
+        "type": "authenticated",
+        "permissions": [],
+        "feature_flags": []
+      },
+      "nav": {
+        "surface": "sidebar",
+        "group": "Admin",
+        "label": "Features",
+        "icon": "Blocks",
+        "order": 14
+      },
+      "reachable_via": "sidebar",
+      "portal": null,
+      "owned_entities": [],
+      "data_tables": [],
+      "status": "live",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:309",
+      "note": null
+    },
+    {
+      "app": "bsu",
+      "path": "/admin/nav-entries",
+      "route_file": "business-suite-unified/src/components/AppContent.tsx",
+      "component": "AdminNav",
+      "component_file": "business-suite-unified/src/pages/Admin/AdminNav.tsx",
+      "layout": "AppShell",
+      "auth": {
+        "type": "authenticated",
+        "permissions": [],
+        "feature_flags": []
+      },
+      "nav": {
+        "surface": "sidebar",
+        "group": "Admin",
+        "label": "Navigation",
+        "icon": "Library",
+        "order": 15
+      },
+      "reachable_via": "sidebar",
+      "portal": null,
+      "owned_entities": [],
+      "data_tables": [],
+      "status": "live",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:318",
       "note": null
     },
     {
@@ -700,7 +754,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:299",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:301",
       "note": null
     },
     {
@@ -727,7 +781,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:338",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:357",
       "note": "→ /developer/platform-kit"
     },
     {
@@ -754,7 +808,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:341",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:360",
       "note": "→ /developer/platform-kit/auth"
     },
     {
@@ -781,7 +835,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:343",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:362",
       "note": "→ /developer/database"
     },
     {
@@ -808,7 +862,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:344",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:363",
       "note": "→ /developer/database"
     },
     {
@@ -835,7 +889,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:339",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:358",
       "note": "→ /developer/platform-kit/logs"
     },
     {
@@ -862,7 +916,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:340",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:359",
       "note": "→ /developer/platform-kit/secrets"
     },
     {
@@ -889,7 +943,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:342",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:361",
       "note": "→ /developer/platform-kit/storage"
     },
     {
@@ -916,7 +970,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:300",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:319",
       "note": null
     },
     {
@@ -943,7 +997,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:301",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:320",
       "note": null
     },
     {
@@ -970,7 +1024,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:303",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:322",
       "note": null
     },
     {
@@ -997,7 +1051,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:474",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:493",
       "note": null
     },
     {
@@ -1024,7 +1078,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:468",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:487",
       "note": null
     },
     {
@@ -1051,7 +1105,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:501",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:520",
       "note": null
     },
     {
@@ -1078,7 +1132,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:277",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:279",
       "note": null
     },
     {
@@ -1098,14 +1152,14 @@
         "group": "Settings",
         "label": "Organisation Branding",
         "icon": "Palette",
-        "order": 16
+        "order": 18
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:309",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:328",
       "note": null
     },
     {
@@ -1132,7 +1186,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:362",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:381",
       "note": "→ /developer/pages"
     },
     {
@@ -1159,7 +1213,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:351",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:370",
       "note": null
     },
     {
@@ -2027,7 +2081,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:516",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:535",
       "note": null
     },
     {
@@ -2054,7 +2108,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:517",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:536",
       "note": null
     },
     {
@@ -2081,7 +2135,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:306",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:325",
       "note": null
     },
     {
@@ -2108,7 +2162,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:522",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:541",
       "note": null
     },
     {
@@ -2135,7 +2189,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:523",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:542",
       "note": null
     },
     {
@@ -2162,7 +2216,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:305",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:324",
       "note": null
     },
     {
@@ -2189,7 +2243,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:304",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:323",
       "note": null
     },
     {
@@ -2216,7 +2270,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:345",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:364",
       "note": null
     },
     {
@@ -2243,7 +2297,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:347",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:366",
       "note": null
     },
     {
@@ -2270,7 +2324,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:346",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:365",
       "note": null
     },
     {
@@ -2297,7 +2351,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:455",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:474",
       "note": null
     },
     {
@@ -2324,7 +2378,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:504",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:523",
       "note": null
     },
     {
@@ -2351,7 +2405,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:285",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:287",
       "note": null
     },
     {
@@ -2378,7 +2432,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:350",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:369",
       "note": null
     },
     {
@@ -2405,7 +2459,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:356",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:375",
       "note": null
     },
     {
@@ -2432,7 +2486,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:286",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:288",
       "note": null
     },
     {
@@ -2459,7 +2513,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:514",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:533",
       "note": null
     },
     {
@@ -2486,7 +2540,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:500",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:519",
       "note": null
     },
     {
@@ -2506,14 +2560,14 @@
         "group": "Settings",
         "label": "General",
         "icon": "Settings",
-        "order": 14
+        "order": 16
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:273",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:275",
       "note": null
     },
     {
@@ -2540,7 +2594,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:292",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:294",
       "note": "→ /branding"
     },
     {
@@ -2560,14 +2614,14 @@
         "group": "Settings",
         "label": "Locale",
         "icon": "Globe",
-        "order": 17
+        "order": 19
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:349",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:368",
       "note": null
     },
     {
@@ -2587,14 +2641,14 @@
         "group": "Settings",
         "label": "Organization",
         "icon": "Building2",
-        "order": 15
+        "order": 17
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:302",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:321",
       "note": null
     },
     {
@@ -2614,14 +2668,14 @@
         "group": "Settings",
         "label": "Schema Builder",
         "icon": "UserCog",
-        "order": 18
+        "order": 20
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:348",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:367",
       "note": null
     },
     {
@@ -2648,7 +2702,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:515",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:534",
       "note": null
     },
     {
