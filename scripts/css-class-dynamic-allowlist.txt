@@ -1,0 +1,22 @@
+# scripts/css-class-dynamic-allowlist.txt
+#
+# Companion to scripts/check-css-classes-emitted.mjs (gate C10).
+#
+# A candidate token that is genuinely assembled at RUNTIME — built from a
+# variable rather than typed as a literal Tailwind class the scanner can see
+# whole — cannot be verified by a static build comparison. The gate already
+# excludes any token containing `${` outright; this file is for the narrower
+# case of a token that reads as a plain literal to the scanner (no `${`) but
+# is still not really a static class name — e.g. a value re-exported from a
+# shared constants module under a name the scanner has no way to resolve.
+#
+# One class name (no prefix stripping, no wildcards) per line. Every entry
+# needs a `#` comment above it stating WHY it cannot be verified statically —
+# an unexplained entry is a hole the gate cannot see through, and this file
+# holding one is exactly as bad as the class name never having been checked.
+#
+# Empty today. No entry has been justified yet — do not add one to make a red
+# run go green; fix the missing @theme registration instead, or add the
+# inline `theme-audit-ok: <reason>` marker (audit-invalid-utilities.sh's
+# convention) on the hit line or the line above if the class truly is a
+# deliberate exception in that one place.

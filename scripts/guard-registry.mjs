@@ -785,6 +785,31 @@ export const GUARDS = [
       'positions, 4 must-stay-silent)"; --self-test exits 1 with 36 failures',
   },
   {
+    // C10. Compares every bg-/text-/border-/ring-/fill-/stroke-/shadow-/
+    // outline- token used in an app's source against the class selectors its
+    // REAL Tailwind build emits (npx @tailwindcss/cli@<installed version> on
+    // the app's own CSS entry). Ratchet on {findings, files_scanned} per app.
+    //
+    // PRECONDITION: each app's own `pnpm install` (the build needs the app's
+    // installed tailwindcss and @bsuite/theme); reaches the network for the
+    // CLI via npx. Refuses per app with "tailwindcss not installed" rather
+    // than reporting clean, and the whole run fails if NO app was scanned.
+    // Same shape as parent-check-stale-lint-exemptions above. ~100 s.
+    id: 'parent-check-css-classes-emitted',
+    label: 'Every used class token has an emitted rule (C10, per-app ratchet)',
+    repo: '.',
+    command: ['node', 'scripts/check-css-classes-emitted.mjs'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"crm7: 8 finding(s), 1639 file(s) scanned, 2254 class(es) emitted" … ' +
+      '"business-suite-unified: 540 finding(s), 430 file(s) scanned, 1695 ' +
+      'class(es) emitted" … "throughput: 227 finding(s), 181 file(s) scanned" ' +
+      '(2026-09-03, six apps, all == baseline). --self-test: "OK (24 logic ' +
+      'cases + 1 real-build case + 3 entry-point cases)"; with the emitted-set ' +
+      'membership test stubbed out it exits 1 on the entry-point case.',
+  },
+  {
     // A RATCHET, not a hard gate: 25 documents in docs/recovered/ still need a
     // verdict against code, and a gate that fails all of them on day one is
     // permanently red — which is how the colour rule was disarmed the first
@@ -1690,7 +1715,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 72
+export const GUARD_FLOOR = 73
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
