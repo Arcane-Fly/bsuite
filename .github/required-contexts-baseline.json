@@ -1,0 +1,6 @@
+{
+  "findings": 0,
+  "scanned": 58,
+  "banked": "2026-09-03",
+  "note": "findings must stay 0; scanned is the number of required contexts across the committed branch dumps."
+}
