@@ -14,5 +14,5 @@
   "scanned": 12,
   "banked_at": "2026-09-03",
   "owner": "R10 adoption PRs",
-  "_doc": "Shrink-only bank of estate domains that do not yet serve /version.json as 200 application/json with a 7-or-40-char hex commit. Written by scripts/check-version-json-served.mjs --update-baseline. A host that starts serving must leave this list in the same commit; a host outside the list that stops serving fails; a hand-added rise fails. Owner: R10 adoption PRs (D-160 step 2). Today every domain is NOT served — no app has adopted the nav-core versionJsonPlugin yet."
+  "_doc": "Hosts that do NOT yet serve /version.json (the nav-core versionJsonPlugin output). Written by scripts/check-version-json-served.mjs --update-baseline; the list only shrinks: a host that starts serving is removed in the PR whose gitlink carries the adopting app, and a host reappearing here fails the gate. As of 2026-09-03 18:03 AWST ideas.crm7.app and d.ideas.crm7.app serve it (throughput, D-160 first adopter); the hosts listed here are the remaining non-serving ones until their apps adopt per R10."
 }
