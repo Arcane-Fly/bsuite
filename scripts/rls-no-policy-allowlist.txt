@@ -1,0 +1,68 @@
+# Tables in schema `public` with RLS ENABLED and ZERO policies.
+#
+# Read by scripts/supabase/check-secdef-grants.mjs (checks 3 and 4).
+#
+# FORMAT
+#   <table name>   # why it deliberately has no policy
+#
+# WHAT THIS SHAPE MEANS
+# ─────────────────────
+# RLS enabled with no policy denies every row to every non-superuser role. That
+# is not a broken table — for this estate it is a deliberate fail-closed idiom:
+#
+#   ALTER TABLE x ENABLE ROW LEVEL SECURITY;   -- deny by default
+#   REVOKE ALL ON x FROM PUBLIC, anon, authenticated;   -- and by name
+#   -- no policy: every read and write goes through a SECURITY DEFINER function
+#
+# The function that owns the table is the only door, and it does its own
+# authorisation. A policy here would be a second, weaker door.
+#
+# So this file is NOT a list of defects. It is the banked set, and the gate's job
+# is to notice a FIFTEENTH — a table that acquired RLS with no policy by accident
+# rather than by design, which presents to a user as "the page is empty" with no
+# error anywhere.
+#
+# The bank is a RATCHET: a table present here but absent from the database is
+# reported and not fatal (the rehearsal substrate is a partial replay). A table
+# in the database that is NOT here fails.
+#
+# CHECK 4 — WHY GRANTS ARE ASSERTED SEPARATELY
+# ────────────────────────────────────────────
+# RLS binds the ROWS; a GRANT binds the TABLE. TRUNCATE is not row-scoped, so a
+# role holding TRUNCATE can empty one of these tables with RLS switched on and
+# every policy absent. A table created while permissive default privileges are in
+# force can inherit exactly that from supabase_admin without any migration saying
+# so. Check 4 therefore asserts that none of these tables carries ANY privilege
+# granted to anon, authenticated or PUBLIC.
+#
+# LIVE STATE 2026-09-03 (tuybltdrdefjblnplpqo, SELECT-only)
+# ──────────────────────────────────────────────────────────
+# All 14 measured: relacl = {postgres=arwdDxtm/postgres,service_role=arwdDxtm/postgres}
+# for every one. Zero anon, zero authenticated, zero PUBLIC, zero TRUNCATE. The
+# idiom is intact in production today. The one historical table where it was NOT
+# applied correctly, tenant_encryption_keys, was fixed by crm7
+# supabase/migrations/archive/20260820010000_tenant_encryption_keys_revoke_anon_grants.sql
+# and is now compliant — it is banked below in its FIXED state.
+#
+# ── rate limiters and attempt counters: fail-closed by design ──
+# Written only by the SECURITY DEFINER function whose abuse they bound. A client
+# that could read them could measure its own remaining budget; one that could
+# write them could reset it.
+
+anon_signing_attempts  # rate limiter for anonymous signing attempts; written only by the signing SECURITY DEFINER functions
+edge_rate_limit_buckets  # token buckets for edge function rate limiting; service_role only
+people_portal_invite_accept_attempts  # brute-force counter for portal invite redemption
+quote_handoff_redeem_attempts  # brute-force counter for quote handoff token redemption
+r7_talent_pool_redeem_attempts  # brute-force counter for talent-pool consent redemption
+r8_quote_return_redeem_attempts  # brute-force counter for R80.4 quote-return token redemption
+
+# ── token, snapshot and cache stores: reachable only through a definer function ──
+
+admin_users  # corporate CMS admin roster, read only via is_developer_admin(); its own migration 20261006000000 states "Deliberately no permissive policy... which is the intent"
+contact_merge_snapshots  # pre-merge contact state kept for undo; written and read by the merge SECURITY DEFINER functions
+person_merge_snapshots  # pre-merge person state kept for undo; written and read by the merge SECURITY DEFINER functions
+people_portal_invites  # single-use portal invite tokens; redeemed only through portal_invite_accept(text)
+quote_handoff_tokens  # single-use quote handoff tokens; redeemed only through the handoff definer functions
+r8_quote_return_tickets  # single-use R80.4 quote-return tickets; redeemed only through their definer function
+tenant_encryption_keys  # per-tenant encryption key material; NEVER client-reachable — the table whose stray anon grants were revoked on 2026-08-20
+xero_tax_rate_cache  # server-side Xero tax rate cache; refreshed by a scheduled job, read by server code only

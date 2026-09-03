@@ -84,3 +84,41 @@ These four were built by background agents that died before committing; their wo
 
 ### Branch backlog reconciled
 ~104 stale branches + 27 leftover parallel-agent worktrees removed (every one had a merged PR = already integrated; the "would-revert-if-merged" ghosts). All repos are now clean (1 worktree each, on `development`). **3 genuinely-unmerged branches remain for a land/abandon decision:** `crm7/feat/ws4-xero-payroll-export-20260604` (blocked Xero cluster), `crm7/fix/dashboard-perf-20260605`, `business-suite-unified/fix/developer-pagegrid-20260606`.
+
+## Execution Log — 2026-09-03 documentation/index reconciliation
+
+This audit remains **Working** and is not archive-ready: the current scan found
+active documentation defects and unverified implementation claims. No plan or
+feature was marked complete solely from a status word or historical report.
+
+### Verified and corrected
+
+- `docs/00-roadmap/bsuite-feature-index.json` and its generated Markdown index
+	now agree at **662 rows across 28 modules**.
+- `scripts/generate-docs-directory-index.mjs` now repairs stale generated
+	indexes as well as creating missing ones. `docs/validation/README.md` was
+	regenerated from five rows to the four documents actually present.
+- Parent documentation indexes now point to the live
+	`20260817-estate-remaining-work-register-v3.00W.md`; the archived v2 register
+	remains identified as historical rather than silently renamed.
+- The hub's ADR range is corrected to ADR-0011, live submodule `README.md` and
+	`PARENT-DOCS.md` entry points resolve, and the duplicate `evidence/` row is
+	removed.
+
+### Still active / not archive-ready
+
+- The plans index is a curated navigation view, not yet a complete inventory of
+	every plan file; unindexed plans remain a remediation item.
+- Historical and dead-link cleanup remains to be handled without rewriting
+	evidence records. Ambiguous renames/deletions, including the recovered
+	`README.md` and non-standard operator-verification filenames, require a
+	separate disposition with backlinks and archive notes.
+- Feature rows citing archived v2 paths need source-index reconciliation before
+	the generated Markdown can be considered fully current.
+
+### Evidence
+
+- `node scripts/generate-docs-directory-index.mjs --check docs` — passed.
+- `node scripts/generate-feature-index.mjs` — wrote 662 rows across 28 modules.
+- `python3 -m json.tool docs/00-roadmap/bsuite-feature-index.json` — passed.
+- `git diff --check` — passed.
