@@ -36702,7 +36702,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "charge-calculator-v9-2.tsx sits at the repo root, not under src/, but is lazy-imported by src/main.tsx and is the entire app \u2014 not an orphan.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Signed-in pass on d.r8.crm7.app, 4 widths x 2 themes = 8 cells, 8/8 PASS, 0 FAIL, 0 UNKNOWN via the estate visual-probe. Real award loaded (MA000004 General Retail 2020), 98 computed money values, zero rendered undefined/NaN/[object Object]. D9 TRUE: public.charge_rate_quotes holds 13 rows, ALL 13 from non-demo non-fixture tenants (e.g. row 7f085339-7d88-4652-bca4-261405fc1dfe, tenant 0c514bfc-3a2c-438f-85c2-4653997ccb22, 2026-07-31). | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.calculate-alias-route",
@@ -36812,7 +36815,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Added because external links pointed at a path that 404'd; canonical route is /.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: GET /calculate resolves and renders the calculator with 98 computed money values - it is a real alias, not a stub. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.dashboard-legacy-redirect",
@@ -36922,7 +36928,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "history.replaceState rewrite to / for stale cross-app builds still emitting ?return_path=/dashboard.",
-  "dod_status": "not-evaluated",
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: GET /dashboard lands on / with 98 money values. The legacy redirect works. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  },
   "operator_audit": [
    {
     "register_id": "D-7",
@@ -37225,7 +37234,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Previously every unmatched path silently rendered the auth gate; a real 404 was added so probes and users see a failure.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live: an unknown path renders 'Page not found - That address does not match anything in the R8 Calculator', not a blank screen and not a crash. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.appshell-theme-gate",
@@ -37251,7 +37263,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live: documentElement carries the theme class and both themes were measured in the 8-cell pass with 0 contrast FAILs against the composited background. NOTE: no theme toggle matched [aria-label*=theme] on this route - the gate applies the theme, it does not expose a switcher here. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.sidebar-nav-single-entry",
@@ -37362,7 +37377,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Deliberately kept to one link by operator ruling \u2014 apprentice/trainee/worker is a control inside the calculator, not a destination.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: 12 nav entries render including Charge Rate Calculator, Account Settings and Billing & Subscription. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.suite-app-switcher",
@@ -37474,7 +37492,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Uses buildLaunchUrl OAuth handoff so cross-app links don't land signed-out.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: the switcher renders and carries Suite Dashboard alongside the R8 entry, so cross-app navigation is reachable from this app. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.dash-award-trade-card",
@@ -38920,7 +38941,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Persists to localStorage only; sortByDependencies() keeps cards that read each other in valid order.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live and RESPONSIVE, measured as CSS multi-column (column-width 360px) NOT react-grid-layout - a react-grid probe reads 0 here and that is correct, it is the wrong mechanism. 1440px: 3 cards flowing into 2 distinct column positions. 768px: collapses to 1. All 3 cards carry break-inside: avoid, so a card never splits across a column. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.results-tab-rates",
@@ -39581,7 +39605,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: three real note controls render - 'Notes on Award, Trade & Qualification (1)', 'Notes on Billing Model (2)', 'Notes on Oncosts (3)' - with counts, so the drawer is wired to content and not an empty affordance. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.clause-appendix",
@@ -39691,7 +39718,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: the heading 'Appendix - award clauses and how this quote reads them' renders. NOTE for the next reader: an innerText regex for the BODY returns false because the appendix is collapsed; assert on the HEADING. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.qualification-picker",
