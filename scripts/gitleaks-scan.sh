@@ -78,12 +78,20 @@ fi
 RANGE="${BASE_SHA}..${HEAD_SHA}"
 COUNT="$(git rev-list --no-merges --count "$RANGE")"
 
-echo "gitleaks-scan: range ${RANGE} (${COUNT} non-merge commits)"
-
 if [ "$COUNT" -eq 0 ]; then
-  echo "gitleaks-scan: no commits in range; nothing to scan." >&2
+  echo "gitleaks-scan: range ${RANGE} — 0 commit(s), 0 file(s); nothing to scan." >&2
   exit 0
 fi
+
+# LANE-WATCHER (scripts/check-guard-self-reporting.mjs) asserts a clean-pass
+# run states a NON-ZERO count of what it examined — a guard that passes
+# without having examined anything is this estate's most-repeated failure
+# class. `--name-only` over the same range gitleaks is about to scan, deduped,
+# is the honest denominator: not every commit touches a file gitleaks reads
+# (a merge, an empty commit), and "N commits, 0 files" would itself be exactly
+# the silent-pass shape this check exists to catch.
+FILE_COUNT="$(git diff --name-only "${BASE_SHA}" "${HEAD_SHA}" 2>/dev/null | sort -u | grep -c . || true)"
+echo "gitleaks-scan: range ${RANGE} — ${COUNT} commit(s), ${FILE_COUNT} file(s) touched"
 
 # --redact: a finding must not print the secret itself into a CI log readable by
 # anyone who can see the run. -v: without it the output is "leaks found: N" and
