@@ -360,6 +360,22 @@ jobs:
           else
             echo "::warning::pg_cron could not be created; cron-only migrations will read as no-ops"
           fi
+          # pg_net is the other half of the same instrument. Every crm7 http cron
+          # migration (8 files, sta-email-watch shape) guards itself with
+          # `IF NOT EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_net')
+          # THEN RAISE NOTICE ... skipped` so that a preview or local database
+          # without pg_net does not fail the replay. Without pg_net created here,
+          # such a migration skips itself, the census sees nothing move, and the
+          # gate rejects it as a silent no-op: 20261112000000_email_inbox_sync_cron
+          # was refused on bsuite#2978 for exactly that reason while production
+          # (where pg_net exists) had applied it. The image ships pg_net; create
+          # it, and degrade honestly if it ever cannot be.
+          if psql "$REHEARSAL_DB_URL" -v ON_ERROR_STOP=1 -c \
+               "CREATE EXTENSION IF NOT EXISTS pg_net;" >/dev/null 2>&1; then
+            echo "pg_net: enabled — http cron migrations no longer skip themselves"
+          else
+            echo "::warning::pg_net could not be created; http cron migrations will read as no-ops"
+          fi
 
       - name: Positive control — the gate must be seen to fail, in both directions
         # Runs BEFORE the real replay and against the same engine that will judge
