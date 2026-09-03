@@ -495,6 +495,43 @@ if (process.argv.includes('--self-test')) {
     setExceptions([]);
     run(['--update-baseline']);
 
+    /*
+     * A THIRD staleness (bsuite#3027 review): an exception naming a file that
+     * no longer exists. The measurement loop only visits files it finds on
+     * disk, so a vanished exception path is invisible to the walk — nothing
+     * marks it missing, nothing marks it contradicted. Before this fix the
+     * run exited 0 and reported "holds" while a documented claim pointed at
+     * nothing.
+     */
+    write('crm7/src/pages/Exempt.tsx', "import { DataGrid } from '@bsuite/data-grid';\n<DataGrid columns={c} data={d} />\n");
+    setExceptions([{ path: 'crm7/src/pages/Exempt.tsx', reason: 'A genuinely explained reason with real content, not a placeholder.' }]);
+    run(['--update-baseline']);
+    rmSync(join(fixture, 'crm7/src/pages/Exempt.tsx')); // the file is gone; the exception entry is not
+    expect('ENTRY: an exception naming a file that no longer exists → exit 1 (stale exception, not "holds")',
+      run([]), 1, /does not exist\. The exception is stale/);
+    setExceptions([]);
+    run(['--update-baseline']);
+
+    /*
+     * MISSING vs MALFORMED baseline (bsuite#3027 review, Copilot thread): a
+     * baseline that fails to READ (ENOENT) is legitimately "no baseline yet"
+     * — the fixture's own first call above already exercises this and must
+     * keep succeeding. A baseline that EXISTS but fails to PARSE is a
+     * different failure entirely and must never be treated the same way, or
+     * a corrupted file gets silently overwritten by the next --update-baseline
+     * instead of being investigated.
+     */
+    const badPath = join(fixture, 'malformed', 'baseline.json');
+    mkdirSync(dirname(badPath), { recursive: true });
+    writeFileSync(badPath, '{ this is not json');
+    expect('ENTRY: a baseline file that EXISTS but is not valid JSON → exit 2, refuses to treat it as "no baseline"',
+      run([], { AIRTABLE_GRID_BASELINE: badPath }), 2, /is not valid JSON/);
+    const noPath = join(fixture, 'absent', 'baseline.json');
+    mkdirSync(dirname(noPath), { recursive: true });
+    expect('ENTRY: a baseline path with no file at all → exit 0 via --update-baseline (genuinely "no baseline yet")',
+      run(['--update-baseline'], { AIRTABLE_GRID_BASELINE: noPath }), 0, /banked:/);
+    rmSync(noPath, { force: true });
+
     // A new hand-rolled table is a RISE.
     write('crm7/src/pages/d.tsx', '<table/>\n');
     expect('ENTRY: planted hand-rolled table → exit 1 "hand-rolled tables ROSE 2 -> 3"',
@@ -683,11 +720,34 @@ function hasRowLevelClickThrough(text) {
 // Read EARLY: the exception mechanism below needs the prior baseline while
 // still measuring (to tell a documented exception from a real gap), not only
 // at verify time.
+//
+// MISSING and MALFORMED are different failures, and collapsing them into one
+// catch block treats them the same — bsuite#3027 review: a baseline file that
+// exists but fails to parse (truncated write, a bad hand-edit, disk
+// corruption) was silently read as "no baseline yet", the same path a
+// genuinely first-ever run takes. The first case should bank fresh data over
+// nothing; the second should never write anything on top of content nobody
+// can currently read — that is how a corrupt baseline gets silently replaced
+// and the corruption goes unnoticed.
 let existingBaseline = null;
+let baselineFileContents = null;
 try {
-  existingBaseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
-} catch {
-  existingBaseline = null;
+  baselineFileContents = readFileSync(BASELINE, 'utf8');
+} catch (err) {
+  if (err.code !== 'ENOENT') {
+    console.error(`FAIL: could not read ${relative(ROOT, BASELINE)}: ${err.code || err.message}. This is not "no baseline" — investigate before running --update-baseline.`);
+    process.exit(2);
+  }
+  // ENOENT: no baseline file exists yet. Legitimate on a first-ever run and on
+  // the self-test fixture's first --reset-schedule/--update-baseline call.
+}
+if (baselineFileContents !== null) {
+  try {
+    existingBaseline = JSON.parse(baselineFileContents);
+  } catch (err) {
+    console.error(`FAIL: ${relative(ROOT, BASELINE)} exists but is not valid JSON (${err.message}). A malformed baseline is not "no baseline" — fix or restore the file before running --update-baseline, which would otherwise silently replace unreadable content.`);
+    process.exit(2);
+  }
 }
 
 const measured = {};
@@ -984,6 +1044,24 @@ for (const app of APPS) {
   for (const ex of exceptions) {
     if (!ex.reason || ex.reason.trim().length < 15) {
       problems.push(`${app} dataGridOnRowClick.exceptions: ${ex.path} has no real reason recorded (need 15+ characters).`);
+    }
+    /*
+     * A THIRD staleness: the exception names a file that is GONE — deleted or
+     * renamed. The measurement loop above only visits files it actually finds
+     * on disk, so a vanished exception path is invisible to it: it never
+     * counts as missing (the file isn't there to check), never contradicts
+     * (same reason), and never appears anywhere else. Reviewed 2026-09-04:
+     * that silence read as "holds" — the run exited 0 while a documented
+     * claim pointed at nothing. Checked here, directly, rather than inferred
+     * from the file's absence from any list the walk produced.
+     */
+    try {
+      statSync(join(ROOT, ex.path));
+    } catch {
+      problems.push(
+        `${app} dataGridOnRowClick.exceptions: ${ex.path} does not exist. The exception is stale — ` +
+          'the file was deleted or renamed. Remove the entry (or update the path) with --update-baseline.',
+      );
     }
   }
   for (const rel of nowDG.exceptionContradictions ?? []) {
