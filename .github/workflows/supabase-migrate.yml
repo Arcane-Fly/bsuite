@@ -453,8 +453,8 @@ jobs:
             fi
             echo "→ Applying transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$f"
-            psql "$DB_URL" -v ON_ERROR_STOP=1 \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES ('${VERSION}', '${BASE#*_}') ON CONFLICT DO NOTHING;"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v name="${BASE#*_}" \
+              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES ('${VERSION}', :'name') ON CONFLICT DO NOTHING;"
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.sql" ! -name "*.nontx.sql" -print0 | sort -z)
@@ -516,7 +516,7 @@ jobs:
 
           command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
 
-          NONTX_COUNT=$(find supabase/migrations -name "*.nontx.sql" 2>/dev/null | wc -l)
+          NONTX_COUNT=$(find supabase/migrations -maxdepth 1 -name "*.nontx.sql" 2>/dev/null | wc -l)
           if [ "$NONTX_COUNT" -eq 0 ]; then
             echo "No .nontx.sql files found — skipping"
             exit 0
@@ -530,8 +530,14 @@ jobs:
 
           APPLIED_COUNT=0
           while IFS= read -r -d '' f; do
-            VERSION=$(basename "$f" .nontx.sql)
-            VERSION=${VERSION%%_*}
+            BASE=$(basename "$f" .nontx.sql)
+            VERSION=${BASE%%_*}
+            # Same guard the transactional loop applies: only <timestamp>_name.sql is
+            # a migration. Without it a helper file's whole basename becomes the
+            # "version", and a nameless non-numeric row lands in the ledger.
+            case "$VERSION" in
+              ''|*[!0-9]*) echo "→ Skipping non-versioned file: $f"; continue ;;
+            esac
             if [ "$VERSION" \< "$MIGRATION_FLOOR" ]; then
               echo "→ Pre-floor ($MIGRATION_FLOOR): $f — owned by history-reconciliation lane, skipping"
               continue
@@ -542,11 +548,11 @@ jobs:
             fi
             echo "→ Applying non-transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
-            psql "$DB_URL" \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version) VALUES ('${VERSION}') ON CONFLICT DO NOTHING;"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v name="${BASE#*_}" \
+              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES ('${VERSION}', :'name') ON CONFLICT DO NOTHING;"
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
-          done < <(find supabase/migrations -name "*.nontx.sql" -print0 | sort -z)
+          done < <(find supabase/migrations -maxdepth 1 -name "*.nontx.sql" -print0 | sort -z)
 
           echo "Done: ${APPLIED_COUNT} non-transactional migration(s) applied."
 
