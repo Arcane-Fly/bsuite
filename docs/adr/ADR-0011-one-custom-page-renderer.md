@@ -1,6 +1,6 @@
 ---
 kind: decision
-authority: proposed
+authority: engineering
 owner: bsuite
 evidence:
   - crm7/src/components/CustomPageRenderer.tsx
