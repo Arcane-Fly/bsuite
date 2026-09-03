@@ -8,7 +8,7 @@ This directory holds the authoritative decisions that govern cross-repo architec
 |---|-------|--------|----------|--------|-----------|
 | [ADR-0001](ADR-0001-page-builder-ownership.md) | Page-Builder Ownership | Accepted | 2026-05-01 | — | P1-4 (AUDIT MISMATCH entry in finish-line roadmap) |
 | [ADR-0002](ADR-0002-schema-builder-ownership.md) | Schema-Builder Ownership | Accepted | 2026-05-01 | — | — |
-| [ADR-0003](ADR-0003-consumer-renderer-pattern.md) | Consumer-Renderer Pattern | Accepted | 2026-05-01 | — | — |
+| [ADR-0003](ADR-0003-consumer-renderer-pattern.md) | Consumer-Renderer Pattern | **Superseded** | 2026-05-01 | ⚠️ built four times; **2 of 4 renderers print raw JSON at users** | superseded by [ADR-0011](ADR-0011-one-custom-page-renderer.md) (2026-09-03) |
 | [ADR-0004](ADR-0004-oauth-allowlist-doctrine.md) | OAuth Allow-List Doctrine | Accepted | 2026-05-01 | — | Duplicate allow-lists in operator-handoff-v4 |
 | [ADR-0005](ADR-0005-rams-funding-authoring.md) | RAMS Funding Authoring | **Superseded** | 2026-05-01 | ❌ **never built — and must not be** | superseded by operator ruling 2026-08-06 (`crm7/src/lib/funding/index.ts`) |
 | [ADR-0006](ADR-0006-contact-propagation-doctrine.md) | Contact Propagation Doctrine | Accepted (**org half superseded**) | 2026-05-01 | ⚠️ contacts yes; `clients.type` **never existed** | org half superseded by `crm7/docs/adr/20260525-host-employer-table-canonicalization-v1.00W.md` |
@@ -16,6 +16,7 @@ This directory holds the authoritative decisions that govern cross-repo architec
 | [ADR-0008](ADR-0008-schema-builder-consolidation.md) | Schema Builder Consolidation — `@bsuite/schema-builder` | Accepted | 2026-05-01 | ✅ package published | — (**renumbered from ADR-0004** on 2026-08-17; duplicate-number collision) |
 | [ADR-0009](ADR-0009-funding-refinement-semantics.md) | Funding Refinement Semantics — the placement-time look at funding REPLACES, it does not add | Accepted | 2026-08-26 | ✅ live in crm7 (separate-ledger model); ❌ contradicted by one unwired R80.4 module | — |
 | [ADR-0010](ADR-0010-fix-the-class-not-the-page.md) | Fix the class, not the page — platform-wide defects are closed platform-wide or not at all | Accepted | 2026-08-26 | ⚠️ policy; enforcement exists (D8.1 + `bsuite_feature_index.sibling_class`), nine classes still open | — |
+| [ADR-0011](ADR-0011-one-custom-page-renderer.md) | One custom-page renderer, with a per-app widget catalogue | Proposed | 2026-09-03 | ❌ not yet built | supersedes ADR-0003 |
 
 > **The `Built?` column is mandatory.** It was added on 2026-08-17 after an audit found
 > that three ratified ADRs had never been implemented and the index gave no way to tell.

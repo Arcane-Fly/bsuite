@@ -158,11 +158,6 @@ const BANKED_DOC_CLAIMS = [
     contains: '`@bsuite/auth` consumer (BS OAuth + cookie SSO)',
     fixedBy: 'conduit#676',
   },
-  {
-    file: 'business-suite-unified/docs/CONSISTENCY-REPORT.md',
-    contains: '- BS OAuth server, cookie SSO',
-    fixedBy: 'business-suite-unified#1104',
-  },
 ];
 
 /*

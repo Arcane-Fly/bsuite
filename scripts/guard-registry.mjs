@@ -384,6 +384,27 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-update-banner-mounted',
+    label: 'UpdateAvailableBanner mount floor per app (D-160 R7/R8)',
+    repo: '.',
+    command: ['node', 'scripts/check-update-banner-mounted.mjs'],
+    ciWorkflow: '.github/workflows/component-mount-gate.yml',
+    mode: 'run',
+    notes:
+      'D-160 step 2. Per-app ratchet on real JSX mounts of ' +
+      '<UpdateAvailableBanner/> imported from @bsuite/nav-core. AST via ' +
+      'typescript (same pattern as check-component-mounts.mjs) — a grep ' +
+      'would count a docblock @example or a test file as a mount. Floors ' +
+      'in scripts/update-banner-mount-floors.json start at 0 for all six ' +
+      'apps with target {1,1,1,1,2,1} (R80.4 needs LiveShell + static). A ' +
+      'count below floor fails; a count above floor without ' +
+      '--update-baseline fails ("the floor is a ratchet: bank the rise"). ' +
+      'A clean pass prints the per-app table and a non-zero file count. ' +
+      'Deliberately NOT an extension of check-exported-not-mounted.mjs ' +
+      '(that gate passes when ONE consumer mounts).',
+  },
+
+  {
     id: 'parent-theme-gate-app-lists',
     label: 'the visual gate installs every app it then tries to drive',
     repo: '.',

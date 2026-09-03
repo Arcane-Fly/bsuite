@@ -692,9 +692,9 @@
   },
   {
     "id": "D-116",
-    "verdict": "UNVERIFIABLE",
-    "evidence": "Publisher verification is an Azure AD app-registration/Microsoft-side status, not something the repo's code can prove either way.",
-    "whereLooked": "YES — D-116; none found | judged 2026-09-03 by audit lane L11 (Sonnet) against code and the issue tracker; recorded by the PI, audit docs/audits/20260903-week-in-review-estate-audit-and-remediation-v1.00W.md"
+    "verdict": "DONE",
+    "evidence": "DONE by the operator 2026-09-03 12:26 AWST: both Azure app registrations (BSuite SSO, BSuite Email & Calendar) carry Publisher verification MPN ID 6905434, publisher display name BRADEN PTY LTD with the verified badge, publisher domain braden.com.au (Azure portal screenshot to the PI; memory bsuite_operator_fact_20260903_azure_apps_mpn_verified). The Microsoft consent screen shows the verified publisher; the 'unverified' warning tenants saw is gone. Previously: Publisher verification is an Azure AD app-registration/Microsoft-side status, not something the repo's code can prove either way.",
+    "whereLooked": "YES — D-116; none found | judged 2026-09-03 by audit lane L11 (Sonnet) against code and the issue tracker; recorded by the PI, audit docs/audits/20260903-week-in-review-estate-audit-and-remediation-v1.00W.md | re-judged 2026-09-03 12:27 by claude-code-bsuite-pi on the operator's own report; the Google OAuth verification (unsafe-app bypass) remains open under D-118/G1"
   },
   {
     "id": "D-117",

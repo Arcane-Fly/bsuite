@@ -96,3 +96,18 @@ jobs:
 
       - name: Check every app with toast() callers mounts a toast surface
         run: node scripts/check-component-mounts.mjs
+
+      # D-160 step 2 / R8: per-app floor on <UpdateAvailableBanner/> from
+      # @bsuite/nav-core. Same job, same typescript install, same submodule
+      # checkout. Prints the per-app table. Self-test proves it can fail.
+      - name: Self-test the guard (proves it can fail)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-update-banner-mounted.mjs --self-test
+
+      - name: Check UpdateAvailableBanner mount floors per app
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-update-banner-mounted.mjs

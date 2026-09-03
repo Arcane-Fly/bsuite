@@ -16,9 +16,17 @@
  * within 3 lines of NO LONGER TRUE / SUPERSEDED / Corrected / re-measured, is
  * discarded.
  */
-import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs'
+import {
+  readFileSync, existsSync, readdirSync, statSync, mkdtempSync, mkdirSync, writeFileSync, rmSync,
+} from 'node:fs'
 import { join, dirname, resolve, relative } from 'node:path'
-import { execSync } from 'node:child_process'
+import { execSync, execFileSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
+import { fileURLToPath } from 'node:url'
+import { compareRatchet, writeBaseline } from './lib/ratchet.mjs'
+
+const SELF = fileURLToPath(import.meta.url)
+const BASELINE_FILE = 'docs/.dangling-link-baseline.json'
 
 const ROOT = process.cwd()
 const APPS = ['crm7', 'conduit', 'business-suite-unified', 'R80.4', 'braden', 'throughput']
@@ -60,6 +68,74 @@ function npmLatest(pkg) {
 
 
 /**
+ * SELF-TEST — proves the RATCHET can fail, not just the regexes.
+ *
+ * Builds a fixture tree with the parent docs/ plus all six app docs/ dirs
+ * (so the submodule-presence refusal below does not fire), invokes THIS
+ * SAME FILE as a subprocess against that fixture — never a hand-rolled
+ * equivalent — first to bank a clean baseline, then to prove a planted
+ * dangling link breaks the ratchet, then to prove a clean fixture passes.
+ */
+function selfTest() {
+  const dir = mkdtempSync(join(tmpdir(), 'doc-links-selftest-'))
+  const checks = []
+  const check = (name, ok) => checks.push([name, ok])
+  const docsBody = (name, target) => `# ${name}\n\nSee [target](./${target}).\n`
+
+  try {
+    mkdirSync(join(dir, 'docs'), { recursive: true })
+    writeFileSync(join(dir, 'docs', 'a.md'), docsBody('A', 'b.md'))
+    writeFileSync(join(dir, 'docs', 'b.md'), '# B\n')
+    for (const app of APPS) {
+      mkdirSync(join(dir, app, 'docs'), { recursive: true })
+      writeFileSync(join(dir, app, 'docs', 'x.md'), `# ${app} doc\n`)
+    }
+
+    const run = () => {
+      try {
+        execFileSync('node', [SELF], { cwd: dir, encoding: 'utf8', stdio: 'pipe' })
+        return 0
+      } catch (e) {
+        return e.status ?? 1
+      }
+    }
+
+    // 1. No baseline yet -> the run fails (unarmed ratchet), never exits 0.
+    check('unarmed ratchet does not pass', run() !== 0)
+
+    // 2. --update-baseline banks the CURRENT (clean) state and exits 0.
+    let bankExit = 0
+    try { execFileSync('node', [SELF, '--update-baseline'], { cwd: dir, encoding: 'utf8', stdio: 'pipe' }) }
+    catch (e) { bankExit = e.status ?? 1 }
+    check('--update-baseline exits 0', bankExit === 0)
+    check('--update-baseline wrote the baseline file', existsSync(join(dir, BASELINE_FILE)))
+
+    // 3. Clean fixture, baseline banked -> ratchet passes.
+    check('clean fixture passes once banked', run() === 0)
+
+    // 4. PLANT A VIOLATION: a dangling link in one doc.
+    writeFileSync(join(dir, 'docs', 'a.md'), docsBody('A', 'nonexistent.md'))
+    check('planted dangling link fails the ratchet', run() !== 0)
+
+    // 5. Remove the violation -> clean again -> passes (findings back at baseline).
+    writeFileSync(join(dir, 'docs', 'a.md'), docsBody('A', 'b.md'))
+    check('restored-clean fixture passes again', run() === 0)
+  } finally {
+    rmSync(dir, { recursive: true, force: true })
+  }
+
+  let bad = 0
+  for (const [name, ok] of checks) {
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${name}`)
+    if (!ok) bad++
+  }
+  console.log(`\n  ${checks.length - bad}/${checks.length} self-tests pass`)
+  process.exit(bad ? 1 : 0)
+}
+
+if (process.argv.includes('--self-test')) selfTest()
+
+/**
  * REFUSE TO RUN WITHOUT SUBMODULES, and this is not defensive padding.
  *
  * Every cross-submodule link — `../crm7/docs/README.md` and its 13 siblings in
@@ -71,7 +147,10 @@ function npmLatest(pkg) {
  * A checker that invents findings when its inputs are absent is worse than one
  * that does not run, because someone acts on the output.
  */
-const SUBMODULE_PROBE = ['crm7/docs', 'business-suite-unified/docs', 'throughput/docs']
+// All SIX app docs dirs, not a sample of three — a probe that only checks
+// half the apps reads a partially-checked-out tree as fully present, and the
+// three it skipped (conduit, R80.4, braden) contributed zero files silently.
+const SUBMODULE_PROBE = APPS.map((a) => `${a}/docs`)
 const missingSubs = SUBMODULE_PROBE.filter((p) => !existsSync(join(ROOT, p)))
 if (missingSubs.length) {
   console.error('REFUSING TO RUN: submodules are not checked out — ' + missingSubs.join(', '))
@@ -99,7 +178,12 @@ function isHistorical(text) {
   return false
 }
 
-const files = [...walk(join(ROOT, 'docs')), ...APPS.flatMap(a => walk(join(ROOT, a, 'docs')))]
+// Tracked PER ROOT (not recomputed later from `files`) so the presence guard
+// can require a minimum document count per app, matching this exact split —
+// two walks of the same tree can disagree if SKIP_DIRS or the app list drifts.
+const perRootFiles = { docs: walk(join(ROOT, 'docs')) }
+for (const app of APPS) perRootFiles[app] = walk(join(ROOT, app, 'docs'))
+const files = [...perRootFiles.docs, ...APPS.flatMap((a) => perRootFiles[a])]
 const results = []
 let historical = 0
 let recordPins = 0
@@ -239,7 +323,7 @@ for (const file of files) {
 const clean = results.filter(r => !r.findings.length)
 const dirty = results.filter(r => r.findings.length)
 console.log(`# Estate documentation sweep\n`)
-console.log(`Files scanned: ${results.length}  (parent ${walk(join(ROOT,'docs')).length}, six apps ${results.length - walk(join(ROOT,'docs')).length})`)
+console.log(`Files scanned: ${results.length}  (parent ${perRootFiles.docs.length}, six apps ${results.length - perRootFiles.docs.length})`)
 console.log(`HISTORICAL (verdict-bannered / dated-audit, skipped): ${historical}`)
 console.log(`RECORD pins (a version in prose is history — not rewritten): ${recordPins}`)
 console.log(`CHECKS-CLEAN: ${clean.length}    CHECKS-FAILED: ${dirty.length}\n`)
@@ -251,3 +335,28 @@ for (const r of dirty.sort((a, b) => b.findings.length - a.findings.length)) {
 }
 const total = dirty.reduce((n, r) => n + r.findings.length, 0)
 console.log(`\nTOTAL FINDINGS: ${total}`)
+
+// ── THE DANGLING-LINK RATCHET — a MONOTONIC CEILING, not equality. ─────────
+//
+// This count is partly derived from SUBMODULE CONTENT: a routine gitlink
+// bump in an unrelated PR changes which commit's docs/ gets scanned, and that
+// author has no reason to look at this number. Only a RISE fails; a fall
+// prints a re-bank note but does not block.
+const perRoot = Object.fromEntries(Object.entries(perRootFiles).map(([k, v]) => [k, v.length]))
+
+if (process.argv.includes('--update-baseline')) {
+  writeBaseline(BASELINE_FILE, { findings: total, scanned: results.length, perRoot, banked: new Date().toISOString().slice(0, 10) })
+  console.log(`\n  banked ${total} findings / ${results.length} scanned to ${BASELINE_FILE}`)
+  process.exit(0)
+}
+
+const ratchet = compareRatchet({
+  file: BASELINE_FILE,
+  findings: total,
+  scanned: results.length,
+  mode: 'ceiling',
+  label: 'dangling-link',
+  scriptPath: 'scripts/check-docs-links-and-pins.mjs',
+})
+console.log(`\n${ratchet.message}`)
+if (!ratchet.ok) process.exit(1)

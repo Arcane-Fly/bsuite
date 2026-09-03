@@ -122,16 +122,35 @@ jobs:
         with:
           python-version: '3.12'
 
+      # NOT `set -e` here (2026-09-03). An unexpected refusal makes the script exit
+      # 1 — correctly, it IS a real finding — but under `-e` a nonzero pipeline kills
+      # this step immediately (pipefail catches node's status even through `tee`),
+      # which used to skip EVERY step after it: no commit, no push, no PR, not even
+      # for the apps that were perfectly safe to advance. One refused app then held
+      # every advanceable app hostage, which is exactly the all-or-nothing failure
+      # that let a stale pointer sit unfixed for weeks (see the file header).
+      #
+      # The script already stages the safe advances (git update-index) BEFORE it
+      # computes its exit code, so those stages exist on disk regardless of what
+      # node returns. This step reads $? via PIPESTATUS[0] — never `$?` directly,
+      # which after a pipe is `tee`'s status, not node's — records it as an output,
+      # and lets the rest of the job (commit, push, open the PR) proceed. The
+      # refusal is not swallowed: it is still printed loudly above (::error:: per
+      # REFUSED line) and the "Fail loudly" step at the end of this job fails the
+      # whole run on that recorded exit code, AFTER the safe work has shipped.
       - name: Advance the pointers
         id: advance
         run: |
-          set -euo pipefail
+          set -uo pipefail
           node scripts/advance-submodule-pointers.mjs --write | tee /tmp/advance.md
+          advance_exit="${PIPESTATUS[0]}"
+          echo "exit_code=$advance_exit" >> "$GITHUB_OUTPUT"
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+          echo "advance-submodule-pointers exited $advance_exit (0 = no unexpected refusal or dead allowlist entry; nonzero = see the REFUSED/::error:: line(s) above — safe advances, if any, are staged and will still be committed, pushed and opened as a PR by the steps below)"
 
       # THE ROUTE INVENTORY IS DERIVED FROM THE APPS AT THE RECORDED GITLINKS, so the
       # commit that moves a gitlink is the commit that invalidates it. Leaving them in
@@ -299,4 +318,23 @@ jobs:
 
       - name: Say so even when there is nothing to do
         if: steps.advance.outputs.changed != 'true'
-        run: echo "All submodule pointers already match their development heads."
+        run: echo "All submodule pointers already match their app main tips."
+
+      # THE JOB STILL GOES RED ON A REFUSAL — just AFTER the safe advances above
+      # have shipped, not instead of them. `if: always()` so this runs whether the
+      # "changed" branch above did or not (an all-refused, nothing-to-advance run
+      # never sets changed=true, and that refusal still has to fail the job), and
+      # even if a step upstream already failed for its own reason.
+      - name: Fail loudly if any refusal was unexpected
+        if: always()
+        run: |
+          code="${{ steps.advance.outputs.exit_code }}"
+          if [ -z "$code" ]; then
+            echo "::error::the 'Advance the pointers' step never recorded an exit code — an earlier step in this job failed first."
+            exit 1
+          fi
+          if [ "$code" != "0" ]; then
+            echo "::error::advance-submodule-pointers found an unexpected refusal or a dead allowlist entry (node exited $code). See the REFUSED / ::error:: line(s) in the 'Advance the pointers' step above — that app needs a human, per scripts/gitlink-refusal-allowlist.json. Any SAFE advances for other apps were still staged, committed, pushed and opened as a PR by the steps above; this failure does not undo them."
+            exit 1
+          fi
+          echo "advance-submodule-pointers: no unexpected refusals, no dead allowlist entries."
