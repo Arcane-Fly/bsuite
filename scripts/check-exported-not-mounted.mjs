@@ -63,6 +63,14 @@
  * without the bank being lowered, that fails too — a ratchet nobody tightens is
  * a permanent exemption wearing a gate's name.
  *
+ * WHAT THIS DOES NOT ASSERT
+ * -------------------------
+ * That a mount is on EVERY surface that needs one. One consumer rendering a
+ * component once satisfies it. A per-app floor (≥1 mount per app, ≥2 for
+ * R80.4's two shell branches) is a different gate — see R8 of the D-160 rulings
+ * (scripts/check-update-banner-mounted.mjs, AST-based) — and extending this one
+ * to carry it would make "one app mounted it" read as "all six did".
+ *
  * USAGE
  *   node scripts/check-exported-not-mounted.mjs [--self-test] [--banked=N] [--list]
  *
@@ -71,7 +79,8 @@
  *   1  a new finding, or a stale bank
  *   2  refused: no packages or no consumer apps found (an ABSENT result, not clean)
  */
-import { readFileSync, readdirSync, existsSync, statSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync, statSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 
 /** The apps that consume shared packages. Submodules of this superproject. */
@@ -102,7 +111,25 @@ export const CONSUMERS = ['crm7', 'business-suite-unified', 'conduit', 'braden',
  * growth lets a fixed finding sit banked forever, and the count stops meaning
  * anything.
  */
-export const BANKED = 0
+/*
+ * RAISED 0 -> 1 on 2026-09-03 (D-160 step 1, nav-core 1.3.0; BRIEF_COMMON_PHASE1
+ * + d160-v2-rulings R10: "1 nav-core 1.3.0 ... 4 throughput ... 9 R80.4").
+ *
+ * @bsuite/nav-core exports UpdateAvailableBanner — the platform update notice
+ * the operator asked for at 10:48 ("ensure their is a platform notice and
+ * refresh to update prompt so they dont lose work on rebuilds"). The package
+ * publishes FIRST, by ruling, because publishing rebuilds nothing; the six app
+ * adoption PRs (11 mount points / 12 render sites) follow in R10's order and
+ * each is to development only. Until throughput's mounts it, this is a real,
+ * honest "exported and rendered nowhere" — banked, not hidden, and the ratchet
+ * fails the throughput gitlink advance that does not lower this to 0.
+ *
+ * This finding was FOUND BY A FIX to the checker in the same commit: the
+ * component's own docblock carried an `@example <UpdateAvailableBanner .../>`
+ * and the internal-render scan read that as the package mounting it. See
+ * renderedInsidePackage — a file cannot vouch for itself.
+ */
+export const BANKED = 1
 
 const TEST_MARKERS = ['__tests__', '.test.', '.spec.', '.stories.', '/test/', '/tests/']
 
@@ -297,15 +324,28 @@ export function componentExports(pkgDir) {
   return [...publicNames].filter((n) => declared.has(n) && !looksLikeConstant(n)).sort()
 }
 
+/** Is `file` the module that declares component `name`? (`Name.tsx` / `Name.ts`) */
+export function isOwnDeclaration(file, name) {
+  return file.endsWith(`${path.sep}${name}.tsx`) || file.endsWith(`${path.sep}${name}.ts`)
+}
+
 /** Names this package renders itself — registry-mounted nodes, internal composition. */
 export function renderedInsidePackage(pkgDir, names) {
   const rendered = new Set()
   const files = sourceFiles(path.join(pkgDir, 'src')).filter((f) => !isTestPath(f))
   const sources = files.map((f) => readFileSync(f, 'utf8'))
   // (files and sources stay index-aligned — the mount scan below reads both)
+  //
+  // A FILE CANNOT VOUCH FOR ITSELF. The declaring file is skipped here exactly
+  // as it is in the import scan below. Found 2026-09-03: a component whose own
+  // docblock carried `@example <UpdateAvailableBanner .../>` read as "mounted
+  // internally" while nothing in the package or any app rendered it — the
+  // precise shape this gate exists to catch, passed by its own documentation.
+  // (A component rendering ITSELF recursively is not a mount either.)
   for (const n of names) {
-    for (const src of sources) {
-      if (rendersJsx(src, n)) { rendered.add(n); break }
+    for (let k = 0; k < files.length; k += 1) {
+      if (isOwnDeclaration(files[k], n)) continue
+      if (rendersJsx(sources[k], n)) { rendered.add(n); break }
     }
   }
   // MOUNTED WITHOUT JSX. A package wires its own components in at least three
@@ -404,6 +444,28 @@ function selfTest() {
   t('a name NOT imported is not captured',
     importStatements("import { Foo } from 'x';").some((st) => referencesWholeWord(st, 'Bar')), false)
 
+  // A FILE CANNOT VOUCH FOR ITSELF (2026-09-03). The declaring module is
+  // skipped by the internal-render scan, so a docblock `@example <Name/>` in
+  // Name.tsx is not a mount. Both directions, over a real fixture on disk.
+  {
+    const fx = mkdtempSync(path.join(tmpdir(), 'enm-selfvouch-'))
+    try {
+      mkdirSync(path.join(fx, 'src'), { recursive: true })
+      writeFileSync(path.join(fx, 'src', 'Banner.tsx'),
+        '/**\n * @example\n * <Banner control={x} />\n */\nexport function Banner() { return null }\n')
+      t('PLANTED: a docblock @example in the declaring file is NOT an internal mount',
+        [...renderedInsidePackage(fx, ['Banner'])], [])
+      writeFileSync(path.join(fx, 'src', 'Shell.tsx'),
+        "import { Banner } from './Banner.js'\nexport function Shell() { return <Banner /> }\n")
+      t('CLEAN: the same component rendered by ANOTHER file in the package IS an internal mount',
+        [...renderedInsidePackage(fx, ['Banner'])], ['Banner'])
+    } finally {
+      rmSync(fx, { recursive: true, force: true })
+    }
+  }
+  t('isOwnDeclaration matches Name.tsx', isOwnDeclaration('/p/src/Banner.tsx', 'Banner'), true)
+  t('isOwnDeclaration does not match a longer name', isOwnDeclaration('/p/src/BannerStack.tsx', 'Banner'), false)
+
   t('SCREAMING_CASE is a constant', looksLikeConstant('FLOW_IN'), true)
   t('SCREAMING_CASE without underscore is a constant', looksLikeConstant('ROWHEIGHTS'), true)
   t('a PascalCase component is not a constant', looksLikeConstant('WorkflowPalette'), false)
@@ -481,7 +543,12 @@ function main() {
     console.error(`  Lower BANKED to ${findings.length} in the same commit that mounted one.`)
     process.exit(1)
   }
-  console.log('  every exported component of every adopted package is rendered somewhere.')
+  if (findings.length > 0) {
+    console.log(`  ${findings.length} banked finding(s) carried — see the BANKED docblock for who owes the mount:`)
+    for (const f of findings) console.log(`    ${f.pkg} exports ${f.component} — rendered nowhere yet`)
+  } else {
+    console.log('  every exported component of every adopted package is rendered somewhere.')
+  }
   process.exit(0)
 }
 
