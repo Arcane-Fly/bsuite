@@ -28,7 +28,28 @@
  *
  *   node scripts/bsuite-notes-cycle.mjs                 # capture + delta, report only
  *   node scripts/bsuite-notes-cycle.mjs --write         # commit the intake, register the delta
+ *   node scripts/bsuite-notes-cycle.mjs --strict        # exit 1 if the LATEST capture has any
+ *                                                        # paragraph with no registered_as (see below)
  *   node scripts/bsuite-notes-cycle.mjs --json
+ *
+ * --strict IS A RUN-START GATE, NOT A CI CHECK — PI ruling 2026-09-03 (audit §7, A5).
+ *
+ * It reads ~/Downloads, which does not exist on a CI runner, so it CANNOT run in .github/
+ * workflows and must not be wired there. It is meant to be run BY THE PI AT THE START OF A
+ * SESSION (the commencement-prompt doc already says "run this first" in prose; this makes the
+ * check that prose implies mechanically checkable, though invoking it is still the PI's own
+ * action, never a hook — see the memory this PR's PR body cites for why a SessionStart hook was
+ * considered and rejected here).
+ *
+ * `registered_as` maps a paragraph's hash to the D-id whose register "Verbatim" quote is a
+ * literal substring of that paragraph — i.e., that paragraph's own words are what the register
+ * row quotes. This is deliberately a SUBSTRING match, not a semantic one: a register row that
+ * SYNTHESISES several paragraphs into one ask, or paraphrases rather than quotes, will not match
+ * even though the paragraph genuinely was accounted for. Measured on the two captures already in
+ * docs/intake/: only ~9% of paragraphs (34/378 and 36/400) directly quote-match a register row.
+ * `--strict` is expected to be LOUDLY RED on today's estate — that red is the true, previously
+ * invisible fact that most captured paragraphs have not yet been triaged into a register row, not
+ * a bug in the matcher. Closing that gap is intake triage work, out of this PR's scope.
  */
 import { execFileSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
@@ -42,6 +63,44 @@ const DOWNLOADS = join(process.env.HOME || '/home/braden', 'Downloads')
 
 const WRITE = process.argv.includes('--write')
 const AS_JSON = process.argv.includes('--json')
+const STRICT = process.argv.includes('--strict')
+
+/** A paragraph's stable identity in registered_as maps — same prefix length as the capture's own sha256_prefix. */
+export function paragraphHash(text) {
+  return createHash('sha256').update(text).digest('hex').slice(0, 12)
+}
+
+/** Register rows, verbatim-quote only — a local, minimal parser (not estate-align.mjs's: that
+ *  module runs its own main() and process.exit() on import, so importing it here would abort
+ *  this script). Same `| D-` line-scan contract as estate-align.mjs's parseRegister. */
+export function parseRegisterVerbatims(text) {
+  const out = []
+  const seen = new Set()
+  for (const line of text.split('\n')) {
+    if (!line.startsWith('| D-')) continue
+    const cells = line.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim())
+    if (cells.length < 6) continue
+    const id = cells[0]
+    if (seen.has(id)) continue
+    seen.add(id)
+    let q = cells[1].trim()
+    if (q.startsWith('*') && q.endsWith('*')) q = q.slice(1, -1).trim()
+    if (q.startsWith('"') && q.endsWith('"')) q = q.slice(1, -1)
+    if (q.length >= 8) out.push({ id, quote: q })
+  }
+  return out
+}
+
+/** { [paragraphHash]: D-id } for every paragraph whose text CONTAINS a register row's verbatim
+ *  quote. A substring match, not a semantic one — see the header comment on why that undercounts. */
+export function matchRegisteredAs(paragraphs, registerRows) {
+  const map = {}
+  for (const p of paragraphs) {
+    const hit = registerRows.find((r) => p.includes(r.quote))
+    if (hit) map[paragraphHash(p)] = hit.id
+  }
+  return map
+}
 
 function sh(cmd, a, cwd) {
   try { return execFileSync(cmd, a, { cwd: cwd || ROOT, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] }) } catch { return '' }
@@ -105,6 +164,15 @@ function previousCapture() {
   return { id: last, paragraphs: readFileSync(join(INTAKE, last, 'paragraphs.txt'), 'utf8').split('\n---\n').filter(Boolean) }
 }
 
+/** The most recently captured directory on disk (by id, which sorts by date-then-hash). */
+function latestCaptureDir() {
+  if (!existsSync(INTAKE)) return null
+  const dirs = readdirSync(INTAKE).filter((d) => existsSync(join(INTAKE, d, 'MANIFEST.json')))
+  if (!dirs.length) return null
+  dirs.sort()
+  return dirs[dirs.length - 1]
+}
+
 function registeredIds() {
   const docs = join(ROOT, 'docs')
   if (!existsSync(docs)) return { path: null, max: 0 }
@@ -139,10 +207,14 @@ const dest = join(INTAKE, captureId)
 if (WRITE && !existsSync(join(dest, 'paragraphs.txt'))) {
   mkdirSync(dest, { recursive: true })
   writeFileSync(join(dest, 'paragraphs.txt'), paragraphs.join('\n---\n'))
+  const registerAtWriteTime = registeredIds()
+  const registerRows = registerAtWriteTime.path ? parseRegisterVerbatims(readFileSync(registerAtWriteTime.path, 'utf8')) : []
   writeFileSync(join(dest, 'MANIFEST.json'), JSON.stringify({
     source: src.f, capturedAt: new Date(src.m).toISOString(), paragraphs: paragraphs.length,
     images, sha256_prefix: sha,
     note: 'Extracted TEXT only. The 24-37 MB .docx binary is deliberately not committed; ~/Downloads is volatile and this is what survives it.',
+    registered_as: matchRegisteredAs(paragraphs, registerRows),
+    registered_as_note: 'paragraph hash (sha256, 12 hex) -> D-id, where that D-id\'s register Verbatim quote is a literal substring of the paragraph. A substring match, not semantic — see this script\'s header comment.',
   }, null, 1) + '\n')
 }
 
@@ -202,10 +274,48 @@ else {
   console.log(`  then \`node scripts/estate-align.mjs --strict\`.`)
 }
 
+// PHASE 4 — STRICT (PI ruling 2026-09-03, audit §7, A5). A run-start gate the PI invokes
+// manually — see the header comment for why it cannot be a CI or SessionStart hook.
+if (STRICT) {
+  const latest = latestCaptureDir()
+  if (!latest) {
+    console.error('STRICT FAIL: no capture on disk to check — run --write at least once first.')
+    process.exit(1)
+  }
+  const manifest = JSON.parse(readFileSync(join(INTAKE, latest, 'MANIFEST.json'), 'utf8'))
+  const latestParas = readFileSync(join(INTAKE, latest, 'paragraphs.txt'), 'utf8').split('\n---\n').filter(Boolean)
+  const registeredAs = manifest.registered_as || {}
+  const missing = latestParas.filter((p) => !(paragraphHash(p) in registeredAs))
+  console.log(`\n4 STRICT    capture ${latest}: ${latestParas.length} paragraph(s), ` +
+    `${latestParas.length - missing.length} registered_as-mapped, ${missing.length} not yet triaged into a register row`)
+  if (missing.length) {
+    console.error(`\nSTRICT FAIL: ${missing.length} of ${latestParas.length} paragraph(s) in ${latest} have no registered_as.`)
+    console.error('These are captured but not yet accounted for in any register row (see the header comment —')
+    console.error('a paraphrased or synthesised row will not substring-match, so this undercounts true coverage,')
+    console.error('never overcounts it).')
+    process.exit(1)
+  }
+  console.log('STRICT OK: every paragraph in the latest capture maps to a register row.')
+}
+
 if (process.argv.includes('--self-test')) {
   const cases = []
   const t = (n, a, e) => cases.push({ n, ok: JSON.stringify(a) === JSON.stringify(e) })
   t('newestExport returns null on a missing dir', newestExport('/nonexistent/xyz'), null)
+
+  // ---- registered_as: the substring matcher, PI ruling 2026-09-03 (audit §7, A5) ----
+  t('parseRegisterVerbatims: reads the quote out of a real row',
+    parseRegisterVerbatims('| D-1 | "emails, cant be opened and read." | x | y | z | w |'),
+    [{ id: 'D-1', quote: 'emails, cant be opened and read.' }])
+  t('parseRegisterVerbatims: skips a malformed row (fewer than 6 cells)',
+    parseRegisterVerbatims('| D-2 — label | *"a quote"* |').length, 0)
+  t('matchRegisteredAs: a paragraph that CONTAINS the verbatim quote maps to that id',
+    matchRegisteredAs(['he said: "emails, cant be opened" today'], [{ id: 'D-1', quote: 'emails, cant be opened' }]),
+    { [paragraphHash('he said: "emails, cant be opened" today')]: 'D-1' })
+  t('matchRegisteredAs: a paragraph with NO matching quote gets no entry',
+    Object.keys(matchRegisteredAs(['totally unrelated text'], [{ id: 'D-1', quote: 'emails, cant be opened' }])).length, 0)
+  t('paragraphHash: stable and 12 hex chars', /^[0-9a-f]{12}$/.test(paragraphHash('x')), true)
+
   const bad = cases.filter((c) => !c.ok)
   for (const b of bad) console.error(`FAIL ${b.n}`)
   if (bad.length) process.exit(1)

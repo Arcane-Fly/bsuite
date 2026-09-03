@@ -58,14 +58,41 @@
  * Read the numbers as "render sites a person must convert", nothing more.
  *
  * Usage:
- *   node scripts/check-airtable-grid-adoption.mjs            # verify
- *   node scripts/check-airtable-grid-adoption.mjs --update   # bank
+ *   node scripts/check-airtable-grid-adoption.mjs                    # verify (PR path)
+ *   node scripts/check-airtable-grid-adoption.mjs --update-baseline  # bank (--update still accepted)
+ *   node scripts/check-airtable-grid-adoption.mjs --reset-schedule --reason "<why>"  # re-arm the floor
+ *   node scripts/check-airtable-grid-adoption.mjs --check-floor      # NIGHTLY ONLY — never a PR check
  */
 import { readdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
+
+/*
+ * SCHEDULED FLOOR — PI ruling 2026-09-03 (audit §7, C2).
+ *
+ * The per-app rise/fall ratchet below only ever refuses a RISE and demands a
+ * re-bank on an unbanked FALL; nothing makes the estate-wide hand-rolled count
+ * actually shrink over time. `_schedule.origin_count` decays by `per_week` from
+ * `_schedule.origin_date`, evaluated ONLY by a nightly, non-required job (see
+ * estate-alignment.yml) — never a PR check. A missing origin_date under
+ * --check-floor is a FAILURE ("schedule unarmed"), not a silent pass.
+ */
+export function scheduledFloor({ origin_count, origin_date, per_week }, today = new Date()) {
+  if (!origin_date) return null;
+  const start = new Date(`${origin_date}T00:00:00Z`).getTime();
+  const weeks = Math.max(0, Math.floor((today.getTime() - start) / (7 * 24 * 60 * 60 * 1000)));
+  return Math.max(0, origin_count - per_week * weeks);
+}
+
+/** A scan that examined fewer files than it did when banked has gone blind, not clean. */
+export function denominatorFell(scannedNow, bankedScanned) {
+  return scannedNow < bankedScanned;
+}
+
+/* PI ruling 2026-09-03: 6 hand-rolled files/week, estate-wide sum, from origin 192. */
+const GRID_PER_WEEK = 6;
 /*
  * The tree to scan. Normally the repo this script lives in.
  *
@@ -269,6 +296,50 @@ if (process.argv.includes('--self-test')) {
       failed += 1;
     }
   }
+
+  /*
+   * THE onRowClick CEILING — PI ruling 2026-09-03 (audit §7, C2): the requirement
+   * now covers EVERY file importing @bsuite/data-grid, not only the banked
+   * pre-conversion clickThrough set. A file rendering DataGrid with no onRowClick
+   * MUST count toward the ceiling — this is the exact "planted onRowClick-less
+   * DataGrid file" case, through the same usesDataGrid()/hasRowClick() the live
+   * per-app scan calls on every file it walks.
+   */
+  const ceilingCases = [
+    ['<DataGrid columns={c} data={d} />', true, 'a planted DataGrid file with NO onRowClick counts against the ceiling'],
+    ['<DataGrid columns={c} data={d} onRowClick={open} />', false, 'a DataGrid file WITH onRowClick does not count against the ceiling'],
+    ['<table><tr><td>x</td></tr></table>', false, 'a hand-rolled table with no DataGrid does not count — this ceiling is DataGrid-scoped'],
+  ];
+  for (const [source, expectedMissing, why] of ceilingCases) {
+    const got = usesDataGrid(source) && !hasRowClick(source);
+    if (got !== expectedMissing) {
+      console.error(`SELF-TEST FAIL: ${why} — expected ${expectedMissing}, got ${got}`);
+      failed += 1;
+    }
+  }
+
+  /*
+   * SCHEDULED-FLOOR self-tests, through the SAME `scheduledFloor()` the live
+   * --check-floor path calls: 0 weeks equals origin, N weeks subtracts
+   * N*per_week, the floor never goes negative, missing origin_date fails.
+   */
+  const floorCases = [
+    ['floor at 0 weeks equals origin', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2026-09-03T00:00:00Z')) === 192],
+    ['floor after 1 week is origin - per_week', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2026-09-10T00:00:00Z')) === 186],
+    ['floor after 5 weeks is origin - 5*per_week', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2026-10-08T00:00:00Z')) === 162],
+    ['floor never goes negative — floors at 0', scheduledFloor({ origin_count: 192, origin_date: '2026-09-03', per_week: 6 }, new Date('2035-01-01T00:00:00Z')) === 0],
+    ['missing origin_date returns null (caller must treat as FAILURE)', scheduledFloor({ origin_count: 192, origin_date: null, per_week: 6 }) === null],
+    ['denominator fall is caught', denominatorFell(90, 95) === true],
+    ['denominator rise is not a fall', denominatorFell(100, 95) === false],
+    ['denominator equality is not a fall', denominatorFell(95, 95) === false],
+  ];
+  for (const [why, ok] of floorCases) {
+    if (!ok) {
+      console.error(`SELF-TEST FAIL: ${why}`);
+      failed += 1;
+    }
+  }
+
   if (failed > 0) {
     console.error(`\nSELF-TEST FAILED (${failed}). The counter is broken; its numbers must not be believed.`);
     process.exit(2);
@@ -277,10 +348,11 @@ if (process.argv.includes('--self-test')) {
     cases.filter((c) => c[1] === 0).length +
     gridCases.filter((c) => c[1] === 0).length +
     clickCases.filter((c) => c[1] === false).length +
-    convCases.filter((c) => c[1] === false).length;
+    convCases.filter((c) => c[1] === false).length +
+    ceilingCases.filter((c) => c[1] === false).length;
+  const totalControls = cases.length + gridCases.length + clickCases.length + convCases.length + ceilingCases.length + floorCases.length;
   console.log(
-    `self-test OK — ${cases.length + gridCases.length + clickCases.length + convCases.length} controls, ` +
-      `including ${negatives} that must NOT count.`,
+    `self-test OK — ${totalControls} controls, including ${negatives} that must NOT count.`,
   );
   process.exit(0);
 }
@@ -390,6 +462,7 @@ function hasRowLevelClickThrough(text) {
 
 const measured = {};
 const clickThroughByApp = {};
+const dataGridByApp = {};
 let examinedFiles = 0;
 for (const app of APPS) {
   const src = join(ROOT, app, 'src');
@@ -399,6 +472,15 @@ for (const app of APPS) {
   let dataGrid = 0;
   const sites = [];
   const clickThrough = [];
+  /*
+   * onRowClick CEILING — PI ruling 2026-09-03 (audit §7, C2): every file
+   * importing @bsuite/data-grid, not only the pre-conversion clickThrough set
+   * below. `missingOnRowClick` is banked as a ceiling that may only shrink
+   * (owned by C8, driving it to 0); a file that later loses onRowClick is a
+   * RISE and fails the PR path exactly like the narrower clickThrough check.
+   */
+  const dataGridFiles = [];
+  const missingOnRowClick = [];
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const t = countTables(text);
@@ -407,9 +489,15 @@ for (const app of APPS) {
     dataGrid += d;
     if (t > 0) sites.push(relative(ROOT, file));
     if (hasRowLevelClickThrough(text)) clickThrough.push(relative(ROOT, file));
+    if (usesDataGrid(text)) {
+      const rel = relative(ROOT, file);
+      dataGridFiles.push(rel);
+      if (!hasRowClick(text)) missingOnRowClick.push(rel);
+    }
   }
-  measured[app] = { handRolled, dataGrid, files: sites.length };
+  measured[app] = { handRolled, dataGrid, files: sites.length, filesScanned: files.length };
   clickThroughByApp[app] = clickThrough.sort();
+  dataGridByApp[app] = { total: dataGridFiles.length, missing: missingOnRowClick.length, missingFiles: missingOnRowClick.sort() };
 }
 
 /*
@@ -423,15 +511,68 @@ if (examinedFiles === 0) {
   process.exit(2);
 }
 
-const updating = process.argv.includes('--update');
+const cliArgs = process.argv.slice(2);
+const updating = cliArgs.includes('--update') || cliArgs.includes('--update-baseline');
+const resettingSchedule = cliArgs.includes('--reset-schedule');
+const checkingFloor = cliArgs.includes('--check-floor');
+const reasonIdx = cliArgs.indexOf('--reason');
+const REASON = reasonIdx !== -1 ? cliArgs[reasonIdx + 1] : null;
 
-// Read first: --update needs the prior baseline to union the protected set, and
-// a missing one on a verify run is a hard failure below rather than a silent 0.
+// Read first: --update-baseline needs the prior baseline to union the protected
+// set, and a missing one on a verify run is a hard failure below rather than a
+// silent 0.
 let existingBaseline = null;
 try {
   existingBaseline = JSON.parse(readFileSync(BASELINE, 'utf8'));
 } catch {
   existingBaseline = null;
+}
+
+const totalNow = APPS.reduce((sum, a) => sum + measured[a].handRolled, 0);
+
+if (resettingSchedule) {
+  if (!REASON) {
+    console.error('FAIL: --reset-schedule requires --reason "<text>" — _schedule.origin_* is a schedule commitment and must not move silently.');
+    process.exit(1);
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const priorSchedule = existingBaseline?._schedule;
+  const banked = {
+    ...(existingBaseline || {}),
+    apps: measured,
+    clickThrough: Object.fromEntries(APPS.map((a) => [a, [...new Set([...(existingBaseline?.clickThrough?.[a] ?? []), ...clickThroughByApp[a]])].sort()])),
+    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [a, { ceiling: dataGridByApp[a].missing, total: dataGridByApp[a].total }])),
+    _schedule: {
+      origin_count: totalNow,
+      origin_date: today,
+      current_count: totalNow,
+      current_date: today,
+      scanned: examinedFiles,
+      per_week: priorSchedule?.per_week ?? GRID_PER_WEEK,
+    },
+  };
+  writeFileSync(BASELINE, `${JSON.stringify(banked, null, 2)}\n`);
+  console.log(`SCHEDULE RESET. reason: ${REASON}`);
+  console.log(`  new origin: ${banked._schedule.origin_count} hand-rolled of ${banked._schedule.scanned} files scanned, from ${banked._schedule.origin_date}, ${banked._schedule.per_week}/week`);
+  process.exit(0);
+}
+
+if (checkingFloor) {
+  // NIGHTLY-ONLY. Never invoked on the PR path — see estate-alignment.yml's
+  // schedule-gated job. The floor is a schedule commitment, not a per-PR gate.
+  const sched = existingBaseline?._schedule;
+  if (!sched || !sched.origin_date) {
+    console.error(`SCHEDULE UNARMED: ${!sched ? 'no _schedule block in the baseline' : '_schedule carries no origin_date'} — the floor has nothing to decay from.`);
+    process.exit(1);
+  }
+  const floor = scheduledFloor(sched, new Date());
+  console.log(`hand-rolled tables: ${totalNow} (examined ${examinedFiles} files); floor today: ${floor} (origin ${sched.origin_count} on ${sched.origin_date}, ${sched.per_week}/week)`);
+  if (totalNow > floor) {
+    console.error(`FLOOR BREACHED: ${totalNow} > ${floor}.`);
+    process.exit(1);
+  }
+  console.log('floor holds.');
+  process.exit(0);
 }
 
 /*
@@ -453,12 +594,14 @@ function unionClickThrough(app) {
 }
 
 if (updating) {
+  const priorSchedule = existingBaseline?._schedule;
   const banked = {
     _doc:
       'Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. ' +
-      'Written by scripts/check-airtable-grid-adoption.mjs --update. Fails on any RISE (a new hand-rolled ' +
-      'table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind ' +
-      'cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.',
+      'Written by scripts/check-airtable-grid-adoption.mjs --update-baseline. Fails on any RISE (a new ' +
+      'hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher ' +
+      'that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the ' +
+      'Airtable style.',
     _measured: `${examinedFiles} .tsx files examined across ${APPS.length} apps`,
     _clickThroughDoc:
       'Files that HAD row-level click-through to a record. Recorded by PATH because a conversion ' +
@@ -468,6 +611,20 @@ if (updating) {
       'this capability." The set is a UNION and only grows.',
     apps: measured,
     clickThrough: Object.fromEntries(APPS.map((a) => [a, unionClickThrough(a)])),
+    /* PI ruling 2026-09-03 (audit §7, C2): the onRowClick requirement now covers
+     * EVERY file importing @bsuite/data-grid. `ceiling` is banked here as the
+     * count that may only shrink (owned by C8, driving it to 0) — a separate,
+     * wider dimension from `clickThrough` above, which stays scoped to files
+     * that had row-level click-through BEFORE conversion. */
+    dataGridOnRowClick: Object.fromEntries(APPS.map((a) => [a, { ceiling: dataGridByApp[a].missing, total: dataGridByApp[a].total }])),
+    _schedule: {
+      origin_count: priorSchedule?.origin_count ?? totalNow,
+      origin_date: priorSchedule?.origin_date ?? null,
+      current_count: totalNow,
+      current_date: new Date().toISOString().slice(0, 10),
+      scanned: examinedFiles,
+      per_week: priorSchedule?.per_week ?? GRID_PER_WEEK,
+    },
   };
   writeFileSync(BASELINE, `${JSON.stringify(banked, null, 2)}\n`);
   console.log(`banked: ${JSON.stringify(measured)}`);
@@ -476,7 +633,7 @@ if (updating) {
 
 const baseline = existingBaseline;
 if (!baseline) {
-  console.error(`FAIL: no baseline at ${relative(ROOT, BASELINE)}. Run with --update to bank the current counts.`);
+  console.error(`FAIL: no baseline at ${relative(ROOT, BASELINE)}. Run with --update-baseline to bank the current counts.`);
   process.exit(2);
 }
 
@@ -485,7 +642,7 @@ for (const app of APPS) {
   const now = measured[app];
   const was = baseline.apps?.[app];
   if (!was) {
-    problems.push(`${app}: not in the baseline. Run --update.`);
+    problems.push(`${app}: not in the baseline. Run --update-baseline.`);
     continue;
   }
   if (now.handRolled > was.handRolled) {
@@ -496,7 +653,45 @@ for (const app of APPS) {
   } else if (now.handRolled < was.handRolled) {
     problems.push(
       `${app}: hand-rolled tables FELL ${was.handRolled} -> ${now.handRolled} without being banked. ` +
-        'If you converted them, run --update. If you did not, this gate has gone blind — find out which.',
+        'If you converted them, run --update-baseline. If you did not, this gate has gone blind — find out which.',
+    );
+  }
+
+  /*
+   * THE DENOMINATOR MUST NOT SHRINK EITHER — PI ruling 2026-09-03 (audit §7, C2).
+   * `handRolled` alone cannot tell "the app got cleaner" from "the walk found
+   * fewer files" — a scan that examines less of the tree than it did when banked
+   * has gone blind, not clean, and is refused rather than believed.
+   */
+  if (was.filesScanned !== undefined && denominatorFell(now.filesScanned, was.filesScanned)) {
+    problems.push(
+      `${app}: files scanned FELL ${was.filesScanned} -> ${now.filesScanned} (below the bank). The scan may ` +
+        'have gone blind — investigate before trusting the hand-rolled count. If the app tree genuinely ' +
+        'shrank, run --update-baseline.',
+    );
+  }
+
+  /*
+   * THE onRowClick CEILING — every DataGrid-importing file, not only the
+   * pre-conversion clickThrough set (checked separately below). A rise is a
+   * regression (a converted file lost onRowClick, or a NEW DataGrid file was
+   * added without it); an unbanked fall must be looked at like any other
+   * ratchet improvement, not assumed.
+   */
+  const nowDG = dataGridByApp[app];
+  const wasDG = baseline.dataGridOnRowClick?.[app];
+  if (!wasDG) {
+    problems.push(`${app}: dataGridOnRowClick not in the baseline. Run --update-baseline.`);
+  } else if (nowDG.missing > wasDG.ceiling) {
+    problems.push(
+      `${app}: DataGrid files missing onRowClick ROSE ${wasDG.ceiling} -> ${nowDG.missing} ` +
+        `(${nowDG.missingFiles.slice(0, 5).join(', ')}${nowDG.missingFiles.length > 5 ? ', …' : ''}). ` +
+        'Every @bsuite/data-grid render site needs onRowClick wired.',
+    );
+  } else if (nowDG.missing < wasDG.ceiling) {
+    problems.push(
+      `${app}: DataGrid files missing onRowClick FELL ${wasDG.ceiling} -> ${nowDG.missing} without being ` +
+        'banked. If you wired onRowClick, run --update-baseline.',
     );
   }
 }
@@ -519,7 +714,7 @@ for (const app of APPS) {
       // guessed at: a rename that silently drops the file from the set is
       // indistinguishable from a conversion that dropped the navigation.
       problems.push(
-        `${rel} is in the click-through set but cannot be read. If it moved, re-bank with --update in ` +
+        `${rel} is in the click-through set but cannot be read. If it moved, re-bank with --update-baseline in ` +
           'the same commit; if it was deleted, say so there too. Do not let it fall out silently.',
       );
       continue;
@@ -538,7 +733,6 @@ for (const app of APPS) {
   }
 }
 
-const totalNow = APPS.reduce((sum, a) => sum + measured[a].handRolled, 0);
 const gridNow = APPS.reduce((sum, a) => sum + measured[a].dataGrid, 0);
 
 if (problems.length > 0) {
@@ -556,6 +750,14 @@ console.log(
   `click-through: ${protectedFiles} file(s) protected, ${protectedFiles - stillHandRolled} converted and ` +
     `keeping onRowClick, ${stillHandRolled} not yet converted.`,
 );
+{
+  const dgTotal = APPS.reduce((sum, a) => sum + dataGridByApp[a].total, 0);
+  const dgMissing = APPS.reduce((sum, a) => sum + dataGridByApp[a].missing, 0);
+  console.log(
+    `onRowClick ceiling (every @bsuite/data-grid file, not only pre-conversion click-through): ` +
+      `${dgMissing} of ${dgTotal} DataGrid file(s) missing onRowClick (ceiling holds; owned by C8, may only shrink).`,
+  );
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
  * --classify — report WHAT the remaining count is made of. Verdict-neutral.

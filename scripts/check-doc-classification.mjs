@@ -28,7 +28,7 @@
  * Standard: docs/20260822-knowledge-classification-standard-v1.00A.md
  */
 
-import { readFileSync, existsSync, readdirSync } from 'node:fs';
+import { readFileSync, existsSync, readdirSync, writeFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { isNavigational, isPointerFile } from './lib/doc-conventions.mjs';
@@ -109,6 +109,23 @@ const SELF_TESTS = [
     e: (r, fm) => Array.isArray(fm.evidence) && fm.evidence.length === 2 },
 ];
 
+/*
+ * SCHEDULED-FLOOR self-tests — through the SAME `scheduledFloor()` the live
+ * --check-floor path calls, per PI ruling 2026-09-03 (audit §7, C2): 0 weeks
+ * equals origin, N weeks subtracts N*per_week, the floor never goes negative,
+ * and a missing origin_date must fail rather than pass silently.
+ */
+const FLOOR_TESTS = [
+  { n: 'floor at 0 weeks equals origin', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03', per_week: 15 }, new Date('2026-09-03T00:00:00Z')) === 175 },
+  { n: 'floor after 1 week is origin - per_week', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03', per_week: 15 }, new Date('2026-09-10T00:00:00Z')) === 160 },
+  { n: 'floor after 4 weeks is origin - 4*per_week', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03', per_week: 15 }, new Date('2026-10-01T00:00:00Z')) === 115 },
+  { n: 'floor never goes negative — floors at 0', f: () => scheduledFloor({ origin_count: 175, origin_date: '2026-09-03', per_week: 15 }, new Date('2030-01-01T00:00:00Z')) === 0 },
+  { n: 'missing origin_date returns null (caller must treat as FAILURE, never a silent pass)', f: () => scheduledFloor({ origin_count: 175, origin_date: null, per_week: 15 }) === null },
+  { n: 'denominator fall is caught', f: () => denominatorFell(290, 300) === true },
+  { n: 'denominator rise is not a fall', f: () => denominatorFell(310, 300) === false },
+  { n: 'denominator equality is not a fall', f: () => denominatorFell(300, 300) === false },
+];
+
 if (process.argv.includes('--self-test')) {
   let bad = 0;
   for (const t of SELF_TESTS) {
@@ -118,13 +135,26 @@ if (process.argv.includes('--self-test')) {
     console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${t.n}`);
     if (!ok) { bad++; console.log(`        got: ${JSON.stringify(r)}`); }
   }
-  console.log(`\n  ${SELF_TESTS.length - bad}/${SELF_TESTS.length} self-tests pass`);
+  for (const t of FLOOR_TESTS) {
+    const ok = t.f();
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${t.n}`);
+    if (!ok) bad++;
+  }
+  console.log(`\n  ${SELF_TESTS.length + FLOOR_TESTS.length - bad}/${SELF_TESTS.length + FLOOR_TESTS.length} self-tests pass`);
   process.exit(bad ? 1 : 0);
 }
 
-const BASELINE = 'docs/.classification-baseline';
+const BASELINE = 'docs/.classification-baseline.json';
+/* PI ruling 2026-09-03 (audit §7, C2): the classification debt must shrink 15/week
+ * from the 2026-09-03 origin. This constant feeds the SCHEDULED FLOOR only — the
+ * nightly, non-required check below — and never the PR-path ratchet, which stays
+ * a plain rise/fall comparison against `current_count`. */
+const CLASSIFICATION_PER_WEEK = 15;
+const REMEDY = 'node scripts/check-doc-classification.mjs --update-baseline';
 const args = process.argv.slice(2);
-const changed = args.filter((a) => !a.startsWith('--'));
+const reasonIdx = args.indexOf('--reason');
+const REASON = reasonIdx !== -1 ? args[reasonIdx + 1] : null;
+const changed = args.filter((a, i) => !a.startsWith('--') && !(reasonIdx !== -1 && i === reasonIdx + 1));
 
 function walk(d, out = []) {
   if (!existsSync(d)) return out;
@@ -173,10 +203,101 @@ if (changedDocs.length) {
   if (!failed) console.log('  all changed docs classify correctly');
 }
 
-const base = existsSync(BASELINE) ? Number(readFileSync(BASELINE, 'utf8').trim()) : null;
+/*
+ * SCHEDULED FLOOR — PI ruling 2026-09-03 (audit §7, C2).
+ *
+ * The PR-path ratchet below only ever refuses a RISE and demands a re-bank on an
+ * unbanked FALL; it has no mechanism to make debt actually shrink over time, so a
+ * baseline can sit unmoved forever and still read "ratchet ok". The floor is that
+ * mechanism: `origin_count` decays by `per_week` from `origin_date`, and a nightly,
+ * NON-REQUIRED job (never a PR check — see estate-alignment.yml) fails when the live
+ * count sits above the floor.
+ *
+ * `origin_date` missing is a FAILURE under --check-floor ("schedule unarmed"), not a
+ * silent pass — a floor nobody can compute is not a floor. It is deliberately NOT a
+ * failure on the ordinary PR path, which must stay exactly the rise/fall check it was.
+ */
+export function scheduledFloor({ origin_count, origin_date, per_week }, today = new Date()) {
+  if (!origin_date) return null;
+  const start = new Date(`${origin_date}T00:00:00Z`).getTime();
+  const weeks = Math.max(0, Math.floor((today.getTime() - start) / (7 * 24 * 60 * 60 * 1000)));
+  return Math.max(0, origin_count - per_week * weeks);
+}
+
+/** A scan that examined fewer docs than it did when banked has gone blind, not clean. */
+export function denominatorFell(scannedNow, bankedScanned) {
+  return scannedNow < bankedScanned;
+}
+
+function loadBaseline() {
+  if (!existsSync(BASELINE)) return null;
+  return JSON.parse(readFileSync(BASELINE, 'utf8'));
+}
+function writeBaseline(b) {
+  writeFileSync(BASELINE, `${JSON.stringify(b, null, 2)}\n`);
+}
+
+if (args.includes('--reset-schedule')) {
+  if (!REASON) {
+    console.error('FAIL: --reset-schedule requires --reason "<text>" — origin_* is a schedule commitment and must not move silently.');
+    process.exit(1);
+  }
+  const prior = loadBaseline();
+  const today = new Date().toISOString().slice(0, 10);
+  const banked = {
+    origin_count: unclassified.length,
+    origin_date: today,
+    current_count: unclassified.length,
+    current_date: today,
+    scanned: all.length,
+    per_week: prior?.per_week ?? CLASSIFICATION_PER_WEEK,
+  };
+  writeBaseline(banked);
+  console.log(`SCHEDULE RESET. reason: ${REASON}`);
+  console.log(`  new origin: ${banked.origin_count} unclassified of ${banked.scanned} docs, from ${banked.origin_date}, ${banked.per_week}/week`);
+  process.exit(0);
+}
+
+if (args.includes('--update-baseline')) {
+  const prior = loadBaseline();
+  if (!prior) {
+    console.error(`FAIL: no baseline at ${BASELINE} to update. Use --reset-schedule --reason "<text>" to arm one first.`);
+    process.exit(1);
+  }
+  const banked = {
+    ...prior,
+    current_count: unclassified.length,
+    current_date: new Date().toISOString().slice(0, 10),
+    scanned: all.length,
+  };
+  writeBaseline(banked);
+  console.log(`BANKED: current_count=${banked.current_count} scanned=${banked.scanned} (origin unchanged: ${banked.origin_count} from ${banked.origin_date})`);
+  process.exit(0);
+}
+
+if (args.includes('--check-floor')) {
+  // NIGHTLY-ONLY. Never invoked on the PR path — see estate-alignment.yml's
+  // schedule-gated job. The floor is a schedule commitment, not a per-PR gate.
+  const b = loadBaseline();
+  if (!b || !b.origin_date) {
+    console.error(`SCHEDULE UNARMED: ${!b ? `no baseline at ${BASELINE}` : 'baseline carries no origin_date'} — the floor has nothing to decay from.`);
+    process.exit(1);
+  }
+  const floor = scheduledFloor(b, new Date());
+  console.log(`unclassified: ${unclassified.length} of ${all.length} doc(s); floor today: ${floor} (origin ${b.origin_count} on ${b.origin_date}, ${b.per_week}/week)`);
+  if (unclassified.length > floor) {
+    console.error(`FLOOR BREACHED: ${unclassified.length} > ${floor}.`);
+    process.exit(1);
+  }
+  console.log('floor holds.');
+  process.exit(0);
+}
+
+const baseline = loadBaseline();
+const base = baseline ? baseline.current_count : null;
 console.log(`\n  unclassified: ${unclassified.length} of ${all.length} doc(s)`);
 if (base === null) {
-  console.log(`  no baseline yet — write ${unclassified.length} to ${BASELINE} to arm the ratchet`);
+  console.log(`  no baseline yet — run \`node scripts/check-doc-classification.mjs --reset-schedule --reason "<why>"\` to arm the ratchet`);
 } else if (unclassified.length > base) {
   /*
    * NAME THE UNTRACKED ONES BEFORE CRYING BROKEN.
@@ -269,7 +390,26 @@ if (base === null) {
   if (committed < base) {
     console.log(
       `  RE-BANK REQUIRED: the committed count fell to ${committed} but ${BASELINE} still reads ${base}. ` +
-        `A baseline above the truth re-permits the debt you just paid off — write ${committed} to it.`,
+        `A baseline above the truth re-permits the debt you just paid off — run \`${REMEDY}\`.`,
+    );
+    failed = true;
+  }
+
+  /*
+   * THE DENOMINATOR MUST NOT SHRINK EITHER — PI ruling 2026-09-03 (audit §7, C2).
+   *
+   * `unclassified` alone cannot tell "the estate got cleaner" from "the walk found
+   * fewer docs" — a scan that silently examines less of the tree reports a smaller
+   * numerator for the wrong reason and reads as progress. `scanned` is the banked
+   * denominator (docs/.classification-baseline.json's `scanned`, written the same
+   * commit as `current_count`); a live count BELOW it means the scan saw less than
+   * it did when banked, and that is refused rather than believed.
+   */
+  if (denominatorFell(all.length, baseline.scanned)) {
+    console.log(
+      `  SCANNED LESS THAN BANKED: examined ${all.length} doc(s), baseline scanned ${baseline.scanned}. ` +
+        `The scan may have gone blind — investigate before trusting ${unclassified.length}. If the tree ` +
+        `genuinely shrank (docs deleted), run \`${REMEDY}\`.`,
     );
     failed = true;
   }
