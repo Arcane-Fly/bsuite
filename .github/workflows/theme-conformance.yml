@@ -1177,15 +1177,18 @@ jobs:
   # plain :root/.dark custom properties, never inside an `@theme` block. 170
   # of that app's occurrences are exactly those four tokens; re-measuring with
   # the finished gate (not the narrower grep the original audit used) found
-  # 540 total in that app (the four shell tokens are 163 of them — 7 of the
-  # grep's 170 sit in a ternary nested inside a template literal, the gate's
-  # documented under-count — plus text-text-primary, border-border-subtle,
+  # 551 total in that app on that tree (the four shell tokens are 170 of them,
+  # matching the grep exactly once template-literal classNames were scanned —
+  # the first cut's 540/163 came from `className={`…`}` not being matched at
+  # all — plus text-text-primary, border-border-subtle,
   # border-border-default and bare bg-/border-warning, text-/bg-success, none
   # registered in any @theme block the build sees), 8 more in crm7 (a
   # different token family entirely — text-text-primary, border-shell, and a
-  # dead text-md size utility), and 227 in throughput (border-light-border /
+  # dead text-md size utility), and 249 in throughput (border-light-border /
   # dark:border-dark-border / dark-accent-*, which do not exist ANYWHERE in
-  # that app's tree — not even in a plain :root). See
+  # that app's tree — not even in a plain :root). BSU has since registered the
+  # four shell tokens (business-suite-unified#1106), so its banked count is
+  # 381. See
   # scripts/check-css-classes-emitted.mjs's own header for the full account
   # and .github/theme-css-classes-baseline.json for the banked per-app counts.
   #
@@ -1275,7 +1278,7 @@ jobs:
           rc=$?
           set -e
           case "$rc" in
-            0) echo "self-test exited 0 — logic cases, the real-build case and the three entry-point cases passed" ;;
+            0) echo "self-test exited 0 — logic cases, the real-build case and the seven entry-point cases passed" ;;
             1) echo "::error::--self-test FAILED (exit 1). The guard's own detector logic is"
                echo "broken; the sweep below would not mean anything. See the log above for"
                echo "which case failed."

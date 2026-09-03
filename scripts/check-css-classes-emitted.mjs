@@ -34,15 +34,26 @@
  * text-success / bg-success (preset ships --color-warning-text and
  * --color-success-text, not the bare names; BSU's own --color-warning /
  * --color-success at src/index.css:318-321 sit in a plain :root block, the
- * exact non-registering position this header describes). Of the 170 grep hits the gate
- * sees 163: the missing 7 sit inside a `className={`…${cond ? 'a' : 'b'}`}`
- * template with a ternary nested in the interpolation (UnifiedDashboard.tsx:233,
- * Admin/AuditLog.tsx:196, Admin/LicenseManager.tsx:255/287/391), which is the
- * documented nested-template gap below — the gate under-counts there, never
- * over-counts. The banked BSU number is the gate's own (540), not the grep's.
+ * exact non-registering position this header describes).
+ *
+ * 170 IS THE GREP AND, SINCE THE TEMPLATE-LITERAL FIX, ALSO THE GATE'S SHELL
+ * COUNT. The first cut saw 163 of the grep's 170: not because of any "nested
+ * ternary" but because `className={`…`}` — a brace before the backtick — was
+ * not matched at all, so EVERY token in such an attribute went unscanned,
+ * static or not (UnifiedDashboard.tsx:233, Admin/AuditLog.tsx:196,
+ * Admin/LicenseManager.tsx:255/287/391). findOccurrencesInFile now tokenises
+ * the static parts (quasis) of a template-literal className, and of template
+ * literals inside cn()/clsx()/cva(), and the quoted arms of any `${a ? 'x' :
+ * 'y'}` inside it; only the dynamic expression itself is excluded. On the tree
+ * the first cut measured (BSU bfe2702) that moves BSU from 540 to 551 (shell
+ * family 163 -> 170, i.e. exactly the grep). The banked BSU number is the
+ * gate's own on the CURRENT tree, which has since taken business-suite-unified
+ * #1106 (the four shell tokens registered in @theme): 381 / 432 files.
  *
  * The same run found 8 in crm7 (text-text-primary ×2, a dead `text-md` size
- * utility ×5, border-shell ×1) and 227 in throughput — a stale
+ * utility ×5, border-shell ×1) and 227 in throughput (249 once template-literal
+ * classNames were scanned — the +22 are the same border-light-border /
+ * dark-accent-* family in `className={`…`}` attributes) — a stale
  * border-light-border / dark:border-dark-border / dark-accent-* family with
  * NO declaration anywhere in that app, not even a plain :root. The other
  * three apps (braden, conduit, R80.4) are clean.
@@ -55,6 +66,20 @@
  *              own source (className literals, plus cn()/clsx()/cva() string
  *              arguments).
  *   finding  = a used candidate absent from the emitted set.
+ *
+ * WAIVERS CARRY A REASON OR THEY ARE NOT WAIVERS. Two exemption forms exist
+ * and both are enforced to the same shape:
+ *   - inline: `theme-audit-ok: <reason of at least 12 characters>` on the hit
+ *     line or the line above exempts that hit. A bare `theme-audit-ok` (no
+ *     colon / no reason / reason under 12 chars) does NOT exempt — it is
+ *     reported as a finding tagged MARKER WITHOUT REASON, so a waiver whose
+ *     justification was never written (or was edited away) is visible in the
+ *     count instead of silently holding.
+ *   - file: scripts/css-class-dynamic-allowlist.txt, one `<class-token> #
+ *     <reason of at least 12 characters>` per line. Any other non-comment line
+ *     aborts the run BEFORE any app is scanned, exit 1, "ALLOWLIST LINE
+ *     WITHOUT REASON: <line>". An unexplained waiver never takes effect for
+ *     even one run.
  *
  * WHY A HAND PARSER, NOT postcss. postcss is not resolvable from the PARENT
  * package tree (`node -e "require.resolve('postcss')"` throws MODULE_NOT_FOUND
@@ -73,11 +98,11 @@
  *   - Arbitrary-value and arbitrary-property forms (`bg-[#fff]`,
  *     `bg-(--custom)`) are excluded outright — they carry their own value and
  *     need no `@theme` registration, so they are not this defect class.
- *   - A ternary or ${} interpolation NESTED inside a template-literal
- *     className (`` `flex ${on ? 'bg-a' : 'bg-b'}` ``) is not unpacked; only
- *     the outer literal is scanned, so the inner arms are missed. cn()/clsx()/
- *     cva() calls ARE unpacked (their arguments are separate string literals,
- *     not one interpolated template), which is the common real pattern.
+ *   - A `${…}` interpolation inside a template-literal className contributes
+ *     only what is LITERAL inside it: the quoted arms of a ternary are read,
+ *     an identifier, call or member expression (`${color}`, `${styles.x}`) is
+ *     not. A token fused to an interpolation on either side
+ *     (`bg-primary-${shade}`) is a fragment and is excluded, never guessed at.
  *   - It does not run against a deployed page or a browser — it proves the
  *     RULE exists in the compiled CSS, not that a specific element receives
  *     it. audit-applied-tokens.mjs is the gate that measures the DOM.
@@ -331,12 +356,105 @@ export function maskCommentsOutsideStrings(text) {
   return out
 }
 
-/** className="…" / className: "…" (the compiled-JSX form check-tailwind-sources.mjs
- * also matches), plus a paren-balanced scan of cn(/clsx(/cva( calls for every
- * quoted-string argument at any nesting depth inside the call. Returns
- * {token, line} occurrences — one per whitespace-separated class in each
- * string, matching how the estate's own re-measurement grep counts (each
- * occurrence is its own finding, not deduplicated to one per distinct token).
+/** Read one string literal starting at `text[start]` (a `"`, `'` or backtick)
+ * and push its STATIC parts onto `parts` as {value, offset, abutsLeft,
+ * abutsRight}: one part for a plain string; for a template literal one part
+ * per quasi, with every `${…}` EXPRESSION skipped — except that a quoted
+ * string literal found INSIDE an expression (the arms of
+ * `${on ? 'bg-a' : 'bg-b'}`, the args of `${cn('bg-a')}`) is itself a static
+ * literal and is read recursively, quasis and all. Identifiers, calls and
+ * operators inside the expression are never guessed at. Returns the index
+ * just past the closing quote. Handles backslash escapes and nested braces/
+ * strings/templates inside expressions. An unterminated literal consumes the
+ * rest of the text (the masked source is the input, so this is a parse
+ * oddity, not a crash). */
+export function readStringLiteral(text, start, parts = []) {
+  const q = text[start]
+  let i = start + 1
+  let segStart = i
+  let abutsLeft = false
+  while (i < text.length) {
+    const c = text[i]
+    if (c === '\\') {
+      i += 2
+      continue
+    }
+    if (c === q) {
+      parts.push({ value: text.slice(segStart, i), offset: segStart, abutsLeft, abutsRight: false })
+      return { end: i + 1, parts }
+    }
+    if (q === '`' && c === '$' && text[i + 1] === '{') {
+      parts.push({ value: text.slice(segStart, i), offset: segStart, abutsLeft, abutsRight: true })
+      i = readTemplateExpression(text, i + 2, parts)
+      segStart = i
+      abutsLeft = true
+      continue
+    }
+    i++
+  }
+  parts.push({ value: text.slice(segStart), offset: segStart, abutsLeft, abutsRight: false })
+  return { end: text.length, parts }
+}
+
+/** `i` sits just after `${`. Walk to the matching `}` (brace depth, with any
+ * nested string or template literal read via readStringLiteral so a brace
+ * inside a string does not count and its static parts ARE collected). Returns
+ * the index just past the closing brace. */
+function readTemplateExpression(text, i, parts) {
+  let depth = 1
+  while (i < text.length) {
+    const c = text[i]
+    if (c === '"' || c === "'" || c === '`') {
+      i = readStringLiteral(text, i, parts).end
+      continue
+    }
+    if (c === '{') depth++
+    else if (c === '}') {
+      depth--
+      if (depth === 0) return i + 1
+    }
+    i++
+  }
+  return i
+}
+
+/** Whitespace-split one static part into {token, offset}. A token that runs
+ * straight into an interpolation on either side (`bg-primary-${shade}`,
+ * `${p}-primary`) is a FRAGMENT, not a class: it is returned with the `${`
+ * marker re-attached on that side so isCandidateToken excludes it under the
+ * existing "contains `${`" rule — the fragment is never mistaken for a
+ * candidate, and the self-test's `bg-primary-${shade}` case keeps meaning
+ * what it says end to end. */
+function tokensOfPart({ value, offset, abutsLeft, abutsRight }) {
+  const toks = splitTokens(value)
+  if (!toks.length) return toks
+  if (abutsLeft && /^\S/.test(value)) toks[0] = { ...toks[0], token: '${' + toks[0].token }
+  if (abutsRight && /\S$/.test(value)) {
+    const last = toks.length - 1
+    toks[last] = { ...toks[last], token: toks[last].token + '${' }
+  }
+  return toks.map((t) => ({ token: t.token, offset: offset + t.offset }))
+}
+
+/** className="…" / className={"…"} / className={`…`} / className: "…" (the
+ * compiled-JSX form check-tailwind-sources.mjs also matches), plus a
+ * paren-balanced scan of cn(/clsx(/cva( calls for every string or template
+ * literal argument at any nesting depth inside the call. Returns {token, line}
+ * occurrences — one per whitespace-separated class in each static part,
+ * matching how the estate's own re-measurement grep counts (each occurrence
+ * is its own finding, not deduplicated to one per distinct token).
+ *
+ * Template literals contribute their quasis and any quoted literal nested in
+ * their `${…}` expressions (see readStringLiteral); the expressions' dynamic
+ * parts are excluded. Before this, `className={`…`}` contributed NOTHING —
+ * the brace before the backtick defeated the quote-only match, so even the
+ * fully static classes in such an attribute went unscanned (review finding,
+ * rule 8; BSU's UnifiedDashboard.tsx:233, Admin/AuditLog.tsx:196,
+ * Admin/LicenseManager.tsx:255/287/391 were the measured misses).
+ *
+ * The two passes can reach the same literal (`className={`${cn('bg-a')}`}`),
+ * so occurrences are deduplicated on (offset, token) — the same character in
+ * the file is one occurrence however many ways the scanner arrived at it.
  *
  * Scans the COMMENT-MASKED text (see maskCommentsOutsideStrings), never the
  * raw source — masking is length- and newline-preserving, so every match
@@ -344,15 +462,22 @@ export function maskCommentsOutsideStrings(text) {
 export function findOccurrencesInFile(rawText) {
   const text = maskCommentsOutsideStrings(rawText)
   const lineOf = makeLineLookup(text)
+  const seen = new Set()
   const occurrences = []
+  const add = ({ token, offset }) => {
+    const key = `${offset}:${token}`
+    if (seen.has(key)) return
+    seen.add(key)
+    occurrences.push({ token, line: lineOf(offset), offset })
+  }
 
-  const classNameRe = /className\s*[=:]\s*(["'`])([\s\S]*?)\1/g
+  const classNameRe = /className\s*[=:]\s*\{?\s*(["'`])/g
   let m
   while ((m = classNameRe.exec(text))) {
-    const valueStart = m.index + m[0].indexOf(m[2], m[0].indexOf(m[1]) + 1)
-    for (const { token, offset } of splitTokens(m[2])) {
-      occurrences.push({ token, line: lineOf(valueStart + offset) })
-    }
+    const quoteIdx = m.index + m[0].length - 1
+    const { end, parts } = readStringLiteral(text, quoteIdx)
+    for (const part of parts) for (const t of tokensOfPart(part)) add(t)
+    classNameRe.lastIndex = end
   }
 
   const callRe = /(?<!\.)\b(?:cn|clsx|cva)\(/g
@@ -365,15 +490,17 @@ export function findOccurrencesInFile(rawText) {
       else if (text[i] === ')') depth--
       i++
     }
-    const argsText = text.slice(openParenIdx + 1, i - 1)
-    const argsStart = openParenIdx + 1
-    const quoteRe = /(["'`])((?:\\.|(?!\1)[^\\])*)\1/g
-    let qm
-    while ((qm = quoteRe.exec(argsText))) {
-      const valueStart = argsStart + qm.index + qm[0].indexOf(qm[1]) + 1
-      for (const { token, offset } of splitTokens(qm[2])) {
-        occurrences.push({ token, line: lineOf(valueStart + offset) })
+    const argsEnd = i - 1
+    let k = openParenIdx + 1
+    while (k < argsEnd) {
+      const c = text[k]
+      if (c === '"' || c === "'" || c === '`') {
+        const { end, parts } = readStringLiteral(text, k)
+        for (const part of parts) for (const t of tokensOfPart(part)) add(t)
+        k = end
+        continue
       }
+      k++
     }
     callRe.lastIndex = i // resume after this call — its nested literals are already captured above
   }
@@ -403,15 +530,52 @@ function walkSourceFiles(dir, out = []) {
   return out
 }
 
-function loadDynamicAllowlist() {
-  if (!existsSync(DYNAMIC_ALLOWLIST_PATH)) return new Set()
-  const set = new Set()
-  for (const raw of readFileSync(DYNAMIC_ALLOWLIST_PATH, 'utf8').split('\n')) {
+/** A waiver that carries no reason is a hole nobody can audit. Both waiver
+ * forms this gate honours (the allowlist file and the inline marker) require
+ * `<something> # reason` / `theme-audit-ok: reason` with a reason of at least
+ * this many characters — long enough that "ok", "todo" or "fixme" do not
+ * qualify, short enough that a real sentence always does. */
+export const MIN_REASON_LENGTH = 12
+
+/** Parse the allowlist TEXT (pure, so the self-test can feed it strings):
+ * returns { allow: Set<token>, invalid: string[] }. A non-comment line is
+ * valid ONLY as `<class-token> # <reason>` with the reason at least
+ * MIN_REASON_LENGTH characters; anything else — a bare token, a token with an
+ * empty or too-short reason, two tokens on one line — lands in `invalid` so
+ * the caller can refuse the whole file rather than silently waiving. */
+export function parseDynamicAllowlist(text) {
+  const allow = new Set()
+  const invalid = []
+  for (const raw of text.split('\n')) {
     const line = raw.trim()
     if (!line || line.startsWith('#')) continue
-    set.add(line)
+    const m = /^(\S+)\s+#\s*(.*)$/.exec(line)
+    if (!m || m[2].trim().length < MIN_REASON_LENGTH) {
+      invalid.push(line)
+      continue
+    }
+    allow.add(m[1])
   }
-  return set
+  return { allow, invalid }
+}
+
+/** Load and VALIDATE an allowlist file. An invalid line is fatal before any
+ * app is scanned: exit 1 naming the line — an unexplained waiver must never
+ * take effect for even one run (review finding, rule 7). Called ONCE from
+ * main(), ahead of every build, so the refusal lands before the first scan. */
+function loadDynamicAllowlist(path = DYNAMIC_ALLOWLIST_PATH) {
+  if (!existsSync(path)) return new Set()
+  const { allow, invalid } = parseDynamicAllowlist(readFileSync(path, 'utf8'))
+  if (invalid.length) {
+    for (const line of invalid) console.error(`ALLOWLIST LINE WITHOUT REASON: ${line}`)
+    console.error(
+      `FAIL ${relative(ROOT, path)}: ${invalid.length} line(s) are not of the form ` +
+        `\`<class-token> # <reason of at least ${MIN_REASON_LENGTH} characters>\`. A waiver without a ` +
+        `reason is a hole the gate cannot see through; nothing was scanned.`,
+    )
+    process.exit(1)
+  }
+  return allow
 }
 
 // ---------------------------------------------------------------------------
@@ -462,21 +626,49 @@ function buildCss(cwd, cssEntryPath) {
  * audit-palette-whitelist.py, audit-oklch-lightness.py, audit-legibility.mjs,
  * check-colour-ban-reaches-converters.mjs): a `theme-audit-ok` marker is
  * honoured on the hit's own line OR the line immediately above it, so a long
- * line can carry its exemption on its own line rather than being reformatted. */
-export function hasThemeAuditOkMarker(lines, lineNo) {
-  const thisLine = lines[lineNo - 1] || ''
-  if (thisLine.includes('theme-audit-ok')) return true
-  const prevLine = lineNo > 1 ? lines[lineNo - 2] || '' : ''
-  return prevLine.includes('theme-audit-ok')
+ * line can carry its exemption on its own line rather than being reformatted.
+ *
+ * THIS gate tightens the convention (review finding, rule 7): only
+ * `theme-audit-ok: <reason of at least MIN_REASON_LENGTH characters>` exempts.
+ * A bare `theme-audit-ok` — no colon, or a reason too short to mean anything —
+ * does NOT exempt and is reported as its own finding kind, MARKER WITHOUT
+ * REASON, so a waiver that lost its justification cannot rot silently.
+ *
+ * `data-theme-audit-ok="…"` is audit-legibility.mjs's DOM-attribute form; it
+ * is not this gate's marker and is neither honoured nor reported here (the
+ * negative lookbehind excludes it).
+ *
+ * Returns 'reasoned' | 'bare' | null for the pair (hit line, line above):
+ * a reasoned marker on either line wins; otherwise a bare marker on either
+ * line is 'bare'; otherwise null. */
+const MARKER_RE = /(?<![\w-])theme-audit-ok(?![\w-])/
+const REASONED_MARKER_RE = /(?<![\w-])theme-audit-ok\s*:\s*(.*)$/
+
+export function classifyThemeAuditOkMarker(lines, lineNo) {
+  const candidates = [lines[lineNo - 1] || '', lineNo > 1 ? lines[lineNo - 2] || '' : '']
+  let sawBare = false
+  for (const l of candidates) {
+    if (!MARKER_RE.test(l)) continue
+    const m = REASONED_MARKER_RE.exec(l)
+    const reason = m ? m[1].replace(/\s*(\*\/|-->|\}|["'`])+\s*$/, '').trim() : ''
+    if (reason.length >= MIN_REASON_LENGTH) return 'reasoned'
+    sawBare = true
+  }
+  return sawBare ? 'bare' : null
 }
 
-function scanApp(appDir, cssRel) {
+/** Kept for the logic self-test and any external caller: true ONLY for a
+ * reasoned marker. A bare marker is not an exemption any more. */
+export function hasThemeAuditOkMarker(lines, lineNo) {
+  return classifyThemeAuditOkMarker(lines, lineNo) === 'reasoned'
+}
+
+function scanApp(appDir, cssRel, allowlist = new Set()) {
   const cssPath = join(appDir, cssRel)
   if (!existsSync(cssPath)) throw new Error(`CSS entrypoint ${cssRel} does not exist under ${appDir}`)
 
   const emittedCss = buildCss(appDir, cssPath)
   const emitted = extractEmittedClasses(emittedCss)
-  const allowlist = loadDynamicAllowlist()
 
   const files = walkSourceFiles(appDir)
   const findings = []
@@ -487,12 +679,22 @@ function scanApp(appDir, cssRel) {
       if (!isCandidateToken(token)) continue
       if (emitted.has(token)) continue
       if (allowlist.has(token)) continue
-      if (hasThemeAuditOkMarker(lines, line)) continue
-      findings.push({ file: relative(ROOT, f), line, token })
+      const marker = classifyThemeAuditOkMarker(lines, line)
+      if (marker === 'reasoned') continue
+      findings.push({
+        file: relative(ROOT, f),
+        line,
+        token,
+        ...(marker === 'bare' ? { kind: 'MARKER WITHOUT REASON' } : {}),
+      })
     }
   }
   findings.sort((a, b) => (a.file === b.file ? a.line - b.line : a.file < b.file ? -1 : 1))
   return { findings, filesScanned: files.length, emittedCount: emitted.size }
+}
+
+function formatFinding(f) {
+  return `  ${f.file}:${f.line}  ${f.token}${f.kind ? `  [${f.kind}]` : ''}`
 }
 
 // ---------------------------------------------------------------------------
@@ -576,11 +778,60 @@ function runRealBuildSelfTestCase() {
     )
     r = runFixture()
     if (r.status !== 0) {
-      console.error(`SELF-TEST FAIL: entry-point case — theme-audit-ok marker should exempt the hit and exit 0; got exit ${r.status}:\n${r.out}`)
+      console.error(`SELF-TEST FAIL: entry-point case — theme-audit-ok marker WITH a reason should exempt the hit and exit 0; got exit ${r.status}:\n${r.out}`)
       failures++
     } else {
-      console.log('  entry-point case: OK — theme-audit-ok marker exempts the planted hit, exits 0')
+      console.log('  entry-point case: OK — theme-audit-ok: <reason> exempts the planted hit, exits 0')
     }
+
+    // A BARE marker (no colon, no reason) must NOT exempt: exit 1, and the
+    // finding is labelled so a waiver that lost its justification is visible.
+    writeFileSync(
+      join(fixtureDir, 'fixture.tsx'),
+      '// theme-audit-ok\nexport const X = () => <div className="bg-known bg-unregistered" />;\n',
+    )
+    r = runFixture()
+    if (r.status !== 1 || !r.out.includes('MARKER WITHOUT REASON') || !r.out.includes('bg-unregistered')) {
+      console.error(`SELF-TEST FAIL: entry-point case — bare theme-audit-ok should NOT exempt; expected exit 1 reporting MARKER WITHOUT REASON for bg-unregistered; got exit ${r.status}:\n${r.out}`)
+      failures++
+    } else {
+      console.log('  entry-point case: OK — bare theme-audit-ok does not exempt; exit 1, MARKER WITHOUT REASON named')
+    }
+
+    // The planted violation written as a template-literal className — the form
+    // the first cut dropped entirely — must still be found through main().
+    writeFileSync(
+      join(fixtureDir, 'fixture.tsx'),
+      'export const X = ({ on }) => <div className={`bg-known ${on ? "p-1" : "p-2"} bg-unregistered`} />;\n',
+    )
+    r = runFixture()
+    if (r.status !== 1 || !r.out.includes('bg-unregistered')) {
+      console.error(`SELF-TEST FAIL: entry-point case — planted violation inside className={\`…\`} should exit 1 naming bg-unregistered; got exit ${r.status}:\n${r.out}`)
+      failures++
+    } else {
+      console.log('  entry-point case: OK — planted bg-unregistered inside a template-literal className exits 1 and is named')
+    }
+
+    // Allowlist through the entry point: a bare line refuses the run before
+    // any scan (exit 1, the line named); a reasoned line waives (exit 0).
+    writeFileSync(join(fixtureDir, 'fixture.tsx'), 'export const X = () => <div className="bg-known bg-unregistered" />;\n')
+    writeFileSync(join(fixtureDir, 'allowlist.txt'), '# fixture allowlist\nbg-unregistered\n')
+    r = runFixture()
+    if (r.status !== 1 || !r.out.includes('ALLOWLIST LINE WITHOUT REASON: bg-unregistered') || r.out.includes('finding(s)')) {
+      console.error(`SELF-TEST FAIL: entry-point case — bare allowlist line should exit 1 naming it BEFORE any scan; got exit ${r.status}:\n${r.out}`)
+      failures++
+    } else {
+      console.log('  entry-point case: OK — bare allowlist line exits 1, named, nothing scanned')
+    }
+    writeFileSync(join(fixtureDir, 'allowlist.txt'), '# fixture allowlist\nbg-unregistered # self-test: this token is assembled at runtime\n')
+    r = runFixture()
+    if (r.status !== 0) {
+      console.error(`SELF-TEST FAIL: entry-point case — allowlist line WITH a reason should waive the hit and exit 0; got exit ${r.status}:\n${r.out}`)
+      failures++
+    } else {
+      console.log('  entry-point case: OK — allowlist line with a reason waives the planted hit, exits 0')
+    }
+    rmSync(join(fixtureDir, 'allowlist.txt'), { force: true })
   } catch (e) {
     console.error(`SELF-TEST FAIL: real-build case — ${e.message}`)
     failures++
@@ -658,16 +909,81 @@ function runSelfTest() {
   const classNameOcc = findOccurrencesInFile(classNameSrc).map((o) => `${o.token}@${o.line}`)
   check('className scan finds both tokens on their line', classNameOcc.sort(), ['bg-known@1', 'bg-unregistered@1'])
 
-  // ---- theme-audit-ok marker honoured on the hit line OR the line above ----
+  // ---- theme-audit-ok marker: ONLY `theme-audit-ok: <reason ≥ 12 chars>` exempts ----
   const markerLines = [
     'const a = "bg-unregistered"; // theme-audit-ok: intentional demo class',
     '// theme-audit-ok: next line is a deliberate demo',
     'const b = "bg-unregistered-2";',
     'const c = "bg-unregistered-3";',
+    'const d = "bg-unregistered-4"; // theme-audit-ok',
+    'const e = "bg-unregistered-5"; // theme-audit-ok: short',
+    'const plain = 1',
+    'const f = "bg-unregistered-6"; data-theme-audit-ok="the DOM-attribute form audit-legibility reads"',
   ]
-  check('marker on the hit line itself exempts it', hasThemeAuditOkMarker(markerLines, 1), true)
-  check('marker on the line above exempts it', hasThemeAuditOkMarker(markerLines, 3), true)
+  check('reasoned marker on the hit line itself exempts it', hasThemeAuditOkMarker(markerLines, 1), true)
+  check('reasoned marker on the line above exempts it', hasThemeAuditOkMarker(markerLines, 3), true)
   check('no marker on either line does not exempt it', hasThemeAuditOkMarker(markerLines, 4), false)
+  check('bare marker (no colon, no reason) does NOT exempt', hasThemeAuditOkMarker(markerLines, 5), false)
+  check('bare marker is classified as bare, not silently ignored', classifyThemeAuditOkMarker(markerLines, 5), 'bare')
+  check('marker with a reason shorter than 12 chars is bare', classifyThemeAuditOkMarker(markerLines, 6), 'bare')
+  check('data-theme-audit-ok attribute is not this marker', classifyThemeAuditOkMarker(markerLines, 8), null)
+  check('no marker classifies as null', classifyThemeAuditOkMarker(markerLines, 4), null)
+
+  // ---- dynamic allowlist: a line is valid ONLY as `<token> # <reason ≥ 12 chars>` ----
+  const allowlistText = [
+    '# a comment line is fine',
+    'bg-bare-token',
+    'bg-short-reason # tiny',
+    'bg-waived # assembled at runtime from a shared constants module',
+    'bg-two tokens # two tokens on one line is not one entry',
+    '',
+  ].join('\n')
+  const parsed = parseDynamicAllowlist(allowlistText)
+  check('allowlist: only the reasoned line waives', [...parsed.allow], ['bg-waived'])
+  check(
+    'allowlist: every bare / short / malformed line is invalid',
+    parsed.invalid,
+    ['bg-bare-token', 'bg-short-reason # tiny', 'bg-two tokens # two tokens on one line is not one entry'],
+  )
+
+  // ---- template-literal className: quasis ARE scanned, `${…}` expressions are not ----
+  const tplSrc = [
+    '<div className={`rounded-3xl border p-8 relative ${',
+    "  isCurrent ? 'ring-2 ring-primary' : 'border-border-shell bg-bg-shell-elevated'",
+    '}`} />',
+  ].join('\n')
+  check(
+    'template className: static quasi tokens and the quoted ternary arms are found, on their lines',
+    findOccurrencesInFile(tplSrc).map((o) => `${o.token}@${o.line}`),
+    ['rounded-3xl@1', 'border@1', 'p-8@1', 'relative@1', 'ring-2@2', 'ring-primary@2', 'border-border-shell@2', 'bg-bg-shell-elevated@2'],
+  )
+  check(
+    'template className: `${color}` is skipped, the static tokens beside it are kept',
+    findOccurrencesInFile('<div className={`p-2 rounded-lg bg-bg-shell-accent ${color}`}>').map((o) => o.token),
+    ['p-2', 'rounded-lg', 'bg-bg-shell-accent'],
+  )
+  check(
+    'template className: a token fused to an interpolation is a fragment, not a candidate',
+    findOccurrencesInFile('<div className={`bg-primary-${shade} ${p}-primary bg-real`}>')
+      .map((o) => o.token)
+      .filter(isCandidateToken),
+    ['bg-real'],
+  )
+  check(
+    'braced quoted className is scanned',
+    findOccurrencesInFile("<div className={'bg-a bg-b'}>").map((o) => o.token),
+    ['bg-a', 'bg-b'],
+  )
+  check(
+    'cn(): template-literal argument contributes its quasis and nested quoted arms',
+    findOccurrencesInFile("cn(`bg-a ${on ? 'bg-b' : \"bg-c\"} bg-d`, 'bg-e')").map((o) => o.token),
+    ['bg-a', 'bg-b', 'bg-c', 'bg-d', 'bg-e'],
+  )
+  check(
+    'a literal reached by both passes counts once',
+    findOccurrencesInFile("<div className={`${cn('bg-a')}`}>").map((o) => o.token),
+    ['bg-a'],
+  )
 
   // ---- cn()/clsx()/cva() paren-balanced scan ----
   const callSrc = 'const x = cn("bg-a", isOn && clsx("bg-b", { "bg-c": on }), cva("bg-d")())'
@@ -694,14 +1010,15 @@ function runSelfTest() {
     ['bg-a', 'text-real-token'],
   )
 
-  // ---- real build ----
+  // ---- real build + entry point ----
+  const ENTRY_POINT_CASES = 7 // planted, clean, reasoned marker, bare marker, template-literal planted, bare allowlist, reasoned allowlist
   failures += runRealBuildSelfTestCase()
 
   if (failures) {
     console.error(`\n${failures} self-test failure(s) — the checker itself is broken; its verdicts mean nothing.`)
     return 1
   }
-  console.log(`check-css-classes-emitted --self-test: OK (${total} logic cases + 1 real-build case + 3 entry-point cases)`)
+  console.log(`check-css-classes-emitted --self-test: OK (${total} logic cases + 1 real-build case + ${ENTRY_POINT_CASES} entry-point cases)`)
   return 0
 }
 
@@ -722,14 +1039,23 @@ function main() {
   const fixtureDir = args.find((a) => a.startsWith('--fixture='))?.slice('--fixture='.length)
   if (fixtureDir) {
     const dir = resolve(fixtureDir)
-    const { findings, filesScanned, emittedCount } = scanApp(dir, 'fixture.css')
+    // A fixture may carry its own allowlist.txt so the self-test can drive the
+    // allowlist validation through THIS entry point (invalid line -> exit 1
+    // before any scan; valid line -> waives). Absent file = empty allowlist.
+    const allowlist = loadDynamicAllowlist(join(dir, 'allowlist.txt'))
+    const { findings, filesScanned, emittedCount } = scanApp(dir, 'fixture.css', allowlist)
     console.log(`fixture ${dir}: ${findings.length} finding(s), ${filesScanned} file(s) scanned, ${emittedCount} class(es) emitted`)
-    for (const f of findings) console.log(`  ${f.file}:${f.line}  ${f.token}`)
+    for (const f of findings) console.log(formatFinding(f))
     process.exit(findings.length ? 1 : 0)
   }
 
   const updateBaseline = args.includes('--update-baseline')
   const onlyApp = args.find((a) => a.startsWith('--app='))?.slice('--app='.length)
+
+  // Validate the allowlist BEFORE the first build: an unexplained waiver
+  // exits 1 here, named, and no app is scanned under it (not even for
+  // --update-baseline — a bank taken under a silent waiver is a silent bank).
+  const allowlist = loadDynamicAllowlist()
 
   const baseline = existsSync(BASELINE_PATH) ? JSON.parse(readFileSync(BASELINE_PATH, 'utf8')) : {}
   const scannedBaseline = existsSync(SCANNED_BASELINE_PATH) ? JSON.parse(readFileSync(SCANNED_BASELINE_PATH, 'utf8')) : {}
@@ -749,7 +1075,7 @@ function main() {
 
     let result
     try {
-      result = scanApp(appDir, cssRel)
+      result = scanApp(appDir, cssRel, allowlist)
     } catch (e) {
       console.error(`FAIL ${app}: ${e.message}`)
       anyFail = true
@@ -757,8 +1083,12 @@ function main() {
     }
     anyRan = true
     const { findings, filesScanned, emittedCount } = result
-    console.log(`\n${app}: ${findings.length} finding(s), ${filesScanned} file(s) scanned, ${emittedCount} class(es) emitted`)
-    for (const f of findings) console.log(`  ${f.file}:${f.line}  ${f.token}`)
+    const bareMarkers = findings.filter((f) => f.kind === 'MARKER WITHOUT REASON').length
+    console.log(
+      `\n${app}: ${findings.length} finding(s), ${filesScanned} file(s) scanned, ${emittedCount} class(es) emitted` +
+        (bareMarkers ? ` — ${bareMarkers} of the findings are MARKER WITHOUT REASON (a bare theme-audit-ok no longer exempts)` : ''),
+    )
+    for (const f of findings) console.log(formatFinding(f))
 
     newBaseline[app] = findings.length
     newScannedBaseline[app] = filesScanned

@@ -824,11 +824,15 @@ export const GUARDS = [
     mode: 'run',
     evidence:
       '"crm7: 8 finding(s), 1639 file(s) scanned, 2254 class(es) emitted" … ' +
-      '"business-suite-unified: 540 finding(s), 430 file(s) scanned, 1695 ' +
-      'class(es) emitted" … "throughput: 227 finding(s), 181 file(s) scanned" ' +
-      '(2026-09-03, six apps, all == baseline). --self-test: "OK (24 logic ' +
-      'cases + 1 real-build case + 3 entry-point cases)"; with the emitted-set ' +
-      'membership test stubbed out it exits 1 on the entry-point case.',
+      '"business-suite-unified: 381 finding(s), 432 file(s) scanned, 1717 ' +
+      'class(es) emitted" … "throughput: 249 finding(s), 181 file(s) scanned" ' +
+      '(2026-09-03 after the template-literal className fix and BSU #1106, six ' +
+      'apps, all == baseline). --self-test: "OK (37 logic cases + 1 real-build ' +
+      'case + 7 entry-point cases)" — the entry-point cases include a bare ' +
+      'theme-audit-ok exiting 1 as MARKER WITHOUT REASON and a bare allowlist ' +
+      'line exiting 1 as ALLOWLIST LINE WITHOUT REASON before any scan; with ' +
+      'the emitted-set membership test stubbed out it exits 1 on the ' +
+      'entry-point case.',
   },
   {
     // A RATCHET, not a hard gate: 25 documents in docs/recovered/ still need a
@@ -1736,7 +1740,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 73
+export const GUARD_FLOOR = 81
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 

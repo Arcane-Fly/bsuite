@@ -58,8 +58,10 @@ run G10 "no silently-dropped utilities" scripts/audit-invalid-utilities.sh
 # from G10's "utility Tailwind DROPS": here the class parses and Tailwind would
 # happily emit it, but nothing in the @theme cascade names the custom property
 # it needs, so the build produces no rule at all. Measured live (F-58/D-149):
-# business-suite-unified alone carries 540 such occurrences, crm7 8, throughput
-# 227 — three apps, not the one the original narrow "bg-shell" audit found.
+# business-suite-unified alone carried 540 such occurrences at first measure
+# (551 once template-literal classNames were scanned; 381 after BSU#1106
+# registered the shell tokens), crm7 8, throughput 249 — three apps, not the
+# one the original narrow "bg-shell" audit found.
 # UNLIKE ITS NEIGHBOURS ABOVE, this gate needs each app's own `pnpm install`
 # already done (it builds the app's real CSS via its own installed tailwindcss)
 # and reaches the network via `npx --yes @tailwindcss/cli@<version>` — the same
