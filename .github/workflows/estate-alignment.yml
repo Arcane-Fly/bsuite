@@ -168,15 +168,26 @@ jobs:
           node scripts/check-doc-classification.mjs --self-test
           node scripts/check-airtable-grid-adoption.mjs --self-test
 
+      # `shell: bash` IS THE GATE, not decoration. GitHub's default shell for a step
+      # that names none is `bash -e {0}` — NO pipefail — so `node … | tee` exits
+      # with tee's status (0) and a breached floor reads as `outcome: success`,
+      # the `if:` on the issue step below never fires, and the nightly lane goes
+      # green on exactly the breach it exists to file. `shell: bash` runs
+      # `bash --noprofile --norc -eo pipefail {0}`, so the exit is node's.
+      # Caught by review 2026-09-03 (bsuite#2970): same breached baseline,
+      # `bash -e` → 0, `bash -eo pipefail` → 1. Same idiom as the two
+      # "Assert the submodules" steps above.
       - name: Floor — doc classification
         id: classification
         continue-on-error: true
-        run: node scripts/check-doc-classification.mjs --check-floor | tee /tmp/floor-classification.txt
+        shell: bash
+        run: node scripts/check-doc-classification.mjs --check-floor 2>&1 | tee /tmp/floor-classification.txt
 
       - name: Floor — Airtable-style grid adoption
         id: grid
         continue-on-error: true
-        run: node scripts/check-airtable-grid-adoption.mjs --check-floor | tee /tmp/floor-grid.txt
+        shell: bash
+        run: node scripts/check-airtable-grid-adoption.mjs --check-floor 2>&1 | tee /tmp/floor-grid.txt
 
       # ONE tracking issue per breached ratchet, idempotent by title — a second
       # nightly breach on the same ratchet comments on the existing issue
