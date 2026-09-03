@@ -139,11 +139,11 @@ try {
     // Reproduces the actual incident shape: checked out on C (no ancestry to
     // B at all), the OLD gitleaks invocation still finds B's secret because
     // it walks every local ref, not the checked-out ref's history.
-    const r = spawnSync(join(binDir, 'gitleaks'), ['detect', '--source', '.', '--no-banner', '-v'], {
+    const r = spawnSync(join(binDir, 'gitleaks'), ['detect', '--source', '.', '--no-banner', '-v', '--redact'], {
       cwd: repo,
       encoding: 'utf8',
     });
-    if (r.status !== 1 || !r.stdout.includes(FAKE_KEY)) {
+    if (r.status !== 1 || !r.stdout.includes('aws-access-token') || !r.stdout.includes('secret.txt')) {
       throw new Error(
         `expected the unscoped invocation to reproduce the bug (exit 1, finding the secret) — ` +
           `got exit ${r.status}. If this changed, gitleaks' own default ref-walk behaviour ` +
