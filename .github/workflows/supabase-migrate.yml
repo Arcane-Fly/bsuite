@@ -461,8 +461,15 @@ jobs:
             fi
             echo "→ Applying transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$f"
-            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;"
+            # psql does NOT interpolate :'var' inside a -c string (the string is sent to the
+            # server as-is; proven on psql 18.6 and on the runner: run 33778653772 failed here
+            # with "syntax error at or near :" after APPLYING 20261115000000, leaving the
+            # migration in effect but unrecorded). Interpolation happens only on stdin, so
+            # the INSERT is fed on stdin with the variables bound; the values never touch
+            # the SQL text.
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" <<'SQL'
+            INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;
+          SQL
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.sql" ! -name "*.nontx.sql" -print0 | sort -z)
@@ -564,8 +571,15 @@ jobs:
             fi
             echo "→ Applying non-transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
-            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;"
+            # psql does NOT interpolate :'var' inside a -c string (the string is sent to the
+            # server as-is; proven on psql 18.6 and on the runner: run 33778653772 failed here
+            # with "syntax error at or near :" after APPLYING 20261115000000, leaving the
+            # migration in effect but unrecorded). Interpolation happens only on stdin, so
+            # the INSERT is fed on stdin with the variables bound; the values never touch
+            # the SQL text.
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" <<'SQL'
+            INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;
+          SQL
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.nontx.sql" -print0 | sort -z)
