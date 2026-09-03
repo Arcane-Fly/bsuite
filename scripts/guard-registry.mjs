@@ -1716,6 +1716,36 @@ export const GUARDS = [
       'parseable JSON") rather than silently passing — another good ' +
       'citizen, filed rather than executed.',
   },
+
+  {
+    id: 'parent-check-secdef-grants',
+    label: 'SECURITY DEFINER functions reachable by anon/PUBLIC + RLS-no-policy table bank',
+    repo: '.',
+    command: ['node', 'scripts/supabase/check-secdef-grants.mjs', '--db-url', '$REHEARSAL_DB_URL', '--substrate', 'replay'],
+    ciWorkflow: '.github/workflows/supabase-migration-rehearsal.yml',
+    mode: 'skip',
+    skipReason:
+      'Needs a Postgres database to read pg_proc/pg_class ACLs from — there is ' +
+      'nothing to scan without one, so a credential-free run would be scanning ' +
+      'zero objects, which this guard treats as a hard failure ("scanned less ' +
+      'than banked") rather than a pass. CI supplies one two ways: the ' +
+      'disposable `supabase db start` container in supabase-migration-rehearsal.yml ' +
+      '(--substrate replay, gating GROWTH — a migration that would introduce the ' +
+      'defect) and the live pooler in prod-rls-policy-drift-audit.yml ' +
+      '(--substrate live, gating STATE — a DROP+CREATE that re-granted PUBLIC ' +
+      'with no migration to rehearse). Verified by hand on 2026-09-03 against a ' +
+      "throwaway postgres:17 container seeded to the estate's shape (8 SECURITY " +
+      'DEFINER functions with NAMED parameters, 14 RLS-no-policy tables): a clean ' +
+      'pass prints "check 1 (PUBLIC EXECUTE on SECURITY DEFINER): {findings: 0, ' +
+      'scanned: 8}", and exit 1 was observed on each of an unlisted anon grant, a ' +
+      '15th RLS-no-policy table, an anon TRUNCATE on a banked table, a planted ' +
+      'PUBLIC-executable function (--self-test), a scanned count below the floor, ' +
+      'and an invalid --substrate (exit 2). GOOD CITIZEN while skipped: with no ' +
+      'database it refuses rather than passing. Note the fixture uses NAMED ' +
+      'parameters deliberately — an earlier bare-type fixture could not reproduce ' +
+      'the signature mismatch that failed the first real run (bsuite run ' +
+      '33727868315), which is the shape a fixture must match to be evidence.',
+  },
 ]
 
 export function findGuard(id) {
@@ -1740,7 +1770,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 81
+export const GUARD_FLOOR = 82
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
