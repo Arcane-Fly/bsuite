@@ -2,25 +2,22 @@
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
   "sharedComponents": 195,
-  "unusedSharedComponents": 169,
+  "unusedSharedComponents": 181,
   "localComponentFiles": {
-    "crm7": 442,
-    "business-suite-unified": 117,
-    "conduit": 98,
-    "braden": 207,
-    "throughput": 89,
-    "R80.4": 5
+    "crm7": 443,
+    "business-suite-unified": 0,
+    "conduit": 0,
+    "braden": 0,
+    "throughput": 0,
+    "R80.4": 0
   },
   "components": [
     {
       "name": "AppShell",
       "package": "@bsuite/ui",
-      "consumers": {
-        "business-suite-unified": 1,
-        "throughput": 1
-      },
-      "consumerFiles": 2,
-      "consumingApps": 2
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "BrandingCard",
@@ -124,12 +121,10 @@
       "name": "DataUnavailable",
       "package": "@bsuite/ui",
       "consumers": {
-        "crm7": 2,
-        "business-suite-unified": 1,
-        "throughput": 2
+        "crm7": 2
       },
-      "consumerFiles": 5,
-      "consumingApps": 3
+      "consumerFiles": 2,
+      "consumingApps": 1
     },
     {
       "name": "Dialog",
@@ -148,38 +143,30 @@
     {
       "name": "DialogContent",
       "package": "@bsuite/ui",
-      "consumers": {
-        "business-suite-unified": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "DialogDescription",
       "package": "@bsuite/ui",
-      "consumers": {
-        "business-suite-unified": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "DialogFooter",
       "package": "@bsuite/ui",
-      "consumers": {
-        "business-suite-unified": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "DialogHeader",
       "package": "@bsuite/ui",
-      "consumers": {
-        "business-suite-unified": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "DialogOverlay",
@@ -198,11 +185,9 @@
     {
       "name": "DialogTitle",
       "package": "@bsuite/ui",
-      "consumers": {
-        "business-suite-unified": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "DialogTrigger",
@@ -229,11 +214,10 @@
       "name": "EntitySelector",
       "package": "@bsuite/ui",
       "consumers": {
-        "crm7": 1,
-        "conduit": 1
+        "crm7": 1
       },
-      "consumerFiles": 2,
-      "consumingApps": 2
+      "consumerFiles": 1,
+      "consumingApps": 1
     },
     {
       "name": "ErrorBoundary",
@@ -245,11 +229,9 @@
     {
       "name": "HeroGrid",
       "package": "@bsuite/ui",
-      "consumers": {
-        "business-suite-unified": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "LoadingSpinner",
@@ -435,11 +417,9 @@
     {
       "name": "CanvasCard",
       "package": "@bsuite/page-builder",
-      "consumers": {
-        "business-suite-unified": 7
-      },
-      "consumerFiles": 7,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "CardHeadingGradient",
@@ -584,24 +564,18 @@
     {
       "name": "PageEditorLauncher",
       "package": "@bsuite/page-builder",
-      "consumers": {
-        "conduit": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "PageGridLayout",
       "package": "@bsuite/page-builder",
       "consumers": {
-        "crm7": 1,
-        "business-suite-unified": 1,
-        "conduit": 1,
-        "braden": 2,
-        "throughput": 1
+        "crm7": 1
       },
-      "consumerFiles": 6,
-      "consumingApps": 5
+      "consumerFiles": 1,
+      "consumingApps": 1
     },
     {
       "name": "RADIUS_RANGE",
@@ -655,14 +629,9 @@
     {
       "name": "AppSwitcher",
       "package": "@bsuite/nav-core",
-      "consumers": {
-        "business-suite-unified": 1,
-        "conduit": 1,
-        "throughput": 1,
-        "R80.4": 1
-      },
-      "consumerFiles": 4,
-      "consumingApps": 4
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "BSUITE_ALL_APP_KEYS",
@@ -689,50 +658,35 @@
       "name": "BSUITE_APP_METADATA",
       "package": "@bsuite/nav-core",
       "consumers": {
-        "crm7": 1,
-        "business-suite-unified": 1,
-        "conduit": 1,
-        "braden": 1,
-        "throughput": 1,
-        "R80.4": 1
+        "crm7": 1
       },
-      "consumerFiles": 6,
-      "consumingApps": 6
+      "consumerFiles": 1,
+      "consumingApps": 1
     },
     {
       "name": "BSUITE_DEV_PORTS",
       "package": "@bsuite/nav-core",
       "consumers": {
-        "crm7": 2,
-        "business-suite-unified": 1,
-        "conduit": 2,
-        "throughput": 2
+        "crm7": 2
       },
-      "consumerFiles": 7,
-      "consumingApps": 4
+      "consumerFiles": 2,
+      "consumingApps": 1
     },
     {
       "name": "BSUITE_PROD_URLS",
       "package": "@bsuite/nav-core",
       "consumers": {
-        "crm7": 2,
-        "business-suite-unified": 1,
-        "conduit": 4,
-        "braden": 1,
-        "throughput": 2,
-        "R80.4": 2
+        "crm7": 2
       },
-      "consumerFiles": 12,
-      "consumingApps": 6
+      "consumerFiles": 2,
+      "consumingApps": 1
     },
     {
       "name": "BSUITE_TENANT_APP_KEYS",
       "package": "@bsuite/nav-core",
-      "consumers": {
-        "braden": 1
-      },
-      "consumerFiles": 1,
-      "consumingApps": 1
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "DEFAULT_UPDATE_POLL_MS",
@@ -744,12 +698,9 @@
     {
       "name": "MobileSidebarDrawer",
       "package": "@bsuite/nav-core",
-      "consumers": {
-        "conduit": 1,
-        "R80.4": 1
-      },
-      "consumerFiles": 2,
-      "consumingApps": 2
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "UNSAVED_CONFIRM_MESSAGE",
@@ -993,12 +944,10 @@
       "name": "SchemaBuilder",
       "package": "@bsuite/schema-builder",
       "consumers": {
-        "crm7": 1,
-        "business-suite-unified": 1,
-        "conduit": 1
+        "crm7": 1
       },
-      "consumerFiles": 3,
-      "consumingApps": 3
+      "consumerFiles": 1,
+      "consumingApps": 1
     },
     {
       "name": "SchemaCanvas",
