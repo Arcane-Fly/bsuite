@@ -1,0 +1,14 @@
+{
+  "findings": 58,
+  "scanned": 456,
+  "perRoot": {
+    "docs": 332,
+    "crm7": 52,
+    "conduit": 16,
+    "business-suite-unified": 28,
+    "R80.4": 27,
+    "braden": 22,
+    "throughput": 29
+  },
+  "banked": "2026-09-03"
+}

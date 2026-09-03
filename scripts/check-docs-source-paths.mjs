@@ -60,7 +60,10 @@ const PATH_RE = /`((?:src|supabase|scripts|packages|api)\/[A-Za-z0-9_./\[\]-]+\.
 // every `src/...` path owned by an app resolves nowhere, and the run reports
 // hundreds of false absences. This checker produced 240 "unresolved" in a bare
 // worktree against 102 in a real checkout — the difference is entirely fiction.
-const SUBMODULE_PROBE = ['crm7/src', 'conduit/src', 'business-suite-unified/src']
+// All SIX app source dirs, not a sample of three — see the sibling gate's
+// identical fix in check-docs-links-and-pins.mjs for why a partial probe is
+// its own false-pass hazard.
+const SUBMODULE_PROBE = APPS.map((a) => `${a}/src`)
 const missingSubs = SUBMODULE_PROBE.filter((d) => !existsSync(join(ROOT, d)))
 if (missingSubs.length) {
   console.error('REFUSING TO RUN: submodules are not checked out — ' + missingSubs.join(', '))
