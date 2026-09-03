@@ -18,11 +18,11 @@ A shared component nothing imports is not a library — it is dead code with a v
 
 | App | Local component files |
 |---|---|
-| crm7 | 433 |
+| crm7 | 447 |
 | business-suite-unified | 117 |
 | conduit | 98 |
 | braden | 207 |
-| throughput | 89 |
+| throughput | 91 |
 | R80.4 | 5 |
 
 ## Shared components with NO consumer

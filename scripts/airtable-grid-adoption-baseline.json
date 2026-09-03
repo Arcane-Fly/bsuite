@@ -39,12 +39,26 @@
       "crm7/src/pages/competencies/index.tsx",
       "crm7/src/pages/contracts/index.tsx",
       "crm7/src/pages/contracts/training/index.tsx",
+      "crm7/src/pages/deals/index.tsx",
+      "crm7/src/pages/documents/compliance.tsx",
+      "crm7/src/pages/engagements/index.tsx",
       "crm7/src/pages/funding-sources/list.tsx",
+      "crm7/src/pages/hosts/vacancies.tsx",
       "crm7/src/pages/hr/disciplinary.tsx",
       "crm7/src/pages/hr/probation-completion.tsx",
+      "crm7/src/pages/leads/scoring.tsx",
+      "crm7/src/pages/payroll/missing-timesheets/index.tsx",
+      "crm7/src/pages/payroll/pay-periods/index.tsx",
+      "crm7/src/pages/people/[id].tsx",
       "crm7/src/pages/pipeline/forecast.tsx",
+      "crm7/src/pages/portal/host-reports.tsx",
+      "crm7/src/pages/reminders/index.tsx",
+      "crm7/src/pages/reports/index.tsx",
       "crm7/src/pages/settings/audit-log.tsx",
-      "crm7/src/pages/whs/return-to-work/index.tsx"
+      "crm7/src/pages/settings/hiring-divisions.tsx",
+      "crm7/src/pages/vet/training-packages/index.tsx",
+      "crm7/src/pages/whs/return-to-work/index.tsx",
+      "crm7/src/pages/workflows/[id].tsx"
     ],
     "business-suite-unified": [
       "business-suite-unified/src/pages/Admin/PlatformKitLogs.tsx",
@@ -56,5 +70,38 @@
     "conduit": [],
     "braden": [],
     "throughput": []
-  }
+  },
+  "rowClickExceptions": {
+    "crm7": [
+      {
+        "path": "crm7/src/components/admin/BrowseDataTab.tsx",
+        "reason": "Browses any of 84 catalogued entities dynamically; a row's shape and identity change with the operator's entity selection, so there is no single fixed detail route a click could resolve to. The interaction model IS in-grid cell editing (\"click a cell, change it, undo it\"), not row navigation to elsewhere."
+      },
+      {
+        "path": "crm7/src/components/reports/ReportBuilder.tsx",
+        "reason": "Catalog-driven report builder over 20 entities, 199 fields, 34 joins; a result row can be a grouped/aggregated projection across joined entities with no single backing record, so there is structurally no fixed destination to navigate to."
+      },
+      {
+        "path": "crm7/src/components/reports/ReportTable.tsx",
+        "reason": "Shared paginated results table for W2 template-driven reports; rows are whatever the selected report template projects (same polymorphic-row reasoning as ReportBuilder), so no fixed detail route exists."
+      },
+      {
+        "path": "crm7/src/pages/apprentices/[id]/aass-registrations.tsx",
+        "reason": "Append-only compliance log (create-only mutation, no update path anywhere in the app); no per-registration detail page exists anywhere, and every field the record has (status, registration number, submission id, dates, notes) is already visible in the row itself."
+      },
+      {
+        "path": "crm7/src/pages/apprentices/[id]/placements.tsx",
+        "reason": "Every row action (advance/suspend/terminate/transfer) is served by an explicit \"Next states\" transition-dialog button already in the row; this table never had click-through even before its DataGrid conversion (absent from the original 2026-08-28 protected-set survey), and the transition dialog IS the record's interaction surface."
+      },
+      {
+        "path": "crm7/src/pages/contacts/tags/index.tsx",
+        "reason": "A row is a synthetic aggregate \u2014 a distinct tag NAME derived from a Set across all contacts' free-text tags \u2014 not a persisted record with its own id or detail page. The only action is delete, already served by the row's own action column."
+      },
+      {
+        "path": "crm7/src/pages/settings/tenant-switch-audit.tsx",
+        "reason": "Read-only audit trail of super-admin tenant-switch EVENTS (crm7#1153); a switch event is an immutable historical fact fully represented by its row (who, from, to, when) with no per-event detail page anywhere, and every column is editable:false."
+      }
+    ]
+  },
+  "_rowClickExceptionsDoc": "Files that render <DataGrid> and deliberately do NOT need onRowClick, with a stated reason. HAND-CURATED, never derived by this script -- --update carries it forward UNCHANGED. A file must be in exactly one of clickThrough or rowClickExceptions; findUncoveredDataGridFiles fails a file in neither (new, unreviewed) or both (contradictory)."
 }
