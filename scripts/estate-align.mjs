@@ -31,14 +31,25 @@
  *   node scripts/estate-align.mjs            # report
  *   node scripts/estate-align.mjs --strict   # non-zero exit on any violation (CI)
  *   node scripts/estate-align.mjs --json
+ *
+ * ESTATE_ALIGN_ROOT — the estate root to reconcile (default: this repo). Exists so --self-test
+ * can spawn this script against a temp fixture estate (index + register + verdicts + baselines)
+ * and assert exit codes through the real entry point, without touching the committed files.
+ * Never set it in CI.
  */
-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+import { existsSync, readFileSync, readdirSync, writeFileSync, mkdirSync, mkdtempSync, rmSync } from 'node:fs'
+import { spawnSync } from 'node:child_process'
+import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+const ROOT = process.env.ESTATE_ALIGN_ROOT ? resolve(process.env.ESTATE_ALIGN_ROOT) : REPO_ROOT
 const INDEX_PATH = join(ROOT, 'docs/00-roadmap/bsuite-feature-index.json')
 const GAPS_PATH = join(ROOT, 'docs/00-roadmap/journey-gap-register.json')
+const VERDICTS_PATH = join(ROOT, 'docs/00-roadmap/operator-notes-verdicts.json')
+const DOD_BASELINE_PATH = join(ROOT, 'docs/.dod-unevaluated-baseline.json')
+const VERDICT_BASELINE_PATH = join(ROOT, 'scripts/operator-verdict-baseline.json')
 
 const DOD_STATES = new Set(['not-evaluated', 'in-progress', 'approved', 'send-back', 'waived'])
 
@@ -143,6 +154,128 @@ function siblingClassViolations(index) {
   return out
 }
 
+/*
+ * F-DOD-FLOOR — PI ruling 2026-09-03 (audit §7, C2).
+ *
+ * dod_status is NOT floored in Phase 1 — 655 not-evaluated is a register-
+ * granularity contract mismatch that the audit's D4 resolves in Phase 3, and
+ * inventing a decay schedule ahead of that would be guessing a business
+ * commitment. But it IS banked now, so it cannot rise, and its denominator
+ * (`total_rows`) cannot fall — the same "cannot tell checked-nothing from
+ * found-nothing" discipline every other ratchet here carries. This runs in the
+ * ordinary --strict PR path (never nightly-only): it is a plain rise/fall
+ * check, not a time-decaying floor.
+ */
+export function dodFloorViolations(cov, baseline) {
+  const out = []
+  const notEvaluated = cov.total - cov.evaluated
+  if (!baseline) {
+    out.push({
+      check: 'F-dod-floor',
+      detail: `no baseline at docs/.dod-unevaluated-baseline.json — run \`node scripts/estate-align.mjs --update-baseline\` to bank ${notEvaluated} not-evaluated of ${cov.total} total rows`,
+    })
+    return out
+  }
+  if (notEvaluated > baseline.not_evaluated) {
+    out.push({
+      check: 'F-dod-floor',
+      detail: `not-evaluated ROSE ${baseline.not_evaluated} -> ${notEvaluated}. dod_status debt may shrink or hold, never rise.`,
+    })
+  }
+  if (cov.total < baseline.total_rows) {
+    out.push({
+      check: 'F-dod-floor',
+      detail: `total_rows FELL ${baseline.total_rows} -> ${cov.total} (below the bank). The index may have gone blind — investigate, or run \`node scripts/estate-align.mjs --update-baseline\` if the shrink is real.`,
+    })
+  }
+  return out
+}
+
+/*
+ * REGISTERED-AT, BY RANGE — PI ruling 2026-09-03 (audit §7, A5).
+ *
+ * The register itself carries no per-row registration date; `registered_at` was
+ * backfilled onto docs/00-roadmap/operator-notes-verdicts.json keyed by which
+ * addendum a D-id came from (each addendum is one intake event, see the register's
+ * own "## Addendum —" headers, cited in the PR this landed in). The same five
+ * ranges are the single source of truth for age, used here so the F-verdict age
+ * limb can compute a row's age EVEN WHEN IT HAS NO VERDICT (a verdict row is the
+ * only other place registered_at lives, and an unverdicted row by definition has
+ * none). Never git history — a later typo-fix edit to an existing row must not
+ * reset its clock, which is exactly what a git-log-based date would do.
+ *
+ * MAINTENANCE: a new addendum needs a new range appended here, the same
+ * continuity requirement `findRegister()` already carries for the file itself.
+ */
+const REGISTER_DATE_RANGES = [
+  { from: 1, to: 103, date: '2026-08-25' },
+  { from: 104, to: 139, date: '2026-08-27' },
+  { from: 140, to: 145, date: '2026-08-28' },
+  { from: 146, to: 159, date: '2026-09-03' },
+  { from: 160, to: 160, date: '2026-09-03' },
+]
+export function registeredAtFor(id) {
+  const n = Number(String(id).replace(/^D-/, ''))
+  if (!Number.isFinite(n)) return null
+  const r = REGISTER_DATE_RANGES.find((r) => n >= r.from && n <= r.to)
+  return r ? r.date : null
+}
+
+/*
+ * F-VERDICT — PI ruling 2026-09-03 (audit §7, A5).
+ *
+ * Every D-id in the register must have a row in operator-notes-verdicts.json.
+ * The unverdicted COUNT is banked equality-both-ways, same shape as every other
+ * ratchet here (a rise fails; an unbanked fall fails). ON TOP of that, an AGE
+ * LIMB: a row registered more than 7 days ago with still no verdict fails
+ * INDIVIDUALLY, by id, regardless of the banked count — a stale row is a defect
+ * even on a day nothing else moved.
+ */
+export function verdictViolations(register, verdicts, baseline, today = new Date()) {
+  const out = []
+  const vids = new Set((verdicts || []).map((v) => v.id))
+  const unverdicted = (register || []).filter((r) => !vids.has(r.id))
+
+  for (const r of unverdicted) {
+    const ra = registeredAtFor(r.id)
+    if (!ra) continue // outside the mapped ranges — cannot compute age, so do not guess one
+    const ageDays = Math.floor((today.getTime() - new Date(`${ra}T00:00:00Z`).getTime()) / 86400000)
+    if (ageDays > 7) {
+      out.push({
+        check: 'F-verdict-age',
+        feature: r.id,
+        detail: `registered ${ra} (${ageDays} days ago) with no verdict — past the 7-day ratchet`,
+      })
+    }
+  }
+
+  if (!baseline) {
+    out.push({
+      check: 'F-verdict',
+      detail: `no baseline at scripts/operator-verdict-baseline.json — run \`node scripts/estate-align.mjs --update-baseline\` to bank ${unverdicted.length} unverdicted of ${(register || []).length} registered`,
+    })
+    return out
+  }
+  if (unverdicted.length > baseline.unverdicted) {
+    out.push({
+      check: 'F-verdict',
+      detail: `unverdicted ROSE ${baseline.unverdicted} -> ${unverdicted.length}. A new register row needs a verdict, not a re-bank.`,
+    })
+  } else if (unverdicted.length < baseline.unverdicted) {
+    out.push({
+      check: 'F-verdict',
+      detail: `unverdicted FELL ${baseline.unverdicted} -> ${unverdicted.length} without being banked. Run \`node scripts/estate-align.mjs --update-baseline\`.`,
+    })
+  }
+  if ((register || []).length < baseline.registered) {
+    out.push({
+      check: 'F-verdict',
+      detail: `registered FELL ${baseline.registered} -> ${(register || []).length} (below the bank) — the register may have gone blind.`,
+    })
+  }
+  return out
+}
+
 /** The operator-notes register is a dated doc; find the newest rather than pinning a filename. */
 export function findRegister(docsDir) {
   if (!existsSync(docsDir)) return null
@@ -232,6 +365,27 @@ function main() {
   }
 
   const gaps = existsSync(GAPS_PATH) ? JSON.parse(readFileSync(GAPS_PATH, 'utf8')) : { journey_gaps: [] }
+  const verdicts = existsSync(VERDICTS_PATH) ? JSON.parse(readFileSync(VERDICTS_PATH, 'utf8')) : []
+  const cov = dodCoverage(index)
+  const dodBaseline = existsSync(DOD_BASELINE_PATH) ? JSON.parse(readFileSync(DOD_BASELINE_PATH, 'utf8')) : null
+  const verdictBaseline = existsSync(VERDICT_BASELINE_PATH) ? JSON.parse(readFileSync(VERDICT_BASELINE_PATH, 'utf8')) : null
+
+  /*
+   * --update-baseline banks BOTH baselines this script owns: the dod-status
+   * floor (C2) and the verdict ratchet (A5). Same flag name as the other two
+   * C2 scripts, so the printed remedy is one consistent instruction estate-wide.
+   */
+  if (process.argv.includes('--update-baseline')) {
+    const notEvaluated = cov.total - cov.evaluated
+    const today = new Date().toISOString().slice(0, 10)
+    writeFileSync(DOD_BASELINE_PATH, `${JSON.stringify({ not_evaluated: notEvaluated, total_rows: cov.total, banked_date: today }, null, 2)}\n`)
+    const vids = new Set(verdicts.map((v) => v.id))
+    const unverdicted = register.filter((r) => !vids.has(r.id)).length
+    writeFileSync(VERDICT_BASELINE_PATH, `${JSON.stringify({ unverdicted, registered: register.length, banked: today }, null, 2)}\n`)
+    console.log(`BANKED: docs/.dod-unevaluated-baseline.json {not_evaluated:${notEvaluated}, total_rows:${cov.total}}`)
+    console.log(`BANKED: scripts/operator-verdict-baseline.json {unverdicted:${unverdicted}, registered:${register.length}}`)
+    process.exit(0)
+  }
 
   // ---- A. code anchors resolve ----
   let anchorsChecked = 0
@@ -257,6 +411,12 @@ function main() {
 
   // ---- E. ADR-0010: a sibling class is closed class-wide, or not at all ----
   violations.push(...siblingClassViolations(index))
+
+  // ---- F. dod_status floor: banked, not decayed in Phase 1 (audit's D4, Phase 3) ----
+  violations.push(...dodFloorViolations(cov, dodBaseline))
+
+  // ---- F. every register row has a verdict; a stale unverdicted row fails by id ----
+  violations.push(...verdictViolations(register, verdicts, verdictBaseline))
 
   // ---- B/D. register <-> index, both directions ----
   const byRoute = new Map()
@@ -369,7 +529,6 @@ function main() {
     console.log(`estate-align: ${index.length} indexed feature(s), ${anchorsChecked} code anchor(s), ${register.length} operator ask(s)`)
     console.log(`  register: ${registerPath || '(none found)'}`)
     console.log(`  dod_status: ${JSON.stringify(report.dod)}`)
-    const cov = dodCoverage(index)
     console.log(`  dod coverage: ${cov.evaluated}/${cov.total} evaluated (${cov.pct}%)`)
     if (cov.evaluated === 0) {
       console.log('  NOTE: every feature is not-evaluated. The gate has never been run against this index.')
@@ -411,9 +570,9 @@ if (process.argv.includes('--self-test')) {
   t('register: ignores non-rows', parseRegister('| ID | v | a | s | app | c |\n|---|---|---|---|---|---|').length, 0)
   t('register: dedupes a repeated id', parseRegister('| D-1 | a | b | c | d | e |\n| D-1 | a | b | c | d | e |').length, 1)
   // The module-relative tolerance, asserted against a path that really exists in this repo.
-  t('anchor: repo-relative resolves', anchorResolves(ROOT, 'scripts/estate-align.mjs', 'scripts'), true)
-  t('anchor: module-relative resolves via the module field', anchorResolves(ROOT, 'src', 'crm7'), true)
-  t('anchor: a genuine miss still fails', anchorResolves(ROOT, 'src/definitely/not/here', 'crm7'), false)
+  t('anchor: repo-relative resolves', anchorResolves(REPO_ROOT, 'scripts/estate-align.mjs', 'scripts'), true)
+  t('anchor: module-relative resolves via the module field', anchorResolves(REPO_ROOT, 'src', 'crm7'), true)
+  t('anchor: a genuine miss still fails', anchorResolves(REPO_ROOT, 'src/definitely/not/here', 'crm7'), false)
   // ---- E. sibling-class closure, both directions ----
   const cls = (id, sibling_class, state) => ({ id, sibling_class, dod_status: state })
   t('sibling: an approved row with an unevaluated sibling is a violation',
@@ -453,6 +612,115 @@ if (process.argv.includes('--self-test')) {
       .zeroModules.map((z) => `${z.module}:${z.total}`), ['conduit:2'])
   t('coverage: a fully evaluated estate names no zero modules',
     dodCoverage([feat('crm7', 'approved'), feat('conduit', 'send-back')]).zeroModules.length, 0)
+
+  // ---- F-dod-floor: banked, not decayed (PI ruling 2026-09-03, audit §7, C2) ----
+  t('dod-floor: no baseline is a violation, not a silent pass',
+    dodFloorViolations({ total: 662, evaluated: 7 }, null).length > 0, true)
+  t('dod-floor: not-evaluated at the bank is clean',
+    dodFloorViolations({ total: 662, evaluated: 7 }, { not_evaluated: 655, total_rows: 662 }).length, 0)
+  t('dod-floor: not-evaluated RISING above the bank fails',
+    dodFloorViolations({ total: 662, evaluated: 5 }, { not_evaluated: 655, total_rows: 662 }).length > 0, true)
+  t('dod-floor: total_rows FALLING below the bank fails',
+    dodFloorViolations({ total: 650, evaluated: 0 }, { not_evaluated: 655, total_rows: 662 }).length > 0, true)
+  t('dod-floor: not-evaluated FALLING (improvement) needs no re-bank',
+    dodFloorViolations({ total: 662, evaluated: 20 }, { not_evaluated: 655, total_rows: 662 }).length, 0)
+
+  // ---- registeredAtFor: the range table, never git history ----
+  t('registeredAtFor: D-1 falls in the first addendum', registeredAtFor('D-1'), '2026-08-25')
+  t('registeredAtFor: D-140 falls in the third addendum', registeredAtFor('D-140'), '2026-08-28')
+  t('registeredAtFor: D-160 is its own single-row addendum', registeredAtFor('D-160'), '2026-09-03')
+  t('registeredAtFor: an id outside every range returns null, not a guess', registeredAtFor('D-9999'), null)
+
+  // ---- F-verdict: the ratchet AND the age limb (PI ruling 2026-09-03, audit §7, A5) ----
+  // The three cases the ruling names explicitly:
+  t('verdict-age: a row past 7 days with no verdict IS a violation',
+    verdictViolations([{ id: 'D-1' }], [], null, new Date('2026-09-05T00:00:00Z'))
+      .some((v) => v.check === 'F-verdict-age' && v.feature === 'D-1'), true)
+  t('verdict-age: inside 7 days is clean',
+    verdictViolations([{ id: 'D-1' }], [], null, new Date('2026-08-28T00:00:00Z'))
+      .some((v) => v.check === 'F-verdict-age'), false)
+  t('verdict-age: a verdicted row never violates at any age',
+    verdictViolations([{ id: 'D-1' }], [{ id: 'D-1' }], null, new Date('2030-01-01T00:00:00Z'))
+      .some((v) => v.check === 'F-verdict-age'), false)
+  t('verdict: unverdicted count RISING above the bank fails',
+    verdictViolations([{ id: 'D-1' }, { id: 'D-2' }], [], { unverdicted: 1, registered: 2 }, new Date('2026-08-26T00:00:00Z'))
+      .some((v) => v.check === 'F-verdict' && /ROSE/.test(v.detail)), true)
+  t('verdict: unverdicted count FALLING without a re-bank fails',
+    verdictViolations([{ id: 'D-1' }], [{ id: 'D-1' }], { unverdicted: 1, registered: 1 }, new Date('2026-08-26T00:00:00Z'))
+      .some((v) => v.check === 'F-verdict' && /FELL/.test(v.detail)), true)
+  t('verdict: matching the bank exactly is clean',
+    verdictViolations([{ id: 'D-1' }], [{ id: 'D-1' }], { unverdicted: 0, registered: 1 }, new Date('2026-08-26T00:00:00Z')).length, 0)
+  t('verdict: registered FALLING below the bank fails (the register may have gone blind)',
+    verdictViolations([{ id: 'D-1' }], [{ id: 'D-1' }], { unverdicted: 0, registered: 2 }, new Date('2026-08-26T00:00:00Z'))
+      .some((v) => v.check === 'F-verdict' && /blind/.test(v.detail)), true)
+
+  /*
+   * ENTRY-POINT cases — review 2026-09-03 (bsuite#2970), rule 6: the helper cases
+   * above call verdictViolations() with literals; none of them proves that
+   * `--strict` EXITS 1 when a register row has no verdict. These spawn this script
+   * against a temp fixture estate via ESTATE_ALIGN_ROOT (index + register +
+   * verdicts + both baselines) and assert the exit code. The committed files are
+   * never read or written; the fixture is removed afterwards.
+   */
+  const fixture = mkdtempSync(join(tmpdir(), 'c2-estate-'))
+  try {
+    const put = (rel, obj) => { mkdirSync(dirname(join(fixture, rel)), { recursive: true }); writeFileSync(join(fixture, rel), typeof obj === 'string' ? obj : `${JSON.stringify(obj, null, 1)}\n`) }
+    // D-63 sits in the 2026-08-25 range (age > 7 days today and forever after);
+    // D-160 is the 2026-09-03 single-row addendum.
+    const index = [
+      { id: 'crm7.a', module: 'crm7', capability_area: 'A', route: '/a', code_anchors: ['docs'], dod_status: 'not-evaluated' },
+      { id: 'crm7.b', module: 'crm7', capability_area: 'B', route: '/b', code_anchors: ['docs'], dod_status: { state: 'approved', evidence: 'e' } },
+    ]
+    const register = '| D-63 | "one" | ask one | /a | CRM7 | ux |\n| D-160 | "two" | ask two | /b | CRM7 | ux |\n'
+    const reset = () => {
+      put('docs/00-roadmap/bsuite-feature-index.json', index)
+      put('docs/20260825-operator-notes-register-fixture-v1.00W.md', register)
+      put('docs/00-roadmap/journey-gap-register.json', { journey_gaps: [] })
+      put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-63', verdict: 'DONE' }, { id: 'D-160', verdict: 'DONE' }])
+      put('docs/.dod-unevaluated-baseline.json', { not_evaluated: 1, total_rows: 2, banked_date: '2026-09-03' })
+      put('scripts/operator-verdict-baseline.json', { unverdicted: 0, registered: 2, banked: '2026-09-03' })
+    }
+    const run = (...args) => {
+      const r = spawnSync(process.execPath, [fileURLToPath(import.meta.url), ...args], { encoding: 'utf8', env: { ...process.env, ESTATE_ALIGN_ROOT: fixture } })
+      return { code: r.status, out: `${r.stdout}${r.stderr}` }
+    }
+    const entry = (n, r, code, re) => cases.push({ n, ok: r.code === code && re.test(r.out), a: `exit ${r.code}\n${r.out}`, e: `exit ${code} matching ${re}` })
+
+    reset()
+    entry('ENTRY: clean fixture estate, --strict → exit 0 "no invariant violations"', run('--strict'), 0, /no invariant violations/)
+
+    reset()
+    put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-63', verdict: 'DONE' }]) // D-160 loses its verdict: a RISE 0 -> 1
+    entry('ENTRY: a register row with no verdict (D-160) → F-verdict "ROSE 0 -> 1", exit 1', run('--strict'), 1, /F-verdict[\s\S]*unverdicted ROSE 0 -> 1/)
+
+    reset()
+    put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-160', verdict: 'DONE' }]) // D-63 (registered 2026-08-25) unverdicted
+    put('scripts/operator-verdict-baseline.json', { unverdicted: 1, registered: 2, banked: '2026-09-03' }) // banked, so ONLY the age limb fires
+    entry('ENTRY: D-63 registered 2026-08-25 with no verdict, count banked → F-verdict-age by id, exit 1', run('--strict'), 1, /F-verdict-age[\s\S]*D-63 registered 2026-08-25 \(\d+ days ago\)/)
+
+    reset()
+    put('docs/00-roadmap/operator-notes-verdicts.json', []) // both unverdicted, bank says 0
+    put('scripts/operator-verdict-baseline.json', { unverdicted: 2, registered: 2, banked: '2026-09-03' })
+    put('docs/00-roadmap/operator-notes-verdicts.json', [{ id: 'D-63', verdict: 'DONE' }, { id: 'D-160', verdict: 'DONE' }]) // now both verdicted: unbanked FALL 2 -> 0
+    entry('ENTRY: unverdicted FELL without a re-bank → exit 1 with the --update-baseline remedy', run('--strict'), 1, /unverdicted FELL 2 -> 0[\s\S]*--update-baseline/)
+
+    reset()
+    put('docs/.dod-unevaluated-baseline.json', { not_evaluated: 1, total_rows: 3, banked_date: '2026-09-03' })
+    entry('ENTRY: dod total_rows banked ABOVE the live index → "total_rows FELL", exit 1', run('--strict'), 1, /total_rows FELL 3 -> 2/)
+
+    reset()
+    put('docs/.dod-unevaluated-baseline.json', { not_evaluated: 0, total_rows: 2, banked_date: '2026-09-03' })
+    entry('ENTRY: not-evaluated ROSE above the bank → exit 1', run('--strict'), 1, /not-evaluated ROSE 0 -> 1/)
+
+    reset()
+    rmSync(join(fixture, 'scripts/operator-verdict-baseline.json'))
+    entry('ENTRY: no verdict baseline → violation naming the --update-baseline remedy, exit 1', run('--strict'), 1, /no baseline at scripts\/operator-verdict-baseline\.json/)
+
+    reset()
+    entry('ENTRY: non-strict report on a clean fixture → exit 0', run(), 0, /estate-align: 2 indexed feature\(s\)/)
+  } finally {
+    rmSync(fixture, { recursive: true, force: true })
+  }
 
   const bad = cases.filter((c) => !c.ok)
   for (const b of bad) console.error(`FAIL ${b.n}: expected ${JSON.stringify(b.e)}, got ${JSON.stringify(b.a)}`)

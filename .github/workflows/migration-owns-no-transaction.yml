@@ -1,0 +1,58 @@
+name: Migration owns no transaction
+
+# The applier already wraps every migration: `psql --single-transaction`
+# (supabase-migrate.yml:455). A BEGIN;/COMMIT; inside the file ends that
+# transaction early, so a later failure leaves the database half-migrated while
+# the ledger row — written after psql returns — says it never ran.
+
+on:
+  pull_request:
+    paths:
+      - 'supabase/migrations/**'
+      - 'crm7/supabase/migrations/**'
+      - 'business-suite-unified/supabase/migrations/**'
+      - 'conduit/supabase/migrations/**'
+      - 'braden/supabase/migrations/**'
+      - 'throughput/supabase/migrations/**'
+      - 'R80.4/supabase/migrations/**'
+      - 'packages/schema-builder/supabase/migrations/**'
+      # Bare gitlink paths: a pointer bump changes only the gitlink, and the
+      # nested globs above never match it — the same trap that silently stopped
+      # the migration applier (gap assessment T1-01).
+      - 'crm7'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'braden'
+      - 'throughput'
+      - 'R80.4'
+      - 'scripts/check-migration-owns-no-transaction.mjs'
+      - '.github/workflows/migration-owns-no-transaction.yml'
+  workflow_dispatch:
+
+jobs:
+  owns-no-transaction:
+    name: Migrations do not open their own transaction
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # Submodules are PRIVATE; the default token gets "Repository not found"
+          # for every one and the job dies at checkout.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # Run the checker's own tests before trusting its verdict. The cases that
+      # matter are the PL/pgSQL ones: `DO $g$ BEGIN … END $g$;` must NOT count,
+      # which is exactly what a pattern match gets wrong.
+      - name: Self-test the checker (proves it can fail)
+        run: node scripts/check-migration-owns-no-transaction.mjs --self-test
+
+      - name: No migration opens its own transaction
+        run: node scripts/check-migration-owns-no-transaction.mjs

@@ -1,0 +1,799 @@
+https://crm.crm7.app/communications
+---
+emails, cant be opened and read.
+---
+Mentioned in excess of 20 times, there is no clear way to connect stmp, or google or azure emails. Clients who sign up and use the bsuite platform should be able to connect and send emails from their stmp or azure/google email accounts.
+---
+https://crm.crm7.app/communications/compose
+---
+tuybltdrdefjblnplpqo.supabase.co/functions/v1/fairwork-enhanced:1  Failed to load resource: the server responded with a status of 503 ()
+---
+Cards - Total Messages, Sent, Delivered, Failed
+---
+Should be individual cards not linked by the same common backing card, i.e. should be able to be moved individually in edit mode.
+---
+Cards are half cut off when page opened.
+---
+These issues are persistent across the app and have been flagged to be fixed across the full app many times. Typically the fixing agent fixes that page i’ve pointed to but i have always said it is a platform wide consideration that needs addressing.
+---
+https://crm.crm7.app/payroll/award-rates
+---
+No wages are visible
+---
+Period just says “percent”
+---
+No description visible
+---
+https://crm.crm7.app/settings/schema-builder
+---
+Schema builder makes no sense. I have no idea how to use it.
+---
+Selecting “tidy” icon just puts the schema cards into a column. Super un-usefull.
+---
+“Fit” icon does nothing.
+---
+https://crm.crm7.app/dashboard
+---
+https://crm.crm7.app/dashboard
+---
+Edit page, should be able to add elements, widgets, entities, and update the form on the live page in edit mode. Currently it takes me to a new screen for page builder and only provides for the creation of a completely new page. We did recently have the ability to add new elements on page but this is now missing again.
+---
+Every option here shouldbe editable on the page i’m on unless a completely new page is wanted and intended:
+---
+https://crm.crm7.app/portal
+---
+Just re-directs to dashboard. No way to send clients, host employers or workers,apprentice and trainee’s their personal portal.
+---
+https://crm.crm7.app/leads/create
+---
+Cant create new company in leads, can only select existing. This wrecks user flow. They should be able to create a new company/client from here
+---
+https://r8.crm7.app/
+---
+Generally UI is trying to squeeze too much into a small card when there is plenty of available page space to structure this far better and be able to view far more on the screen at once.
+---
+Update Pay rate “Standard” option is unclear? Is this the junior “Has note completed year 12” option? Hierarchy, “Adult”, “Junior”, “School Based”|(Adult unchanged), “Completed year 12”, Has not completed year 12”, School Based Year 11 or school based year 12. |Industry SectorFunding OffsetsThis is poor UX. it should be available from within the calculation itself. /home/braden/Downloads/charge-calculator-mapd.jsx has a far better visual arrangement. This is a demo and doesnt account for bulk creation but the calculation is solid aside from the hard coded values
+---
+Training HoursAgain, should be in the calculation screen not a separate page. The demo jsx again does this far better. https://crm.crm7.app/charge-rates/1e4c279b-befd-4c93-bd07-a9bb9c51fe61/editWhere are the advanced configuration values coming from? Why can’t these be edited. This should be pulled from the worker/apprentice’s calculation in R8Can’t confirm selection.
+---
+https://crm.crm7.app/training/plans/create
+---
+This Progress should be a calculation based of units of competency completed vs those remaining
+---
+https://crm.crm7.app/vet/qualifications/6e25b04b-701a-401a-8dfa-5a4d79d89d70/edit
+---
+Why can’t I import units? Should be pulled from the TGA API like the qualification
+---
+https://crm.crm7.app/training/plans/1bb52a9c-8087-4836-a292-a9af0def5916 - appears to have units associated to the apprentice, so we need cross cuttings and one shot policy applied.https://suite.crm7.app/docs/enterprise-admin Should include screen shots. Same for all docs.
+---
+https://crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2/edit
+---
+Hourly rate is unclear whether its pay rate or charge rate. Should also be able to be pulled from R8 if chosen to link it. https://crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2?tab=documentsRequires document upload capabilityhttps://crm.crm7.app/training/plans/9c8d4b3a-7c40-48bf-aaf6-0fd628f63297/editLicence grace seats
+---
+Enterprise annual tenants can invite past their seat cap for 30 days. Each grace invite is recorded here so you can invoice additional seats (Xero) and mark them paid when the webhook reconciles.
+---
+Refresh
+---
+Failed to load events: Could not find the table 'public.enterprise_licence_events' in the schema cache
+---
+Seat caps are enforced in Admin → Team Members. Xero batch submit uses the existing xero-invoice-submit edge function; paid stamps will update paid_at via webhook when wired.
+---
+https://suite.crm7.app/branding
+---
+Will only save after “show preview”https://crm.crm7.app/portal/worker
+---
+This should create a link that can be placed in the job add and take candidates through to the application. Or post directly to seek and others for seek profile scraping and import of application. Client update to host bug. Leads to clients and host employer one shot policy compliance. https://crm.crm7.app/pipeline/kanbanShould be able to be pulled from conduithttps://crm.crm7.app/settings/module-visibility Says 2 hidden modules but no modules that show they are not visible. I.e. how can i enable modules without being able to select them? 30/06/2026
+---
+Failed to load resource: the server responded with a status of 404 ()ExplanationUnderstanding the problemThis error occurs because the browser requested a specific resource (such as an image, JavaScript file, CSS file, or API endpoint) from the server, but the server could not find anything at that URL. The 404 (Not Found) status code indicates that the destination address is either incorrect, the file has been moved, or it was never uploaded to the server.How to verifyCheck the Network Tab: Open Chrome DevTools, go to the Network tab, and reload the page. Look for the row highlighted in red with the status 404.Inspect the Request URL: Click on the failed request and look at the Request URL in the "Headers" sub-tab. Verify if the domain, path, and filename are exactly what you expect.Manual Test: Copy the Request URL and try to open it directly in a new browser tab. If it still shows a 404, the issue is on the server or the path construction.Suggested fixThe fix depends on why the path is incorrect. Common issues include typos, incorrect relative paths, or case-sensitivity.Case 1: Incorrect relative path
+---
+If your file structure changed, update the path.html<!-- Incorrect: looking in the wrong folder --><script src="js/app.js"></script><!-- Fixed: using the correct relative or absolute path --><script src="/scripts/app.js"></script>Use code snippets with cautionCase 2: Typo or Case-sensitivity
+---
+Ensure the filename matches exactly. Many servers (like Linux-based ones) are case-sensitive.js// Incorrect: 'UserIcon.png' exists on server, but code asks for lowercaseconst imgUrl = './assets/usericon.png';// Fixed: Match the server filename exactlyconst imgUrl = './assets/UserIcon.png';Use code snippets with cautionCase 3: Missing file in build output
+---
+If you are using a build tool (like Webpack, Vite, or React), ensure the asset is actually being copied to the dist or build folder. You may need to import the asset directly in your script so the bundler processes it:jsimport logo from './assets/logo.svg'; // Ensures the bundler includes the fileUse code snippets with cautionSummary404 means the server found the location you specified, but the specific file or resource does not exist there.Check the Network tab to see the exact URL being requested.Verify file paths, typos, and case-sensitivity.Ensure the resource is actually present in your server's public directory or build folder.Data used to understand this messageConsole messageReload the page to capture
+---
+I need to receive an email and in app notice via the notices system to alert me to grace invites. Grace users should have a date to notify when grace is ending. New invoice auto generated from my xero. Place to nominate price of additional seets per subscription type. Grace sign up should allow for subscription type selection. Suite.crm7.app - jodie AI logo image missing. Should be same as crm7.
+---
+If i select CRM7 or any other app from inside bsuite. I am sent to the landing off that app and am not signed in. i should stay signed in when switching between apps. /auth-supabasehttps://crm.crm7.app/dashboard Card resize regressions. Cant resize individual cards anymore.
+---
+Columns to move cards into do not respect the columns slider.
+---
+https://crm.crm7.app/training-providers/
+---
+Info available on TGA i.e. all empty cells in the image is available on TGA but not populated. Qualification Scope is missing. I.e. qualifications delivered by this RTO. All TGA training companies should be available via TGA api and imported on user action i.e. decision to import. Not all available from the start. Training Providers imported should be also available as an Organisaiton and more contacts and details available to be added rather than what is just auto populated from TGA. TGA should also track training costs from apprentices registered with them plus resource costs, equipment costs etc. Last entry per qualification type most authoritative and available to import into R8 when doing rate calculation for host employer.
+---
+31/07/2026d.crm.crm7.app/financial   and crm.crm7.app/financialAdvice from chrome browser debug agent. Doesnt have bsuite color and brand packaging context so consider that too. ## UI Refinement: Statcard Background and Borders
+---
+**Context**
+---
+Analysis of statcard elements (`.flex.flex-col.gap-4.rounded-3xl.p-6.md\:p-7`) to resolve pure white background rendering and misaligned/blurry borders.
+---
+**Diagnostics**
+---
+The investigation revealed that the "off-white" color failed due to maximum lightness settings in the LAB color space, and the "border" was implemented as a shadow ring rather than a standard border.
+---
+| Property | Computed Value | Technical Observation |
+---
+| :--- | :--- | :--- |
+---
+| `background-color` | `lab(100 0 0 / 0.96)` | `100` lightness renders as pure white regardless of opacity. |
+---
+| `border-width` | `0px` | No physical border exists; the visual edge is a `box-shadow`. |
+---
+| `box-shadow` | `... 0px 0px 0px 1px lab(...)` | A 1px shadow ring is used, which can appear blurry due to sub-pixel rendering. |
+---
+| Parent Background | `lab(95.3104 -0.479668 -4.87884)` | The surrounding context is off-white, making the `lab(100)` card appear brighter. |
+---
+**Actionable Findings**
+---
+*   **Background Correction:** The use of `lab(100 ...)` forces pure white. Lowering the lightness value to approximately `98` is required for a true off-white appearance.
+---
+*   **Edge Definition:** The misalignment is caused by the browser's interpretation of a `1px` spread `box-shadow` on a `0px` border-width container. Switching to a physical border or a higher-contrast shadow ring provides better definition.
+---
+**Suggested Code Fixes**
+---
+The following changes were identified as potential fixes to achieve the design requirements:
+---
+`````css
+---
+/* Option A: Global Variable Adjustment */
+---
+:root {
+---
+/* Reduce lightness from 100 to ~98 for off-white */
+---
+--card-bg: lab(98.5 -0.5 -1 / 0.96);
+---
+/* Increase contrast on the shadow ring for sharper edges */
+---
+--shadow-shell: 0 0 0 1px lab(90 -1 -4), 0 4px 12px lab(0 0 0 / 0.05);
+---
+}
+---
+/* Option B: Specific Component Fix */
+---
+.rounded-3xl.p-6 {
+---
+background-color: #f9fafb;
+---
+border: 1px solid var(--border-color);
+---
+box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+---
+}
+---
+`````
+---
+*Note: The code fixes and findings above were identified on a live page in DevTools. When applying them to your codebase, please adapt them to your project's specific technical stack (e.g., Tailwind CSS classes, CSS modules, framework components) rather than applying them as literal CSS overrides.*
+---
+https://d.crm.crm7.app/funding-sources/list and https://crm.crm7.app/funding-sources/list
+---
+We have rams set up for use with ADMS - how to client organisations use our connection to then claim for their apprentices? Needs research into ADMS federal gov data specs. And the existing templates cant be selected/applied
+---
+How is this funding continuously validated and updated as funding priorities and sources evolve overtime?
+---
+https://d.crm.crm7.app/funding-sources/new and https://crm.crm7.app/funding-sources/new
+---
+Dnd kit issue, all top level cards attached to the same backing card which means they are all dnd together instead of individually like they should be. Dashboard shows how cards should be setup, noting the resize issue still to be resolved for all cards.
+---
+https://d.crm.crm7.app/financial/reports/newhttps://crm.crm7.app/reports/custom/create
+---
+Financial reports and Analytics and Reports do not present as the required airtable style reporting - mapped out, planned, and directed to fix many times. Further when logging in as a client organisation i.e. FutureBuild the custom report builder shows the option of platform wide reporting which should be gated to only the enterprise and sub orgs. Super admins may want to set cyborg permissions so they can only report on their sub org. Noone but a developer account should have platform level reporting. And the airtable style report builder is nowhere visible. There is plenty of docs outlining and planning this. Airtable clone repo’s for reference: - https://github.com/topics/airtable-alternative
+---
+https://github.com/Bipin579/Airtable.com-clone-
+---
+https://github.com/fractaledmind/hottable
+---
+https://github.com/ramsarraf11/Airtable-Clone
+---
+https://github.com/nocodb/nocodb
+---
+For consideration, general from gemini - How to have several repos that present as a single app. e.g. if i have a crm, and a airtable style report project, if someone has a crm subscription then it jsut presents the crm, if i have crm and reports subscription the crm has an additional reports navigation link and i access the reports from what still feels like i'm in the crm environment. supabase backend, vite/react frontend.
+---
+Micro-frontends or a monorepo with federated building allow separate repositories to blend seamlessly into a single user interface.
+---
+To achieve this using React, Vite, and Supabase, you must decouple your hosting but unify your authentication and shell architecture.
+---
+Choose an Architectural Pattern
+---
+You can merge separate repositories into one app using two primary methods: [1]
+---
+Vite Module Federation: Compiles repositories dynamically at runtime.
+---
+Multi-Zone Routing: Switches repositories at the reverse-proxy level.
+---
+Feature
+---
+Vite Module Federation
+---
+Multi-Zone Routing
+---
+Integration Level
+---
+Deep (Shared state/context)
+---
+Shallow (Page-level switches)
+---
+User Experience
+---
+Instant page loads
+---
+Brief browser reload on zone switch
+---
+Deployment Risk
+---
+High (Runtime dependency sync)
+---
+Low (Isolated repository builds)
+---
+Implement Vite Module Federation (Recommended)
+---
+Module Federation allows a "Shell" repository to dynamically load the "CRM" and "Reports" repositories as remote modules over HTTPS.
+---
+1. Configure the Remote Apps (CRM & Reports)
+---
+In your individual CRM and Reports repositories, expose the main application components using the @originjs/vite-plugin-federation package.
+---
+javascript
+---
+// crm/vite.config.js
+---
+import federation from '@originjs/vite-plugin-federation'
+---
+export default defineConfig({
+---
+plugins: [
+---
+federation({
+---
+name: 'crm_app',
+---
+filename: 'remoteEntry.js',
+---
+exposes: {
+---
+'./CrmModule': './src/App.jsx',
+---
+},
+---
+shared: ['react', 'react-dom', '@supabase/supabase-js'],
+---
+}),
+---
+],
+---
+})
+---
+Use code with caution.
+---
+2. Configure the Host App (The Shell)
+---
+The Shell repository manages the main layout, sidebar navigation, global styles, and authentication state.
+---
+javascript
+---
+// shell/vite.config.js
+---
+import federation from '@originjs/vite-plugin-federation'
+---
+export default defineConfig({
+---
+plugins: [
+---
+federation({
+---
+name: 'host_app',
+---
+remotes: {
+---
+crm: 'https://production.live',
+---
+reports: 'https://production.live',
+---
+},
+---
+shared: ['react', 'react-dom', '@supabase/supabase-js'],
+---
+}),
+---
+],
+---
+})
+---
+Use code with caution.
+---
+Handle Entitlements and Conditional UI
+---
+To make the apps feel unified, the Shell must guard access based on Supabase metadata.
+---
+1. Store Subscriptions in Supabase
+---
+Save user subscription permissions inside your public profiles table or directly inside the app_metadata fields of Supabase Auth for instant access.
+---
+2. Build Conditional Shell Routing
+---
+Use React lazy loading and dynamic routing within the Shell to fetch modules only when a valid subscription exists.
+---
+jsx
+---
+import React, { lazy, Suspense } from 'react';
+---
+import { Routes, Route, Link } from 'react-router-dom';
+---
+// Lazy load the federated modules from separate repos
+---
+const CrmModule = lazy(() => import('crm/CrmModule'));
+---
+const ReportsModule = lazy(() => import('reports/ReportsModule'));
+---
+export function AppShell({ userSubscriptions }) {
+---
+const hasCrm = userSubscriptions.includes('crm');
+---
+const hasReports = userSubscriptions.includes('reports');
+---
+return (
+---
+<div className="app-layout">
+---
+<nav className="sidebar">
+---
+{hasCrm && <Link to="/crm">CRM Home</Link>}
+---
+{hasCrm && hasReports && <Link to="/reports">Advanced Reports</Link>}
+---
+</nav>
+---
+<main className="content-area">
+---
+<Suspense fallback={<div>Loading Module...</div>}>
+---
+<Routes>
+---
+{hasCrm && <Route path="/crm/*" element={<CrmModule />} />}
+---
+{hasReports && <Route path="/reports/*" element={<ReportsModule />} />}
+---
+</Routes>
+---
+</Suspense>
+---
+</main>
+---
+</div>
+---
+);
+---
+}
+---
+Use code with caution.
+---
+Sync Authentication State
+---
+Because all remote modules share the @supabase/supabase-js dependency via Module Federation, they can hook into the same memory space.
+---
+Initialize Once: Instantiate the Supabase client inside the Shell app.
+---
+Pass via Context: Pass the supabase instance down to the remote modules using standard React Context.
+---
+Share Storage: Since all components execute on the Shell's domain, they automatically share the same localStorage tokens.
+---
+Row-Level Security (RLS): Enforce subscription validation on the backend database layers to block malicious API requests.
+---
+Which of these two deployment styles fits your current infrastructure better: hosting modules on separate subdomains or bundling them onto a single core domain?
+---
+1 site
+---
+How to Share Components Between Front-End Applications20 July 2022 — Options to share components with several applications. The most direct way is quite simple. We will create two separate repositori...JavaScript in Plain English
+---
+does your advice conform to supabase' oauth server 2.1 since that is what i am setup with.
+---
+Yes, this micro-frontend advice completely conforms to Supabase's OAuth 2.1 Server capabilities. However, introducing an OAuth 2.1 layer into your system shifts the exact responsibility of the Shell and Remote Apps depending on how tightly you want to couple your repositories. [1, 2]
+---
+When using Supabase as an OAuth 2.1 Authorization Server, your CRM and Reports repositories act as first-party OAuth Clients. This dictates exactly how your code should be organized. [1, 2, 3]
+---
+Scenario A: Vite Module Federation (Deep Integration)
+---
+If you stick with Vite Module Federation to blend everything into a single user interface on a single domain, your OAuth flow happens only once at the Shell level. [1]
+---
+How it aligns: The Shell app is registered as a single OAuth 2.1 client in your Supabase Dashboard.
+---
+Token handling: The Shell executes the Authorization Code Flow with PKCE. It receives the standard Supabase Access and Refresh tokens.
+---
+The Code Connection: Because Module Federation shares the memory space and context of @supabase/supabase-js, the Shell passes its fully authenticated Supabase client instance down to the CRM and Reports components as standard React props or Context. The remote modules do not need to perform their own separate OAuth handshakes. They inherit the Shell's user context seamlessly. [, 2, 3, 4, 5]
+---
+Scenario B: Multi-Zone Routing / Subdomains (Isolated Isolation)
+---
+If you decide to isolate the repositories by deploying them on separate origins (e.g., ://myapp.com and ://myapp.com), your Supabase OAuth 2.1 setup comes directly into play for Single Sign-On (SSO). [1, 2]
+---
+1. Register Each App as a Client [1]
+---
+You must register the CRM and Reports apps as individual clients in your Supabase Dashboard > Authentication > OAuth Server panel. Each client receives its own client_id. [1, 2]
+---
+2. Leverage Asymmetric JWT Verification
+---
+As recommended by the Supabase OAuth 2.1 specification, ensure your Supabase instance uses asymmetric signing (RS256 or ES256). [1]
+---
+Your isolated frontend apps (CRM, Reports) use standard PKCE auth flows.
+---
+When a user clicks "Advanced Reports," they are redirected to ://myapp.com. The Reports app checks if a token exists. If not, it kicks off a background OAuth challenge against your Supabase Auth endpoint. Because the user is already logged into Supabase in that browser session, they are redirected right back to the reports page instantly without re-typing their password. [1, 2, 3, 5]
+---
+RLS and Scopes for Entitlements
+---
+The most powerful alignment with Supabase's OAuth 2.1 server is how it handles access restrictions natively via Scopes and Row-Level Security (RLS). [, 2, 3, 4]
+---
+Instead of relying only on frontend UI toggles to hide the navigation links, you enforce subscription rules directly via database policies. Supabase OAuth 2.1 tokens embed standard claims like user_id, role, and client_id. []
+---
+sql
+---
+-- Example RLS Policy enforcing access controls based on OAuth authentication
+---
+CREATE POLICY "Allow premium report access"
+---
+ON public.reports_data
+---
+FOR SELECT
+---
+USING (
+---
+-- 1. Ensure user is authenticated via Supabase Auth
+---
+auth.uid() = user_id
+---
+AND
+---
+-- 2. Validate that the user profile has a valid subscription flag
+---
+EXISTS (
+---
+SELECT 1 FROM public.profiles
+---
+WHERE profiles.id = auth.uid()
+---
+AND profiles.subscriptions @> ARRAY['reports']::text[]
+---
+)
+---
+);
+---
+Use code with caution.
+---
+Summary of Best Practices
+---
+For Runtime Blending (Federation): Let the App Shell handle the OAuth 2.1 handshake with Supabase. Pass that single authenticated state down to your remote micro-repositories through React context. [1]
+---
+For Separate Deployments (Multi-Zone): Register each repository domain as an allowed redirect URI under its respective OAuth Client configuration in Supabase. [1, 2]
+---
+Are you planning to host these repository applications together on the same domain/subdomain, or will they be living on entirely separate domain roots?
+---
+All apps:
+---
+Pure white text on dark screen not matching the styling per d2c theme. Dark theme header text should reflect the gradient shown by the only crm7 text in the header with a gradient. Glow should be the glow of the accent colour. Navigation should match the gradient of the underline displayed under the tenant switchers. Card and page headers should be styled per the d2c theme, not pure white or black.No light theme cards to be pure white. Auth enpoints: OAuth Server
+---
+Configure your project to act as an identity provider for third-party applications
+---
+Docs
+---
+Enable the Supabase OAuth Server
+---
+Enable OAuth server functionality for your project to create and manage OAuth applications.
+---
+Site URL
+---
+The base URL of your application, configured in Auth URL Configuration settings.
+---
+Authorization Path
+---
+Path where you'll implement the OAuth authorization UI (consent screens).
+---
+Make sure this path is implemented in your application.
+---
+Preview Authorization URL: https://suite.crm7.app/oauth/consent
+---
+Allow Dynamic OAuth Apps
+---
+Enable dynamic OAuth app registration. Apps can be registered programmatically via APIs. Learn more
+---
+OAuth Endpoints
+---
+Share these endpoints with third-party applications that need to integrate with your OAuth 2.1 server.
+---
+Authorization endpoint
+---
+https://tuybltdrdefjblnplpqo.supabase.co/auth/v1/oauth/authorize
+---
+Token endpoint
+---
+https://tuybltdrdefjblnplpqo.supabase.co/auth/v1/oauth/token
+---
+JWKS endpoint
+---
+https://tuybltdrdefjblnplpqo.supabase.co/auth/v1/.well-known/jwks.json
+---
+OIDC discovery
+---
+https://tuybltdrdefjblnplpqo.supabase.co/auth/v1/.well-known/openid-configurationR8
+---
+No option in the UI for workers that are not apprentices or trainee. How do i quite for a casual or ABN, or full or parttime skilled worker i.e. Someone who already has completed their qualification. Applicable for labour hire workers.
+---
+https://d.conduit.crm7.app/portal/field-officer
+---
+Host portal, worker portal/employee portal/apprentice portal/traineeportal ~ same thingNavigation f-cking sucks, UX sucks, the portals basically suck. Take on the persona of each external user and think of what they would need to achieve in this portal. e.g. workers/apprentices etc, upload employment documentation, financial details if employed, timesheets, apply for roles, browse roles, /brainstorm all of this for all roles. I’m not sure what the filed officer portal archives. They would have gto access like other gto employees. Honestly - what is this shit: https://r8.crm7.app/This is awefulhttps://crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2/editWhy are supervisors from other hosts available to select? Why is pay rate there by itself? No charge no nothing? No allowances no, charge rates, no linked quote and agreed charge. https://crm.crm7.app/people/5465b63c-3340-4c9c-8828-25390a944e69Borders on people card are still all messed up.
+---
+Cards like training contracts are all on common backing cards so dnd kit is useless. Training plans card has /u visible and clicking doesnt take me to training plans. https://crm.crm7.app/engagements/createAvetmiss funding makes no sense. GTO needs to be able to record funding available to employers not for training. https://crm.crm7.app/funding-sources/fa5eaa41-b395-4747-aba9-2c3a6a4804eb
+---
+How does the system “create a claim” when the claim is on CTF’s portal? Same for other funding types. The only one with direct connection is federal ones via ADMS connection. How do you put in the funding amount, the payment timeframes and dates. And how it should be applied? I.e. passthrough to the host? Offset the rates? Pass through to apprentice, top up wages? Add custom priority list categories? Generally, I’m having to go in an out of pages and re-orient myself. The whole ux is terrible. Go through the codehouse doc and see how they layout their workforce one system. https://crm.crm7.app/financial/reportsCards still messed up. AND this look nothing like the repeatedly directed to fix airtable style reports we researched and have specs in docs. You have got to be kidding me.https://d.suite.crm7.app/admin/permissions
+---
+Default permissions should show the marked check box. Permissions should not show platform admin. This page is visible to enterprises tenants and users. None of them should be able to edit my global and universal developer permissions. https://d.suite.crm7.app/admin/brandingPlatform branding should not be visible to anyone but developers. So lives in Developer portal which already holds this capability. Enterprises can control their parent and sub organisation branding, and organisations their branding for white labeling. But no one other than developers should have platform level visibility. Worth a sweep of this throughout all features everywhere. https://d.suite.crm7.app/admin/platform-kit
+---
+Platform kit, move to developer portal. Same reasoning as platform kit above.
+---
+Here's the whole thing.
+---
+The rule. A migration on 31 July added this to placements:
+---
+CHECK (charge_rate IS NULL
+---
+OR (award_rate_resolution_status IS NOT NULL
+---
+AND award_rate_resolution_status <> 'unresolved'))
+---
+In plain terms: if a placement carries a charge rate, it must record how that rate was resolved. That's a good rule — it stops you billing a rate nobody can justify against the award.
+---
+Two things went wrong, and you need both to explain it.
+---
+First, it was added NOT VALID. The author believed that grandfathered the existing rows — the migration header literally says the violators are "tolerated". It doesn't. NOT VALID only skips the one-time scan when the constraint is created. Every UPDATE afterwards is checked. So those rows aren't tolerated, they're frozen — and not just against rate edits. Any change to any column fails. I proved it by updating nothing but updated_at on a real row: 23514.
+---
+Second — and this is the part that makes it unfixable-by-itself — nothing in the application has ever written award_rate_resolution_status. The field existed only in two TypeScript type files. So the guard demanded a marker no code path could supply. A rule that can only ever fail.
+---
+Who's caught:
+---
+TenantFrozenStatusRates
+---
+bsuite Platform12unresolved32.00–45.00
+---
+FutureBuild8NULL — never attempted35.00–36.50
+---
+Braden Group1NULL$57.30
+---
+None has an award_rate_id. The FutureBuild eight are the live problem: that's every placement Caris has. She opens one, changes anything, saves — and gets an opaque constraint error naming award rates she never touched. That's her "placements not found".
+---
+What I fixed today, and what I didn't. In the charge-calc work I added a manual value to the vocabulary and made the create flow write it — resolved when the wage came from a real award-rate row, manual when a person typed it. So new placements are fine. I deliberately left the 21 existing rows alone, because setting a status on a historical rate asserts something about where that rate came from, and inventing that is exactly what the field exists to prevent.
+---
+But I now have the evidence, which I didn't when I first flagged this. The 8 FutureBuild snapshots say it themselves: source = 'custom', no calc engine version, no wage, no overhead, no margin, and calc_inputs reading {"_reconstructed": true, "_note": "only charge_rate_hourly was available"}. Those rates were typed by a human. So marking them manual isn't a guess — it records what actually happened, and it unfreezes Caris immediately.
+---
+My recommendation: set the 9 NULL-status rows (8 FutureBuild + 1 Braden Group) to manual. It's true, it's the honest weaker claim rather than resolved, and it's reversible. The 12 unresolved rows in bsuite Platform are a different case — unresolved means resolution ran and failed, and they're demo seed in your own tenant, so I'd leave them frozen rather than overwrite a real signal.
+---
+Say the word and I'll do the nine, dry-run first. What I won't do without you is touch the 12, or drop the constraint.https://crm.crm7.app/documents/collaborative/14510e79-1174-43a6-b6af-5de990fcbc5a
+---
+Users shouldnt have to know coding even markdown is too much How can I upload an existing word or similar document and edit it and insert a merge field etc? Requires deep dive into existing docs and full UX consideration for users. https://suite.crm7.app/developer/tablesShould be like the https://r8.crm7.app/- Jodie AI Missing- apprentice % of Standard Rate card always displays $29.54 no matter the award loaded. The plumbing award mentions building and construction award. The original R80.4 had this sorted before it moved into the sub modules. - Wages (Per Apprenticeship year) card always displays Yr 1 - 14.725
+---
+Yr 2 - 17.67
+---
+Yr 3 − 20.615
+---
+Yr 4 - $26.505
+---
+No matter what award is selected. Occupation and Qualification should be able to be set in the UI. Everything that impacts the calculation should be in 1 card and super clear. At present it is very unclear that setting occupation / trade is what sets trades like bricklaying and carpentry and others apart. Unacceptable and it was done before the merge into the sub modules. “⚠ These rows and their clause references are MA000020’s, shown as a starting point because MA000036 has no penalty table wired here yet. Multipliers and minimum engagements differ between awards — MA000025 alone differs from MA000020 on the casual minimum engagement, the casual penalty convention and four of five multistorey bands. Import MA000036’s own table, or set each row against its award before quoting.”Base Rate and Ordinary Rate need to be much clearer. Oncosts: onfirm before relying on relief
+---
+The exemption runs for the duration of a registered contract.
+---
+WA expressly withdraws the exemption while a contract is SUSPENDED — those wages must be declared as taxable. Easy to miss on a stood-down apprentice.
+---
+“Unsuspended” isnt a word. You mean “Active” or Suspended. All say 100% on apprentice sare, yet this can be pulled from the award api, and is referenced in the R80.4/awards/*% of each allowance, per year — defaults follow MA000036’s wage percentagesReset to award
+---
+Yr 1
+---
+−
+---
++
+---
+Yr 2
+---
+−
+---
++
+---
+Yr 3
+---
+−
+---
++
+---
+Yr 4
+---
+−
+---
++
+---
+All award allowances are always building and construction. This WAS working!. Funding milestones should not be pre-populated by default. Just text that says milestone name. Yrs overflows over buttonIt is unclear how to zero out payroll tax for exempt apprenticeships. |Unacceptable: No trade selector for MA000036 — the trade list, the allowance bands and the clauses behind them are MA000020’s, and they do not carry to another award. If MA000036 keys an allowance to the trade, add it there and it will appear here.This WAS already working. Should display base rate, ordinary hours, and that contributing to the ordinary hour. E.g. building and construction is industry allowance and tool allowance. Should display in header occupation and qualification. No way to export quote for quoting. - must be. Much of what was working before beeingR8.4 was working and is not not working. Unacceptable. This is incorrect. “Shift loadings differ by sector: general building pays 1.25 (morning / early afternoon) and 1.5; civil construction pays 1.15 for a 5-in-a-row afternoon or night shift. Selecting the wrong sector misprices every shift hour. There is no separate commercial construction sector in this award — general building covers it, and cl.22.1(a) groups general building with metal and engineering construction on the same $67.15 industry allowance. PACT offers the same two options and no more.” - shifts are the same as residential, but the industry allowances is the same as civil. https://d.crm.crm7.app/charge-rates/import-r8This is horrible UX, its forcing the USER to code again, and r8 doesnt export like this. It should be able to pull in from R8. also its R8 in the UI the repo is r80.4 since its version 0.4 but it should only ever be displayed as R8. Think what rates apply to like hosts and apprentices trainees and workers. Should be displayed in full on their placement. And pure white displayed which is forbidden by D2C branding. Why is database ID displaying in full as their ID? Once Placed an Employee ID created. Training Contract ID should also be available as a primary identifier once set. Same with USI. 13/08/2026
+---
+https://d.r8.crm7.app/Still no option for commercial construction. Commercial construction has same hours and penalty conditions as residential but same industry allowance as civil. There is only an option for 3 or 4 year apprenticeships. What if we’re pricing a traineeship or labour hire worker? Selecting an award in the “award, trade & qualification” card does not pre-populate the Award in the “Fairwork MAPD” award and vice versa. Fairwork MAPD card still has Proxy URL, proxy token, and subscription key visible in ui. Standard rate
+---
+Apprentice % of Standard Rate, Standard rate and Source do not update with award selection and should.
+---
+Competency based progression. Remove. I did not ok this. An actually have said many times that this is not the job of the calculator. Calculation is point in time. How much is a 1st, 2nd, 3rd, 4th year apprentice now? You cant accurately forecast future award wage increases because that is set by fairwork. You can forecast statutoriy increases that are published like super rate. CRM7 in the placement record does need to keep change of year  records with reminders and to send out change of year notices to apprentice/trainee and host employer, and notices for the same when a new wage anniversary is reached. E.g. worker rate requote when fairwork releases a new wage for a new FY. so records for competency based wage progressions should be kept in the people and host record and reminders and notices setup for anniversary dates but the calculator is not the place to include anything like this. Allowances shouldnt all be visible. Clearly marked which are added by default to base wage to calculate the ordinary hours. And other allowances selected from a drop down of available allowances, add new calculation for each new calculation added. E.g. meal allowances are common so “add allowance” select meal allowance, calculation added. Check box, “add new allowance” same again. Only when added does the new allowance show on the UI and the card expands accordingly similar to the funding but funding is free text whereas allowances are pulled from the api or EBA or custom. 14/08/2026Suite.crm7.appEach Card e.g. CRM7 Professional, Conduit ATS… should be individually draggable via DnD-kit they are all fixed to a common card behind them. Every page on every app should have this working correctly. This is a repeated issue and has been raised innumerable times. Usually one page gets fixed but not all even when all are a requirement of the task. Each Card e.g. CRM7 Professional, Conduit ATS… should be appropriately compliant with the D2C theme. i.e. heading text of the card e.g. CRM& Professional should display the text in the gradient. Every page in the developer portal has unstyled/themed buttons, and is generally not compliant to the D2C theme. https://suite.crm7.app/developer/tenants, https://suite.crm7.app/developer/website, https://suite.crm7.app/developer/tenant, https://suite.crm7.app/developer/*,
+---
+Features
+---
+Database
+---
+Logs
+---
+Functions
+---
+Feature Builder
+---
+Access
+---
+Notices
+---
+Routing
+---
+Embed
+---
+Rate Limits
+---
+Platform
+---
+Nav
+---
+Licences
+---
+Branding
+---
+Platform Kit
+---
+Theme consistency and completeness on every app is a concern, with pure white and black, missing gradients, text cut off by borders, missing glows and shadows per each apps accent colour with all else to be as consistent as possible. Really only conduit may have unique requirements given that it is nextjs rather than react. But even so, it should look the same. 18/08/2026
+---
+Still doesnt look like airtable. Should look pretty much like a spreadsheet with more power and capability and be able to be expanded to get a full screen view. These too are poor and should be airtable style.https://crm.crm7.app/settings/datahttps://crm.crm7.app/admin/data Cant select all entities. E.g. selecting person shows the person_id from supabase but not the persons name and there is no way to select the persons name in the available fields when “add field”19/08/2026
+---
+Dates should default to Australian dates always and respect local setting in BSU i.e. today’s date is 19/08/2026 not 08/19/2026
+---
+Correct: 19/08/2026
+---
+Incorrect because Americans are wrong: 08/19/2026
+---
+Small/medium/big > medium/small/big
+---
+Award selected in “Award, Trade & Qualification” when selected must populate the Fair Work MAPD card otherwise users are selecting the award twice. Or pick one spot and just use that, higher on the page the better.
+---
+Text displaying “qualification not captured” must go. And qualification was required to be captured since people will want to use it on quotes. Work in a past sessions had detailed instructions and discussion on this or check memory mcp.
+---
+Proxy connection settings proxy set “Requests go to this site’s own /api/fwc. The Fair Work subscription key is held by the server, never by this page, and the server checks your sign-in before it will use it.” must go. This is left over from the demo single file R80.4 mvp now we use proper supbase edge function secrets.
+---
+Each card is being filled up with explanatory text. E.g. the shiftwork and industry allowance clauses etc. all of this stuff should be either minimizable or shifted to a right collapsable panel and exportable as an appendix on the exportable quote and eSigning of quotes.
+---
+Left panel should be collapsible, use agy or shadcn mcp to help.
+---
+Left panel should save quat thread history and be able to be grouped and saved as templates by the user.
+---
+There date duplication throughout “rates at” appears several times.
+---
+Searching for an award in Farwork MAPD card throws this “
+---
+Unexpected token '<', "<!doctype "... is not valid JSON”
+---
+Payroll tax should be able to be zero’d
+---
+Crosscut every calculation and be very weary of hardcoved values.
+---
+Oncosts card says WA on all wages (not just super base) confusing. Mixes terminology. Super is paid on ordinary wage based on qualifying super. So the use of base looks like it is only applying it to base wage.
+---
+Apprentice % of Standard rate - “Percentages and the standard rate are not auto-updated from MAPD — re-check them against the award each financial year.” must update for awards that do pre-calculate and this warning goes for those awards. We still should pre-populate based on the percentage for their employment type. We have the percentages from the award text to use for 3 and 4 year and year 12 no year 12 and adult calcs. We just need to ensure Jodie AI can scrape the actual award and update in future. Always with user to check each year to be sure. Same for penalty and overtime rates. But i’m 90% sure they can come from the API.
+---
+Export to pdf, push to crm7 placement, and send for eSigning via crm7’s email cality all required.
+---
+20/08/2026
+---
+https://crm.crm7.app/vet/qualifications/*No units of competency available for the qualifications. They need to be linked together, along with training providers who offer them (only those used by the gto once placed there. https://crm.crm7.app/hosts/vacancies/new
+---
+Can this be posted to conduit as a job?
+---
+Can this be linked to a host. Some might be catch all for common roles and some might be host specific.
+---
+Heading text no gradient and almost cut off by border
+---
+Cant easily pull in a rate from R8 or manually put in charges and wages/allowances, unclear how to even do this: https://crm.crm7.app/placements/aaaaaaaa-0000-4000-8000-000000000003
+---
+This is confusing and misleading. Pay rate usually would be read as ordinary wage. Charge rate is what is billed on billable hours. Additional details (read-only — managed elsewhere)
+---
+Award code: -
+---
+Set from the Award Rate / FWC classification selector when the placement is created; not yet editable from this form.
+---
+OTS rule: No OTS rule assigned
+---
+Assign or change from the placement detail page.
+---
+Charge rate (hourly): -
+---
+Not the pay rate above — this is the amount billed to the host employer, sourced only from an approved charge-rate quote once one is linked.
+---
+Margin: -
+---
+Derived alongside the charge rate; not independently editable.
+---
+Last updated: 06 July 2026
+---
+21/08/2026
+---
+R8.crm7.app
+---
+“Offline — no Fair Work API call. This list is the 21 trade awards this tool curates; the Fair Work MAPD card's own search reaches any of the 141 awards FWC publishes and can pull live pay rates once one is picked, here or there — both set the same award.” - why does it say “offline” if the api to fairwork is connected? And what do users do if they want to enter an eba, custom or award off the 21 list?
+---
+I know the card is dragable but it should default to the top of the page since it effect the whole calculator. This principle should be applied to all cards. Dependee’s should sit lower than that which they depend on.
+---
+22/08/2026Header - Logo in header should be the logo set in the platform branding or the logo set in white label section per the relevant tenant. Permissions check boxes should be pre-selected for all organisations and saveable. Defaulting to all unchecked leaves admins and developers what is already set in the system for these user types. If updated, save and persist. Ensure permissions structure logic allows for this. And also option to reset to defaults by org admins and developers and delegees of this permission. This is something I have insisted on many times. Still that cards are looking shit in relation to the borders. Data and Reporting:Reports generally are a mess. And duplicative. https://d.crm.crm7.app/reports/custom/createhttps://d.crm.crm7.app/reports
+---
+https://d.crm.crm7.app/reports/scheduleshttps://d.crm.crm7.app/settings/data
+---
+https://d.crm.crm7.app/admin/datahttps://suite.crm7.app/developer/databasehttps://d.suite.crm7.app/developer/database?surface=tables - this is probably the best functioning of all 0 except again bsuite theme and styling is incomplete. Do we need something like storybook? Needs to be consolidated. Or we create a separate app and bring in https://github.com/GaryOcean428/atmosphere. Its backend isnt fully setup and it is nuxt, but what it can do is exactly what i have been asking for and documented this whole time. And all o’ve got is tise mess of half arsed half complete not fully working attempts that are now confusing and very very duplicative. It is very much a violation of the standing rule of high and intuitive UX. 24/08/2026Analyse interoperability of these - https://crm.crm7.app/settings/role-overrides
+---
+https://suite.crm7.app/admin/permissions
+---
+Further as stated above. Permissions in admin/permissions should be pre populated and display checked boxes for default permissions out of the gate. At present nothing is ticked by default and its confusing.
+---
+25/08/2026
+---
+Back to placement link should be a button. https://d.crm.crm7.app/placements/9b8ef267-595f-41f4-b1fc-42cebf7164c2 placement detail page should also be a button. This is specific example but this should be a button for all.
+---
+Margin is profit pretty much. Its not charge less, wage. Should reflect the calc done in R8. https://d.crm.crm7.app/engagements/createHardcoded funding. Violation of requirements. Funding in the engagement should reflect how R8 does funding.  R8 broad application for common groups for quoting. During engagement we learn the person being placed’s particulars and can more closely allocate all funding that individual attracts. We will know all the variables to that individual that may impact the funding available to be applied. Engagements should be renamed to training engagements. Person record should have a list of all placements and engagements we have records for. https://d.crm.crm7.app/training-providers
+---
+This should be presented in a filterable list/table preferably airtable style list similar to reports. Anything that holds lots of data and rows like qualifications units of competencies should be presented this way and filterable by attribute. E.g. to our real client futurebuild they will not care about a training provider in remote QLD since they are Perth metro in WA. so they should be able to mark training providers they want visible and hidden. Search all, search Active. Active means Active for us as in the org marking them active. It doesn't mean Active generally. That would be classed as registered and deregistered.
+---
+RTO 22613 says (no name) but it has a record: https://training.gov.au/organisation/details/22613/summary - check all like concerns.
+---
+Why is Michael Chen from ADCO Constructions an available Signatory for the Selected “Example Constructions Pty Ltd” Michael Chen is real futurebuild Site Supervisor working for AdCO Constructions. So Michael Chen should be associated with ADCO and the FutureBuild Tenant. We did import some futurebuild hosts and clients etc into the bsuite or tenants associated with me initially to make sure we could get it to work before then importing into the FutureBuild Tenant but really they should have been reassigned to futurebuild not entered again causing confusing duplicates.
+---
+When connecting to my gmail account in crm7 so i can send and receive and view existing emails, the google auth screen returns me to the bsuite ui with popup still open rather than the email-accounts screen in crm7 and closing the popup. Microsoft is unverified even though we have set up the manifest? 26/0/2026
+---
+Missing known member caris@mbawa.com and has .json. Advanced json ok, but anything available via json should be done through non-coding means. This is always and has been a long standing directive: Save template and save as default dont currently work. The little tab “quotes” is confusing. Just the left regular panel should be used and create threads. Save as default button also needs to work. Doesnt currently save on page refresh. Still no way to export to pdf, email for esigning, or push to an apprentice or host record. And corresponding import a template or quote from R8https://crm.crm7.app/admin/dataMust be able to actually interact with data here if permissions allows. Developer always. Must be able to import and export csv and xlxs and create import templates to download and use to re-upload.
+---
+General Notes: R8 cant save and cant save template. Adult doesnt change the wages in the wages card. Needs notices for actions you take e.g. save. Needs export and send for esigning and as email. Leads convert relevant sections to contact and client through opportunity etc chain. Any subscribed user of a tenant should be able to be afforded permissions by the admin and assigned a caseload of apprentices. Even several over the same if they share or a supervisor over their field staff. The UI across the apps is pretty slow. Investigate if their optimization,  modularization or anything else that can be done to speed it up for the user or  let me know if its good and just needs a bigger machine. https://crm.crm7.app/contracts/training/e-signatures - training contracts are created by the State Training Authority in PDF form and scanned. This page makes no sense. Many things like host contracts, employment contracts, WHS risk assessment site visit attendance quotes, and placement confirmation of rates and charges to name a few will need e-signatures. The only way e-signatures might work is if the STA sends through a clean pdf and we can get all parties to sign it by customizing the signature section and adding e-sig block which isnt a stretch but this needs to be thought through rather than being so limited and even now unfunctional for is semi miss intended purpose. https://crm.crm7.app/hosts should lsit all placements in a table filterable all active and past and pending etc. customizable columns. This should provide option to like from other areas like the existing contacts mor leads or the like violates one shot policy. Bottom border still double for cards which we have raised 100s of times now. https://crm.crm7.app/clients/a***Linked entities with a link looks amaturise. Hosts and clients each should displace in a table below all placements contacts, all records associated with them easily and filterable in tables. Similar to one page up https://crm.crm7.app/clientsRthis is a good example of how mass data should be shown anywhere a lsit can be formed. See e.g. and extrapolate out to all places this should be applied:
+---
+Likely also anything that lists rows like this needs to be brought up to the airtable style design which is still itself sub par. Take inspiration from the GaryOcean428/atmosphere setup and then make it like atmosphere was converted to react and associated components. Send email button directly in any external record. I.e. client, host, worker, apprentice, trainee, contact, training provider, anything like this, takes me to email and then can go back to record once sent. Why has the work ground to a halt? There is no excuse for not checking the docs issues or consulting with peers and the owner-operator to pull new tasks. It is reminiscent of a child claiming boredom while standing in a messy room; the work is right there to be taken on.
+---
+so why have you stopped to report? reporting and acting are not useful in isolation
+---
+Universality — five locations, fetch eliminated
+---
+~/.claude/CLAUDE.md → new Gate F. Integrates with every session and agent across all projects. This is the mechanism ensuring universality over skill-reliance.
+---
+All 221 SKILL.md contract blocks — strictly inline; a rule requiring manual fetch won’t trigger when critical. Same 11 skills exceeding 500-line guidance as before.
+---
+ux-gate-d8.md — the comprehensive gate: details every sub-check, necessary evidence, and the six failure modes targeted for prevention.
+---
+general-what-done-looks-like — updated with sections 10 (round-trip), 11 (superior methods + interaction overhead), and 12 (impact + sibling volume).
+---
+completion-enforcer and accountability-agent — enforcer block active: will now refuse to APPROVE user-facing modifications if D8 remains unevaluated.
+---
+29/08/2026
+---
+https://suite.crm7.app/developer/branding - platform logo’s and default branding, theme, styling etc. Master applies to all apps light and dark, and as i create more specific logo’s for each app, i’d want to add light and dark versions of each to the specific apps. Note that the braden.com.au logos are my corporate brand and already different
+---
+https://suite.crm7.app/branding - white label option available to enterprise users. Overrides platform logo’s and branding for their tenant and sub organisation tenants all at once or per sub tenant. Does not touch braden since that is my corporate website that isnt part of any subscription except developer account. And check logic for theme customization and in page customization. Theme and borders and card and button colors and all like customizations dont appear to allow for full customizability and some card and button colors have dropped off since you started this task.
+---
+https://suite.crm7.app/gto
+---
+Compliance table click through. Need to be able to click row and see more detail. Leads and any other notice needs to be able to click through and take me to the lead or whatever the notice is about. Leads for braden website should also come through to my email, and provide confirmation email to the lead themselves. Same for enterprises using the embed from bsu and placing that embed on their website. Embed form fields customizable. Must be outside of developer portal. It may be simpler to just use the embed and use that on my website braden.com.au same as user enterprises would. 01/09/2026
+---
+https://suite.crm7.app/loginFont wrong,
+---
+Logo not the uploaded platform logo from BSU platform level branding.
+---
+03/09/2026
+---
+https://crm.crm7.app/reports
+---
+Name column in reports has double lines and no way to correct.
+---
+https://crm.crm7.app/settings/data
+---
+Should be airtable style
+---
+https://crm.crm7.app/admin/data
+---
+Should be editable for developers platform wide and owners (so long as its scoped only to their tenants and sub tenants. Should be presented in ui in airtable style like an improved fully functional version of https://crm.crm7.app/reports - e2e migration applicability and safety considered, and how to do this flexibly for multi tenant changes that only touch those tenants. There should be scoping docs already in the docs.
+---
+Bulk editor same principles as above. Currently its is unnusible. Columns are meaningless at present and all columns that can relate to an apprentice or whatever the bulk data being edited should be available. This may include hosts or placements or anything really.

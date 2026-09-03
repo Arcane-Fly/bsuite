@@ -38,6 +38,7 @@
 
 import { execFileSync } from 'node:child_process'
 import path from 'node:path'
+import { compareForCollision } from './lib/migration-collision-compare.mjs'
 
 export const SCOPES = ['crm7', 'business-suite-unified', 'conduit', 'braden', 'throughput', 'R80.4']
 
@@ -66,7 +67,45 @@ export function collisions(entries) {
   const out = []
   for (const [version, group] of byVersion) {
     const sources = new Set(group.map((g) => `${g.scope}#${g.pr}`))
-    if (sources.size > 1) out.push({ version, entries: group })
+    if (sources.size <= 1) continue
+    // CONTENT, not just the version string. The hazard is the applier recording a
+    // version, reaching a SECOND, DIFFERENT file at it, and silently skipping that
+    // DDL. Two PRs carrying the byte-identical file lose nothing: whichever merges
+    // first applies it, the other merges to a no-op.
+    //
+    // Measured 2026-09-02: crm7#2333 (reconcile main->development) and crm7#2331
+    // (cut from main) shared 20261102000000, 20261103000000 and 20261105000000 as
+    // IDENTICAL blobs. All three were reported as collisions demanding a renumber,
+    // which would have been wrong — one file seen on two branches. A merge-blocking
+    // gate with three false positives teaches everyone to merge through it, which is
+    // exactly when it stops catching the real thing.
+    //
+    // FAILS CLOSED: an unreadable blob is its own identity, never equal to another,
+    // so "could not compare" can never read as "identical".
+    const contents = new Set(
+      group.map((g, n) => (g.blob ? `blob:${g.blob}` : `unreadable:${g.scope}#${g.pr}:${g.file}:${n}`)),
+    )
+    if (contents.size <= 1) continue
+
+    // BLOBS DIFFER — that is not automatically a real collision (bsuite J7,
+    // 2026-09-03). A comment-only difference (a header noting which copy is
+    // canonical, or the `-- rehearsal: already-enforced` marker
+    // scripts/supabase/rehearse-migrations.mjs reads) gives every copy a
+    // DIFFERENT blob despite carrying the same DDL. `.content`, when the
+    // caller has fetched it (main() only does this for groups that reach
+    // here — every file on every open PR would be too expensive to read
+    // unconditionally), is compared with the SAME rule every other
+    // migration-collision gate in this estate uses. Missing content on any
+    // entry means the tie-break is skipped and the group is reported as a
+    // real collision — the same fail-closed direction as an unreadable blob.
+    const allHaveContent = group.every((g) => typeof g.content === 'string')
+    if (allHaveContent) {
+      const anchor = group[0].content
+      const allCommentOnly = group.slice(1).every((g) => compareForCollision(anchor, g.content).equal)
+      if (allCommentOnly) continue
+    }
+
+    out.push({ version, entries: group })
   }
   return out.sort((a, b) => a.version.localeCompare(b.version))
 }
@@ -89,7 +128,9 @@ function migrationsOnBranch(scope, root, branch) {
   const dir = path.join(root, scope)
   try {
     sh('git', ['fetch', 'origin', branch, '--quiet'], dir)
-    const listing = sh('git', ['ls-tree', '-r', '--name-only', 'FETCH_HEAD', 'supabase/migrations/'], dir)
+    // NOT --name-only: the blob sha is what lets collisions() tell ONE file on two
+    // branches from TWO DIFFERENT files claiming one version.
+    const listing = sh('git', ['ls-tree', '-r', 'FETCH_HEAD', 'supabase/migrations/'], dir)
     // `archive/` IS NOT A MIGRATION SET. This gate asks what the applier will RUN,
     // and `supabase db push` reads only the top level of supabase/migrations —
     // subdirectories are history, filed away, already applied.
@@ -104,9 +145,19 @@ function migrationsOnBranch(scope, root, branch) {
     // (lint-migrations-revoke-anon.mjs is the opposite case and must KEEP reading
     // archive/: a REVOKE that ran in June is still in force, so its question —
     // what privileges does the database hold — is answered by the whole history.)
-    return listing
-      ? listing.split('\n').filter(Boolean).filter((f) => !f.includes('/archive/'))
-      : []
+    if (!listing) return []
+    const out = []
+    for (const line of listing.split('\n')) {
+      if (!line) continue
+      // `<mode> <type> <sha>\t<path>` — split on the tab, then walk the left side.
+      const tab = line.indexOf('\t')
+      if (tab < 0) continue
+      const file = line.slice(tab + 1)
+      if (file.includes('/archive/')) continue
+      const meta = line.slice(0, tab).split(' ').filter(Boolean)
+      out.push({ file, blob: meta.length === 3 ? meta[2] : null })
+    }
+    return out
   } catch {
     return []
   }
@@ -124,10 +175,10 @@ function selfTest() {
 
   // THE REAL CASE, from 2026-08-27: two open PRs in ONE app claiming one version.
   const real = [
-    { scope: 'business-suite-unified', pr: 935, version: '20260928000000', file: 'a_email_signatures.sql' },
-    { scope: 'business-suite-unified', pr: 940, version: '20260928000000', file: 'b_close_escalation.sql' },
+    { scope: 'business-suite-unified', pr: 935, version: '20260928000000', file: 'a_email_signatures.sql', blob: 'aaaaaaaa' },
+    { scope: 'business-suite-unified', pr: 940, version: '20260928000000', file: 'b_close_escalation.sql', blob: 'bbbbbbbb' },
   ]
-  t('two open PRs claiming one version collide', collisions(real).length, 1)
+  t('two open PRs claiming one version with DIFFERENT content collide', collisions(real).length, 1)
 
   // NEGATIVE CONTROL: the same PR listing a file twice is NOT a collision, or the
   // gate cries wolf on every run and gets ignored.
@@ -151,12 +202,112 @@ function selfTest() {
       { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql' },
     ]).length, 1)
 
+
+  // THE 2026-09-02 FALSE POSITIVE, as a permanent case: one file, two branches,
+  // identical blob. Merging both is a no-op on the second — no DDL is lost.
+  t('two open PRs carrying the IDENTICAL blob do not collide',
+    collisions([
+      { scope: 'crm7', pr: 2333, version: '20261103000000', file: 'w.sql', blob: 'd5abd847' },
+      { scope: 'crm7', pr: 2331, version: '20261103000000', file: 'w.sql', blob: 'd5abd847' },
+    ]).length, 0)
+
+  // ...and identical content across two APPS is still one DDL, so still not a loss.
+  t('the identical blob across two apps does not collide',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: 'cafe1234' },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'x.sql', blob: 'cafe1234' },
+    ]).length, 0)
+
+  // FAIL CLOSED. An unreadable blob is never equal to anything, including another
+  // unreadable one — otherwise a tree that could not be read reports as clean.
+  t('an UNREADABLE blob still collides',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: null },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql', blob: null },
+    ]).length, 1)
+
+  // ...and one readable, one not, is still a collision.
+  t('a readable blob against an unreadable one collides',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: 'cafe1234' },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql', blob: null },
+    ]).length, 1)
+
+  // bsuite J7, 2026-09-03: DIFFERENT blobs (a comment-only edit always gets a
+  // different content-addressed blob) but content that normalizes equal via
+  // scripts/lib/migration-collision-compare.mjs — reproduces the exact
+  // 20261103000000 root-vs-crm7 shape (rationale block ending in the
+  // `-- rehearsal: already-enforced` marker). Not a collision when `.content`
+  // is supplied for every entry in the group.
+  {
+    const body = 'CREATE TABLE public.workflow_definitions (id uuid primary key);\n'
+    t('different blobs but comment-only-different CONTENT do not collide when content is supplied',
+      collisions([
+        { scope: 'crm7', pr: 1, version: '20261103000000', file: 'x.sql', blob: 'aaaa', content: `-- canonical header\n${body}` },
+        { scope: 'business-suite-unified', pr: 2, version: '20261103000000', file: 'x.sql', blob: 'bbbb', content: `-- DIFFERENT header, rationale only\n${body}` },
+      ]).length, 0)
+  }
+
+  // ...but a GENUINE content difference beyond comments still collides even
+  // with content supplied — the tie-break can only ever narrow false
+  // positives, never launder a real divergence.
+  t('different blobs AND genuinely different content still collide',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: 'aaaa', content: 'ALTER TABLE t ADD COLUMN a text;\n' },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql', blob: 'bbbb', content: 'ALTER TABLE t ADD COLUMN b text;\n' },
+    ]).length, 1)
+
+  // ...and without content on EVERY entry, the tie-break is skipped entirely
+  // (fail-safe: partial content is treated the same as no content).
+  t('different blobs with content missing on only ONE entry still collide (tie-break skipped)',
+    collisions([
+      { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: 'aaaa', content: 'SELECT 1;\n' },
+      { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql', blob: 'bbbb' },
+    ]).length, 1)
   const bad = cases.filter((c) => !c.ok)
   for (const c of cases) {
     console.log(`  ${c.ok ? 'ok  ' : 'FAIL'} ${c.name}${c.ok ? '' : ` — got ${JSON.stringify(c.got)}, want ${JSON.stringify(c.want)}`}`)
   }
   console.log(`\ncheck-migration-collisions-across-open-prs: ${cases.length - bad.length}/${cases.length} self-test(s) passed`)
   return bad.length ? 1 : 0
+}
+
+/**
+ * Fetch `.content` for entries that belong to a MULTI-SOURCE, blob-differing
+ * version group only. Reading every file on every open PR branch would be
+ * needless work for the overwhelming majority of runs (zero collisions); this
+ * only pays the cost for the rare groups where collisions() actually needs a
+ * tie-break. The blob was already pulled into the scope's local object store
+ * by migrationsOnBranch()'s own `git fetch`, so `git cat-file -p` reads it
+ * without a second network round trip.
+ */
+function attachContentForDivergentGroups(entries, root) {
+  const byVersion = new Map()
+  for (const e of entries) {
+    if (!byVersion.has(e.version)) byVersion.set(e.version, [])
+    byVersion.get(e.version).push(e)
+  }
+  for (const group of byVersion.values()) {
+    const sources = new Set(group.map((g) => `${g.scope}#${g.pr}`))
+    if (sources.size <= 1) continue
+    const blobs = new Set(group.map((g) => g.blob).filter(Boolean))
+    if (blobs.size <= 1 && group.every((g) => g.blob)) continue // already identical, no tie-break needed
+    for (const e of group) {
+      if (!e.blob) continue
+      const dir = path.join(root, e.scope)
+      const out = shOrNull('git', ['cat-file', '-p', e.blob], dir)
+      if (out !== null) e.content = out
+    }
+  }
+  return entries
+}
+
+function shOrNull(cmd, args, cwd) {
+  try {
+    return sh(cmd, args, cwd)
+  } catch {
+    return null
+  }
 }
 
 function main() {
@@ -171,9 +322,9 @@ function main() {
     if (prs === null) { unreadable.push(scope); continue }
     for (const pr of prs) {
       prCount++
-      for (const file of migrationsOnBranch(scope, root, pr.headRefName)) {
+      for (const { file, blob } of migrationsOnBranch(scope, root, pr.headRefName)) {
         const version = versionOf(file)
-        if (version) entries.push({ scope, pr: pr.number, branch: pr.headRefName, version, file })
+        if (version) entries.push({ scope, pr: pr.number, branch: pr.headRefName, version, file, blob })
       }
     }
   }
@@ -187,10 +338,14 @@ function main() {
 
   console.log(`check-migration-collisions-across-open-prs: ${SCOPES.length} scope(s), ${prCount} open PR(s), ${entries.length} migration file(s) on their branches`)
 
+  attachContentForDivergentGroups(entries, root)
   const found = collisions(entries)
   for (const c of found) {
     console.error(`::error::VERSION ${c.version} is claimed by ${new Set(c.entries.map((e) => `${e.scope}#${e.pr}`)).size} different open PRs:`)
-    for (const e of c.entries) console.error(`    ${e.scope}#${e.pr} (${e.branch})  ${e.file}`)
+    for (const e of c.entries) {
+      const b = e.blob ? e.blob.slice(0, 8) : 'UNREADABLE'
+      console.error(`    ${e.scope}#${e.pr} (${e.branch})  ${e.file}  blob=${b}`)
+    }
   }
   if (found.length) {
     console.error('')

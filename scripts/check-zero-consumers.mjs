@@ -103,6 +103,87 @@ export function hookConsumers(hooks, sources) {
   return counts
 }
 
+// ---------------------------------------------------------- persistence
+/**
+ * A FIFTH SHAPE, added 2026-09-02: a service function that reads or writes the
+ * database and is called only from inside the service layer.
+ *
+ * WHY THE EXISTING DETECTORS MISS IT. `check-table-reach` asks whether ANYTHING
+ * references a table; `custom_pages` and `form_layouts` are both referenced, so
+ * both read as reached. The `package`/`hook`/`token` detectors above ask about
+ * artifacts a consumer IMPORTS. Neither asks the question that actually failed:
+ * the write happens, the row lands, and nothing ever renders it.
+ *
+ * MEASURED, both in crm7 on 2026-09-02:
+ *   - `savePageRevision` (services/customPageService.ts) — the ONLY function that
+ *     can write a custom page's layout after creation — has ZERO callers
+ *     anywhere. `custom_page_revisions` has 0 production rows, and Custom Pages
+ *     cannot be authored through the interface at all.
+ *   - `resolveFormLayout` (services/formLayoutService.ts) is called by exactly
+ *     one place, `stores/formLayoutStore.ts`, whose action no component ever
+ *     destructures. The Form Layout Builder is a real drag-and-drop builder with
+ *     a property panel, and its output has zero render sites.
+ *
+ * WHY "OUTSIDE THE LAYER" AND NOT "ANY CALLER". A one-hop caller check passes
+ * `resolveFormLayout`, because the store does call it. The store is not a
+ * screen, so a chain that ends there has not reached anybody. Services calling
+ * services, and stores calling services, are both invisible to a user.
+ *
+ * WHY THIS IS A RATCHET AND NOT A HARD RULE. A service function legitimately
+ * used only by another service is real — a shared fetch behind two public
+ * functions, for instance. So this REPORTS against a banked list that may only
+ * shrink, exactly like the classes above.
+ */
+export function isServiceLayer(path) {
+  return (
+    path.includes('/services/') ||
+    path.includes('/stores/') ||
+    /Service\.tsx?$/.test(path) ||
+    /Store\.tsx?$/.test(path)
+  );
+}
+
+/**
+ * Exported functions in the service layer whose body touches persistence.
+ *
+ * Parses the CONSTRUCT, not the line: a body runs to the next top-level
+ * `export` (or end of file), because a `.from(` three lines below a declaration
+ * belongs to that declaration and a line-oriented scan would miss it.
+ */
+export function persistenceExports(sources) {
+  const out = [];
+  for (const { path, text } of sources) {
+    if (!isServiceLayer(path)) continue;
+    const decl = /^export\s+(?:async\s+)?(?:function\s+([A-Za-z_$][\w$]*)|const\s+([A-Za-z_$][\w$]*)\s*[=:])/gm;
+    const found = [];
+    let m;
+    while ((m = decl.exec(text)) !== null) found.push({ name: m[1] || m[2], at: m.index });
+    for (let i = 0; i < found.length; i++) {
+      const body = text.slice(found[i].at, i + 1 < found.length ? found[i + 1].at : text.length);
+      if (body.includes('.from(') || body.includes('.rpc(')) {
+        out.push({ name: found[i].name, definedIn: path });
+      }
+    }
+  }
+  return out;
+}
+
+/**
+ * Consumers OUTSIDE the service layer. Its own file never counts, and neither
+ * does another service or store — see the docblock above for why.
+ */
+export function persistenceConsumers(exports_, sources) {
+  const counts = new Map(exports_.map((e) => [`${e.definedIn}::${e.name}`, []]));
+  for (const { path, text } of sources) {
+    if (isServiceLayer(path)) continue;
+    for (const e of exports_) {
+      if (path === e.definedIn) continue;
+      if (new RegExp(`\\b${e.name}\\b`).test(text)) counts.get(`${e.definedIn}::${e.name}`).push(path);
+    }
+  }
+  return counts;
+}
+
 // ---------------------------------------------------------------- tokens
 /**
  * A token declared inside an `@theme` block becomes a Tailwind utility, so absence of
@@ -162,6 +243,55 @@ function selfTest() {
     if (sub.get('useThing').length !== 0) fail('a longer identifier was counted as a use of the shorter one')
   }
 
+  // persistence — the two shapes measured in crm7 on 2026-09-02
+  {
+    const svc = [
+      {
+        path: 'crm7/src/services/customPageService.ts',
+        text: [
+          'export async function getCustomPageBySlug(slug) {',
+          '  return supabase.from("custom_pages").select("*")',
+          '}',
+          'export async function savePageRevision(page) {',
+          '  // the .from() is BELOW the declaration line — a line-oriented scan misses it',
+          '  return supabase',
+          '    .from("custom_page_revisions")',
+          '    .insert(page)',
+          '}',
+          'export function titleOf(page) { return page.title }',
+        ].join('\n'),
+      },
+      {
+        path: 'crm7/src/stores/formLayoutStore.ts',
+        text: 'import { resolveFormLayout } from "../services/formLayoutService"; resolveFormLayout(x)',
+      },
+    ]
+    const exp = persistenceExports(svc)
+    const names = exp.map((e) => e.name)
+    if (!names.includes('savePageRevision')) fail('a .from() BELOW the declaration line was missed')
+    if (!names.includes('getCustomPageBySlug')) fail('a persisting export was not detected')
+    if (names.includes('titleOf')) fail('an export that touches no persistence was counted')
+
+    const counts = persistenceConsumers(exp, [
+      ...svc,
+      { path: 'crm7/src/pages/custom/[slug].tsx', text: 'getCustomPageBySlug(slug)' },
+    ])
+    if (counts.get('crm7/src/services/customPageService.ts::getCustomPageBySlug').length !== 1)
+      fail('a screen calling a service function was not counted as a consumer')
+    if (counts.get('crm7/src/services/customPageService.ts::savePageRevision').length !== 0)
+      fail('savePageRevision has zero callers and must report zero')
+
+    // The measured trap: a store DOES call resolveFormLayout, and a store is not a screen.
+    const rf = [{ name: 'resolveFormLayout', definedIn: 'crm7/src/services/formLayoutService.ts' }]
+    const viaStore = persistenceConsumers(rf, svc)
+    if (viaStore.get('crm7/src/services/formLayoutService.ts::resolveFormLayout').length !== 0)
+      fail('a call from the STORE layer was counted as reaching a user')
+
+    if (!isServiceLayer('crm7/src/services/x.ts')) fail('services/ not recognised as the layer')
+    if (!isServiceLayer('crm7/src/stores/x.ts')) fail('stores/ not recognised as the layer')
+    if (isServiceLayer('crm7/src/pages/x.tsx')) fail('a page was classed as the service layer')
+  }
+
   // tokens
   {
     if (classifyToken('--x', false, 3) !== 'used') fail('a referenced token is not "used"')
@@ -189,11 +319,13 @@ function selfTest() {
   }
 
   console.log(
-    'check-zero-consumers --self-test: 14 assertions across four detectors — package ' +
+    'check-zero-consumers --self-test: 22 assertions across five detectors — package ' +
       'consumer counting including the self-reference trap, hook counting including the ' +
       'definition-is-not-a-use and substring traps, and token classification including ' +
       'the Tailwind @theme case that must never be called unused, and minted-token diff ' +
-      'parsing including the removed-token and var()-reference-on-an-added-line traps.',
+      'parsing including the removed-token and var()-reference-on-an-added-line traps, and\n' +
+        'persistence-function reach including the two traps that let the real defects ship: a\n' +
+        '`.from()` BELOW the declaration line, and a caller that is itself a store rather than a screen.',
   )
   return bad
 }
@@ -202,7 +334,7 @@ function main() {
   if (process.argv.includes('--self-test')) process.exit(selfTest() === 0 ? 0 : 1)
   if (selfTest() !== 0) { console.error('::error::checker failed its own self-test'); process.exit(1) }
 
-  const findings = { package: [], hook: [], token: [] }
+  const findings = { package: [], hook: [], token: [], persistence: [] }
   const unverifiable = { token: 0 }
 
   // ---- packages -----------------------------------------------------------
@@ -261,6 +393,14 @@ function main() {
   const sources = [...pkgSrcFiles, ...appSrcFiles].map((p) => ({ path: p, text: readFileSync(p, 'utf8') }))
   const hookCounts = hookConsumers(hooks, sources)
   for (const [name, consumers] of hookCounts) if (consumers.length === 0) findings.hook.push(name)
+
+  // ---- persistence --------------------------------------------------------
+  // `sources` already holds every package and app .ts/.tsx, which is exactly the
+  // denominator this needs: the definitions live in the app service layer and the
+  // consumers that count live in the app screens.
+  const persisting = persistenceExports(sources)
+  const persistCounts = persistenceConsumers(persisting, sources)
+  for (const [key, consumers] of persistCounts) if (consumers.length === 0) findings.persistence.push(key)
 
   // ---- tokens -------------------------------------------------------------
   const cssFiles = listFiles(['packages/theme/src', 'packages/design-tokens'], ['.css'])
@@ -349,7 +489,7 @@ function main() {
   }
 
   let failed = 0
-  for (const kind of ['package', 'hook', 'token']) {
+  for (const kind of ['package', 'hook', 'token', 'persistence']) {
     const known = new Set(baseline[kind] ?? [])
     const now = new Set(findings[kind])
     for (const n of findings[kind]) {

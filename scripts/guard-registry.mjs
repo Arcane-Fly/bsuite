@@ -215,6 +215,47 @@ export const GUARDS = [
   },
 
   {
+    id: 'parent-no-cookie-sso',
+    label: 'no cookie SSO in code, and no doc claiming it is shipped',
+    repo: '.',
+    command: ['node', 'scripts/check-no-cookie-sso.mjs'],
+    ciWorkflow: '.github/workflows/guard-self-reporting.yml',
+    mode: 'run',
+    notes:
+      'Registered 2026-09-03. The estate\'s most emphatic security doctrine — ' +
+      'AUTH_CANONICAL.md opens "DO NOT REVERT TO COOKIE SSO", effective 2025-02-27 — and ' +
+      'it had no full-tree gate at all. This script existed, passed, and was invoked by ' +
+      'no workflow: `lint:no-cookie-sso` in package.json was called by nothing, and ' +
+      '`lint:all` runs each app\'s own lint, not the root\'s. The PR drift scanner does ' +
+      'carry a COOKIE-SSO signal, but it is AST-based over ADDED diff lines only, so it ' +
+      'cannot see a violation arriving by a gitlink advance, a file move, a revert, or ' +
+      'anything predating it. Full-universe beats diff-scoped here, per this registry\'s ' +
+      'own INVOCATION CHOICE note. ' +
+      'A second pass was added at the same time because the code being clean is not the ' +
+      'same as the estate SAYING it is clean: four documents across business-suite-unified ' +
+      'and conduit listed "BS OAuth + cookie SSO" as a SHIPPED, ALIGNED capability, and ' +
+      'conduit/docs/CONSISTENCY-REPORT.md contradicted itself eleven lines apart — ' +
+      '"Cookie-SSO carve-out fully retired" in its table, "BS OAuth + cookie SSO" in its ' +
+      'aligned list. That matters because the next agent to touch auth reads the docs ' +
+      'first, and AUTH_CANONICAL.md names that reader explicitly: "If any code, test, ' +
+      'comment, doc, or AI agent suggests reintroducing cookieStorage ... that suggestion ' +
+      'is wrong." Docs may still DISCUSS the prohibition; a line trips only when it ' +
+      'asserts cookie SSO as a current capability with no negation and no meta-marker. ' +
+      'Suppression follows drift-scan.mjs\'s existing theme-audit-ok convention ' +
+      '(cookie-sso-audit-ok, same line or the one above) rather than inventing a third, ' +
+      'and frontmatter `verdict: superseded` skips preserved historical records outright. ' +
+      'It also now REFUSES a missing root instead of swallowing ENOENT — the old ' +
+      'behaviour scanned an uninitialised submodule, found nothing and exited 0.',
+    evidence:
+      'Examined 4028 source files across 8 source roots and 516 markdown files across 7 ' +
+      'doc roots. No forbidden cookie SSO patterns, and no document claims cookie SSO is ' +
+      'a current capability. (Run by hand on this tree 2026-09-03. Positive controls: a ' +
+      'planted "- BS OAuth + cookie SSO" doc line was caught and moved the denominator ' +
+      '516 -> 517; an empty tree exited 2 naming all 14 missing roots; --self-test passes ' +
+      '16 assertions.)',
+  },
+
+  {
     id: 'parent-zero-consumers',
     label: 'nothing ships with zero consumers',
     repo: '.',
@@ -340,6 +381,27 @@ export const GUARDS = [
       'aliased (<SonnerToaster/>, <RadixToaster/>). Mounts resolve through ' +
       'import bindings, not tag names. A clean pass prints per-app file, ' +
       'caller and mount counts; scanning zero files is a hard failure.',
+  },
+
+  {
+    id: 'parent-update-banner-mounted',
+    label: 'UpdateAvailableBanner mount floor per app (D-160 R7/R8)',
+    repo: '.',
+    command: ['node', 'scripts/check-update-banner-mounted.mjs'],
+    ciWorkflow: '.github/workflows/component-mount-gate.yml',
+    mode: 'run',
+    notes:
+      'D-160 step 2. Per-app ratchet on real JSX mounts of ' +
+      '<UpdateAvailableBanner/> imported from @bsuite/nav-core. AST via ' +
+      'typescript (same pattern as check-component-mounts.mjs) — a grep ' +
+      'would count a docblock @example or a test file as a mount. Floors ' +
+      'in scripts/update-banner-mount-floors.json start at 0 for all six ' +
+      'apps with target {1,1,1,1,2,1} (R80.4 needs LiveShell + static). A ' +
+      'count below floor fails; a count above floor without ' +
+      '--update-baseline fails ("the floor is a ratchet: bank the rise"). ' +
+      'A clean pass prints the per-app table and a non-zero file count. ' +
+      'Deliberately NOT an extension of check-exported-not-mounted.mjs ' +
+      '(that gate passes when ONE consumer mounts).',
   },
 
   {

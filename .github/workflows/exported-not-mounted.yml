@@ -1,0 +1,57 @@
+name: Exported but not mounted
+
+# THE CLASS THIS STOPS
+#
+# On 2026-09-02 the operator opened the workflow builder and called it "1/3
+# baked": no way to add, rename, delete or publish a node. Every one of those
+# controls was BUILT, PUBLISHED to npm, and EXPORTED — and crm7 rendered the
+# canvas with no children.
+#
+# Types compiled (an unused import is not a type error). Lint passed (nothing was
+# imported, so nothing was unused). Tests passed (they asserted the canvas got
+# the right props, never that the chrome existed — and the package mock did not
+# even declare those exports). The estate had no instrument that could see it.
+
+on:
+  pull_request:
+    paths:
+      - 'packages/**'
+      - 'crm7'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'braden'
+      - 'throughput'
+      - 'R80.4'
+      - 'scripts/check-exported-not-mounted.mjs'
+      - '.github/workflows/exported-not-mounted.yml'
+  workflow_dispatch:
+
+jobs:
+  exported-not-mounted:
+    name: Every exported component is mounted somewhere
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The consumer apps ARE the submodules. Without them the scan finds no
+          # consumer, which the checker refuses (exit 2) rather than reporting
+          # clean — an absent result is not a clean one.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # 20 cases, and the three that matter are the three parsing bugs this
+      # checker had during its own construction: multi-line JSX, a single indexOf
+      # landing inside a longer identifier, and a line-oriented import missing the
+      # multi-line form. Each one made a MOUNTED component read as dead.
+      - name: Self-test the checker (proves it can fail)
+        run: node scripts/check-exported-not-mounted.mjs --self-test
+
+      - name: No adopted package exports a component nobody renders
+        run: node scripts/check-exported-not-mounted.mjs

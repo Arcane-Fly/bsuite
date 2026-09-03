@@ -288,3 +288,53 @@ status column here would be the false-completion surface the estate keeps rebuil
 | D-143 | "yes and flexibility to nominate who. drop downs or add both available" | Sender/number nomination by dropdown, with an add-new option as well | number-provision / send composer | CRM7 | ux |
 | D-144 | "this is a business so some customization will take time for me and provides value so for now so we have it build in a nominal proce to do this. also consider tagging of messages and merge fields." | Charge a nominal price for messaging customisation; support message tagging and merge fields | messaging setup / plan chooser; message composer | CRM7/suite | ux |
 | D-145 | "ensure UI and round trips are also key focus of yours" | Keep UI polish and round-trip flows (no dead ends) a first-class focus of the messaging build | messaging platform | CRM7/suite | ux |
+
+## Addendum — D-146 … D-159, from the 3 September export (capture `docs/intake/20260903-a7ae581fe24b/`)
+
+**Added 2026-09-03.** The operator downloads his notes document as he updates it, so exports are
+never named by number or filename here: the source is **the newest `bsuite notes*.docx` in
+`~/Downloads` by modification time**, which `scripts/bsuite-notes-cycle.mjs` selects. This export
+(39,054,591 B, mtime 2026-09-03 09:55, 400 paragraphs, 98 images) is the 26 August capture
+(`20260826-10af2d73c44d`, 378 paragraphs, 91 images) **plus 22 paragraphs and 7 screenshots** dated
+29/08, 01/09 and 03/09. The cycle script reports **+23 new, −1 removed**: the "removed" paragraph is
+the 26 August closing paragraph on Airtable-style lists, which he **extended** in place with the
+send-email ask and a rebuke. That is an edit, not a retraction, and it is said out loud here as the
+script requires.
+
+**Excluded as not his words** (context only): six pasted paragraphs of an agent's Gate F and D8 notes
+("Universality — five locations, fetch eliminated" through "completion-enforcer and
+accountability-agent — enforcer block active"). **Recorded as operator voice, not as asks** (audit
+classes V1 and V2): "Why has the work ground to a halt? There is no excuse for not checking the docs
+issues or consulting with peers and the owner-operator to pull new tasks" and "so why have you
+stopped to report? reporting and acting are not useful in isolation".
+
+The remaining paragraphs carry **14 distinct asks**, numbered D-146 … D-159 on the same basis as
+D-1 … D-145. Screenshots are named by their position in the export's media folder.
+
+**None of these carry a status.** This register records what was asked, not what was done; the
+verdict lives in `docs/00-roadmap/operator-notes-verdicts.json`.
+
+| ID | Verbatim (his words) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-146 | "Send email button directly in any external record. I.e. client, host, worker, apprentice, trainee, contact, training provider, anything like this, takes me to email and then can go back to record once sent." | A Send-email action on every external-party record that opens the composer and returns to the record after sending (a round trip, audit D8.5) | record detail pages: client, host, worker, apprentice, trainee, contact, training provider | CRM7 | ux |
+| D-147 | "https://suite.crm7.app/developer/branding - platform logo's and default branding, theme, styling etc. Master applies to all apps light and dark, and as i create more specific logo's for each app, i'd want to add light and dark versions of each to the specific apps. Note that the braden.com.au logos are my corporate brand and already different" | Platform master branding applied to every app in both themes; per-app logo variants, light and dark; braden's corporate brand kept separate | /developer/branding | BSU | theme-branding |
+| D-148 | "https://suite.crm7.app/branding - white label option available to enterprise users. Overrides platform logo's and branding for their tenant and sub organisation tenants all at once or per sub tenant. Does not touch braden since that is my corporate website that isnt part of any subscription except developer account." | Enterprise white-label at tenant level cascading to every sub-organisation, or per sub-tenant; never braden | /branding | BSU | theme-branding |
+| D-149 | "And check logic for theme customization and in page customization. Theme and borders and card and button colors and all like customizations dont appear to allow for full customizability and some card and button colors have dropped off since you started this task." (screenshot image26: the suite dashboard's plan cards rendering as plain surfaces) | Full customisability of theme, borders, card and button colours in the theme editor and in in-page editing; restore the card and button colours that dropped off | theme editor; in-page customisation; suite dashboard | BSU, all apps | regression |
+| D-150 | "https://suite.crm7.app/gto Compliance table click through. Need to be able to click row and see more detail." (screenshot image98) | Compliance rows open a detail view | /gto | BSU | ux |
+| D-151 | "Leads and any other notice needs to be able to click through and take me to the lead or whatever the notice is about." (screenshot image98: four "New Lead … No routing rule matched. Visit Developer Portal" notifications) | Every notification links to the record it is about | notifications panel | BSU, all apps | ux |
+| D-152 | "Leads for braden website should also come through to my email, and provide confirmation email to the lead themselves. Same for enterprises using the embed from bsu and placing that embed on their website." | A website lead notifies the owner by email and confirms to the lead; the same for enterprise embeds | braden lead capture; BSU lead embed | braden, BSU | integration |
+| D-153 | "Embed form fields customizable. Must be outside of developer portal. It may be simpler to just use the embed and use that on my website braden.com.au same as user enterprises would." | Customisable embed form fields outside the developer portal; braden.com.au may use the same embed as enterprises do | BSU lead embed | BSU, braden | ux |
+| D-154 | "https://suite.crm7.app/login Font wrong," (screenshot image5: the login card in a serif fallback face). Repeats the 1 September ask; see audit §2. | The login page renders the platform font, not a fallback | /login | BSU | theme-branding |
+| D-155 | "Logo not the uploaded platform logo from BSU platform level branding." (screenshot image5). Repeats D-96 and the 1 September ask. | The login page shows the platform-level uploaded logo | /login | BSU | theme-branding |
+| D-156 | "https://crm.crm7.app/reports Name column in reports has double lines and no way to correct." (screenshot image88: title and slug on two cramped lines in the Templates grid) | A one-line Name cell, the slug as its own column or tooltip, and a way for the user to correct it | /reports templates grid | CRM7 | ux |
+| D-157 | "https://crm.crm7.app/settings/data Should be airtable style" (screenshot image76: Data Import & Bulk Update) | Import and bulk update presented as an Airtable-style grid | /settings/data | CRM7 | ux |
+| D-158 | "https://crm.crm7.app/admin/data Should be editable for developers platform wide and owners (so long as its scoped only to their tenants and sub tenants. Should be presented in ui in airtable style like an improved fully functional version of https://crm.crm7.app/reports - e2e migration applicability and safety considered, and how to do this flexibly for multi tenant changes that only touch those tenants. There should be scoping docs already in the docs." (screenshot image80: Enterprise Data Console, read-only field catalogue) | An editable data console: developers platform-wide, owners scoped to their tenant and sub-tenants; Airtable-style; migration safety and tenant-scoped change considered; the existing scoping docs applied | /admin/data | CRM7 | architecture |
+| D-159 | "Bulk editor same principles as above. Currently its is unnusible. Columns are meaningless at present and all columns that can relate to an apprentice or whatever the bulk data being edited should be available. This may include hosts or placements or anything really." (screenshot image50: the Apprentices bulk editor showing only five ADMS columns, every row not_linked) | The bulk editor exposes every column related to the entity, including linked hosts and placements | /settings/data Bulk Update | CRM7 | ux |
+
+## Addendum — D-160, from the operator's chat directive of 2026-09-03 10:48 AWST
+
+Not a docx export: sent to the PI session (`claude-code-bsuite-pi`) mid-turn on 3 September, on the same basis as D-140 to D-145 (a transcript source). It carries **one ask** and one standing rule; the rule is recorded as tier-1 precedent `precedent__bsuite__20260903__live_clients_stage_to_development_and_notify_before_refresh`. **No status here**; the verdict lives in `docs/00-roadmap/operator-notes-verdicts.json`.
+
+| ID | Verbatim (his words) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-160 | "note there are people using the app in production i.e. actual clients so stage all work to development branch and then ensure their is a platform notice and refresh to update prompt so they dont lose work on rebuilds." | Every app shows an in-app new-version notice with a refresh-to-update prompt so a signed-in user saves before a rebuild replaces the running build (never an automatic reload); all work staged to `development`; production promotions scheduled, never incidental | every app shell (one shared implementation) | ALL six | process + ux |
