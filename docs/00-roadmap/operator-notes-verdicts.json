@@ -885,20 +885,20 @@
   {
     "id": "D-154",
     "verdict": "DONE",
-    "evidence": "DONE in code and deployed; UNVERIFIED visually (browser harness 402) - Fix bafe272 (1 Sept 14:14) useBranding.ts:500-520 gates the DB font default; on main via BSU#1100 (2 Sept 19:06); deployed useBranding-g1r99zVs.js has the gate; deployed CSS has Geist @font-face and --font-body Geist, zero serif. Live row header_font 'Geist' = default. Screenshot dated 29/08, pre-fix",
-    "whereLooked": "Register D-154. Audit F-61, step F6. No issue | class: every app resolving DB fonts; crm7 useBranding.ts:105-107,336 lacks the gate (Inter default, no face) so sibling NOT-DONE; grep sanitizeFontFamilyForCss per app | regression: yes in effect (DB value written 1 Sept broke it) | repeat: 1 Sept ask | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI"
+    "evidence": "DONE, verified on production 2026-09-03 10:39 AWST by claude-code-bsuite-main (inbox STEP_EXIT ce4b9849): suite.crm7.app/login read unauthenticated in a clean browser context resolves --font-body to \"Geist Variable\", Geist, system-ui, sans-serif and body and headline render in it; d.suite.crm7.app returns the same values. Earlier: fix bafe272 (1 Sept) useBranding.ts:500-520 gates the DB font default; on main via BSU#1100 (2 Sept 19:06). Remaining F6 limb, tracked separately: the five sibling login surfaces (crm7, conduit, R80.4, throughput, braden) and crm7 useBranding's HARDCODED_DEFAULTS gate. Same pass found a NEW defect: after sign-in --font-body reads Inter on the same host (runtime branding write), under D-149.",
+    "whereLooked": "Register D-154. Audit F-61, step F6. No issue | class: every app resolving DB fonts; crm7 useBranding.ts:105-107,336 lacks the gate (Inter default, no face) so sibling NOT-DONE; grep sanitizeFontFamilyForCss per app | regression: yes in effect (DB value written 1 Sept broke it) | repeat: 1 Sept ask | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI | re-judged 2026-09-03 10:55 by claude-code-bsuite-pi from the main lane's production measurement"
   },
   {
     "id": "D-155",
     "verdict": "DONE",
-    "evidence": "DONE in code and deployed; UNVERIFIED visually - Fix 244ec74 (1 Sept 13:41, BSU#1076) AuthForm.tsx:48-93 getLogoUrl('auth'); on main; deployed AuthScreen-CPx4EP70.js has it; live platform row has logo_light_url/logo_dark_url (both HTTP 200, 724,805 B, same size so possibly the same file twice). Screenshot pre-fix",
-    "whereLooked": "Register D-155. Audit F-61, step F6. Repeats D-96 | class: every login surface; 5 siblings (crm7, conduit, R80.4, throughput, braden) read no 'auth' slot; grep getLogoUrl('auth') per app | regression: no | repeat: D-96; 1 Sept | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI"
+    "evidence": "DONE, verified on production 2026-09-03 10:39 AWST by claude-code-bsuite-main (inbox STEP_EXIT ce4b9849): suite.crm7.app/login unauthenticated shows the uploaded tenant-logos/platform/platform-light.png at 56px, markSvgPresent false (no default mark substituted), and <html> carries --brand-logo-light: url(...) so branding applies; d.suite.crm7.app identical. Earlier: fix 244ec74 (BSU#1076) AuthForm.tsx:48-93 getLogoUrl('auth'). Remaining F6 limb: the five sibling login surfaces read no 'auth' slot.",
+    "whereLooked": "Register D-155. Audit F-61, step F6. Repeats D-96 | class: every login surface; 5 siblings (crm7, conduit, R80.4, throughput, braden) read no 'auth' slot; grep getLogoUrl('auth') per app | regression: no | repeat: D-96; 1 Sept | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI | re-judged 2026-09-03 10:55 by claude-code-bsuite-pi from the main lane's production measurement"
   },
   {
     "id": "D-156",
     "verdict": "PARTIAL",
     "evidence": "PARTIAL (fixed on development, not promoted; no user correction) - reports/index.tsx:361-397 one-line Name + separate Key column (956cdeb97, 2 Sept 22:02) on development only; main 1fd4fd829 (2 Sept 18:17) lacks it; live reports-DrGm63jq.js still stacks name and templateKey in one cell. No user column-width/row-height control",
-    "whereLooked": "Register D-156. Audit F-62, step C9. No issue | class: every DataGrid renderCell emitting two block children; grep renderCell bodies in data-grid consumers | regression: no | repeat: D-139; F-62 | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI"
+    "whereLooked": "Register D-156. Audit F-62, step C9. No issue | class: every DataGrid renderCell emitting two block children; grep renderCell bodies in data-grid consumers | regression: no | repeat: D-139; F-62 | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI | 2026-09-03 10:39 the main lane measured the fix live on d.crm.crm7.app (development preview): Key its own column, every Name cell 32px one line; production crm.crm7.app unchanged until crm7 promotes, and promotions are held by D-160"
   },
   {
     "id": "D-157",
@@ -917,5 +917,11 @@
     "verdict": "NOT-DONE",
     "evidence": "NOT-DONE - settings/data.tsx:266 `slice(0, 4)` over fields ordered by label asc (bulkDataService.ts:258) = first four alphabetical fields (Adms *) + Scope. Deployed data-DeeHll9k.js contains slice(0,4). No joins to related entities (browseDataService.ts:727 \"Browse never joins\")",
     "whereLooked": "Register D-159. Audit F-63, step F7. crm7#1477 | class: every grid truncating columns with a hard slice; 1 found + audit Browse label picker; grep `slice(0,` on column arrays | regression: no | repeat: D-118, D-123, D-124, crm7#1477 | judged 2026-09-03 by audit lane L12 (Fable via hermes) against code, deployed bundles and the live branding row; recorded by the PI"
+  },
+  {
+    "id": "D-160",
+    "verdict": "PARTIAL",
+    "evidence": "PARTIAL - only crm7 handles a post-deploy stale build, and it does so by reloading: src/App.tsx:1155 listens for vite:preloadError and calls purgeStaleAppCachesThenReload (an automatic reload is the loss the ask forbids), VitePWA registerType 'autoUpdate' (vite.config.ts:286), contract test src/__tests__/sw-stale-chunk-recovery-contract.test.ts. business-suite-unified, conduit, braden, R80.4, throughput: no service worker, no preloadError handler, no notice (grep of each app's origin/development tree for needRefresh|registerSW|useRegisterSW|vite:preloadError|new version is available|refresh to update|deploymentId: 0 hits). No app shows a 'new version available, save then refresh' notice; the shared shell packages/ui/src/app-shell.tsx has no such slot. Vercel: no Skew Protection or Rolling Releases configured (audit §9 Vercel row).",
+    "whereLooked": "Register D-160 (operator chat directive 2026-09-03 10:48 AWST, not a docx export). Audit §9 Vercel row; §7 has no step for it until this row | class: every app shell; 6 apps (5 Vite SPAs, 1 Next.js), counted by package.json and grep on origin/development | regression: no | repeat: no, first raise | judged 2026-09-03 10:55 by claude-code-bsuite-pi; design scout in flight; precedent precedent__bsuite__20260903__live_clients_stage_to_development_and_notify_before_refresh; promotions to main held until the notice ships"
   }
 ]
