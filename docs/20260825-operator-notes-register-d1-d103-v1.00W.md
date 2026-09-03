@@ -348,9 +348,9 @@ Not a docx export: two asks the operator put to the email-p0 lane in chat on 3 S
 | D-161 | "can't reset the page layout" / "can't reset to defaults in the page editor" | Reset to Default findable from the page editor without hunting | page-builder edit toolbar (today: three clicks deep in the layers popover) | crm7 (shared page-builder) | customisation / D8.3 clarity |
 | D-162 | SMS recipients must resolve mobiles from any record that holds one and from groups: all contacts at a host, a tagged group, a client, a lead, an opportunity; one-shot, never retyped | a recipient picker that reaches every mobile the estate already holds, by record and by group | compose sheet / RecipientPicker | crm7 | one-shot DRY / communications |
 
-## Addendum — D-163 to D-167, findings raised on 2026-09-03 by the lanes' own gates
+## Addendum — D-163 to D-168, findings raised on 2026-09-03 by the lanes' own gates
 
-Not operator asks: five class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+Not operator asks: six class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
 
 | ID | Finding (source) | Asks for | Surface | App | Category |
 |---|---|---|---|---|---|
@@ -359,3 +359,4 @@ Not operator asks: five class findings surfaced by the corrective run's reviews 
 | D-165 | email-dispatcher resolved a mailbox by id + tenant membership, not ownership: a tenant member could send as a colleague (email-p0 lane, found via the refused send to a client) | BSU#1117 resolveOwnedMailbox (tenant + user_id, 403 before the insert) paired with crm7#2372 (From offers only your own mailboxes); enforcer SEND_BACK 17:20 with six bounded gaps | email-dispatcher, _shared/mailbox-ownership.ts, crm7 compose | BSU + crm7 | security / impersonation (P0, live clients) |
 | D-166 | R80.4 Jodie affordance tells a signed-in person to 'Sign in to ask Jodie' (PI signed-in pass on d.r8, 17:45) | the affordance reads the shell's session; if the gate is a plan, say so in the user's nouns | R80.4 apprentice panel; every 'Sign in to …' caption estate-wide | R80.4 (others uncounted) | UX / false gate |
 | D-167 | AppShell root is unbounded (min-h-svh, document scrolls; two instruments on R80.4#301) | class fix in @bsuite/ui with a D8 pass per consumer; not on the wage promotion | @bsuite/ui AppShell | every app mounting AppShell | layout invariant 1 |
+| D-168 | five results-tab index rows describe a tabbed panel the calculator replaced with cards (main lane, bsuite#2995) | re-model to the card surface in its own PR, verdicts after; generator flags a row whose anchor no longer carries the claimed role | bsuite-feature-index.json, R80.4 | R80.4 (class: every row's surface_type vs the rendered kind) | index model drift |

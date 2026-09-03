@@ -1174,5 +1174,12 @@
     "verdict": "OPEN",
     "evidence": "OPEN - the DOM-layout lint warning on R80.4#301 (INVARIANT 1 possible unbounded shell) measured by two instruments 17:35-17:45 AWST: the document scrolls as one region (enforcer: 0 inner scroll containers; main lane: every ancestor from the calculator's div to html is 8943px with overflow-y visible at a 900px viewport). The unbounded root is the shared AppShell from @bsuite/ui ('flex min-h-svh flex-col bg-background'), so every app mounting AppShell inherits it; R80.4's own min-h-svh at charge-calculator-v9-2.tsx:7025 is nested inside it. Ruling: not on the wage-fix promotion. Fix is a class change in @bsuite/ui (h-svh + an inner scroll pane) with a D8 pass per consumer app; sibling count = the apps mounting AppShell (enumerate by import). Owner: unassigned (platform).",
     "whereLooked": "@bsuite/ui AppShell root; R80.4 main.tsx:156-175 (calculator lazy-mounted inside AppShell); enforcer evidence lanes/dod/enforcer-r80-301-evidence.json"
+  },
+  {
+    "id": "D-168",
+    "registered_at": "2026-09-03",
+    "verdict": "OPEN",
+    "evidence": "OPEN - found by the main lane while writing DoD verdicts for R80.4 (bsuite#2995, 18:05 AWST): the feature index's results-tab class (5 rows, surface_type tab, route /) describes a tabbed results panel the app no longer has; the live signed-in calculator renders zero [role=tab] elements and shows the masonry cards keyed by DASH_LABELS (charge-calculator-v9-2.tsx:957). The lane correctly refused to write verdicts against a surface model the app does not have. Ruling: re-model the five rows to the card surface (surface_type card, ids results-card-<DASH_LABELS id>, anchors to the card render sites, old ids kept in notes as 'replaced by'), in a separate PR after #2995 merges, verdicts only after the re-model and measured on DOM nodes (innerText drops clipped content). Class: any index row whose surface_type no longer matches the rendered element kind; the generator should flag a row whose anchor file no longer contains the role it claims.",
+    "whereLooked": "docs/00-roadmap/bsuite-feature-index.json (results-tab rows); R80.4 charge-calculator-v9-2.tsx:957 DASH_LABELS; main lane inbox d500fb1c"
   }
 ]
