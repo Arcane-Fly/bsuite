@@ -8,7 +8,7 @@
 #   policies.json   — pg_policies rows for schema public (roles, cmd, qual,
 #                     with_check included; `roles` is a native Postgres array
 #                     and round-trips through row_to_json as a JSON array, so
-#                     build-surface-map.mjs's `(p.roles || []).includes(role)`
+#                     build-surface-map.mjs's `(p.roles || '').includes(r)`
 #                     matches on an exact element, not a substring).
 #   functions.json  — pg_proc rows for schema public: proname, prosecdef.
 #                     NOTE: measured against build-surface-map.mjs directly —
@@ -44,7 +44,6 @@ set -euo pipefail
 SP="${SP:?SP=<output dir> is required}"
 ENV_FILE="${ENV_FILE:-.env.local}"
 SUPABASE_PROJECT_REF="${SUPABASE_PROJECT_REF:-tuybltdrdefjblnplpqo}"
-REPO_ROOT="$(pwd)"
 
 if [ ! -f "$ENV_FILE" ]; then
   echo "snapshot-db-for-surface-map: ENV_FILE not found: $ENV_FILE" >&2
@@ -60,7 +59,7 @@ set -a
 . "$ENV_FILE"
 set +a
 
-DB="${POSTGRES_URL%%\?*}"
+DB="${POSTGRES_URL%%\?*}?sslmode=require"  # the pooler URL's own query string is dropped (pgbouncer flags psql rejects); sslmode is re-stated so the strip cannot downgrade the connection
 if [ -z "${DB:-}" ]; then
   echo "snapshot-db-for-surface-map: POSTGRES_URL not set after sourcing $ENV_FILE" >&2
   exit 2
