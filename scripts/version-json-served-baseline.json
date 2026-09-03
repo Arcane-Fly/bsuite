@@ -1,20 +1,17 @@
 {
-  "_doc": "Shrink-only bank of estate domains that do not yet serve /version.json as 200 application/json with a 7-or-40-char hex commit. Written by scripts/check-version-json-served.mjs --update-baseline. A host that starts serving must leave this list in the same commit; a host outside the list that stops serving fails; a hand-added rise fails. Owner: R10 adoption PRs (D-160 step 2). Today every domain is NOT served — no app has adopted the nav-core versionJsonPlugin yet.",
   "expected_missing": [
-    "suite.crm7.app",
-    "crm.crm7.app",
-    "conduit.crm7.app",
-    "ideas.crm7.app",
-    "r8.crm7.app",
-    "d.suite.crm7.app",
-    "d.crm.crm7.app",
-    "d.conduit.crm7.app",
-    "d.ideas.crm7.app",
-    "d.r8.crm7.app",
     "braden.com.au",
-    "d.braden.com.au"
+    "conduit.crm7.app",
+    "crm.crm7.app",
+    "d.braden.com.au",
+    "d.conduit.crm7.app",
+    "d.crm.crm7.app",
+    "d.r8.crm7.app",
+    "r8.crm7.app",
+    "suite.crm7.app"
   ],
   "scanned": 12,
   "banked_at": "2026-09-03",
-  "owner": "R10 adoption PRs"
+  "owner": "R10 adoption PRs",
+  "_doc": "Hosts that do NOT yet serve /version.json (the nav-core versionJsonPlugin output). Written by scripts/check-version-json-served.mjs --update-baseline, which refuses to grow the list; the gate itself only checks that every host OUTSIDE this list serves the file and that the banked count is exact. Adding a host here by hand is not detected by the gate and would mask that host's failure: never do it; a host leaves this list in the PR whose gitlink carries the adopting app. As of 2026-09-03 18:03 AWST ideas.crm7.app and d.ideas.crm7.app serve it (throughput, D-160 first adopter); the hosts listed here are the remaining non-serving ones until their apps adopt per R10."
 }

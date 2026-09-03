@@ -338,3 +338,28 @@ Not a docx export: sent to the PI session (`claude-code-bsuite-pi`) mid-turn on 
 | ID | Verbatim (his words) | Asks for | Surface | App | Category |
 |---|---|---|---|---|---|
 | D-160 | "note there are people using the app in production i.e. actual clients so stage all work to development branch and then ensure their is a platform notice and refresh to update prompt so they dont lose work on rebuilds." | Every app shows an in-app new-version notice with a refresh-to-update prompt so a signed-in user saves before a rebuild replaces the running build (never an automatic reload); all work staged to `development`; production promotions scheduled, never incidental | every app shell (one shared implementation) | ALL six | process + ux |
+
+## Addendum — D-161 and D-162, from the operator's chat directives of 2026-09-03 15:49 AWST
+
+Not a docx export: two asks the operator put to the email-p0 lane in chat on 3 September, relayed to the PI over the bsuite inbox (6003495c, 0fcd55e2). The PI did not see the verbatim text; the wording below is the lane's relay and is marked as such. Same basis as D-140 to D-145 and D-160 (a transcript source). Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+
+| ID | Wording (as relayed; not verbatim) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-161 | "can't reset the page layout" / "can't reset to defaults in the page editor" | Reset to Default findable from the page editor without hunting | page-builder edit toolbar (today: three clicks deep in the layers popover) | crm7 (shared page-builder) | customisation / D8.3 clarity |
+| D-162 | SMS recipients must resolve mobiles from any record that holds one and from groups: all contacts at a host, a tagged group, a client, a lead, an opportunity; one-shot, never retyped | a recipient picker that reaches every mobile the estate already holds, by record and by group | compose sheet / RecipientPicker | crm7 | one-shot DRY / communications |
+
+## Addendum — D-163 to D-171, findings raised on 2026-09-03 by the lanes' own gates
+
+Not operator asks: nine class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+
+| ID | Finding (source) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-163 | calendar-integration acts with a colleague's provider token on an id + tenant membership check (email-p0 lane); OPERATOR 18:11: recruiters and managers DO write to colleagues' calendars; 18:1x: tenant + sub-tenant gated permissions | a role-based, tenant-gated permission (book/view colleague calendars) with server-side check + audit; increment 1 tonight, catalogue + settings + hierarchy next | BSU calendar-integration, crm7 permissions/calendar, phase-5 hierarchy | BSU + crm7 | security / permissions (operator ruling; precedent Tier 2) |
+| D-164 | real client and person names in crm7 source: 82 hits in src/, 215 repo-wide (enforcer on crm7#2367) | a class sweep to neutral fixture names + a gate seeded from real tenant names | crm7 source, tests, fixtures | crm7 (others uncounted) | privacy / Privacy Act |
+| D-165 | email-dispatcher resolved a mailbox by id + tenant membership, not ownership: a tenant member could send as a colleague (email-p0 lane, found via the refused send to a client) | BSU#1117 resolveOwnedMailbox (tenant + user_id, 403 before the insert) paired with crm7#2372 (From offers only your own mailboxes); enforcer SEND_BACK 17:20 with six bounded gaps | email-dispatcher, _shared/mailbox-ownership.ts, crm7 compose | BSU + crm7 | security / impersonation (P0, live clients) |
+| D-166 | R80.4 Jodie affordance tells a signed-in person to 'Sign in to ask Jodie' (PI signed-in pass on d.r8, 17:45) | the affordance reads the shell's session; if the gate is a plan, say so in the user's nouns | R80.4 apprentice panel; every 'Sign in to …' caption estate-wide | R80.4 (others uncounted) | UX / false gate |
+| D-167 | AppShell root is unbounded (min-h-svh, document scrolls; two instruments on R80.4#301) | class fix in @bsuite/ui with a D8 pass per consumer; not on the wage promotion | @bsuite/ui AppShell | every app mounting AppShell | layout invariant 1 |
+| D-168 | five results-tab index rows describe a tabbed panel the calculator replaced with cards (main lane, bsuite#2995) | re-model to the card surface in its own PR, verdicts after; generator flags a row whose anchor no longer carries the claimed role | bsuite-feature-index.json, R80.4 | R80.4 (class: every row's surface_type vs the rendered kind) | index model drift |
+| D-169 | OPERATOR 18:1x: 'API is legacy': GitHub automation authenticates as a GitHub App, not a PAT (63 parent workflows use the PAT; 2 write) | register the App (operator), migrate the 2 writers, then the 61 readers | parent .github/workflows | parent (0 app workflows) | automation identity (precedent Tier 3) |
+| D-170 | braden and crm7 took the same migration version (20261115000000) the same afternoon; one shared ledger; caught only by the parent gitlink gate after braden promoted | renumbered to 20261118000000 (braden#587); app-repo CI runs the cross-scope check | every app repo's migration PR CI, plus the parent collision gate | 6 app repos (0 run it) | migration ledger integrity |
+| D-171 | /communications/mail-merge still asks for a recipient type and can create a batch addressing nobody (enforcer on crm7#2365) | build it out on the #2365 picker; never delete | crm7 mail-merge page | every recipient-picking surface (9, 8 done) | unbuilt route |

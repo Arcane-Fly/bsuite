@@ -806,6 +806,35 @@ export const GUARDS = [
       'positions, 4 must-stay-silent)"; --self-test exits 1 with 36 failures',
   },
   {
+    // C10. Compares every bg-/text-/border-/ring-/fill-/stroke-/shadow-/
+    // outline- token used in an app's source against the class selectors its
+    // REAL Tailwind build emits (npx @tailwindcss/cli@<installed version> on
+    // the app's own CSS entry). Ratchet on {findings, files_scanned} per app.
+    //
+    // PRECONDITION: each app's own `pnpm install` (the build needs the app's
+    // installed tailwindcss and @bsuite/theme); reaches the network for the
+    // CLI via npx. Refuses per app with "tailwindcss not installed" rather
+    // than reporting clean, and the whole run fails if NO app was scanned.
+    // Same shape as parent-check-stale-lint-exemptions above. ~100 s.
+    id: 'parent-check-css-classes-emitted',
+    label: 'Every used class token has an emitted rule (C10, per-app ratchet)',
+    repo: '.',
+    command: ['node', 'scripts/check-css-classes-emitted.mjs'],
+    ciWorkflow: '.github/workflows/theme-conformance.yml',
+    mode: 'run',
+    evidence:
+      '"crm7: 10 finding(s), 1650 file(s) scanned, 2265 class(es) emitted" … ' +
+      '"business-suite-unified: 381 finding(s), 432 file(s) scanned, 1717 ' +
+      'class(es) emitted" … "throughput: 249 finding(s), 181 file(s) scanned" ' +
+      '(2026-09-03 after the template-literal className fix and BSU #1106, six ' +
+      'apps, all == baseline). --self-test: "OK (37 logic cases + 1 real-build ' +
+      'case + 7 entry-point cases)" — the entry-point cases include a bare ' +
+      'theme-audit-ok exiting 1 as MARKER WITHOUT REASON and a bare allowlist ' +
+      'line exiting 1 as ALLOWLIST LINE WITHOUT REASON before any scan; with ' +
+      'the emitted-set membership test stubbed out it exits 1 on the ' +
+      'entry-point case.',
+  },
+  {
     // A RATCHET, not a hard gate: 25 documents in docs/recovered/ still need a
     // verdict against code, and a gate that fails all of them on day one is
     // permanently red — which is how the colour rule was disarmed the first
@@ -1687,6 +1716,66 @@ export const GUARDS = [
       'parseable JSON") rather than silently passing — another good ' +
       'citizen, filed rather than executed.',
   },
+
+  {
+    id: 'required-contexts-producible',
+    label: 'Every required status check is one some PR can actually report',
+    repo: '.',
+    command: ['node', 'scripts/check-required-contexts-producible.mjs'],
+    ciWorkflow: '.github/workflows/guard-self-reporting.yml',
+    mode: 'ratchet',
+    notes:
+      'A required context nobody can produce blocks every merge into that branch, ' +
+      'silently: GitHub waits for a status that never arrives while every visible ' +
+      'check is green. Three ways to get there, all seen here — a workflow with a ' +
+      '`paths:` filter that a PR misses, a job-level `if:` that reports SKIPPED ' +
+      '(SKIPPED does not satisfy a required context), and a job renamed out from ' +
+      'under a context string still sitting in branch protection. This reads the ' +
+      'COMMITTED dumps under docs/security/branch-protection/ rather than the live ' +
+      'API, so it needs no token and the rollback for every protection write stays ' +
+      'in git history. It does NOT assert that the dump still matches live ' +
+      'protection — re-dump in the PR that writes it.',
+    evidence:
+      'Clean pass states "examined N required context(s) across M branch dump(s) ' +
+      '... against J job(s) in W workflow file(s); F finding(s)" — 61 / 2 / 129 / ' +
+      '105 / 0 on development+main at 2026-09-03, after `align` was appended to ' +
+      'both branches and `Every gitlink sits on its app\'s own main` to main. ' +
+      '--self-test covers 11 cases: clean, stale context, path filter, ' +
+      'job-level if:, branches:, branches-ignore:, a types: list omitting both ' +
+      'opened and synchronize, a matrix job\'s bare name, its parenthesised ' +
+      'form, and a structural case asserting a `- run: |` body does not swallow ' +
+      'the step keys after it.',
+  },
+
+  {
+    id: 'parent-check-secdef-grants',
+    label: 'SECURITY DEFINER functions reachable by anon/PUBLIC + RLS-no-policy table bank',
+    repo: '.',
+    command: ['node', 'scripts/supabase/check-secdef-grants.mjs', '--db-url', '$REHEARSAL_DB_URL', '--substrate', 'replay'],
+    ciWorkflow: '.github/workflows/supabase-migration-rehearsal.yml',
+    mode: 'skip',
+    skipReason:
+      'Needs a Postgres database to read pg_proc/pg_class ACLs from — there is ' +
+      'nothing to scan without one, so a credential-free run would be scanning ' +
+      'zero objects, which this guard treats as a hard failure ("scanned less ' +
+      'than banked") rather than a pass. CI supplies one two ways: the ' +
+      'disposable `supabase db start` container in supabase-migration-rehearsal.yml ' +
+      '(--substrate replay, gating GROWTH — a migration that would introduce the ' +
+      'defect) and the live pooler in prod-rls-policy-drift-audit.yml ' +
+      '(--substrate live, gating STATE — a DROP+CREATE that re-granted PUBLIC ' +
+      'with no migration to rehearse). Verified by hand on 2026-09-03 against a ' +
+      "throwaway postgres:17 container seeded to the estate's shape (8 SECURITY " +
+      'DEFINER functions with NAMED parameters, 14 RLS-no-policy tables): a clean ' +
+      'pass prints "check 1 (PUBLIC EXECUTE on SECURITY DEFINER): {findings: 0, ' +
+      'scanned: 8}", and exit 1 was observed on each of an unlisted anon grant, a ' +
+      '15th RLS-no-policy table, an anon TRUNCATE on a banked table, a planted ' +
+      'PUBLIC-executable function (--self-test), a scanned count below the floor, ' +
+      'and an invalid --substrate (exit 2). GOOD CITIZEN while skipped: with no ' +
+      'database it refuses rather than passing. Note the fixture uses NAMED ' +
+      'parameters deliberately — an earlier bare-type fixture could not reproduce ' +
+      'the signature mismatch that failed the first real run (bsuite run ' +
+      '33727868315), which is the shape a fixture must match to be evidence.',
+  },
 ]
 
 export function findGuard(id) {
@@ -1711,7 +1800,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 72
+export const GUARD_FLOOR = 83
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 

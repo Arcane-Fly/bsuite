@@ -131,3 +131,20 @@ jobs:
       # what a full-tree scan needs to mean anything.
       - name: No cookie SSO in code, and no doc claiming it is shipped
         run: node scripts/check-no-cookie-sso.mjs
+
+      # A REQUIRED CONTEXT NOBODY CAN PRODUCE BLOCKS EVERY MERGE, SILENTLY.
+      #
+      # This lands here rather than in a workflow of its own for the reason
+      # stated two steps above: this file has no `paths:` filter and its own
+      # context is already required on both protected branches, so a gate wired
+      # in here is a gate that reports on every PR. Adding a new required
+      # context to check the required contexts would be its own joke.
+      #
+      # It reads the COMMITTED dumps under docs/security/branch-protection/,
+      # never the live API — no token, no network, and the rollback for every
+      # protection write is in git history where a future lane can find it.
+      - name: Self-test the guard (proves it can fail)
+        run: node scripts/check-required-contexts-producible.mjs --self-test
+
+      - name: Every required status check is one some PR can actually report
+        run: node scripts/check-required-contexts-producible.mjs

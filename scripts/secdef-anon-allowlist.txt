@@ -1,0 +1,91 @@
+# SECURITY DEFINER functions in schema `public` that may be executed by `anon`.
+#
+# Read by scripts/supabase/check-secdef-grants.mjs (checks 1 and 2).
+#
+# FORMAT
+#   <function>(<argument TYPES, comma separated, no spaces>)   # why anon needs it
+#
+# Example — a function declared in its migration as
+#
+#     CREATE FUNCTION public.r7_redeem_talent_pool_consent(p_token text) ...
+#
+# is written here as
+#
+#     r7_redeem_talent_pool_consent(text)      # ...reason...
+#
+# No schema prefix. No parameter names. Types only.
+#
+# The signature is rendered by the checker as
+#
+#   proname || '(' || string_agg(format_type(t, NULL), ',') || ')'
+#     over unnest(proargtypes)
+#
+# and it is NEITHER of the two obvious spellings, because both are wrong here:
+#
+#   * `oid::regprocedure::text` gains a `public.` prefix whenever search_path
+#     does not contain public. An entry written without it then matches nothing —
+#     and on an allowlist, "matches nothing" means "everything is unlisted", so
+#     the whole estate fails at once.
+#
+#   * `pg_get_function_identity_arguments(oid)` includes PARAMETER NAMES:
+#     `r7_redeem_talent_pool_consent(p_token text)`, not `(text)`. That is not a
+#     hypothetical — it is what this gate did on its first real run (bsuite run
+#     33727868315), reporting four allowlisted functions as unlisted while
+#     simultaneously reporting the same four as "allowlisted but not present":
+#     the two halves of one mismatch, printed six lines apart. The local fixture
+#     could not catch it, because functions created as `f(text)` have no
+#     parameter names to include.
+#
+# Building the list from proargtypes has neither failure mode, and the checked-in
+# self-test now plants a function with named parameters so this rendering path is
+# exercised in CI rather than by production data.
+#
+# A line without a `#` reason is a HARD FAILURE, not a warning. An allowlist
+# entry whose justification is missing is indistinguishable from one nobody
+# reviewed, and this file's whole value is that every line was argued for once.
+#
+# THE RULE THIS FILE ENCODES
+# ──────────────────────────
+# Anon reachability is legitimate only for the token-redemption / consent /
+# signing class: a function reached from an unauthenticated portal route, whose
+# ONLY key is a high-entropy token the caller must already possess, and which
+# fails closed when that token is absent, expired or already redeemed.
+#
+# Every entry below carries a NAMED `anon` grant preceded by an explicit
+# `REVOKE EXECUTE ... FROM PUBLIC` in its own migration (the estate's template is
+# crm7 supabase/migrations/archive/20260812070000_portal_invite_mint_accept.sql
+# lines 294-296). Named-and-revoked is the shape that belongs here. Reachable by
+# PUBLIC is never allowed — see the PENDING section at the foot of this file.
+#
+# Census taken live against tuybltdrdefjblnplpqo on 2026-09-03: exactly 8
+# SECURITY DEFINER functions in `public` were anon-executable. The 7 below hold a
+# named anon grant and NO PUBLIC grant. The 8th, is_developer_admin(), was the
+# inverse — PUBLIC grant, no named anon grant — and is being revoked.
+
+get_charge_rate_quote_signing_context(text)  # crm7 chargeRateQuoteSigning.ts: renders the quote a client is about to sign, keyed on the signing token alone
+get_host_agreement_signing_context(text)  # crm7 hostAgreementSigning.ts: renders the host agreement a host employer is about to sign, keyed on the signing token alone
+portal_invite_accept(text)  # crm7 portalInvite.ts: redeems a single-use portal invite token and provisions the account; the token IS the authorisation
+r7_redeem_talent_pool_consent(text)  # conduit redeemConsent.ts: records a candidate's talent-pool consent from an emailed consent link
+r7_submit_public_application(uuid,text,text,text,text,text,text,text,text,text,text,text,text,boolean,boolean,text,text,boolean,boolean,text,boolean,boolean,boolean,text,text,text,text)  # conduit submitApplication.ts: the public job-application form; unauthenticated by definition
+redeem_charge_rate_quote_signature(text,text,text,text,text,text)  # crm7 chargeRateQuoteSigning.ts: writes the counter-signature, keyed on the same one-time token
+redeem_host_agreement_signature(text,text,text,text,text,text)  # crm7 hostAgreementSigning.ts: writes the host's signature, keyed on the same one-time token
+
+# SECTION: PENDING-PUBLIC-EXECUTE
+#
+# A RATCHET, NOT AN ALLOWLIST. Each line is a SECURITY DEFINER function that is
+# currently EXECUTE-able by PUBLIC on some database this gate runs against, and
+# for which the fix is already written. The list may only SHRINK. Adding a line
+# is not a way to make this gate pass — it is an admission that needs a migration
+# named on the same line.
+#
+# An entry here that has STOPPED violating is a HARD FAILURE, not a reminder. The
+# exemption exists only for as long as its cause does; left as a note, the line
+# would survive the migration that fixed it and quietly become a permanent hole —
+# the next function to acquire a PUBLIC grant under that same name would be waved
+# straight through by an exemption nobody re-argued. The gate goes red until the
+# line is deleted, which is the only moment anyone is guaranteed to be looking.
+#
+# ABSENT IS NOT FIXED. A function this file names that is not on the database at
+# all yields a note, never a failure: a partial replay may simply not have built
+# it, and that is not evidence of anything.
+

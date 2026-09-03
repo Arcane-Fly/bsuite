@@ -68,6 +68,12 @@ on:
       - '.github/theme-c1-baseline.txt'
       - '.github/theme-c2-baseline.txt'
       - '.github/theme-near-pure-baseline.txt'
+      # check-css-classes-emitted.mjs and its two baselines moved OUT of this
+      # filter with the C10 job itself, to .github/workflows/css-classes-emitted.yml
+      # — that job is a REQUIRED check and a required check cannot live behind a
+      # `paths:` filter. Leaving its inputs listed here would start this whole
+      # workflow (including the Playwright signed-in sweep) on a PR that only
+      # touches the C10 baseline, for no gate this file still owns.
       - '.github/workflows/theme-conformance.yml'
       # THE SUBMODULE GITLINKS. Every app is a submodule, so a pointer bump is
       # the ONLY change to this repo that moves this gate's inputs — and none of

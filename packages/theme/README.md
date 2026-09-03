@@ -114,15 +114,37 @@ The `resolvedTheme` always returns `'light'` or `'dark'` — use this when you n
 
 All 11 canonical electric colours are available as palette tokens, but consumer UI should bind to role/shadcn tokens. Palette names are presentational; roles are the stable contract for white-labelling.
 
-| Role / token | OKLCH source | Notes |
-|---|---|---|
-| `--role-primary` / Electric Blue | `oklch(0.546 0.215 262.9)` | Primary actions and focus affordances |
-| `--role-accent` / Electric Cyan | `oklch(0.769 0.132 191.7)` | Accents, highlights, visible focus in dark mode |
-| `--role-success` | `oklch(0.723 0.192 149.6)` | Success; never rely on colour alone |
-| `--role-warning` | `oklch(0.728 0.168 22.5)` | Warning; pair with icon/text |
-| `--role-error` / `--role-destructive` | `oklch(0.568 0.202 283.1)` | Purple by platform policy; coral/red must not be semantic error/destructive |
+**The values live in `src/css/vars.css` and `src/css/braden.css`, and only there.**
+This table gives each role's _binding_ and the line that owns it, deliberately not
+the literal. Until 2026-09-03 it carried literals, and three of its five rows were
+the pre-0.7.0 contract: it advertised error as purple `oklch(0.568 0.202 283.1)`
+with "coral/red must not be semantic error/destructive" — the exact rule the
+2026-08-02 rewrite overturned — plus green-as-success and orange-as-warning, both
+also superseded. `AGENTS.md` names this file as canonical for "theme tokens, both
+brands", so an agent that trusted it painted the overturned palette. A second copy
+of a value is a second source of truth; this table now points instead.
 
-Braden keeps separate corporate identity tokens in `@bsuite/theme/braden-css`: Braden Red `oklch(0.51 0.17 19)`, Braden Gold `oklch(0.77 0.10 82)`, and Braden Navy `oklch(0.34 0.04 250)`. Red is identity only; Braden error/destructive roles still map to purple.
+| Role / token | Binds to | Owner | Notes |
+|---|---|---|---|
+| `--role-primary` | `--neon-electric-blue` | `vars.css:152` | Primary actions and focus affordances |
+| `--role-accent` | `--neon-electric-cyan` | `vars.css:154` | Accents, highlights, visible focus in dark mode |
+| `--role-secondary` | `--neon-electric-deep` | `vars.css:153` | Secondary action; was indigo — 0.037 from primary |
+| `--role-success` | `--neon-electric-teal` | `vars.css:168` | Success; never rely on colour alone |
+| `--role-warning` | `--neon-electric-amber` | `vars.css:167` | Warning; pair with icon/text. Separates from error by LIGHTNESS |
+| `--role-error` / `--role-destructive` | `--neon-electric-red` | `vars.css:165-166` | **RED.** Tenant override blocked. Purple measured ΔE 0.006 against primary blue under protanopia — the destructive colour and the primary action colour were the same swatch |
+
+Purple, indigo, coral, orange, yellow and green remain in the palette as
+**decorative** entries. None of them may be bound to a semantic role.
+
+Braden keeps separate corporate identity tokens in `@bsuite/theme/braden-css`
+(`--braden-red`, `--braden-gold`, `--braden-navy`, `braden.css:62-68`). Red is
+identity only. **Braden's error/destructive roles map to `--error-red`
+(`braden.css:81,187-188`) — the same error red the D2C brand uses, by operator
+ruling 2026-08-10: recognition beats palette separation, a person reads red as
+"danger" before they read it as "Braden".** The cost is measured in that file's
+header — ΔE 0.113 between error red and Braden red is now the Corporate palette's
+tightest pair — so a destructive action on Braden must carry an icon or an
+explicit verb, never colour alone.
 
 WCAG AA compliance: use semantic text tokens (`text-foreground`, `text-muted-foreground`, `text-text-on-primary`, `text-text-on-accent`) rather than raw `text-white`/`text-black`. Dark-surface text is capped at L=0.94 for extended-session comfort.
 
