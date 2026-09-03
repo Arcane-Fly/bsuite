@@ -347,3 +347,12 @@ Not a docx export: two asks the operator put to the email-p0 lane in chat on 3 S
 |---|---|---|---|---|---|
 | D-161 | "can't reset the page layout" / "can't reset to defaults in the page editor" | Reset to Default findable from the page editor without hunting | page-builder edit toolbar (today: three clicks deep in the layers popover) | crm7 (shared page-builder) | customisation / D8.3 clarity |
 | D-162 | SMS recipients must resolve mobiles from any record that holds one and from groups: all contacts at a host, a tagged group, a client, a lead, an opportunity; one-shot, never retyped | a recipient picker that reaches every mobile the estate already holds, by record and by group | compose sheet / RecipientPicker | crm7 | one-shot DRY / communications |
+
+## Addendum — D-163 and D-164, findings raised on 2026-09-03 by the lanes' own gates
+
+Not operator asks: two class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+
+| ID | Finding (source) | Asks for | Surface | App | Category |
+|---|---|---|---|---|---|
+| D-163 | calendar-integration resolves a colleague's calendar by id + tenant membership, not ownership (email-p0 lane, class sweep for BSU#1117) | writes owner-only, reads tenant-scoped; two deno cases | supabase/functions/calendar-integration | business-suite-unified | authz / same class as the dispatcher hole |
+| D-164 | real client and person names in crm7 source: 82 hits in src/, 215 repo-wide (enforcer on crm7#2367) | a class sweep to neutral fixture names + a gate seeded from real tenant names | crm7 source, tests, fixtures | crm7 (others uncounted) | privacy / Privacy Act |
