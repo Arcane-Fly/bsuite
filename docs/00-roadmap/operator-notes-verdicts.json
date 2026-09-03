@@ -1139,5 +1139,19 @@
     "verdict": "OPEN",
     "evidence": "OPEN - build: SMS recipients must resolve mobiles from ANY record that holds one (apprentice, host employer contact, client, lead, opportunity, person) and from GROUPS (all contacts at a host, a tagged group, a client, a lead, an opportunity), one-shot, never retyped. Owner: the email-p0 lane on the crm7#2357/#2365 stack (crm7#2365 feat/sms-recipients-from-records-and-groups opened 16:19 AWST). DoD-gated with D8 (round-trip: choosing a group never leaves the compose sheet). Source: operator chat 2026-09-03 15:49 AWST as relayed by the email-p0 lane (inbox 6003495c); verbatim not captured by the PI.",
     "whereLooked": "crm7 src/components/communications/mail/RecipientPicker.tsx, src/services/recipientSearchService.ts"
+  },
+  {
+    "id": "D-163",
+    "registered_at": "2026-09-03",
+    "verdict": "OPEN",
+    "evidence": "OPEN - finding from the email-p0 lane's class sweep for BSU#1117 (dispatcher hardening): business-suite-unified supabase/functions/calendar-integration/index.ts (~lines 121 and 239) resolves email_integrations by id and then requires the CALLER to be a member of the row's tenant, not its owner, so any tenant member can list/create/update events on a colleague's connected calendar with that colleague's token. PI ruling 17:11 AWST: WRITES (create/update/delete) become owner-only via the same resolveOwnedMailbox with columns '*'; READS (list, availability) stay tenant-member-scoped because Jodie's scheduling tools and the team views read colleagues' calendars; if any Jodie tool WRITES to a colleague's calendar today, that write stays gated behind an explicit delegation row, not membership. Owner: email-p0 lane, follow-up PR after #1117 with two deno cases (a colleague can list, cannot create). Source: inbox 76741056.",
+    "whereLooked": "business-suite-unified/supabase/functions/calendar-integration/index.ts; _shared/mailbox-ownership.ts (resolveOwnedMailbox from #1117)"
+  },
+  {
+    "id": "D-164",
+    "registered_at": "2026-09-03",
+    "verdict": "OPEN",
+    "evidence": "OPEN - finding from the enforcer run on crm7#2367 (17:06 AWST): the PII redaction in that PR fixed two instances of a class; `grep -rniI -e caris -e futurebuild src/` in crm7 development returns 82 hits (215 repo-wide), including src/lib/permissions.ts:129 and src/components/communications/mail/mailboxes.ts:5 (added 2026-09-03). A real client's and a real person's name in source, comments, tests and fixtures is a Privacy Act exposure for a lawyer-operated estate and a leak path into logs and public builds. Fix is a class sweep: replace with neutral fixture names, add a gate (a denylist of real client identifiers, seeded from the tenants table's real names, run on every PR; self-test with a planted name) so the class cannot regrow. Not assigned yet; sized as one lane brief.",
+    "whereLooked": "crm7 src/ (82 hits), whole repo (215); BSU/conduit/R80.4 not yet counted"
   }
 ]
