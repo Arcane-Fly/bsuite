@@ -1,6 +1,13 @@
 export { PageGridLayout } from './PageGridLayout.js';
 export { PageEditorLauncher } from './PageEditorLauncher.js';
 export { CanvasCard } from './CanvasCard.js';
+export { CustomPageView, renderStructuredLayout, layoutIsEmpty, flattenSections } from './CustomPageView.js';
+export type {
+  CustomPageLike,
+  CustomPageViewProps,
+  StoredLayout,
+  StoredLayoutSection,
+} from './CustomPageView.js';
 export type { CanvasCardProps } from './CanvasCard.js';
 export { DraggableCardPage } from './DraggableCardPage.js';
 export type { DraggableCardPageProps } from './DraggableCardPage.js';

@@ -2,6 +2,13 @@
 kind: decision
 authority: proposed
 owner: bsuite
+evidence:
+  - crm7/src/components/CustomPageRenderer.tsx
+  - business-suite-unified/src/components/CustomPageRenderer.tsx
+  - braden/src/components/CustomPageRenderer.tsx
+  - conduit/src/components/custom-page-renderer/CustomPageRenderer.tsx
+  - packages/page-builder/src/CustomPageView.tsx
+  - docs/adr/ADR-0003-consumer-renderer-pattern.md
 ---
 
 # ADR-0011 — One custom-page renderer, with a per-app widget catalogue
