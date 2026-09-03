@@ -2,7 +2,7 @@
 #
 # ─── THE HALF THAT CANNOT LIVE IN THE DATABASE ──────────────────────────────
 #
-# crm7 migration 20261116000000 installs `public.pg_cron_watchdog_check()` and
+# crm7 migration 20261117000000 installs `public.pg_cron_watchdog_check()` and
 # schedules `cron-watchdog-every-15m` to run it. That function writes ONE row to
 # `public.cron_watchdog_checkins` on EVERY run, healthy or not.
 #
@@ -306,7 +306,7 @@ jobs:
           if [ "${INSTALLED}" != "yes" ]; then
             TITLE_SUFFIX="the dead-man's switch is not installed on the shared project"
             REASON="public.cron_watchdog_checkins and/or public.pg_cron_watchdog_check() do not exist"
-            DETAIL="crm7 migration 20261116000000_pg_cron_watchdog_checkins.sql has not reached production. Migrations apply only from the parent repo's main via the Supabase Migrations workflow, so this closes when that promotion lands. Until then there is NO liveness proof for any of the 24 scheduled controls."
+            DETAIL="crm7 migration 20261117000000_pg_cron_watchdog_checkins.sql has not reached production. Migrations apply only from the parent repo's main via the Supabase Migrations workflow, so this closes when that promotion lands. Until then there is NO liveness proof for any of the 24 scheduled controls."
           else
             TITLE_SUFFIX="${ALARM_TITLE}"
             REASON="${ALARM_REASON}"
@@ -323,7 +323,7 @@ jobs:
             echo
             echo "Observed at $(date -u '+%Y-%m-%d %H:%M UTC') by [this run](${RUN_URL})."
             echo
-            echo "The watchdog is \`cron-watchdog-every-15m\` -> \`public.pg_cron_watchdog_check()\`, installed by crm7 migration \`20261116000000\`. It writes one row to \`public.cron_watchdog_checkins\` on every run. This issue is updated in place on every recurrence rather than reopened; it does not close itself."
+            echo "The watchdog is \`cron-watchdog-every-15m\` -> \`public.pg_cron_watchdog_check()\`, installed by crm7 migration \`20261117000000\`. It writes one row to \`public.cron_watchdog_checkins\` on every run. This issue is updated in place on every recurrence rather than reopened; it does not close itself."
             echo
             echo "First look:"
             echo

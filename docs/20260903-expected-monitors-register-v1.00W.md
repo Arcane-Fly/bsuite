@@ -19,7 +19,7 @@ evidence:
   ratchet becomes a place findings go to be forgotten.
 
   The two files, in the crm7 repository:
-    supabase/migrations/20261116000000_pg_cron_watchdog_checkins.sql
+    supabase/migrations/20261117000000_pg_cron_watchdog_checkins.sql
     supabase/tests/database/91_pg_cron_watchdog_dead_mans_switch.sql
   Add them to `evidence` above once the gitlink carrying them reaches this repo.
 -->
@@ -72,7 +72,7 @@ Seeded from the live roster measured **2026-09-03** (`SELECT jobid, jobname, sch
 (command ILIKE '%net.http_post%') FROM cron.job ORDER BY jobid` — 24 rows, 9 of them http),
 plus the watchdog's own job, plus the two deployed-and-unscheduled edge functions. The
 authoritative copy is the table `public.cron_job_manifest`, seeded by crm7 migration
-`20261116000000`; this section is its readable form and must be updated in the same change.
+`20261117000000`; this section is its readable form and must be updated in the same change.
 
 `max_age_minutes` mirrors the tolerances `public.cron_job_health()` already applies, so the two
 controls cannot disagree about what "late" means.

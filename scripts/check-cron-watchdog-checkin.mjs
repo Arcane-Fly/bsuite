@@ -5,7 +5,7 @@
  * ---------------------------------------------------------------------------
  * THE INVERSION THIS HALF EXISTS TO COMPLETE
  * ---------------------------------------------------------------------------
- * `public.pg_cron_watchdog_check()` (crm7 migration 20261116000000) writes ONE
+ * `public.pg_cron_watchdog_check()` (crm7 migration 20261117000000) writes ONE
  * row to `public.cron_watchdog_checkins` on EVERY run, healthy or not. That is
  * deliberate and it is the whole design: a control that speaks only when
  * something is wrong makes a healthy estate and a dead control produce
@@ -109,7 +109,7 @@ export function verdict(checkin, bank, opts) {
       reason: 'no check-in has ever been recorded',
       detail:
         'public.cron_watchdog_checkins is empty. Either the crm7 migration ' +
-        '20261116000000 has not reached production, or cron-watchdog-every-15m ' +
+        '20261117000000 has not reached production, or cron-watchdog-every-15m ' +
         'has never once run. Silence here is the alarm, not the all-clear.',
       ageMinutes: null,
     }

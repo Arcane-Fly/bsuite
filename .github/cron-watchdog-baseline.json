@@ -20,5 +20,5 @@
   "jobs_examined": 25,
   "manifest_rows": 27,
   "measured": "2026-09-03",
-  "source_migration": "crm7/supabase/migrations/20261116000000_pg_cron_watchdog_checkins.sql"
+  "source_migration": "crm7/supabase/migrations/20261117000000_pg_cron_watchdog_checkins.sql"
 }
