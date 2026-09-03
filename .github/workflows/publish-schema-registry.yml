@@ -11,7 +11,7 @@
 #       workflow filename: publish-schema-registry.yml
 #       environment name: leave blank (this workflow declares no environment)
 #       allowed action: Allow npm publish
-#   Requires `id-token: write` (set below). Do not add NPM_TOKEN fallback.
+#   Requires `id-token: write` (set below). Do not add a long-lived token fallback.
 #
 # To trigger manually (e.g. after a version bump merged to main):
 #   gh workflow run publish-schema-registry.yml
