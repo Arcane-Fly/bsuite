@@ -12,11 +12,11 @@
 > restructure, not a rename, so a rewrite would swap a visibly stale pointer for one that
 > looks current and is still broken. Authority: `docs/README.md`.
 
-Applies to **all 5 apps** (BSU, CRM7, Conduit, Braden, R80.3). These rules exist because AI agents routinely reach for z-index hacks and magic pixel offsets when the real fix is a structural DOM/flexbox change. The three-prompt system below is the mandatory protocol.
+Applies to **all 6 apps** (BSU, CRM7, Conduit, Braden, R80.4, Throughput). *(Was "5 apps … R80.3" — R80.3 was archived in the 2026-08-06 restructure and R80.4 and Throughput were never added.)* These rules exist because AI agents routinely reach for z-index hacks and magic pixel offsets when the real fix is a structural DOM/flexbox change. The three-prompt system below is the mandatory protocol.
 
 ### The 3-Prompt DOM Autopsy System
 
-**Use this system before touching any layout, z-index, positioning, or sticky/fixed element across all 5 apps.** Running Prompt 1 first prevents the "CSS hack trap" — where an agent throws `z-index: 9999` or `position: absolute !important` at a symptom instead of fixing the root cause.
+**Use this system before touching any layout, z-index, positioning, or sticky/fixed element across all 6 apps.** Running Prompt 1 first prevents the "CSS hack trap" — where an agent throws `z-index: 9999` or `position: absolute !important` at a symptom instead of fixing the root cause.
 
 ---
 
@@ -200,7 +200,7 @@ omitted R80.4 and throughput, which exist.
 | business-suite-unified | `AppShell` — `AppContent.tsx:223` | no |
 | conduit | `AppShell` — `DashboardShell.tsx:364` | no |
 | throughput | `AppShell` — `MainContent.tsx:30` | no |
-| R80.4 | `AppShell` — `main.tsx:156` (no props) | no |
+| R80.4 | **its own local `AppShell`** — `./components/layout/AppShell` (`main.tsx:8`), not `@bsuite/ui` | **YES — `flex min-h-svh flex-col`, `AppShell.tsx:71` and `:121`** |
 | braden | **no `AppShell`** — admin shell root is `SidebarProvider`, `AdminLayout.tsx:101` | **YES — `min-h-svh`, sidebar.tsx:142** |
 
 Consumers pass only background, transition and dot-pattern props to `AppShell` itself — none
@@ -215,18 +215,30 @@ where this rule is still being broken:
   (`AdminLayout.tsx:101`) over `sidebar.tsx:142`, `flex min-h-svh w-full`, with a
   `SidebarInset` at `:324` that is also `min-h-svh`. Nothing bounds that surface's height.
 
-crm7#201 ("SidebarProvider root uses min-h-svh — unbounded") was closed on 2026-04-16, and
-the vendored `min-h-svh` it was about is still in both files. Closing the app-level issue did
-not close the class, because the class lives in the vendored shadcn component that each app
-copied. **A fix here has to be verified per surface, not per package** — the admin surface is
-the one where it currently bites.
+- **R80.4** — imports its **own** `AppShell` from `./components/layout/AppShell`
+  (`main.tsx:8`), not `@bsuite/ui`. Its root is `flex min-h-svh flex-col` at
+  `AppShell.tsx:71` **and** `:121` (two branches, both unbounded). Cross-reference D-167,
+  whose text describes R80.4 as using the shared shell; it does not.
 
------|---------------------|--------------|--------|
-| conduit | `h-screen overflow-hidden` on `DashboardShell` root | `<main> overflow-y-auto` | ✅ Correct (after #56 fix) |
-| business-suite-unified | `h-screen overflow-hidden` on `MainApp` root | `<main> overflow-y-auto` | ⚠️ Fix pending (#74) |
-| crm7 | `h-svh overflow-hidden` on `SidebarProvider` | `flex-1 overflow-auto min-h-0` inner div | ⚠️ Fix pending (#201) |
-| R80.3 | `h-screen overflow-hidden flex-col` on App root | `<main> overflow-auto` | ⚠️ Fix pending (#52) |
-| braden | `flex flex-col min-h-screen` → `h-screen` target | Scroll on body (SPA) | ⚠️ Fix pending (#96) |
+crm7#201 ("SidebarProvider root uses min-h-svh — unbounded") was closed on 2026-04-16 and
+the `min-h-svh` it was about is still there. Closing the app-level issue did not close the
+class, and the class is **three different shapes in three apps** — a vendored shadcn wrapper
+(crm7, braden) and a locally-written shell of the same name (R80.4). A grep for `<AppShell`
+finds all three and tells you nothing: **check the import**, then check what wraps it.
+
+**A fix here has to be verified per surface, not per package.**
+
+*How the "no" rows were checked, since a bare `<AppShell` grep is what produced the wrong
+answer the first time:* for each app, the **import** was read (all three resolve to
+`@bsuite/ui`) and the **ancestors** of the call site walked. BSU's `<PageEditorLauncher>`
+wrapper is `className="contents"` and so creates no box; `AppContent.tsx:77` records in its
+own comment that it avoids `min-h-svh` deliberately.
+
+The `min-h-svh` / `min-h-screen` occurrences that remain in those three apps are on
+marketing pages, auth shells, error boundaries and loading states — surfaces that **should**
+grow past the viewport. This rule is about the **authenticated app shell root**, not a ban
+on the utility.
+
 
 ---
 
