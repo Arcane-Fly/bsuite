@@ -348,9 +348,9 @@ Not a docx export: two asks the operator put to the email-p0 lane in chat on 3 S
 | D-161 | "can't reset the page layout" / "can't reset to defaults in the page editor" | Reset to Default findable from the page editor without hunting | page-builder edit toolbar (today: three clicks deep in the layers popover) | crm7 (shared page-builder) | customisation / D8.3 clarity |
 | D-162 | SMS recipients must resolve mobiles from any record that holds one and from groups: all contacts at a host, a tagged group, a client, a lead, an opportunity; one-shot, never retyped | a recipient picker that reaches every mobile the estate already holds, by record and by group | compose sheet / RecipientPicker | crm7 | one-shot DRY / communications |
 
-## Addendum — D-163 to D-170, findings raised on 2026-09-03 by the lanes' own gates
+## Addendum — D-163 to D-171, findings raised on 2026-09-03 by the lanes' own gates
 
-Not operator asks: eight class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+Not operator asks: nine class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
 
 | ID | Finding (source) | Asks for | Surface | App | Category |
 |---|---|---|---|---|---|
@@ -362,3 +362,4 @@ Not operator asks: eight class findings surfaced by the corrective run's reviews
 | D-168 | five results-tab index rows describe a tabbed panel the calculator replaced with cards (main lane, bsuite#2995) | re-model to the card surface in its own PR, verdicts after; generator flags a row whose anchor no longer carries the claimed role | bsuite-feature-index.json, R80.4 | R80.4 (class: every row's surface_type vs the rendered kind) | index model drift |
 | D-169 | OPERATOR 18:1x: 'API is legacy': GitHub automation authenticates as a GitHub App, not a PAT (63 parent workflows use the PAT; 2 write) | register the App (operator), migrate the 2 writers, then the 61 readers | parent .github/workflows | parent (0 app workflows) | automation identity (precedent Tier 3) |
 | D-170 | braden and crm7 took the same migration version (20261115000000) the same afternoon; one shared ledger; caught only by the parent gitlink gate after braden promoted | renumbered to 20261118000000 (braden#587); app-repo CI runs the cross-scope check | every app repo's migration PR CI, plus the parent collision gate | 6 app repos (0 run it) | migration ledger integrity |
+| D-171 | /communications/mail-merge still asks for a recipient type and can create a batch addressing nobody (enforcer on crm7#2365) | build it out on the #2365 picker; never delete | crm7 mail-merge page | every recipient-picking surface (9, 8 done) | unbuilt route |
