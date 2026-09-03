@@ -1,32 +1,37 @@
 {
-  "_doc": "Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. Written by scripts/check-airtable-grid-adoption.mjs --update. Fails on any RISE (a new hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.",
-  "_measured": "1487 .tsx files examined across 5 apps",
+  "_doc": "Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. Written by scripts/check-airtable-grid-adoption.mjs --update-baseline. Fails on any RISE (a new hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.",
+  "_measured": "1489 .tsx files examined across 5 apps",
   "_clickThroughDoc": "Files that HAD row-level click-through to a record. Recorded by PATH because a conversion destroys the <TableRow onClick> evidence. Any file here that renders a DataGrid must pass onRowClick, or the conversion turned a working navigation into a dead list. Operator ask 2026-08-28: \"make sure table that currently enable click through to a record still maintain this capability.\" The set is a UNION and only grows.",
   "apps": {
     "crm7": {
       "handRolled": 145,
-      "dataGrid": 21,
-      "files": 95
+      "dataGrid": 23,
+      "files": 95,
+      "filesScanned": 792
     },
     "business-suite-unified": {
       "handRolled": 28,
       "dataGrid": 0,
-      "files": 25
+      "files": 25,
+      "filesScanned": 225
     },
     "conduit": {
       "handRolled": 5,
       "dataGrid": 0,
-      "files": 4
+      "files": 4,
+      "filesScanned": 161
     },
     "braden": {
       "handRolled": 13,
       "dataGrid": 0,
-      "files": 13
+      "files": 13,
+      "filesScanned": 221
     },
     "throughput": {
       "handRolled": 1,
       "dataGrid": 0,
-      "files": 1
+      "files": 1,
+      "filesScanned": 90
     }
   },
   "clickThrough": {
@@ -56,5 +61,36 @@
     "conduit": [],
     "braden": [],
     "throughput": []
+  },
+  "dataGridOnRowClick": {
+    "crm7": {
+      "ceiling": 17,
+      "total": 22
+    },
+    "business-suite-unified": {
+      "ceiling": 0,
+      "total": 0
+    },
+    "conduit": {
+      "ceiling": 0,
+      "total": 0
+    },
+    "braden": {
+      "ceiling": 0,
+      "total": 0
+    },
+    "throughput": {
+      "ceiling": 0,
+      "total": 0
+    }
+  },
+  "_schedule": {
+    "unit": "hand-rolled <table>/<Table> RENDER SITES (sum of apps.*.handRolled), not files; per_week is render sites per week",
+    "origin_count": 192,
+    "origin_date": "2026-09-03",
+    "current_count": 192,
+    "current_date": "2026-09-03",
+    "scanned": 1489,
+    "per_week": 6
   }
 }
