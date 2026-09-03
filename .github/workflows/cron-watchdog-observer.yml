@@ -119,6 +119,16 @@ jobs:
           token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
           persist-credentials: false
 
+      # REFUSE AN EMPTY TREE. Without this, a checkout that failed to fetch the
+      # private crm7 submodule is indistinguishable from one where the gitlink
+      # simply predates the migration — and the step below would quietly drop to
+      # the fixture in both cases, reporting a pass over the weaker surface with
+      # only a ::notice:: to say so. Those are different facts and only one of
+      # them is acceptable: a failed checkout must fail, and "this gitlink does
+      # not carry the migration yet" must fall back and announce it. Scoped to
+      # crm7 because that is the only tree this job reads.
+      - run: scripts/assert-app-trees-present.sh crm7
+
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
@@ -176,7 +186,7 @@ jobs:
             psql "$PROBE_DB_URL" -q -v ON_ERROR_STOP=1 --single-transaction -f "${MIG}"
             echo "surface=migration" >> "$GITHUB_OUTPUT"
           else
-            echo "::notice::crm7 does not carry *_pg_cron_watchdog_checkins.sql at this gitlink (submodule absent, or the migration has not been promoted yet) — using .github/fixtures/cron-watchdog-checkins.sql. The predicate itself is proven by crm7's pgTAP suite 91; this job proves the OBSERVER."
+            echo "::notice::the crm7 tree is present but this gitlink predates *_pg_cron_watchdog_checkins.sql — using .github/fixtures/cron-watchdog-checkins.sql, whose columns are checked against the contract below either way. (A crm7 tree that failed to check out does not reach this line; the assert step above refuses it.) The predicate itself is proven by crm7's pgTAP suite 91; this job proves the OBSERVER."
             psql "$PROBE_DB_URL" -q -v ON_ERROR_STOP=1 -f .github/fixtures/cron-watchdog-checkins.sql
             echo "surface=fixture" >> "$GITHUB_OUTPUT"
           fi
