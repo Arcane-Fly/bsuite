@@ -73,6 +73,35 @@ import fs from 'node:fs'
 export const DEFAULT_MAX_AGE_MINUTES = 45
 
 /**
+ * A THRESHOLD THAT IS NOT A NUMBER DISABLES THE CHECK IT CONFIGURES.
+ *
+ * `Number('forty-five')` is NaN, and every comparison against NaN is false — so
+ * `--max-age-minutes forty-five` did not fail, it made the staleness limb
+ * unable to fire at all, quietly, while the run still reported a verdict. The
+ * same is true of '', '45min', Infinity and -1. A bad threshold must be a USAGE
+ * ERROR (exit 2), never a silently disabled control.
+ *
+ * @returns {number} the validated positive integer
+ * @throws {Error} with a message naming the offending value
+ */
+export function parseMaxAgeMinutes(raw) {
+  if (typeof raw === 'number') raw = String(raw)
+  const text = String(raw ?? '').trim()
+  if (text === '') throw new Error('--max-age-minutes was empty')
+  // Number() accepts '45min' as NaN but also ' 45 ', '0x2d' and '4.5e1'. An
+  // explicit digits-only test is the only form whose accepted set is obvious
+  // from reading it.
+  if (!/^[0-9]+$/.test(text)) {
+    throw new Error(`--max-age-minutes must be a whole number of minutes, got ${JSON.stringify(raw)}`)
+  }
+  const n = Number(text)
+  if (!Number.isSafeInteger(n) || n <= 0) {
+    throw new Error(`--max-age-minutes must be a positive whole number, got ${JSON.stringify(raw)}`)
+  }
+  return n
+}
+
+/**
  * One issue per CLASS, titled from this map, so the observer updates a single
  * thread instead of opening a new one on every run. The wording is the issue
  * title verbatim after the "Cron watchdog: " prefix.
@@ -126,11 +155,20 @@ export function verdict(checkin, bank, opts) {
     }
   }
 
-  const ageMinutes = Math.round((now.getTime() - ranAt.getTime()) / 60000)
+  // SECONDS, AND FLOOR — NEVER ROUND.
+  //
+  // This was Math.round((now - ranAt) / 60000). A check-in 45 minutes and 29
+  // seconds old rounded DOWN to 45, compared 45 > 45 as false, and did not
+  // alarm — so the threshold silently sat at 45m30s, and every boundary test
+  // written in whole minutes agreed with it. Comparing in seconds removes the
+  // quantisation entirely; the floored minute count is kept for humans to read
+  // and is never what the decision is made on.
+  const ageSeconds = Math.floor((now.getTime() - ranAt.getTime()) / 1000)
+  const ageMinutes = Math.floor(ageSeconds / 60)
 
   // STALENESS FIRST. A stale check-in's CONTENT is history, and reporting
   // "healthy" from a three-hour-old row is exactly the failure being closed.
-  if (ageMinutes > maxAge) {
+  if (ageSeconds > maxAge * 60) {
     return {
       alarm: true,
       klass: 'stale',
@@ -301,6 +339,34 @@ function selfTest() {
     true,
   )
 
+  // BOUNDARY, IN SECONDS. 45m00s is inside the threshold; 45m01s is not. The
+  // rounded form passed both of these only because it never saw the seconds.
+  check(
+    'exactly 45m00s old does not alarm',
+    verdict(healthyRow({ ran_at: '2026-09-03T07:15:00Z' }), BANK, o).alarm,
+    false,
+  )
+  check(
+    '45m01s old DOES alarm (the rounded form silently allowed up to 45m29s)',
+    verdict(healthyRow({ ran_at: '2026-09-03T07:14:59Z' }), BANK, o).alarm,
+    true,
+  )
+  check(
+    '45m29s old DOES alarm',
+    verdict(healthyRow({ ran_at: '2026-09-03T07:14:31Z' }), BANK, o).alarm,
+    true,
+  )
+
+  // A THRESHOLD THAT IS NOT A NUMBER IS A USAGE ERROR, NOT A DISABLED CHECK.
+  const rejects = (v) => {
+    try { parseMaxAgeMinutes(v); return false } catch { return true }
+  }
+  for (const bad of ['forty-five', '', '  ', '45min', '-1', '0', '4.5', 'NaN', 'Infinity', '1e3', null, undefined]) {
+    check(`--max-age-minutes ${JSON.stringify(bad)} is rejected`, rejects(bad), true)
+  }
+  check('--max-age-minutes 45 is accepted', parseMaxAgeMinutes('45'), 45)
+  check('--max-age-minutes 1 is accepted', parseMaxAgeMinutes(1), 1)
+
   // Every alarming class must have a stable title, or the workflow opens a new
   // issue per run for whichever one it forgot.
   for (const k of ['no_checkin', 'unreadable_checkin', 'stale', 'denominator_drift', 'unhealthy']) {
@@ -314,7 +380,7 @@ function selfTest() {
 
   console.log(
     failures === 0
-      ? `\ncheck-cron-watchdog-checkin: 20/20 self-test(s) passed`
+      ? `\ncheck-cron-watchdog-checkin: ${20 + 3 + 14} self-test(s) passed`
       : `\ncheck-cron-watchdog-checkin: ${failures} self-test(s) FAILED`,
   )
   return failures === 0 ? 0 : 1
@@ -338,9 +404,19 @@ function main(argv) {
     return 2
   }
   const baselinePath = arg('baseline', '.github/cron-watchdog-baseline.json')
-  const maxAgeMinutes = Number(arg('max-age-minutes', DEFAULT_MAX_AGE_MINUTES))
+  let maxAgeMinutes
+  try {
+    maxAgeMinutes = parseMaxAgeMinutes(arg('max-age-minutes', DEFAULT_MAX_AGE_MINUTES))
+  } catch (e) {
+    console.error(`::error::${e.message}. Refusing to run with a threshold that cannot fire.`)
+    return 2
+  }
   const nowArg = arg('now', null)
   const now = nowArg ? new Date(nowArg) : new Date()
+  if (Number.isNaN(now.getTime())) {
+    console.error(`::error::--now ${JSON.stringify(nowArg)} is not a parseable timestamp. Refusing to judge freshness against an unreadable clock.`)
+    return 2
+  }
 
   let raw
   try {

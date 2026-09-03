@@ -78,10 +78,46 @@ jobs:
   self-test:
     name: Cron watchdog observer self-test
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
+
+    # A DISPOSABLE POSTGRES, ON THE PULL-REQUEST PATH, HOLDING NO CREDENTIAL.
+    #
+    # The DB-backed probe below used to live in the `observe` job, which is
+    # if:-gated to non-PR events — so on the pull request that introduced it, it
+    # was SKIPPED, and the planted-stale / fresh-quiet / rollback lines existed
+    # only in a local transcript. A proof that never runs in CI is a claim.
+    #
+    # It runs here instead, against a throwaway container on the runner's own
+    # network. Nothing in this job can reach production even by mistake, which is
+    # the property that lets it run on every PR.
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+
+    env:
+      PROBE_DB_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+
     steps:
+      # submodules: recursive so the REAL crm7 migration is used whenever the
+      # gitlink carries it. The cross-repo PAT is what makes that possible; when
+      # it is absent (a fork) the submodule simply does not check out and the
+      # step below falls back to the fixture and SAYS SO. It never silently
+      # proves less than it claims.
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
+          persist-credentials: false
 
       - uses: actions/setup-node@v4
         with:
@@ -112,6 +148,121 @@ jobs:
             }
             console.log(`[cron-watchdog] bank: ${b.jobs_examined} job(s), ${b.manifest_rows} manifest row(s), measured ${b.measured}`);
           ' "$BANK"
+
+      - name: Install psql client
+        run: |
+          set -euo pipefail
+          sudo rm -f /etc/apt/sources.list.d/*microsoft* /etc/apt/sources.list.d/*azure* || true
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+          psql --version
+
+      # PREFER THE REAL MIGRATION. Fall back to the fixture, loudly, and never
+      # let the fallback pass unremarked — "which surface did this prove?" must
+      # be answerable from the log alone.
+      - name: Build the check-in table (real migration if the gitlink carries it)
+        id: surface
+        run: |
+          set -euo pipefail
+          psql "$PROBE_DB_URL" -q -v ON_ERROR_STOP=1 -c "DO \$\$ BEGIN
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='anon') THEN CREATE ROLE anon NOLOGIN; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='authenticated') THEN CREATE ROLE authenticated NOLOGIN; END IF;
+            IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname='service_role') THEN CREATE ROLE service_role NOLOGIN BYPASSRLS; END IF;
+          END \$\$;"
+
+          MIG=$(ls crm7/supabase/migrations/*_pg_cron_watchdog_checkins.sql 2>/dev/null | head -1 || true)
+          if [ -n "${MIG}" ]; then
+            echo "[cron-watchdog] proving against the REAL migration: ${MIG}"
+            psql "$PROBE_DB_URL" -q -v ON_ERROR_STOP=1 --single-transaction -f "${MIG}"
+            echo "surface=migration" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::crm7 does not carry *_pg_cron_watchdog_checkins.sql at this gitlink (submodule absent, or the migration has not been promoted yet) — using .github/fixtures/cron-watchdog-checkins.sql. The predicate itself is proven by crm7's pgTAP suite 91; this job proves the OBSERVER."
+            psql "$PROBE_DB_URL" -q -v ON_ERROR_STOP=1 -f .github/fixtures/cron-watchdog-checkins.sql
+            echo "surface=fixture" >> "$GITHUB_OUTPUT"
+          fi
+
+      # THE CONTRACT BETWEEN THE TWO REPOSITORIES. Whichever surface was built,
+      # it must carry exactly these columns — so a rename in crm7 fails here the
+      # moment the gitlink advances, instead of being discovered by an alarm that
+      # returns null at 3am.
+      - name: Assert the check-in column contract
+        run: |
+          set -euo pipefail
+          EXPECTED='expected_missing,healthy,http_failures,id,jobs_examined,manifest_rows,ran_at,unhealthy_jobs'
+          ACTUAL=$(psql "$PROBE_DB_URL" -q -tA -c \
+            "SELECT string_agg(column_name, ',' ORDER BY column_name)
+               FROM information_schema.columns
+              WHERE table_schema='public' AND table_name='cron_watchdog_checkins'")
+          echo "[cron-watchdog] columns: ${ACTUAL}"
+          if [ "${ACTUAL}" != "${EXPECTED}" ]; then
+            echo "::error::public.cron_watchdog_checkins columns are '${ACTUAL}', expected '${EXPECTED}'. The observer's projection query and this contract have drifted apart; fix one of them before trusting any verdict."
+            exit 1
+          fi
+
+      # PLANTED VIOLATION, THROUGH THE REAL PROJECTION QUERY, ROLLED BACK AND
+      # VERIFIED. The fixture self-test above proves the DECISION can fire; this
+      # proves it fires over the real SQL and the real column types, which a
+      # JavaScript fixture cannot cover — a renamed column would sail past it and
+      # quietly return null forever.
+      - name: Self-test — plant a stale check-in and prove the observer fails
+        run: |
+          set -euo pipefail
+          JOBS=$(node -p "require('./.github/cron-watchdog-baseline.json').jobs_examined")
+          ROWS=$(node -p "require('./.github/cron-watchdog-baseline.json').manifest_rows")
+
+          # A pre-existing row, so the rollback assertion is not vacuous: a count
+          # of 0 before and 0 after would hold even if the DELETE had committed.
+          psql "$PROBE_DB_URL" -q -v ON_ERROR_STOP=1 -c \
+            "INSERT INTO public.cron_watchdog_checkins (ran_at, healthy, jobs_examined, manifest_rows)
+             VALUES (now() - interval '1 minute', true, ${JOBS}, ${ROWS});"
+
+          BEFORE=$(psql "$PROBE_DB_URL" -q -tA -c "SELECT count(*) FROM public.cron_watchdog_checkins;")
+          echo "check-in rows before the probe: ${BEFORE}"
+
+          plant() {   # $1 = age interval, $2 = healthy, $3 = outfile
+            psql "$PROBE_DB_URL" -q -tA -v ON_ERROR_STOP=1 <<SQL > "$3"
+          BEGIN;
+          DELETE FROM public.cron_watchdog_checkins;
+          INSERT INTO public.cron_watchdog_checkins
+            (ran_at, healthy, jobs_examined, manifest_rows)
+          VALUES (now() - interval '$1', $2, ${JOBS}, ${ROWS});
+          SELECT coalesce((SELECT row_to_json(x)::text FROM (
+                   SELECT ran_at, healthy, jobs_examined, manifest_rows,
+                          unhealthy_jobs, expected_missing, http_failures
+                     FROM public.cron_watchdog_checkins
+                    ORDER BY ran_at DESC LIMIT 1) x), 'null');
+          ROLLBACK;
+          SQL
+          }
+
+          plant '3 hours' true probe-stale.json
+          if node scripts/check-cron-watchdog-checkin.mjs --checkin probe-stale.json; then
+            echo "::error::the observer reported OK for a check-in planted three hours in the past. The detector cannot fire and every verdict it produces is meaningless."
+            exit 1
+          fi
+          echo "✓ planted a 3-hour-old check-in and the observer alarmed"
+
+          plant '2 minutes' false probe-unhealthy.json
+          if node scripts/check-cron-watchdog-checkin.mjs --checkin probe-unhealthy.json; then
+            echo "::error::the observer reported OK for a fresh check-in carrying healthy = false."
+            exit 1
+          fi
+          echo "✓ planted a fresh but unhealthy check-in and the observer alarmed"
+
+          plant '2 minutes' true probe-fresh.json
+          if ! node scripts/check-cron-watchdog-checkin.mjs --checkin probe-fresh.json; then
+            echo "::error::the observer alarmed on a fresh, healthy, correctly-sized check-in. It is flagging everything, which is the same as flagging nothing."
+            exit 1
+          fi
+          echo "✓ planted a 2-minute-old healthy check-in and the observer stayed quiet"
+
+          AFTER=$(psql "$PROBE_DB_URL" -q -tA -c "SELECT count(*) FROM public.cron_watchdog_checkins;")
+          if [ "$AFTER" != "$BEFORE" ]; then
+            echo "::error::the probe transaction was supposed to roll back and did not: ${BEFORE} check-in row(s) before, ${AFTER} after."
+            exit 1
+          fi
+          echo "✓ rollback verified: ${AFTER} check-in row(s), unchanged"
+          rm -f probe-stale.json probe-unhealthy.json probe-fresh.json
 
   observe:
     name: Observe the latest watchdog check-in
@@ -192,69 +343,18 @@ jobs:
           echo "installed=${HAS}" >> "$GITHUB_OUTPUT"
           echo "watchdog installed: ${HAS}"
 
-      # PLANTED VIOLATION, THROUGH THE REAL TABLE, ROLLED BACK.
+      # THE LIVE JOB IS STRICTLY READ-ONLY, AND THAT IS A CHANGE.
       #
-      # The fixture self-test above proves the DECISION can fire. This proves the
-      # decision fires over the REAL projection query against the REAL column
-      # types, which is the half a fixture cannot cover — a renamed column would
-      # sail past a fixture and quietly return null forever.
+      # This job used to run the planted-stale probe against PRODUCTION inside a
+      # rolled-back transaction, every thirty minutes, forever — a DELETE and an
+      # INSERT on a real table, trusting a ROLLBACK, to prove something the pull
+      # request path can prove just as well against a throwaway container. The
+      # probe now lives in the `self-test` job above, where it runs on every PR
+      # with no production credential anywhere near it, and the column contract
+      # asserted there is what ties the fixture's shape to the real migration.
       #
-      # Everything happens inside one transaction that always ROLLS BACK, the
-      # pattern cron-job-health-audit.yml already uses for its own probe. And
-      # the rollback is VERIFIED rather than trusted: the row count is taken
-      # before and after and must be identical.
-      - name: Self-test — plant a stale check-in and prove the observer fails
-        if: steps.installed.outputs.installed == 'yes'
-        env:
-          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
-          DB_HOST: ${{ steps.pooler.outputs.db_host }}
-        run: |
-          set -euo pipefail
-          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
-          JOBS=$(node -p "require('./.github/cron-watchdog-baseline.json').jobs_examined")
-          ROWS=$(node -p "require('./.github/cron-watchdog-baseline.json').manifest_rows")
-
-          BEFORE=$(psql "$DB_URL" -q -tA -c "SELECT count(*) FROM public.cron_watchdog_checkins;")
-          echo "check-in rows before the probe: ${BEFORE}"
-
-          plant() {   # $1 = interval offset for ran_at, $2 = healthy, $3 = outfile
-            psql "$DB_URL" -q -tA -v ON_ERROR_STOP=1 <<SQL > "$3"
-          BEGIN;
-          DELETE FROM public.cron_watchdog_checkins;
-          INSERT INTO public.cron_watchdog_checkins
-            (ran_at, healthy, jobs_examined, manifest_rows)
-          VALUES (now() - interval '$1', $2, ${JOBS}, ${ROWS});
-          SELECT coalesce((SELECT row_to_json(x)::text FROM (
-                   SELECT ran_at, healthy, jobs_examined, manifest_rows,
-                          unhealthy_jobs, expected_missing, http_failures
-                     FROM public.cron_watchdog_checkins
-                    ORDER BY ran_at DESC LIMIT 1) x), 'null');
-          ROLLBACK;
-          SQL
-          }
-
-          plant '3 hours' true probe-stale.json
-          if node scripts/check-cron-watchdog-checkin.mjs --checkin probe-stale.json; then
-            echo "::error::the observer reported OK for a check-in planted three hours in the past. The detector cannot fire and every verdict below is meaningless."
-            exit 1
-          fi
-          echo "✓ planted a 3-hour-old check-in and the observer alarmed"
-
-          plant '2 minutes' true probe-fresh.json
-          if ! node scripts/check-cron-watchdog-checkin.mjs --checkin probe-fresh.json; then
-            echo "::error::the observer alarmed on a fresh, healthy, correctly-sized check-in. It is flagging everything, which is the same as flagging nothing."
-            exit 1
-          fi
-          echo "✓ planted a 2-minute-old healthy check-in and the observer stayed quiet"
-
-          AFTER=$(psql "$DB_URL" -q -tA -c "SELECT count(*) FROM public.cron_watchdog_checkins;")
-          if [ "$AFTER" != "$BEFORE" ]; then
-            echo "::error::the probe transaction was supposed to roll back and did not: ${BEFORE} check-in row(s) before, ${AFTER} after. Investigate immediately — this job writes to production."
-            exit 1
-          fi
-          echo "✓ rollback verified: ${AFTER} check-in row(s), unchanged"
-          rm -f probe-stale.json probe-fresh.json
+      # So there is no longer any write path from this workflow to production.
+      # Everything below is SELECT.
 
       - name: Read the newest check-in
         id: read
@@ -285,45 +385,57 @@ jobs:
         continue-on-error: true
         run: node scripts/check-cron-watchdog-checkin.mjs --checkin checkin.json
 
-      # ONE ISSUE PER CLASS, UPDATED RATHER THAN REOPENED. The title comes from
-      # the stable class, never from the reason — a reason carries a minute count
-      # that changes on every run and would open a brand new issue every thirty
-      # minutes forever.
-      - name: Open or update the alarm issue
+      # ONE ISSUE FOR THE WHOLE ESTATE, UPDATED IN PLACE, CLOSED WHEN IT CLEARS.
+      #
+      # It was one issue per alarm CLASS. As an estate moves stale -> unhealthy
+      # -> denominator_drift that opens three separate threads, none of which
+      # closes itself, all describing the same watchdog. The class belongs in the
+      # BODY, where it is history; the title is an identity and there is only one
+      # thing being identified.
+      #
+      # Found by EXACT-TITLE SEARCH, not by listing the first hundred open
+      # issues. bsuite has 65 open issues today, so the listing form works right
+      # up until it doesn't, and its failure mode is a silent duplicate.
+      # `--state all` so a recurrence REOPENS the closed thread rather than
+      # starting a new one, which keeps the history of a flapping control in one
+      # place.
+      - name: Open, update or reopen the single alarm issue
         if: >-
           always() &&
           (steps.installed.outputs.installed != 'yes' || steps.judge.outcome == 'failure')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           INSTALLED: ${{ steps.installed.outputs.installed }}
-          ALARM_TITLE: ${{ steps.judge.outputs.title }}
+          ALARM_CLASS: ${{ steps.judge.outputs.class }}
           ALARM_REASON: ${{ steps.judge.outputs.reason }}
           ALARM_DETAIL: ${{ steps.judge.outputs.detail }}
+          ISSUE_TITLE: 'Cron watchdog: scheduled controls need attention'
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
 
           if [ "${INSTALLED}" != "yes" ]; then
-            TITLE_SUFFIX="the dead-man's switch is not installed on the shared project"
+            KLASS="not_installed"
             REASON="public.cron_watchdog_checkins and/or public.pg_cron_watchdog_check() do not exist"
             DETAIL="crm7 migration 20261117000000_pg_cron_watchdog_checkins.sql has not reached production. Migrations apply only from the parent repo's main via the Supabase Migrations workflow, so this closes when that promotion lands. Until then there is NO liveness proof for any of the 24 scheduled controls."
           else
-            TITLE_SUFFIX="${ALARM_TITLE}"
+            KLASS="${ALARM_CLASS}"
             REASON="${ALARM_REASON}"
             DETAIL="${ALARM_DETAIL}"
           fi
-          TITLE="Cron watchdog: ${TITLE_SUFFIX}"
 
           # Body from a FILE, never from the command line — a backtick on a
           # command line executes.
           {
             echo "**${REASON}**"
             echo
+            echo "Class: \`${KLASS}\`"
+            echo
             echo "${DETAIL}"
             echo
             echo "Observed at $(date -u '+%Y-%m-%d %H:%M UTC') by [this run](${RUN_URL})."
             echo
-            echo "The watchdog is \`cron-watchdog-every-15m\` -> \`public.pg_cron_watchdog_check()\`, installed by crm7 migration \`20261117000000\`. It writes one row to \`public.cron_watchdog_checkins\` on every run. This issue is updated in place on every recurrence rather than reopened; it does not close itself."
+            echo "The watchdog is \`cron-watchdog-every-15m\` -> \`public.pg_cron_watchdog_check()\`, installed by crm7 migration \`20261117000000\`. It writes one row to \`public.cron_watchdog_checkins\` on every run. This is the single issue for that control: it is updated in place on every recurrence and CLOSES ITSELF once a later check-in is healthy."
             echo
             echo "First look:"
             echo
@@ -334,17 +446,52 @@ jobs:
             echo '```'
           } > issue-body.md
 
-          EXISTING=$(gh issue list --state open --limit 100 --json number,title \
-                       --jq "map(select(.title == \"${TITLE}\")) | .[0].number // empty")
+          FOUND=$(gh issue list --state all --search "in:title \"${ISSUE_TITLE}\"" \
+                    --json number,title,state --limit 50 \
+                    --jq "map(select(.title == \"${ISSUE_TITLE}\")) | .[0] // empty")
 
-          if [ -n "${EXISTING}" ]; then
-            gh issue comment "${EXISTING}" --body-file issue-body.md
-            echo "::warning::updated existing issue #${EXISTING} — ${TITLE}"
+          NUM=$(printf '%s' "${FOUND}" | jq -r '.number // empty')
+          STATE=$(printf '%s' "${FOUND}" | jq -r '.state // empty')
+
+          if [ -z "${NUM}" ]; then
+            gh issue create --title "${ISSUE_TITLE}" --body-file issue-body.md
+            echo "::warning::opened the cron watchdog issue — ${KLASS}: ${REASON}"
           else
-            gh issue create --title "${TITLE}" --body-file issue-body.md
-            echo "::warning::opened a new issue — ${TITLE}"
+            if [ "${STATE}" = "CLOSED" ]; then
+              gh issue reopen "${NUM}"
+              echo "::warning::reopened issue #${NUM} — the watchdog alarm recurred"
+            fi
+            gh issue comment "${NUM}" --body-file issue-body.md
+            echo "::warning::updated issue #${NUM} — ${KLASS}: ${REASON}"
           fi
           rm -f issue-body.md
+
+      # A CONTROL THAT CANNOT CLEAR ITS OWN ALARM TEACHES PEOPLE TO IGNORE IT.
+      # The estate is healthy right now, so if the thread is open it is stale.
+      - name: Close the alarm issue once the estate is healthy
+        if: steps.installed.outputs.installed == 'yes' && steps.judge.outcome == 'success'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: 'Cron watchdog: scheduled controls need attention'
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          NUM=$(gh issue list --state open --search "in:title \"${ISSUE_TITLE}\"" \
+                  --json number,title --limit 50 \
+                  --jq "map(select(.title == \"${ISSUE_TITLE}\")) | .[0].number // empty")
+          if [ -z "${NUM}" ]; then
+            echo "no open cron watchdog issue to close"
+            exit 0
+          fi
+          {
+            echo "Cleared. The newest check-in is fresh, its denominators match the bank, and it reports no unhealthy job, no missing declared job and no http-layer failure."
+            echo
+            echo "Closed automatically by [this run](${RUN_URL}). It will reopen on the next alarm rather than a new thread being started."
+          } > close-body.md
+          gh issue comment "${NUM}" --body-file close-body.md
+          gh issue close "${NUM}"
+          echo "closed issue #${NUM} — the watchdog reports a healthy estate"
+          rm -f close-body.md
 
       # LAST, so the issue is always filed even when the run is about to go red.
       - name: Fail the run on any alarm

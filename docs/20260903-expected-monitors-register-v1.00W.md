@@ -107,6 +107,30 @@ controls cannot disagree about what "late" means.
 | `email-token-refresh` | — | unscheduled_expected | — | deployed, no `cron.job` row anywhere |
 | `tga-organisation-sync` | — | unscheduled_expected | — | deployed, no `cron.job` row anywhere |
 
+### The verdict vocabulary
+
+| Verdict | Means |
+|---|---|
+| `unknown_job` | scheduled in `cron.job`, absent from the manifest — a rename cannot opt out |
+| `expected_missing` | declared in the manifest, no `cron.job` row |
+| `manifest_stale` | declared as deployed-but-unscheduled, yet a `cron.job` row now exists |
+| `inactive` | the manifest **requires** it and `cron.job.active` is false |
+| `hung` | still in flight, longer than the declared `max_age_minutes` |
+| `never_run` | declared, active, required, not in flight, and no completed run |
+| `last_run_failed` | the newest **completed** run did not succeed |
+| `stale` | the last sign of life is older than `max_age_minutes` |
+
+**A RUNNING JOB IS NOT A FAILED JOB, AND THIS COST A BLOCKER TO LEARN.** pg_cron 1.6
+writes a `job_run_details` row with status `starting`, then `running`, *before* the command
+it describes has finished. The first version of this control called anything other than
+`succeeded` a failure — so at the instant the watchdog ran, the newest row for its **own**
+job said `running` and it flagged itself. Verified through a real pg_cron worker:
+`healthy = f`, `{"jobname": "cron-watchdog-every-15m", "reason": "last_run_failed: running"}`.
+Every production check-in would have been unhealthy, burying the real
+`document-retention-sweep-daily` finding in permanent noise. Two things fix it: in-flight is
+its own state (recognised by status **and** by `end_time IS NULL`), and the watchdog does not
+judge its own runs — its liveness is the check-in row's existence, judged from outside.
+
 **A paused or never-pinged monitor pages, by construction.** A manifest row with no `cron.job`
 row is `expected_missing`; a `cron.job` row with no manifest row is `unknown_job`; an
 `unscheduled_expected` row that acquires a `cron.job` row is `manifest_stale`. All three mark
@@ -150,5 +174,10 @@ gate will tell you:
    `unknown_job` or `expected_missing` within 15 minutes;
 3. `.github/cron-watchdog-baseline.json`, so the observer's denominators still match — a count
    that fell means something disappeared, a count that rose means nobody declared it.
+
+Disabling a control rather than removing it is a fourth case: set
+`cron_job_manifest.required = false` in the same change. `cron.job.active = false` on a
+required control is a finding, deliberately — a deliberate disablement should be a decision
+with an author, not a permanent alarm everyone learns to scroll past.
 
 And this table, so the readable form does not drift from the authoritative one.
