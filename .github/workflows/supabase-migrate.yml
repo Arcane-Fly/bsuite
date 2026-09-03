@@ -437,6 +437,14 @@ jobs:
           while IFS= read -r -d '' f; do
             BASE=$(basename "$f" .sql)
             VERSION=${BASE%%_*}
+            NAME=${BASE#*_}
+            # A migration is exactly <14 digits>_<name>.sql. A numeric prefix alone is not
+            # enough: "20261118000000.sql" has no underscore, so ${BASE#*_} returns the whole
+            # basename and the ledger would record name == version (Copilot on bsuite#3022).
+            case "$BASE" in
+              [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_?*) ;;
+              *) echo "→ Skipping non-versioned file (needs <14 digits>_<name>.sql): $f"; continue ;;
+            esac
             # Only versioned migrations (<timestamp>_name.sql) — helper files
             # like verify_migrations.sql are not migrations (same rule the
             # Supabase CLI applies).
@@ -453,8 +461,8 @@ jobs:
             fi
             echo "→ Applying transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$f"
-            psql "$DB_URL" -v ON_ERROR_STOP=1 -v name="${BASE#*_}" \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES ('${VERSION}', :'name') ON CONFLICT DO NOTHING;"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" \
+              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;"
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.sql" ! -name "*.nontx.sql" -print0 | sort -z)
@@ -532,6 +540,14 @@ jobs:
           while IFS= read -r -d '' f; do
             BASE=$(basename "$f" .nontx.sql)
             VERSION=${BASE%%_*}
+            NAME=${BASE#*_}
+            # A migration is exactly <14 digits>_<name>.sql. A numeric prefix alone is not
+            # enough: "20261118000000.sql" has no underscore, so ${BASE#*_} returns the whole
+            # basename and the ledger would record name == version (Copilot on bsuite#3022).
+            case "$BASE" in
+              [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_?*) ;;
+              *) echo "→ Skipping non-versioned file (needs <14 digits>_<name>.sql): $f"; continue ;;
+            esac
             # Same guard the transactional loop applies: only <timestamp>_name.sql is
             # a migration. Without it a helper file's whole basename becomes the
             # "version", and a nameless non-numeric row lands in the ledger.
@@ -548,8 +564,8 @@ jobs:
             fi
             echo "→ Applying non-transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
-            psql "$DB_URL" -v ON_ERROR_STOP=1 -v name="${BASE#*_}" \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES ('${VERSION}', :'name') ON CONFLICT DO NOTHING;"
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" \
+              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;"
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.nontx.sql" -print0 | sort -z)
