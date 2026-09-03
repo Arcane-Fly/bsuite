@@ -83,10 +83,18 @@ app not having got to it: it is the same capability implemented four times and f
 
 ## Atomic replace-and-remove plan
 
-1. **DONE.** `CustomPageView` lands in `@bsuite/page-builder`, taking the already-fetched page and a
-   `renderLayout` widget-catalogue prop, with a readable structural default for an app that has no
-   catalogue yet. Folded into the unpublished 2.6.0 rather than bumped, because npm's latest is
-   2.5.0 and a bump would leave a version that never existed on the registry.
+1. **BUILT, AND DELIBERATELY NOT YET EXPORTED.** `CustomPageView` lands in `@bsuite/page-builder`,
+   taking the already-fetched page and a `renderLayout` widget-catalogue prop, with a readable
+   structural default for an app that has no catalogue yet. Folded into the unpublished 2.6.0
+   rather than bumped, because npm's latest is 2.5.0 and a bump would leave a version that never
+   existed on the registry.
+
+   Its `index.ts` export line is **withheld until step 2**. `check-exported-not-mounted` refused it
+   and was right — *"Mount it, or stop exporting it. There is no third state."* — and it cannot be
+   mounted today: business-suite-unified and braden consume this package **from npm** at `^2.5.0`,
+   2.6.0 is unpublished because `publish-page-builder.yml` fires on push to `main`, and that
+   promotion is held. So the export ships in the same pull request as the mounts, which is the
+   atomic shape this plan already asks for.
 2. **business-suite-unified and braden adopt it and their local renderers are deleted from disk in
    the same pull request.** Not deprecated, not left beside it — deleted. This is the step that
    ends the raw-JSON screens.
@@ -94,6 +102,10 @@ app not having got to it: it is the same capability implemented four times and f
 4. crm7 adopts it last, since its local copy is the source of the core and removing it is a pure
    de-duplication with no behavioural change to verify.
 5. `TenantLayoutSlot` deleted from `@bsuite/schema-registry`.
+
+**Step 2 is blocked on publishing 2.6.0, and therefore on the promotion.** That is a real ordering
+constraint, not a delay of choice: the consumer apps deploy standalone and cannot take a workspace
+link, so they can only reach the shared component through the registry.
 
 **No step deletes a renderer before its replacement is in the tree.** The estate's own history is
 that a surface removed ahead of its successor leaves a dead route, and a dead route is unbuilt work
