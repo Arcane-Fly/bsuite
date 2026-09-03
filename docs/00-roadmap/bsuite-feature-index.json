@@ -14681,7 +14681,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "| pass-6 correction: this is the RUNTIME WRITER for any table listed is_active in report_catalog_entities. It resolves the target table from a DB row and issues dynamic EXECUTE format('INSERT INTO %I.%I'), so the table name never appears in TypeScript \u2014 invisible to every source grep and to packages/dry-lint's AST-based cross-app-write rule. award_rates, host_contracts and whs_records are all is_active here.",
-  "dod_status": "not-evaluated",
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "crm7#2353 + #2359 + #2366. D8 COMPLETE on d.crm.crm7.app signed in: 4 cells (1440/768 x light/dark) 0 FAIL 0 WARN, page-loaded asserted; canvasColumns evaluated by interaction (12->4->24->12->6, 6 SURVIVED a full reload). Opening view went 14 columns with 5 system to 6 with 1, then to 6 with 0 after the bare-id and Scope-collision fixes. D9 FALSE: data_import_jobs holds 1 row, tenant 00000000-0000-0000-0000-000000000e2e (E2E fixture) - no real tenant has used this surface. Closer: first real import by a live tenant."
+  },
   "operator_audit": [
    {
     "register_id": "D-79",
@@ -36699,7 +36702,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "charge-calculator-v9-2.tsx sits at the repo root, not under src/, but is lazy-imported by src/main.tsx and is the entire app \u2014 not an orphan.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Signed-in pass on d.r8.crm7.app, 4 widths x 2 themes = 8 cells, 8/8 PASS, 0 FAIL, 0 UNKNOWN via the estate visual-probe. Real award loaded (MA000004 General Retail 2020), 98 computed money values, zero rendered undefined/NaN/[object Object]. D9 TRUE: public.charge_rate_quotes holds 13 rows, ALL 13 from non-demo non-fixture tenants (e.g. row 7f085339-7d88-4652-bca4-261405fc1dfe, tenant 0c514bfc-3a2c-438f-85c2-4653997ccb22, 2026-07-31). | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.calculate-alias-route",
@@ -36809,7 +36815,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Added because external links pointed at a path that 404'd; canonical route is /.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: GET /calculate resolves and renders the calculator with 98 computed money values - it is a real alias, not a stub. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.dashboard-legacy-redirect",
@@ -36919,7 +36928,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "history.replaceState rewrite to / for stale cross-app builds still emitting ?return_path=/dashboard.",
-  "dod_status": "not-evaluated",
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: GET /dashboard lands on / with 98 money values. The legacy redirect works. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  },
   "operator_audit": [
    {
     "register_id": "D-7",
@@ -37222,7 +37234,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Previously every unmatched path silently rendered the auth gate; a real 404 was added so probes and users see a failure.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live: an unknown path renders 'Page not found - That address does not match anything in the R8 Calculator', not a blank screen and not a crash. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.appshell-theme-gate",
@@ -37248,7 +37263,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live: documentElement carries the theme class and both themes were measured in the 8-cell pass with 0 contrast FAILs against the composited background. NOTE: no theme toggle matched [aria-label*=theme] on this route - the gate applies the theme, it does not expose a switcher here. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.sidebar-nav-single-entry",
@@ -37359,7 +37377,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Deliberately kept to one link by operator ruling \u2014 apprentice/trainee/worker is a control inside the calculator, not a destination.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: 12 nav entries render including Charge Rate Calculator, Account Settings and Billing & Subscription. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.app.suite-app-switcher",
@@ -37471,7 +37492,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Uses buildLaunchUrl OAuth handoff so cross-app links don't land signed-out.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: the switcher renders and carries Suite Dashboard alongside the R8 entry, so cross-app navigation is reachable from this app. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.dash-award-trade-card",
@@ -38917,7 +38941,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Persists to localStorage only; sortByDependencies() keeps cards that read each other in valid order.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live and RESPONSIVE, measured as CSS multi-column (column-width 360px) NOT react-grid-layout - a react-grid probe reads 0 here and that is correct, it is the wrong mechanism. 1440px: 3 cards flowing into 2 distinct column positions. 768px: collapses to 1. All 3 cards carry break-inside: avoid, so a card never splits across a column. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.results-tab-rates",
@@ -39578,7 +39605,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: three real note controls render - 'Notes on Award, Trade & Qualification (1)', 'Notes on Billing Model (2)', 'Notes on Oncosts (3)' - with counts, so the drawer is wired to content and not an empty affordance. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.clause-appendix",
@@ -39688,7 +39718,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Verified live signed in: the heading 'Appendix - award clauses and how this quote reads them' renders. NOTE for the next reader: an innerText regex for the BODY returns false because the appendix is collapsed; assert on the HEADING. | ADR-0010: recorded in-progress, not approved - the calculator-app class has 10 members and approval is the PI enforcer's call, not the maker's."
+  }
  },
  {
   "id": "r80.calc.qualification-picker",
@@ -40958,7 +40991,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Calls crm7's /api/ai/rate-review; blocked until crm7's CORS allowlist adds r8.crm7.app, per the module's own header \u2014 a real but externally-gated dependency.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/lib/jodie-rate-review.ts + suite: 29 assertions, all passing under node --test. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.qualifying-earnings",
@@ -40995,7 +41031,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Several electable components (commissions, bonuses, salary sacrifice) are explicitly labelled as not priced by the engine even though they are electable.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/qualifying-earnings.ts + its suite: 34 assertions, all passing under node --test. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.wic-rate-resolution",
@@ -41035,7 +41074,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Ladder: tenant-class rate > tenant-global rate > published regulator rate > refuse (never substitutes an average).",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/lib/wic-rate.ts + its suite: 16 assertions, all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.payroll-tax",
@@ -41088,7 +41130,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/payroll-tax.ts + its suite: 85 assertions - the heaviest of the six - all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.super-wc-basis",
@@ -41135,7 +41180,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/super-wc-basis.test.ts: 20 assertions, all passing. NOTE for the next reader: there is no super-wc-basis.ts - the implementation is accruesSuperAndWC in src/awards/calc-types.ts, which the test imports. The row's anchor names the TEST, and that is not a missing implementation. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.contingent-costs",
@@ -41187,7 +41235,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/contingent-costs.ts + its suite: 60 assertions, all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.boot-four-week",
@@ -41224,7 +41275,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Restricted by operator ruling to custom rates only (not award or EBA); returns a $ difference, deliberately never a PASS/FAIL verdict.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/boot-four-week.ts + its suite: 22 assertions, all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.calc.engagement-term-progression",
@@ -41312,7 +41366,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "41 assertions, all passing under node --test. NOTE: there is no casual-penalty-convention.ts - the test exercises calculate.ts, text-normalise.ts and round.ts, which it imports. The row's anchor names the TEST; that is not a missing implementation. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-rule-registry",
@@ -41435,7 +41492,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Normalises analysis/allowance_trace_*.json (5 awards: MA000010/020/025/036/089) \u2014 the trace JSON is stated as the single source of truth, code hand-transcribes nothing.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/registry.ts (201 lines) and clause-rules.ts both resolve; clause-rules carries 85 assertions, all passing. GAP RECORDED: registry.ts has NO test file of its own. Its only coverage is indirect, through clause-rules.test.ts which imports it. Named here rather than left implied. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.apprentice-ladder-manifest",
@@ -41473,7 +41533,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Fixed a defect where the UI's own hand-typed PCT_AWARDS table only covered 7 of the 21 modelled awards and silently showed the wrong award's shape for the other 14.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/apprentice-ladder-manifest.ts + suite: 12 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.rate-source-provenance",
@@ -41532,7 +41595,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Tenant DB rate-cache sync (mapd_db_cache) and DB-stored enterprise agreements (db_instrument) are named/typed as a contract but marked 'reserved' / future BSuite port work, not implemented in this repo.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/rate-source.ts + suite: 21 assertions, all passing. Related shipped work today: R80.4 'say where each dollar came from' (a21ad19), which is on #301 awaiting promotion. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.supported-wage-system",
@@ -41569,7 +41635,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "One award-agnostic module rather than 20 near-duplicate copies; MA000020 has no SWS schedule.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/supported-wage-system.ts + suite: 19 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.inclement-weather",
@@ -41606,7 +41675,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Requires an operator-supplied weather-exposure estimate rather than inventing a frequency; distinguishes cost-share-of-payroll from billable-uplift (a ~5-point gap at the cap).",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/inclement-weather.ts + suite: 56 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.national-training-wage",
@@ -41652,7 +41724,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "LOOP.md calls this 'THE HIGHEST-LEVERAGE SINGLE MODULE' \u2014 one module covers the trainee path for 69 awards rather than duplicating it per award.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/national-training-wage.ts + suite: 43 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.funding-programs-placement",
@@ -41711,7 +41786,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Deliberately has NO eligibility evaluator by operator ruling \u2014 programs/conditions are free text the operator writes and reads, never parsed or blocked on.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/funding-programs.ts + suite: 20 assertions, all passing. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-queue-coverage-gate",
@@ -41794,7 +41872,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Not user-facing; derives 'modelled' status from per-award coverage ledgers rather than a hand-maintained status string, specifically to avoid the queue and the CI gate disagreeing.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. Anchors src/awards/award-queue.ts and the coverage directory both resolve. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.awards-modelled-21",
@@ -41863,7 +41944,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "MA000004, 005, 008, 009, 010, 014, 017, 020, 025, 026, 029, 033, 036, 058, 059, 071, 073, 089, 101, 104, 119 \u2014 each with its own coverage ledger; award-queue.ts's next() derives the true frontier from the ledgers, not the hand-written 'status' field.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. The 21 CLEAN awards are MA000020, MA000025, MA000010, MA000089, MA000036, MA000029, MA000104, MA000005, MA000004, MA000009, MA000119, MA000058, MA000059, MA000073, MA000101, MA000033, MA000014, MA000008, MA000026, MA000071, MA000017. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-ma000020-building",
@@ -41889,7 +41973,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Largest single trade award; a competency-based progression limb was added then explicitly removed on operator ruling ('calculation is point in time').",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "MA000020 is in the 21 CLEAN list from the gate run on ef7db0b, and its source files resolve. Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-ma000104-schedule-e",
@@ -41923,7 +42010,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "MA000104 is in the 21 CLEAN list from the gate run on ef7db0b, and its source files resolve. Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.data.award-text-corpus",
@@ -42079,7 +42169,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "JWKS-verified bearer auth (unconditional, no env-var bypass), per-caller + per-IP sliding-window limits, and a global monthly quota (placeholder default pending confirmation against the real FWC subscription tier).",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "api/fwc.js and api/_shared/fwc-rate-limit.js both resolve; the rate-limit suite carries 45 assertions, all passing. This endpoint's 401 message was corrected today in R80.4#302 - it named env vars that were never tried. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.api.fwc-dev-proxy",
@@ -42119,7 +42212,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "apply: 'serve' \u2014 never present in a production build; carries none of api/fwc.js's auth/rate-limit hardening because it cannot obtain a verifiable token locally.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "vite-fwc-proxy.js resolves. Dev-only proxy, no production surface; verified present and referenced from the vite config. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.auth.oauth-session",
@@ -42403,7 +42499,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "LOOP.md D14: 'NO REGEX' is a standing house rule enforced via text-normalise.ts helpers used throughout.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/round.ts (22 assertions) and text-normalise.ts (99 assertions) both resolve, both suites passing - 121 assertions between them, the heaviest pair in this class. D9 engine: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.tools.corpus-and-analysis-scripts",
@@ -42431,7 +42530,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Not user-facing; produces the analysis/ artifacts registry.ts consumes.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "tools/analysis/analyze_awards.py resolves. Analysis tooling, no user surface. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.loop.overnight-agent-contract",
@@ -42456,7 +42558,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Unusual for this codebase: a standing contract instructing an AI coding agent to keep modelling the award queue overnight, with a defined stuck-protocol and memory/inbox wake mechanism (qig-memory namespace 'bsuite').",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "LOOP.md resolves. A contract document, not a runtime surface - recorded so it is not mistaken for unbuilt code. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "pkg.auth.oauth-client",
