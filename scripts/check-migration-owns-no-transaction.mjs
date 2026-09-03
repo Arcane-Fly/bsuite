@@ -86,7 +86,7 @@ export const SCOPES = [
  * packages/schema-builder. A grep count is a hypothesis; the parser is the
  * measurement.
  */
-export const BANKED = 48
+export const BANKED = 47
 
 /**
  * Strip dollar-quoted bodies, line comments and block comments, then report the
