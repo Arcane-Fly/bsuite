@@ -57,6 +57,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import os from 'node:os'
+import { parseAllowlist, ALLOWLIST_RELATIVE_PATH } from './lib/migration-collision-compare.mjs'
 
 /**
  * Every migration scope that writes into the shared schema_migrations table.
@@ -88,8 +89,6 @@ const SCOPES = [
   { name: 'throughput', dir: 'throughput/supabase/migrations' },
   { name: 'schema-builder', dir: 'packages/schema-builder/supabase/migrations' },
 ]
-
-const ALLOWLIST_RELATIVE_PATH = 'scripts/migration-collision-allowlist.txt'
 
 /** Leading 14-digit version from a filename, or null if it doesn't start with one. */
 function versionOf(filename) {
@@ -140,59 +139,14 @@ function findCollisions(files) {
   return collisions
 }
 
-/**
- * Parse `VERSION<ws>n=<count><ws>reason` lines; blanks and `#` comments ignored.
- *
- * THE `n=` PIN, AND WHY IT IS REQUIRED
- *
- * The allowlist is keyed on the VERSION alone, which means an entry written to
- * waive one known-benign pair silently waived every future file at that version
- * too. Proven by mutation, 2026-08-12: 20260701090000 is allowlisted for a
- * crm7/business-suite-unified pair, and planting a THIRD file at that version in
- * conduit — a brand-new, unrelated, genuinely-losing migration — still exited 0.
- * A new colliding migration could therefore merge unnoticed simply by landing on
- * a timestamp somebody had already excused, which is the exact bsuite#1913 shape
- * the gate exists to stop.
- *
- * `n=<count>` records how many colliding files the entry was VERIFIED against.
- * If the group later grows, the entry no longer describes it and the check
- * fails until a human re-verifies and updates the count.
- *
- * KNOWN RESIDUAL GAP, stated rather than hidden: a same-count REPLACEMENT (one
- * colliding file deleted and a different one added at the same version, in the
- * same scope) keeps the count intact and is not caught. Pinning exact filenames
- * would close it; that was judged not worth the line-length cost here because
- * the dominant real-world shape — and the one that has actually cost this estate
- * a security control — is a NEW migration landing on an existing version.
- */
-function parseAllowlist(text) {
-  const allowed = new Map()
-  const lines = text.split('\n')
-  for (const raw of lines) {
-    const line = raw.trim()
-    if (!line || line.startsWith('#')) continue
-    let i = 0
-    while (i < line.length && line[i] >= '0' && line[i] <= '9') i++
-    const version = line.slice(0, i)
-    let rest = line.slice(i).trim()
-    if (version.length !== 14 || !rest) continue
-
-    let expectedFiles = null
-    if (rest.startsWith('n=')) {
-      let j = 2
-      while (j < rest.length && rest[j] >= '0' && rest[j] <= '9') j++
-      const digits = rest.slice(2, j)
-      const atBoundary = j === rest.length || rest[j] === ' ' || rest[j] === '\t'
-      if (digits.length && atBoundary) {
-        expectedFiles = Number(digits)
-        rest = rest.slice(j).trim()
-      }
-    }
-    if (!rest) continue
-    allowed.set(version, { reason: rest, expectedFiles })
-  }
-  return allowed
-}
+// parseAllowlist and ALLOWLIST_RELATIVE_PATH moved to
+// scripts/lib/migration-collision-compare.mjs (bsuite J7, 2026-09-03) — this
+// file used to carry its own copy, byte-for-byte duplicated in
+// check-migration-collisions-at-branch-tips.mjs. Both now import the one
+// shared implementation, which additionally hard-fails on a duplicate live
+// entry for the same version (see that module's header for why: exactly this
+// happened to 20261105000000, silently, before this extraction). See that
+// module for the full `n=<count>` pin rationale.
 
 /**
  * Names of every non-optional scope that yielded no migration files.

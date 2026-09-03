@@ -385,6 +385,19 @@
       "tracked_in": null
     },
     {
+      "added": "2026-09-03",
+      "lint": "authenticated_security_definer_function_executable",
+      "mode": "accepted",
+      "object_type": "function",
+      "objects": [
+        "email_integration_confirm_ownership(p_integration_id uuid)",
+        "email_integration_disconnect(p_integration_id uuid)"
+      ],
+      "reason": "Mailbox P0 (BSU#1105/#1108/#1110). Both are browser-called SECURITY DEFINER RPCs because the row's own RLS cannot reach vault.secrets, and a PostgREST DELETE that matches zero rows returns success. authenticated EXECUTE is the mechanism: a person confirming or disconnecting THEIR mailbox must be able to call them; anon is revoked.\n\nAuthorisation is inside the function, not the grant:\n  * confirm_ownership: only the row's user_id = auth.uid() may flip pending_confirmation to active.\n  * disconnect: auth.uid() = row owner, OR tenant owner/admin via auth_tenant_id_with_role, OR JWT role service_role (JWKS-verified at PostgREST; never HS256). Anyone else gets not-found (P0002), not a distinct forbidden, so the id is not a probe.\n  * search_path pinned public, pg_temp. REVOKE ALL FROM PUBLIC, anon.\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: advancing the parent gitlink to BSU main a126ab8 made the live catalog's two new RPCs visible to the advisor. That is the gate working — a new SECURITY DEFINER function exposed to authenticated MUST fail until justified. This is that justification.",
+      "review": "Re-justify if either signature changes. Re-justify if disconnect's tenant-admin limb is ever widened to staff/manager (that is BSU#1107, register-only).",
+      "tracked_in": null
+    },
+    {
       "added": "2026-08-16",
       "lint": "authenticated_security_definer_function_executable",
       "mode": "accepted",

@@ -1,6 +1,20 @@
 # ADR-0003 — Consumer-Renderer Pattern
 
-**Status:** Accepted (2026-05-01)
+**Status:** **SUPERSEDED (2026-09-03)** by [ADR-0011](ADR-0011-one-custom-page-renderer.md)
+
+> **SUPERSEDED — read ADR-0011 before acting on anything below.** The decision recorded here
+> produced, measured 2026-09-03 across all six app trees: **four** `CustomPageRenderer`
+> implementations, of which **one** renders real content (crm7, 211 lines), one renders
+> `"Widget placeholder"` divs (conduit, 310), and **two print `JSON.stringify(layout)` into a
+> `<pre>` at users on live routed screens** (business-suite-unified 138, braden 129).
+>
+> Its reason 3 — that a shared package would add release friction — no longer applies:
+> `@bsuite/page-builder` already exists and all five consumer apps already depend on it. Its
+> reason 2 — that apps have different widget catalogues — is the one durable point, and ADR-0011
+> preserves it as an injected prop rather than paying for it four times.
+>
+> The original text is left unchanged below. A record that is quietly corrected stops being a
+> record.
 **Related:** ADR-0001 (Page-Builder Ownership); `docs/20260227-dry-one-shot-architecture-v1.04A.md` §3 Tier-1
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
