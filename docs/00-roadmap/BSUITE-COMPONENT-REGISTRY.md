@@ -19,7 +19,7 @@ A shared component nothing imports is not a library — it is dead code with a v
 | App | Local component files |
 |---|---|
 | crm7 | 443 |
-| business-suite-unified | 117 |
+| business-suite-unified | 119 |
 | conduit | 98 |
 | braden | 207 |
 | throughput | 91 |
@@ -214,6 +214,7 @@ A shared component nothing imports is not a library — it is dead code with a v
 | `AppShell` | @bsuite/ui | 2 | business-suite-unified, throughput |
 | `EntitySelector` | @bsuite/ui | 2 | crm7, conduit |
 | `MobileSidebarDrawer` | @bsuite/nav-core | 2 | conduit, R80.4 |
+| `UpdateAvailableBanner` | @bsuite/nav-core | 2 | business-suite-unified, throughput |
 | `DialogContent` | @bsuite/ui | 1 | business-suite-unified |
 | `DialogDescription` | @bsuite/ui | 1 | business-suite-unified |
 | `DialogFooter` | @bsuite/ui | 1 | business-suite-unified |
@@ -224,7 +225,6 @@ A shared component nothing imports is not a library — it is dead code with a v
 | `ROW_HEIGHTS` | @bsuite/data-grid | 1 | crm7 |
 | `PageEditorLauncher` | @bsuite/page-builder | 1 | conduit |
 | `BSUITE_TENANT_APP_KEYS` | @bsuite/nav-core | 1 | braden |
-| `UpdateAvailableBanner` | @bsuite/nav-core | 1 | throughput |
 | `WorkflowCanvas` | @bsuite/workflow-canvas | 1 | crm7 |
 | `WorkflowInspector` | @bsuite/workflow-canvas | 1 | crm7 |
 | `WorkflowPalette` | @bsuite/workflow-canvas | 1 | crm7 |
