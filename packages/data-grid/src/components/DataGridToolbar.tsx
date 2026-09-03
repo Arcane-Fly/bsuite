@@ -97,7 +97,7 @@ export function DataGridToolbar<TRow>({
           value={filter}
           onChange={(e) => onFilterChange(e.target.value)}
           placeholder="Filter…"
-          className="h-8 w-48 rounded-md border border-border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 w-48 rounded-md border border-border-interactive bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         {/*
          * Say what the filter DID. A filter that silently removes rows leaves
@@ -118,7 +118,7 @@ export function DataGridToolbar<TRow>({
           aria-expanded={columnsOpen}
           aria-controls={panelId}
           onClick={() => setColumnsOpen((o) => !o)}
-          className="h-8 rounded-md border border-border px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 rounded-md border border-border-interactive px-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {/* Name what is hidden, not just "Columns" — otherwise a reader who
               hid a column has no cue that the list is showing them less than
@@ -180,7 +180,7 @@ export function DataGridToolbar<TRow>({
           value={rowHeightNameFor(rowHeight)}
           onChange={(e) => onRowHeightChange(ROW_HEIGHTS[e.target.value as RowHeightName])}
           aria-label="Row height"
-          className="h-8 rounded-md border border-border bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="h-8 rounded-md border border-border-interactive bg-background px-2 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           {(Object.keys(ROW_HEIGHTS) as RowHeightName[]).map((name) => (
             <option key={name} value={name}>

@@ -141,3 +141,31 @@ jobs:
       # must not be reportable as a clean tree.
       - name: No content text is painted below 4.5:1
         run: node scripts/check-content-contrast-tier.mjs
+
+  control-boundary-contrast:
+    name: shared-package form controls clear WCAG SC 1.4.11 on their own boundary
+    runs-on: ubuntu-latest
+    steps:
+      # No submodules needed — this scans packages/ in THIS repo, which is where
+      # the shared components live. Keeping the checkout shallow keeps the job in
+      # seconds, which is the reason estate-invariants can afford no paths filter.
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .node-version
+
+      # bsuite#3009's own completion-enforcer gate sent that PR back for exactly
+      # this shape of claim: "the remaining border-border uses are dividers,"
+      # asserted rather than measured, and false for 24+ of them. The self-test
+      # proves every native control tag with a bare resting border-border FAILS,
+      # and border-border-interactive / border-border-strong / a variant-prefixed
+      # use / a non-control element / <dialog> / a comment all PASS — the exact
+      # boundary that PR body got wrong by assertion.
+      - name: Self-test the checker
+        run: node scripts/check-control-boundary-contrast.mjs --self-test
+
+      # Exits 2, not 0, when it scans fewer files than its floor — a broken read
+      # must not be reportable as a clean tree.
+      - name: No native form control draws its only boundary with the divider token
+        run: node scripts/check-control-boundary-contrast.mjs

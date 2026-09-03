@@ -472,7 +472,7 @@ export function FieldEditDialog({
                 className={`w-full rounded-md border bg-card px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-ring ${
                   nameError
                     ? 'border-role-error'
-                    : 'border-border'
+                    : 'border-border-interactive'
                 }`}
               />
               {nameError ? (
@@ -509,7 +509,7 @@ export function FieldEditDialog({
                     value: e.target.value as FieldType,
                   })
                 }
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 {FIELD_TYPE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value}>
@@ -534,7 +534,7 @@ export function FieldEditDialog({
                   dispatch({ type: 'SET_LABEL', value: e.target.value })
                 }
                 placeholder="Shown to end users"
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
                 aria-describedby="field-edit-label-hint"
               />
               <p
@@ -560,7 +560,7 @@ export function FieldEditDialog({
                   dispatch({ type: 'SET_PLACEHOLDER', value: e.target.value })
                 }
                 placeholder="e.g. jane@example.com"
-                className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
               />
             </div>
 
@@ -630,7 +630,7 @@ export function FieldEditDialog({
               <button
                 type="button"
                 onClick={handleCancel}
-                className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
+                className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
               >
                 Cancel
               </button>
@@ -729,7 +729,7 @@ export function FieldEditDialog({
             <button
               type="button"
               onClick={handleCancelConfirm}
-              className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
+              className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
             >
               Cancel
             </button>
