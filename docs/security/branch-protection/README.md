@@ -24,15 +24,51 @@ revert is `git show`-able a year later by someone who was not there.
 ## 2. Contexts are APPENDED with POST, never replaced with PUT
 
 ```sh
-# CORRECT — appends, leaves the other contexts alone
+S=$(mktemp -d)
+
+# 1. dump the before-state
+gh api repos/GaryOcean428/bsuite/branches/<branch>/protection > "$S/before.json"
+
+# 2. CORRECT — appends, leaves the other contexts alone.
+#    The body is a JSON array passed with --input. See the two wrong forms below.
+cat > "$S/body.json" <<'JSON'
+{"contexts":["<exact context string>"]}
+JSON
 gh api --method POST \
   repos/GaryOcean428/bsuite/branches/<branch>/protection/required_status_checks/contexts \
-  -f 'contexts[]=<exact context string>'
+  --input "$S/body.json"
+
+# 3. re-read and diff — the write is NOT done until REMOVED is empty
+gh api repos/GaryOcean428/bsuite/branches/<branch>/protection > "$S/after.json"
+python3 - <<'EOPY'
+import json, os
+S = os.environ["S"]
+b = json.load(open(f"{S}/before.json"))["required_status_checks"]["contexts"]
+a = json.load(open(f"{S}/after.json"))["required_status_checks"]["contexts"]
+print(len(b), "->", len(a))
+print("ADDED  :", [c for c in a if c not in b])
+print("REMOVED:", [c for c in b if c not in a])   # MUST be []
+print("order preserved:", a[:len(b)] == b)        # MUST be True
+EOPY
 ```
 
-`PUT` on the same endpoint **replaces the whole list**. Appending one context by `PUT` has
-erased the other twenty-nine here before. Every write is followed by a re-read and a diff
-against the dump: only the appended contexts may differ.
+`DELETE` on the same endpoint, same body shape, removes a context — that is the rollback.
+
+**TWO WRONG FORMS, both of which look like they worked:**
+
+- **`PUT`** replaces the whole list. Appending one context by `PUT` has erased the other
+  twenty-nine here before.
+- **`-f 'contexts[]=<ctx>'`** exits 1, writes **nothing**, and prints an empty body. Measured on
+  2026-09-03 (bsuite#2988): the call "failed" so quietly that only re-reading the protection
+  object showed main still had exactly 30 contexts. `gh`'s `-f` builds a form field, not the JSON
+  array this endpoint wants. Never use it here — for `POST` or `DELETE`.
+
+Every write is followed by a re-read and a diff against the dump: only the appended contexts may
+differ, in the original order, with every other field of the protection object byte-identical.
+
+**Never append a context that is red on the PR making the append.** Merge the base in first and
+let that PR's own run of the context be the proof; a context appended while it is failing can
+deadlock the very PR that records the append.
 
 The strings are **exact**, including capitalisation, punctuation and the em dashes some of them
 carry. A context is the JOB's `name:` — or the job ID when the job has no `name:`, which is why

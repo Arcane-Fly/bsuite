@@ -1737,8 +1737,14 @@ export const GUARDS = [
       'protection — re-dump in the PR that writes it.',
     evidence:
       'Clean pass states "examined N required context(s) across M branch dump(s) ' +
-      '... against J job(s) in W workflow file(s); F finding(s)" — 58 / 2 / 129 / ' +
-      '104 / 0 on development+main at 2026-09-03.',
+      '... against J job(s) in W workflow file(s); F finding(s)" — 61 / 2 / 129 / ' +
+      '105 / 0 on development+main at 2026-09-03, after `align` was appended to ' +
+      'both branches and `Every gitlink sits on its app\'s own main` to main. ' +
+      '--self-test covers 11 cases: clean, stale context, path filter, ' +
+      'job-level if:, branches:, branches-ignore:, a types: list omitting both ' +
+      'opened and synchronize, a matrix job\'s bare name, its parenthesised ' +
+      'form, and a structural case asserting a `- run: |` body does not swallow ' +
+      'the step keys after it.',
   },
 ]
 

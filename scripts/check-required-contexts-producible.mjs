@@ -31,7 +31,10 @@
  *                     name is therefore NOT a context anyone can produce), or
  *                     the context is registered in the app-provided allowlist.
  *   reachable         at least one producing workflow triggers on `pull_request`
- *                     for THAT branch, with no `paths:`/`paths-ignore:` filter.
+ *                     for THAT branch — not excluded by `branches:` or
+ *                     `branches-ignore:`, not narrowed by a `types:` list that
+ *                     omits both `opened` and `synchronize`, and with no
+ *                     `paths:`/`paths-ignore:` filter.
  *   unconditional     at least one producing job has no job-level `if:`.
  *
  * WHAT IT DOES NOT ASSERT — say it, so nobody reads more into a green tick:
@@ -102,15 +105,26 @@ export function indexWorkflows(workflowsDir) {
     );
     const prMap = pr && typeof pr === 'object' && !Array.isArray(pr) ? pr : null;
     const prBranches = prMap && Array.isArray(prMap.branches) ? prMap.branches.map(String) : null;
+    // `branches-ignore` is the inverse filter and excludes just as absolutely.
+    // It cannot be combined with `branches:` in a real workflow, so they are
+    // read independently and both consulted below.
+    const prBranchesIgnore = prMap && Array.isArray(prMap['branches-ignore'])
+      ? prMap['branches-ignore'].map(String) : null;
     const rawPaths = prMap ? (prMap.paths ?? prMap['paths-ignore']) : null;
     const paths = Array.isArray(rawPaths) ? rawPaths.map(String) : null;
+    // A `types:` list narrows WHICH pull_request activity starts the workflow.
+    // Omitted, GitHub uses [opened, synchronize, reopened] — the shape that makes
+    // a check report on a fresh PR and again on every push to it. A list missing
+    // BOTH `opened` and `synchronize` (e.g. `[labeled]`) means an ordinary PR
+    // never triggers the run at all, so the context never reports.
+    const prTypes = prMap && Array.isArray(prMap.types) ? prMap.types.map(String) : null;
 
     for (const [jobId, job] of Object.entries(doc.jobs ?? {})) {
       if (!job || typeof job !== 'object') continue;
       jobsScanned += 1;
       const { base, matrix } = jobContext(jobId, job);
       const jobIf = typeof job.if === 'string' && job.if.trim() !== '' ? job.if.trim() : null;
-      const entry = { base, file, jobId, prBranches, hasPr, paths, jobIf };
+      const entry = { base, file, jobId, prBranches, prBranchesIgnore, prTypes, hasPr, paths, jobIf };
       if (matrix) { matrixJobs.push(entry); continue; }
       if (!exact.has(base)) exact.set(base, []);
       exact.get(base).push(entry);
@@ -175,7 +189,9 @@ export function evaluate({ workflowsDir, dumpsDir }) {
         });
         continue;
       }
-      const onThisBranch = producers.filter((p) => p.hasPr && (p.prBranches === null || p.prBranches.includes(dump.branch)));
+      const onThisBranch = producers.filter((p) => p.hasPr
+        && (p.prBranches === null || p.prBranches.includes(dump.branch))
+        && (p.prBranchesIgnore === null || !p.prBranchesIgnore.includes(dump.branch)));
       if (onThisBranch.length === 0) {
         rows.push({
           branch: dump.branch,
@@ -185,13 +201,27 @@ export function evaluate({ workflowsDir, dumpsDir }) {
         });
         continue;
       }
-      const unfiltered = onThisBranch.filter((p) => p.paths === null);
+      // A `types:` list that starts on neither `opened` nor `synchronize` means an
+      // ordinary PR never starts the workflow — the same deadlock as a path
+      // filter, arrived at through a different field.
+      const triggerable = onThisBranch.filter((p) => p.prTypes === null
+        || p.prTypes.includes('opened') || p.prTypes.includes('synchronize'));
+      if (triggerable.length === 0) {
+        rows.push({
+          branch: dump.branch,
+          context,
+          verdict: 'types-restricted',
+          detail: `every producer narrows \`on.pull_request.types\` to a list containing neither \`opened\` nor \`synchronize\` (${onThisBranch.map((p) => `${p.file}:${p.jobId} types: [${p.prTypes.join(', ')}]`).join(' | ')}). An ordinary pull request never starts the workflow, so the context never reports.`,
+        });
+        continue;
+      }
+      const unfiltered = triggerable.filter((p) => p.paths === null);
       if (unfiltered.length === 0) {
         rows.push({
           branch: dump.branch,
           context,
           verdict: 'path-filtered',
-          detail: `every producer is path-filtered (${onThisBranch.map((p) => `${p.file}:${p.jobId}`).join(', ')}). A PR whose changeset misses the filter never starts the workflow, so the context never reports and the merge waits forever.`,
+          detail: `every producer is path-filtered (${triggerable.map((p) => `${p.file}:${p.jobId}`).join(', ')}). A PR whose changeset misses the filter never starts the workflow, so the context never reports and the merge waits forever.`,
         });
         continue;
       }
@@ -324,6 +354,54 @@ function selfTest() {
       expectVerdict: 'unproducible',
     },
     {
+      name: 'planted branches-ignore that excludes the protected branch',
+      workflow: CLEAN_WORKFLOW.replace(
+        '    branches: [main, development]\n',
+        '    branches-ignore: [development]\n',
+      ),
+      contexts: ['A fixture gate'],
+      expect: 1,
+      expectVerdict: 'branch-scoped-out',
+    },
+    {
+      name: 'planted types: list with neither opened nor synchronize',
+      workflow: CLEAN_WORKFLOW.replace(
+        '    branches: [main, development]\n',
+        '    branches: [main, development]\n    types: [labeled]\n',
+      ),
+      contexts: ['A fixture gate'],
+      expect: 1,
+      expectVerdict: 'types-restricted',
+    },
+    {
+      name: '…but a types: list that KEEPS synchronize is fine',
+      workflow: CLEAN_WORKFLOW.replace(
+        '    branches: [main, development]\n',
+        '    branches: [main, development]\n    types: [opened, synchronize, labeled]\n',
+      ),
+      contexts: ['A fixture gate'],
+      expect: 0,
+      expectVerdict: null,
+    },
+    {
+      name: 'a `- run: |` body never swallows the step keys that follow it',
+      // `- run: |` stays ON THE DASH LINE on purpose — that is the only shape
+      // the bug had. Moving it to its own line makes the header indent and the
+      // sibling indent equal, and the fixture stops testing anything.
+      workflow: CLEAN_WORKFLOW.replace(
+        '          echo "if: not a condition"\n',
+        '          echo "if: not a condition"\n        shell: bash\n        env:\n          PATHS: not-a-filter\n',
+      ),
+      contexts: ['A fixture gate'],
+      expect: 0,
+      expectVerdict: null,
+      // The floor for a `- key: |` body is the KEY's indent, not the dash's;
+      // using the dash's swallowed `shell:`/`env:` into the run scalar. Asserted
+      // structurally below, not just by exit code — a case that only checks the
+      // exit code would pass with the bug still in.
+      assertStructure: true,
+    },
+    {
       name: '…and it DOES satisfy the parenthesised form GitHub actually reports',
       workflow: CLEAN_WORKFLOW.replace(
         '    runs-on: ubuntu-latest\n',
@@ -341,6 +419,20 @@ function selfTest() {
     fs.mkdirSync(dir, { recursive: true });
     const dirs = fixtureDir(dir, c);
     const result = evaluate(dirs);
+    // A structural case asserts what the PARSE produced, not only what the gate
+    // concluded — the block-scalar floor bug this covers changed no verdict, so
+    // an exit-code-only case would have passed throughout.
+    let structureOk = true;
+    if (c.assertStructure) {
+      const doc = parseWorkflowYaml(fs.readFileSync(path.join(dirs.workflowsDir, 'fixture.yml'), 'utf8'));
+      const step = ((doc.jobs?.fixture?.steps) || [])[0] || {};
+      structureOk = step.shell === 'bash'
+        && step.env && step.env.PATHS === 'not-a-filter'
+        && typeof step.run === 'string' && !step.run.includes('shell:');
+      if (!structureOk) {
+        console.error(`       block scalar swallowed its siblings: keys=[${Object.keys(step).join(',')}] run=${JSON.stringify(step.run)}`);
+      }
+    }
     const rc = result.findings > 0 ? 1 : 0;
     const verdicts = result.rows.map((r) => r.verdict);
     const okExit = rc === c.expect;
@@ -348,7 +440,7 @@ function selfTest() {
     // The clean case must also prove it EXAMINED something — a fixture that
     // silently scanned zero contexts would "pass" every case above.
     const okDenominator = result.scanned === c.contexts.length;
-    if (okExit && okVerdict && okDenominator) {
+    if (okExit && okVerdict && okDenominator && structureOk) {
       console.log(`  ok   ${c.name} (exit ${rc}, scanned ${result.scanned}${verdicts.length ? `, ${verdicts.join('+')}` : ''})`);
     } else {
       failed += 1;

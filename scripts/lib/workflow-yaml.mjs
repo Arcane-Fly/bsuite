@@ -50,9 +50,23 @@ export function parseWorkflowYaml(text) {
   const folded = new Map();
   for (let i = 0; i < lines.length; i += 1) {
     if (opaque[i]) continue;
-    const m = /^(\s*)(?:-\s+)?(?:[^#\s][^:]*)?:\s*[|>][+-]?\d*\s*(?:#.*)?$/.exec(lines[i]);
+    const m = /^(\s*)(-\s+)?(?:[^#\s][^:]*)?:\s*[|>][+-]?\d*\s*(?:#.*)?$/.exec(lines[i]);
     if (!m) continue;
-    const headerIndent = m[1].length;
+    // THE FLOOR IS THE KEY'S OWN INDENT, NOT THE DASH LINE'S.
+    //
+    // For `      - run: |` the dash sits at column 6 but the KEY starts at 8,
+    // and the item's sibling keys (`shell:`, `env:`, a step-level `if:`) are at
+    // 8 as well. Using the dash's indent as the floor swallowed every one of
+    // them into the run body — `- run: | … shell: bash env: X: 1` parsed as a
+    // single scalar with no `shell` key at all.
+    //
+    // Caught by the independent review of bsuite#2988, and it was LATENT rather
+    // than harmless-by-design: this gate reads only `on`, `jobs.<id>.name`,
+    // `.if` and `.strategy.matrix`, never a step field, so no required-context
+    // verdict was ever wrong. The next caller to read step-level fields would
+    // have been. Fixed at the source rather than noted as a limit, because a
+    // known-wrong parser is a trap with a comment on it.
+    const headerIndent = m[1].length + (m[2] ? m[2].length : 0);
     const body = [];
     for (let j = i + 1; j < lines.length; j += 1) {
       const raw = lines[j];
@@ -75,6 +89,9 @@ export function parseWorkflowYaml(text) {
       // Rebuild as `key: <folded body>`. splitKey below re-splits it; the body
       // is never re-parsed for structure, and never comment-stripped (a `#`
       // inside a shell body is a comment in the SHELL, not in the YAML).
+      // NB: the node keeps the DASH LINE's indent (raw's leading whitespace),
+      // because readSequence keys off the dash's column; only the block
+      // scalar's BODY floor moved above.
       const bare = stripComment(raw).trim();
       const dash = bare.startsWith('- ') ? '- ' : '';
       const key = splitKey(dash ? bare.slice(2).trim() : bare);
