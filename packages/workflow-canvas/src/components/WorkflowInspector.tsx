@@ -153,7 +153,7 @@ export function WorkflowInspector({
             ;(event.target as HTMLInputElement).blur()
           }
         }}
-        className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="mt-1 w-full rounded-lg border border-border-interactive bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
 
       <label
@@ -170,7 +170,7 @@ export function WorkflowInspector({
         rows={3}
         onChange={(event) => setDescription(event.target.value)}
         onBlur={commitDescription}
-        className="mt-1 w-full rounded-lg border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="mt-1 w-full rounded-lg border border-border-interactive bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
 
       {readOnly ? (
