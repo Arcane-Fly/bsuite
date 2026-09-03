@@ -33,7 +33,13 @@
  *                Not fixable here, and not a defect.
  *   PLANNED      the citing entry carries a `(planned)` suffix — the row-before-diff
  *                doctrine: a plan doc may cite a script that is not built YET. Exempt
- *                from the ratchet below by design, not by omission.
+ *                from the ratchet below by design, not by omission. The marker works
+ *                in BOTH places a citation can live (2026-09-03 review fix): an
+ *                `evidence:` frontmatter item, and a BODY citation (prose or a JSON
+ *                string) immediately followed by ` (planned)` — one space, the exact
+ *                word, closing paren — with an optional `:N` line ref allowed between
+ *                the path and the suffix. Anything else (`(planned)` on a later line,
+ *                `(Planned)`, `(planned soon)`) is NOT the marker.
  *   UNRESOLVED   nothing by that path exists anywhere, and it does not say `(planned)`.
  *                Under a MONOTONIC CEILING (2026-09-03): the count may only fall or
  *                hold, never rise — but UNRESOLVED itself still does not fail the
@@ -77,12 +83,31 @@ const BASELINE_FILE = 'docs/.unresolved-citation-baseline.json';
 export const CITATION =
   /(?<![A-Za-z0-9_/.-])(scripts\/[A-Za-z0-9_./-]+?\.(?:mjs|js|sh|ts)|\.github\/workflows\/[A-Za-z0-9_.-]+?\.ya?ml)(?![A-Za-z0-9])/g;
 
-export function cite(text) {
-  const out = new Set();
+/**
+ * The body-citation planned marker: the citation, then optionally `:N`, then
+ * exactly ` (planned)`. Anchored at the match end, so it cannot pick up a
+ * `(planned)` that belongs to some other citation later on the line.
+ */
+const BODY_PLANNED = /^(?::\d+)? \(planned\)/;
+
+/**
+ * citeEntries — every body citation with its `(planned)` flag. A path cited more
+ * than once in the same doc is planned if ANY occurrence carries the marker, the
+ * same "at least one citer says planned" rule the frontmatter form already uses.
+ */
+export function citeEntries(text) {
+  const out = new Map(); // path -> planned
   let m;
   CITATION.lastIndex = 0;
-  while ((m = CITATION.exec(text))) out.add(m[1]);
-  return out;
+  while ((m = CITATION.exec(text))) {
+    const planned = BODY_PLANNED.test(text.slice(m.index + m[0].length));
+    out.set(m[1], (out.get(m[1]) ?? false) || planned);
+  }
+  return [...out].map(([path, planned]) => ({ path, planned }));
+}
+
+export function cite(text) {
+  return new Set(citeEntries(text).map((e) => e.path));
 }
 
 /**
@@ -109,13 +134,18 @@ export function parseEvidence(text) {
     if (!inList) continue;
     const m = line.match(/^\s+-\s+(.+?)\s*$/);
     if (!m) { inList = false; continue; }
-    let raw = m[1].trim().replace(/^`(.+)`$/, '$1').replace(/:\d+$/, '');
+    // Order matters: the parenthetical is OUTERMOST (`scripts/x.mjs:50 (Gate G1)`),
+    // so strip it first; then any backticks; then the `:N` line ref. Stripping
+    // `:N` first left `scripts/x.mjs:50` as the path whenever an annotation
+    // followed — a path existsSync can never resolve (2026-09-03 review fix).
+    let raw = m[1].trim();
     let planned = false;
     const paren = raw.match(/^(.*?)\s+\(([^)]*)\)\s*$/);
     if (paren) {
       if (/^planned$/i.test(paren[2])) planned = true;
       raw = paren[1].trim();
     }
+    raw = raw.replace(/^`(.+)`$/, '$1').replace(/:\d+$/, '');
     if (raw) out.push({ path: raw, planned });
   }
   return out;
@@ -135,6 +165,32 @@ const SELF_TESTS = [
   { n: 'a trailing :50 line ref does not break the match',
     f: () => cite('`.github/workflows/verify.yml:50`').has('.github/workflows/verify.yml') },
   { n: 'prose mentioning the word scripts is not a citation', f: () => cite('the scripts directory').size === 0 },
+
+  // ── body-citation (planned) marker — the frontmatter form's twin (2026-09-03) ──
+  { n: 'a body citation immediately followed by " (planned)" is flagged planned', f: () => {
+    const e = citeEntries('Run `scripts/not-built.mjs (planned)` later.');
+    return e.length === 1 && e[0].path === 'scripts/not-built.mjs' && e[0].planned === true;
+  } },
+  { n: 'a body citation inside a JSON string is flagged planned the same way', f: () => {
+    const e = citeEntries('{"check": "scripts/check-x.mjs (planned) builds each app"}');
+    return e[0]?.path === 'scripts/check-x.mjs' && e[0]?.planned === true;
+  } },
+  { n: 'a body citation with a :N line ref before " (planned)" is still planned', f: () => {
+    const e = citeEntries('see scripts/not-built.mjs:50 (planned)');
+    return e[0]?.path === 'scripts/not-built.mjs' && e[0]?.planned === true;
+  } },
+  { n: 'a body citation with no marker is NOT planned', f: () => {
+    const e = citeEntries('Run scripts/not-built.mjs later.');
+    return e[0]?.planned === false;
+  } },
+  { n: '"(planned)" that is not immediately adjacent does not count — exact rule', f: () => {
+    const e = citeEntries('scripts/a.mjs is (planned)\nscripts/b.mjs  (planned)\nscripts/c.mjs (Planned)\nscripts/d.mjs (planned soon)');
+    return e.length === 4 && e.every((x) => x.planned === false);
+  } },
+  { n: 'a path cited twice, once planned, is planned (at-least-one-citer rule)', f: () => {
+    const e = citeEntries('scripts/x.mjs today; scripts/x.mjs (planned)');
+    return e.length === 1 && e[0].planned === true;
+  } },
 
   // ── evidence: frontmatter parsing — the new forms the old regex never saw ──
   { n: 'evidence: captures a .sql path outside scripts/', f: () => {
@@ -160,6 +216,14 @@ const SELF_TESTS = [
   { n: 'a non-planned trailing annotation is stripped but NOT marked planned', f: () => {
     const ev = parseEvidence('---\nevidence:\n  - docs/plans/20260817-x-v1.00D.md (Gate G1)\n---\n# doc\n');
     return ev[0]?.path === 'docs/plans/20260817-x-v1.00D.md' && ev[0]?.planned === false;
+  } },
+  { n: 'a :N line ref BEFORE a trailing annotation is stripped too — path is scripts/x.mjs, not scripts/x.mjs:50', f: () => {
+    const ev = parseEvidence('---\nevidence:\n  - scripts/x.mjs:50 (Gate G1)\n---\n# doc\n');
+    return ev[0]?.path === 'scripts/x.mjs' && ev[0]?.planned === false;
+  } },
+  { n: 'a :N line ref before (planned) yields a resolvable path AND the planned flag', f: () => {
+    const ev = parseEvidence('---\nevidence:\n  - `scripts/x.mjs:50` (planned)\n---\n# doc\n');
+    return ev[0]?.path === 'scripts/x.mjs' && ev[0]?.planned === true;
   } },
   { n: 'evidence: parsing stops at the closing frontmatter fence — does not read the BODY',
     f: () => {
@@ -225,6 +289,15 @@ if (process.argv.includes('--self-test')) {
     // The SAME citation, marked (planned), is exempt.
     writeFileSync(target, fm('  - scripts/never-written.mjs (planned)\n'));
     fcheck('(planned) suffix exempts the same citation', run() === 0);
+
+    // BODY form (2026-09-03 review fix). Before the fix this exact fixture counted
+    // 1 UNRESOLVED with the marker present; now the unmarked body citation is the
+    // planted violation and the marked one is exempt.
+    const body = (extra) => `${fm('')}\nRun \`scripts/not-built.mjs${extra}\` later.\n`;
+    writeFileSync(target, body(''));
+    fcheck('planted unresolved BODY citation fails the ratchet', run() !== 0);
+    writeFileSync(target, body(' (planned)'));
+    fcheck('the same BODY citation followed by " (planned)" is exempt', run() === 0);
 
     // Back to clean.
     writeFileSync(target, fm(''));
@@ -314,7 +387,7 @@ const found = new Map();        // path -> Set<citing docs>
 const plannedPaths = new Set(); // paths where at least one citer marked (planned)
 for (const d of docs) {
   const text = readFileSync(d, 'utf8');
-  const entries = [...cite(text)].map((path) => ({ path, planned: false })).concat(parseEvidence(text));
+  const entries = citeEntries(text).concat(parseEvidence(text));
   for (const { path: c, planned } of entries) {
     if (existsSync(c)) continue;
     if (planned) plannedPaths.add(c);
