@@ -28,6 +28,14 @@
  *                  the deletion call site as well as in classification, so
  *                  a caller that gets classify() to say the wrong thing
  *                  still cannot delete a protected name.
+ *   PROTECTED      branch name is main/master/development (exact), or starts
+ *                  with a protected prefix (archive/, attic/, presnap/,
+ *                  release/, prod) — the estate's own deliberate-record
+ *                  namespaces. Reported as "protected (kept by policy)",
+ *                  never listed as deletable, refused independently at the
+ *                  deletion call site too (fixed 2026-09-04: bsuite
+ *                  archive/pre-rewrite-main-20260723 was ahead_by 0 and read
+ *                  STALE-MERGED before this check existed).
  *   everything else is left alone and not reported.
  *
  * It does NOT prove a branch is safe to delete beyond "GitHub says it has no
@@ -67,6 +75,26 @@ export const REPOS = ['bsuite', 'crm7', 'business-suite-unified', 'conduit', 'br
 /** Branches this tool never classifies and never deletes, by name alone. */
 export const PROTECTED_NAMES = new Set(['main', 'master', 'development']);
 
+/**
+ * Branch NAME PREFIXES the estate keeps as deliberate records, never
+ * deletion candidates, regardless of ahead_by or merge state — archive/*,
+ * attic/* and presnap/* are explicitly the estate's "work at risk" capture
+ * mechanism itself (see feedback_work_left_uncommitted_in_a_shared_...), so
+ * this tool must never be the thing that deletes what THAT mechanism saved.
+ * release/* and anything starting with 'prod' (covers both 'prod/*' and
+ * 'production*') are kept for the same reason: a deliberate record, not
+ * abandoned work. Checked in BOTH classify() and deleteBranch() —
+ * classify() so it is never even reported as deletable, deleteBranch() so
+ * a caller that gets classify() wrong (or calls deleteBranch() directly,
+ * as the self-test below does) still cannot delete one.
+ */
+export const PROTECTED_PREFIXES = ['archive/', 'attic/', 'presnap/', 'release/', 'prod'];
+
+/** True when `branch` starts with any entry in PROTECTED_PREFIXES. */
+export function isProtectedByPrefix(branch) {
+  return PROTECTED_PREFIXES.some((prefix) => branch.startsWith(prefix));
+}
+
 /** A branch whose tip is older than this and has no open PR is at risk. */
 export const STALE_THRESHOLD_HOURS = 24;
 
@@ -85,6 +113,12 @@ export function ageHours(dateIso, now = new Date()) {
 export function classify({ branch, aheadBy, hasOpenPR, mergedAtTip, tipAgeHours, protectedFlag }) {
   if (PROTECTED_NAMES.has(branch)) {
     return { verdict: 'PROTECTED', reason: 'main/master/development are never classified or deleted by this tool' };
+  }
+  if (isProtectedByPrefix(branch)) {
+    return {
+      verdict: 'PROTECTED',
+      reason: 'protected (kept by policy) — branch name matches a protected prefix (archive/, attic/, presnap/, release/, prod); never a deletion candidate regardless of ahead_by or merge state',
+    };
   }
   if (hasOpenPR) {
     return { verdict: 'OK', reason: 'has an open PR' };
@@ -137,6 +171,15 @@ export async function deleteBranch({ repo, branch, remove }) {
     return {
       repo, branch, deleted: false, refused: true,
       reason: `refusing to delete protected branch '${branch}' on ${repo} — main/master/development are never deleted by this tool`,
+    };
+  }
+  // Defence in depth: this check is INDEPENDENT of classify() — a caller
+  // that gets classify() wrong, or calls deleteBranch() directly (as the
+  // self-test below does), still cannot delete a protected-prefix branch.
+  if (isProtectedByPrefix(branch)) {
+    return {
+      repo, branch, deleted: false, refused: true,
+      reason: `refusing to delete protected branch '${branch}' on ${repo} — protected (kept by policy): matches a protected prefix (archive/, attic/, presnap/, release/, prod)`,
     };
   }
   await remove();
@@ -415,6 +458,17 @@ async function selfTest() {
     git(work, ['commit', '-q', '-m', 'new, unmerged work on the reused name'], { GIT_AUTHOR_DATE: old, GIT_COMMITTER_DATE: old });
     git(work, ['push', '-q', 'origin', 'chore/reused-name-then-new-work']);
 
+    // Case 6/7 (D1 fix, reported live 2026-09-04 against bsuite
+    // archive/pre-rewrite-main-20260723): a branch under a PROTECTED PREFIX
+    // must never read STALE-MERGED/deletable, even at ahead_by 0 with a
+    // merged-at-tip PR — it must read PROTECTED, unconditionally. archive/x
+    // and release/x both branch off development with NO extra commits
+    // (ahead_by 0 by construction, matching the reported shape exactly).
+    git(work, ['checkout', '-q', '-b', 'archive/x', 'development']);
+    git(work, ['push', '-q', 'origin', 'archive/x']);
+    git(work, ['checkout', '-q', '-b', 'release/x', 'development']);
+    git(work, ['push', '-q', 'origin', 'release/x']);
+
     git(work, ['fetch', '-q', 'origin']);
 
     const localAheadBy = (branch) => Number(git(work, ['rev-list', '--count', `origin/development..origin/${branch}`]));
@@ -448,6 +502,18 @@ async function selfTest() {
         branch: 'feat/fresh-wip', aheadBy: localAheadBy('feat/fresh-wip'), hasOpenPR: false, mergedAtTip: false,
         tipAgeHours: ageHours(localTipDate('feat/fresh-wip'), now), protectedFlag: false,
       }),
+      // ahead_by 0 by construction (branched off development, no commits
+      // added), PLUS a fabricated merged-at-tip PR signal — the exact shape
+      // reported live: a protected-prefix branch that would ALSO qualify as
+      // STALE-MERGED under the ordinary rule. The prefix check must win.
+      'archive/x': classify({
+        branch: 'archive/x', aheadBy: localAheadBy('archive/x'), hasOpenPR: false, mergedAtTip: true,
+        tipAgeHours: ageHours(localTipDate('archive/x'), now), protectedFlag: false,
+      }),
+      'release/x': classify({
+        branch: 'release/x', aheadBy: localAheadBy('release/x'), hasOpenPR: false, mergedAtTip: true,
+        tipAgeHours: ageHours(localTipDate('release/x'), now), protectedFlag: false,
+      }),
     };
 
     t('an old, unmerged, PR-less branch is WORK-AT-RISK', rows['feat/at-risk'].verdict === 'WORK-AT-RISK', rows['feat/at-risk'].verdict);
@@ -455,6 +521,9 @@ async function selfTest() {
     t('an old, unmerged branch WITH an open PR is OK, not at risk', rows['feat/active-with-pr'].verdict === 'OK', rows['feat/active-with-pr'].verdict);
     t('fresh WIP (<24h, no PR) is OK — the detector does not cry wolf', rows['feat/fresh-wip'].verdict === 'OK', rows['feat/fresh-wip'].verdict);
     t('a reused branch name (old merged PR, NEW unmerged tip) is WORK-AT-RISK, not STALE-MERGED-by-name (D1/D7 fix, live case braden/chore/lockfile-reach)', rows['chore/reused-name-then-new-work'].verdict === 'WORK-AT-RISK', rows['chore/reused-name-then-new-work'].verdict);
+    t('archive/x is PROTECTED, never STALE-MERGED, even at ahead_by 0 with a merged-at-tip PR', rows['archive/x'].verdict === 'PROTECTED', rows['archive/x'].verdict);
+    t('release/x is PROTECTED likewise', rows['release/x'].verdict === 'PROTECTED', rows['release/x'].verdict);
+    t('the PROTECTED report line reads "protected (kept by policy)"', rows['archive/x'].reason.includes('protected (kept by policy)'), rows['archive/x'].reason);
 
     // Positive control for the same fix, at the pure classify() level (no git
     // needed): when a merged PR's head sha DOES match the current tip — the
@@ -494,6 +563,20 @@ async function selfTest() {
       remove: () => { mainRemoveCalled = true; },
     });
     t('deleteBranch() refuses "main" even though it was never pushed to this repo', delMain.refused === true && mainRemoveCalled === false, JSON.stringify(delMain));
+
+    // deleteBranch() called DIRECTLY on a protected-prefix branch (never
+    // routed through classify() at all) must still refuse — the defence in
+    // depth this fix adds. Proven against the REAL 'archive/x' ref pushed
+    // above, same standard as the main/development proofs: the remover is
+    // never invoked, and the ref is still present on the bare origin after.
+    let archiveRemoveCalled = false;
+    const delArchive = await deleteBranch({
+      repo: 'self-test/origin', branch: 'archive/x',
+      remove: () => { archiveRemoveCalled = true; execFileSync('git', ['-C', bare, 'branch', '-D', 'archive/x']); },
+    });
+    const archiveStillPresent = git(tmp, ['ls-remote', bare, 'refs/heads/archive/x']);
+    t("deleteBranch('archive/x') refuses even when called directly, without classify()", delArchive.refused === true && archiveRemoveCalled === false, JSON.stringify(delArchive));
+    t('"archive/x" is still present on the bare origin after the refused delete', archiveStillPresent !== '', 'ref vanished — the prefix refusal did not actually protect it');
   } catch (e) {
     t('self-test harness ran without throwing', false, String(e && e.stack || e));
   } finally {
