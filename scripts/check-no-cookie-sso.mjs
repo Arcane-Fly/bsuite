@@ -56,6 +56,7 @@
  */
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
+import { execFileSync } from 'node:child_process';
 
 const root = process.cwd();
 
@@ -135,7 +136,64 @@ export function docLineIsForbiddenClaim(line) {
   );
 }
 
+/*
+ * THE BANK — three doc claims that are ALREADY FIXED on app branches, and which CI
+ * still sees because the parent records each submodule at a PINNED COMMIT (a
+ * "gitlink"), not at the app's branch tip. Both gitlinks here track each app's MAIN,
+ * so a fix reaches the parent only after feature -> development -> main -> pointer
+ * advance. Blocking this gate until that whole chain completes would mean the estate's
+ * loudest security doctrine stays ungated for the duration, which is the worse trade.
+ *
+ * Banked BY IDENTITY, never by count. A bare number lets a DIFFERENT violation hide
+ * behind it; matching on the file and the offending text cannot.
+ */
+const BANKED_DOC_CLAIMS = [
+  {
+    file: 'conduit/docs/CONSISTENCY-REPORT.md',
+    contains: '- BS OAuth + cookie SSO',
+    fixedBy: 'conduit#676',
+  },
+  {
+    file: 'conduit/docs/UNIFIED-ROADMAP.md',
+    contains: '`@bsuite/auth` consumer (BS OAuth + cookie SSO)',
+    fixedBy: 'conduit#676',
+  },
+  {
+    file: 'business-suite-unified/docs/CONSISTENCY-REPORT.md',
+    contains: '- BS OAuth server, cookie SSO',
+    fixedBy: 'business-suite-unified#1104',
+  },
+];
+
+/*
+ * A BANK IS ONLY TRUE FOR ONE GITLINK, and this gate runs in two places that disagree.
+ *
+ * In CI the submodule is checked out AT the recorded pointer, so a banked entry that
+ * produces no finding really is stale and must be removed — the half of a ratchet that
+ * stops fixed work sitting banked forever.
+ *
+ * In a developer tree the submodule sits on a branch AHEAD of the pointer, so the same
+ * silence means "already fixed locally, pointer not advanced yet" — which is the normal,
+ * correct state and must not fail. Telling the two apart is a measurement, not a guess:
+ * compare the recorded gitlink against the submodule's actual HEAD.
+ */
+function submoduleTreeMatchesGitlink(mod) {
+  try {
+    const recorded = execFileSync('git', ['ls-tree', 'HEAD', mod], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim().split(/\s+/)[2];
+    const actual = execFileSync('git', ['-C', mod, 'rev-parse', 'HEAD'], {
+      encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'],
+    }).trim();
+    if (!recorded || !actual) return null;
+    return recorded === actual;
+  } catch {
+    return null; // cannot tell — treated as "do not fail on staleness"
+  }
+}
+
 const hits = [];
+const bankedSeen = new Set();
 const missingRoots = [];
 let sourceFilesScanned = 0;
 let docFilesScanned = 0;
@@ -211,6 +269,13 @@ async function scanDocFile(full, relative) {
   lines.forEach((line, index) => {
     if (!docLineIsForbiddenClaim(line)) return;
     if (hasDocAuditOk(lines, index)) return;
+    const banked = BANKED_DOC_CLAIMS.find(
+      (b) => b.file === relative && line.includes(b.contains),
+    );
+    if (banked) {
+      bankedSeen.add(`${banked.file}::${banked.contains}`);
+      return;
+    }
     hits.push(
       `${relative}:${index + 1}: doc claims cookie SSO is a current capability — ` +
         `${line.trim().slice(0, 120)}`,
@@ -305,6 +370,42 @@ if (missingRoots.length > 0) {
   process.exit(2);
 }
 
+// The ratchet's other half: a banked finding that no longer occurs must LEAVE the
+// bank, or fixed work sits banked forever and the number stops meaning anything.
+// Only enforced where the check is meaningful — see submoduleTreeMatchesGitlink.
+const staleBank = BANKED_DOC_CLAIMS.filter(
+  (b) => !bankedSeen.has(`${b.file}::${b.contains}`),
+);
+const enforceableStale = [];
+const notYetPointed = [];
+for (const b of staleBank) {
+  const mod = b.file.split('/')[0];
+  const matches = submoduleTreeMatchesGitlink(mod);
+  if (matches === true) enforceableStale.push(b);
+  else notYetPointed.push({ ...b, mod });
+}
+
+if (notYetPointed.length > 0) {
+  console.log(
+    `Bank: ${notYetPointed.length} entr(y/ies) already fixed in a submodule working tree ` +
+      'that is AHEAD of the recorded pointer. Not stale yet — they clear when the pointer advances:',
+  );
+  for (const b of notYetPointed) {
+    console.log(`  pending pointer advance: ${b.file} (fixed by ${b.fixedBy})`);
+  }
+}
+
+if (enforceableStale.length > 0) {
+  console.error(
+    'STALE BANK: these entries no longer occur at the recorded pointer, so the bank is ' +
+      'holding fixed work. Delete them from BANKED_DOC_CLAIMS in this file.',
+  );
+  console.error(
+    enforceableStale.map((b) => `  stale: ${b.file} (fixed by ${b.fixedBy})`).join('\n'),
+  );
+  process.exit(1);
+}
+
 if (hits.length > 0) {
   console.error(
     'Cookie SSO is forbidden in code AND in what the docs claim. Use BS OAuth 2.1 PKCE + JWKS only.',
@@ -321,5 +422,7 @@ if (hits.length > 0) {
 console.log(
   `Examined ${sourceFilesScanned} source files across ${sourceRoots.length} source roots and ` +
     `${docFilesScanned} markdown files across ${docRoots.length} doc roots. ` +
-    'No forbidden cookie SSO patterns, and no document claims cookie SSO is a current capability.',
+    'No forbidden cookie SSO patterns, and no NEW document claims cookie SSO is a current ' +
+    `capability. ${bankedSeen.size} of ${BANKED_DOC_CLAIMS.length} banked claim(s) still present ` +
+    'at the recorded submodule pointers; the bank may only shrink.',
 );
