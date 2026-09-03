@@ -420,35 +420,50 @@ jobs:
       #
       # A DROP + CREATE restores the default, so this is drift, not a one-time
       # fix. It runs here, after the replay, against the same disposable database
-      # the replay just built.
+      # the replay just built — with `--substrate replay`, which runs the three
+      # GROWTH checks (did this change introduce a PUBLIC-executable function, an
+      # unlisted anon grant, or a 15th RLS-no-policy table?) and deliberately does
+      # NOT run the converged-STATE check.
+      #
+      # A partial replay cannot answer that one. Measured 2026-09-03 on this very
+      # job (run 33727868315): it reported 13 client grants on
+      # tenant_encryption_keys that production does not have, because the
+      # migration revoking them lives in crm7's `archive/` subdirectory and is
+      # never replayed. That is the instrument failing to reproduce production,
+      # not the tree being wrong — and this file's own header insists a gate must
+      # never confound its instrument with its measurement. The live scan in
+      # prod-rls-policy-drift-audit.yml asserts it instead, and the step below
+      # says out loud that it skipped it rather than quietly reporting a smaller
+      # number.
       - name: Self-test the guard (proves it can fail)
         run: |
           set -o pipefail
           node scripts/supabase/check-secdef-grants.mjs \
-            --db-url "$REHEARSAL_DB_URL" --self-test \
+            --db-url "$REHEARSAL_DB_URL" --self-test --substrate replay \
             --min-functions "$SECDEF_MIN_FUNCTIONS" --min-tables "$SECDEF_MIN_TABLES" \
             | tee -a "$GITHUB_STEP_SUMMARY"
         env:
-          # Floors, not equality checks: this substrate is a baseline dump plus a
-          # replay and its object count legitimately differs from production
-          # (measured 2026-09-03: production carries 282 SECURITY DEFINER
-          # functions and 442 RLS-enabled tables in `public`). They exist to catch
-          # an EMPTY or WRONG database, which is the only way this assertion could
-          # report a false clean. The step prints the observed counts, so these can
-          # be tightened later against evidence rather than guessed upward now.
-          SECDEF_MIN_FUNCTIONS: '50'
-          SECDEF_MIN_TABLES: '200'
+          # Floors, not equality checks. MEASURED on this very substrate on
+          # 2026-09-03 (run 33727868315): it builds 191 SECURITY DEFINER functions
+          # and 385 RLS-enabled tables, against production's 282 and 442. The
+          # replay is deliberately partial — it does not scan `archive/`
+          # migrations, and all 7 allowlisted anon functions were absent from it.
+          # Set below the measured figures with headroom, because their job is to
+          # catch an EMPTY or WRONG database, which is the only way this assertion
+          # could report a false clean. Both steps print the observed counts.
+          SECDEF_MIN_FUNCTIONS: '120'
+          SECDEF_MIN_TABLES: '300'
 
       - name: Assert no SECURITY DEFINER function in public is PUBLIC-executable
         run: |
           set -o pipefail
           node scripts/supabase/check-secdef-grants.mjs \
-            --db-url "$REHEARSAL_DB_URL" \
+            --db-url "$REHEARSAL_DB_URL" --substrate replay \
             --min-functions "$SECDEF_MIN_FUNCTIONS" --min-tables "$SECDEF_MIN_TABLES" \
             | tee -a "$GITHUB_STEP_SUMMARY"
         env:
-          SECDEF_MIN_FUNCTIONS: '50'
-          SECDEF_MIN_TABLES: '200'
+          SECDEF_MIN_FUNCTIONS: '120'
+          SECDEF_MIN_TABLES: '300'
 
       - name: Stop disposable database
         if: always()

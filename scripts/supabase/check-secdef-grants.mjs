@@ -53,6 +53,9 @@
  *     table appearing that is NOT banked fails.
  *   - It does not assert that the 14 banked tables SHOULD have no policies. That
  *     is a design ruling recorded in the bank file, not a fact this can measure.
+ *   - Under --substrate replay it does NOT run check 4 at all, and says so on
+ *     stdout rather than quietly returning a smaller number. A partial replay
+ *     cannot answer a converged-state question; see the comment above check 4.
  *
  * TELLING "CHECKED NOTHING" FROM "FOUND NOTHING"
  * ──────────────────────────────────────────────
@@ -70,6 +73,9 @@
  *   node scripts/supabase/check-secdef-grants.mjs --db-url URL
  *   node scripts/supabase/check-secdef-grants.mjs --db-url URL --self-test      # loopback only; plants for real
  *   node scripts/supabase/check-secdef-grants.mjs --db-url URL --self-test-tx   # safe anywhere; BEGIN/ROLLBACK
+ *
+ *   --substrate live    (default) all four checks; for production or any converged database
+ *   --substrate replay            checks 1-3 only; for the rehearsal's partial replay
  */
 
 import { execFileSync } from 'node:child_process';
@@ -148,8 +154,30 @@ function parseAllowlist(file, { section = null } = {}) {
 
 /* ───────────────────────── the four checks ───────────────────────── */
 
+// SIGNATURE RENDERING — types only, and NEITHER of the two obvious spellings.
+//
+// `oid::regprocedure::text` gains a `public.` prefix whenever search_path does
+// not contain public, so an allowlist written without it silently matches
+// nothing — and "matches nothing" on an allowlist means "everything is
+// unlisted", i.e. the whole estate fails.
+//
+// `pg_get_function_identity_arguments(oid)` includes PARAMETER NAMES:
+// `r7_redeem_talent_pool_consent(p_token text)`, not `(text)`. Measured on the
+// real rehearsal substrate 2026-09-03, where it reported four allowlisted
+// functions as unlisted while simultaneously reporting the same four as
+// "allowlisted but not present" — the two halves of one mismatch. A local
+// fixture missed it because functions created as `f(text)` have no parameter
+// names to include, so the fixture and reality disagreed about the very thing
+// under test.
+//
+// So: build the type list from proargtypes directly. No schema prefix, no
+// parameter names, stable across search_path.
+
 const SQL_PUBLIC_EXECUTE = `
-SELECT p.proname || '(' || replace(pg_get_function_identity_arguments(p.oid), ', ', ',') || ')'
+SELECT p.proname || '(' || coalesce((
+         SELECT string_agg(format_type(t, NULL), ',' ORDER BY o)
+           FROM unnest(p.proargtypes) WITH ORDINALITY AS u(t, o)
+       ), '') || ')'
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
  WHERE n.nspname = 'public'
@@ -163,7 +191,10 @@ SELECT p.proname || '(' || replace(pg_get_function_identity_arguments(p.oid), ',
  ORDER BY 1`;
 
 const SQL_NAMED_ANON_EXECUTE = `
-SELECT p.proname || '(' || replace(pg_get_function_identity_arguments(p.oid), ', ', ',') || ')'
+SELECT p.proname || '(' || coalesce((
+         SELECT string_agg(format_type(t, NULL), ',' ORDER BY o)
+           FROM unnest(p.proargtypes) WITH ORDINALITY AS u(t, o)
+       ), '') || ')'
   FROM pg_proc p
   JOIN pg_namespace n ON n.oid = p.pronamespace
  WHERE n.nspname = 'public'
@@ -203,7 +234,7 @@ SELECT c.relname, r.rolname, a.privilege_type
 const SQL_COUNT_SECDEF = `SELECT count(*) FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace WHERE n.nspname='public' AND p.prosecdef`;
 const SQL_COUNT_RLS_TABLES = `SELECT count(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace WHERE n.nspname='public' AND c.relkind='r' AND c.relrowsecurity`;
 
-function runChecks(dbUrl, { minFunctions, minTables, quiet = false }) {
+function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet = false }) {
   const say = (s) => { if (!quiet) console.log(s); };
   const failures = [];
   const notes = [];
@@ -284,7 +315,34 @@ function runChecks(dbUrl, { minFunctions, minTables, quiet = false }) {
     if (!observed.includes(t)) notes.push(`banked RLS-no-policy table not present on this database: public.${t}`);
   }
 
-  /* 4 — none of them may carry an anon/authenticated/PUBLIC grant */
+  /* 4 — none of them may carry an anon/authenticated/PUBLIC grant.
+   *
+   * LIVE SUBSTRATE ONLY, and this is not a loophole — it is the difference
+   * between a question the substrate can answer and one it cannot.
+   *
+   * Checks 1-3 are GROWTH questions ("did this change introduce a
+   * PUBLIC-executable function / an unlisted anon grant / a 15th RLS-no-policy
+   * table?"), and a partial replay answers those honestly: anything it DOES
+   * build, it builds correctly.
+   *
+   * Check 4 is a STATE question ("does this table's grant set match the one
+   * production converged on?"), and a partial replay cannot answer it. Measured
+   * on the real substrate 2026-09-03: it reported 13 findings on
+   * tenant_encryption_keys, every one of which is ABSENT from production —
+   * because the migration that revokes them, crm7
+   * supabase/migrations/archive/20260820010000_tenant_encryption_keys_revoke_anon_grants.sql,
+   * lives in an `archive/` subdirectory the replay does not scan. The table is
+   * created with default grants and never revoked, on the substrate only.
+   *
+   * That is the instrument failing to reproduce production, not the tree being
+   * wrong, and this file's own sibling says a gate must never confound its
+   * instrument with its measurement. So the live scan asserts it and the
+   * rehearsal says out loud that it did not.
+   */
+  if (substrate !== 'live') {
+    say(`check 4 (grants on RLS-no-policy tables): SKIPPED on substrate=${substrate} — a partial replay cannot answer a converged-state question (see the comment in this file). The live scan asserts it.`);
+    return { failures, notes, scannedFunctions, scannedTables };
+  }
   const grants = rows(dbUrl, SQL_RLS_BANK_GRANTS);
   say(`check 4 (grants on RLS-no-policy tables): {findings: ${grants.length}, scanned: ${observed.length}}`);
   for (const [tbl, role, priv] of grants) {
@@ -387,12 +445,14 @@ function main() {
   let mode = 'check';
   let minFunctions = 50;
   let minTables = 100;
+  let substrate = 'live';
   for (let i = 0; i < argv.length; i++) {
     if (argv[i] === '--db-url') dbUrl = argv[++i];
     else if (argv[i] === '--self-test') mode = 'self-test';
     else if (argv[i] === '--self-test-tx') mode = 'self-test-tx';
     else if (argv[i] === '--min-functions') minFunctions = Number(argv[++i]);
     else if (argv[i] === '--min-tables') minTables = Number(argv[++i]);
+    else if (argv[i] === '--substrate') substrate = argv[++i];
     else {
       console.error(`unknown argument: ${argv[i]}`);
       process.exit(2);
@@ -403,10 +463,14 @@ function main() {
     process.exit(2);
   }
 
-  if (mode === 'self-test') return selfTest(dbUrl, { minFunctions, minTables });
+  if (!['live', 'replay'].includes(substrate)) {
+    console.error(`--substrate must be "live" or "replay" (got ${JSON.stringify(substrate)})`);
+    process.exit(2);
+  }
+  if (mode === 'self-test') return selfTest(dbUrl, { minFunctions, minTables, substrate });
   if (mode === 'self-test-tx') return selfTestTx(dbUrl);
 
-  const { failures, notes } = runChecks(dbUrl, { minFunctions, minTables });
+  const { failures, notes } = runChecks(dbUrl, { minFunctions, minTables, substrate });
 
   for (const n of notes) console.log(`  note: ${n}`);
 

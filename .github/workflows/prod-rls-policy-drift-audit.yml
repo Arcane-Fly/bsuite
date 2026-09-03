@@ -265,7 +265,7 @@ jobs:
 
           set +e
           node scripts/supabase/check-secdef-grants.mjs \
-            --db-url "$DB_URL" \
+            --db-url "$DB_URL" --substrate live \
             --min-functions "$SECDEF_MIN_FUNCTIONS" \
             --min-tables "$SECDEF_MIN_TABLES" > secdef-scan.txt 2>&1
           RC=$?
