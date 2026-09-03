@@ -40991,7 +40991,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Calls crm7's /api/ai/rate-review; blocked until crm7's CORS allowlist adds r8.crm7.app, per the module's own header \u2014 a real but externally-gated dependency.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/lib/jodie-rate-review.ts + suite: 29 assertions, all passing under node --test. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.qualifying-earnings",
@@ -41845,7 +41848,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Not user-facing; derives 'modelled' status from per-award coverage ledgers rather than a hand-maintained status string, specifically to avoid the queue and the CI gate disagreeing.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. Anchors src/awards/award-queue.ts and the coverage directory both resolve. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.awards-modelled-21",
@@ -41914,7 +41920,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "MA000004, 005, 008, 009, 010, 014, 017, 020, 025, 026, 029, 033, 036, 058, 059, 071, 073, 089, 101, 104, 119 \u2014 each with its own coverage ledger; award-queue.ts's next() derives the true frontier from the ledgers, not the hand-written 'status' field.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. The 21 CLEAN awards are MA000020, MA000025, MA000010, MA000089, MA000036, MA000029, MA000104, MA000005, MA000004, MA000009, MA000119, MA000058, MA000059, MA000073, MA000101, MA000033, MA000014, MA000008, MA000026, MA000071, MA000017. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-ma000020-building",
@@ -41940,7 +41949,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Largest single trade award; a competency-based progression limb was added then explicitly removed on operator ruling ('calculation is point in time').",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "MA000020 is in the 21 CLEAN list from the gate run on ef7db0b, and its source files resolve. Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.engine.award-ma000104-schedule-e",
@@ -41974,7 +41986,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "MA000104 is in the 21 CLEAN list from the gate run on ef7db0b, and its source files resolve. Award gate on the promotion tip ef7db0b: 'GATING 21 of 21 awards with scripts/dod.mjs - 21 modelled, 0 rate-scope partials, 0 with an open rate scope, 0 carrying a baselined known-open benchmark', exit 0. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.data.award-text-corpus",
@@ -42130,7 +42145,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "JWKS-verified bearer auth (unconditional, no env-var bypass), per-caller + per-IP sliding-window limits, and a global monthly quota (placeholder default pending confirmation against the real FWC subscription tier).",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "api/fwc.js and api/_shared/fwc-rate-limit.js both resolve; the rate-limit suite carries 45 assertions, all passing. This endpoint's 401 message was corrected today in R80.4#302 - it named env vars that were never tried. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.api.fwc-dev-proxy",
@@ -42170,7 +42188,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "apply: 'serve' \u2014 never present in a production build; carries none of api/fwc.js's auth/rate-limit hardening because it cannot obtain a verifiable token locally.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "vite-fwc-proxy.js resolves. Dev-only proxy, no production surface; verified present and referenced from the vite config. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.auth.oauth-session",
@@ -42482,7 +42503,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Not user-facing; produces the analysis/ artifacts registry.ts consumes.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "tools/analysis/analyze_awards.py resolves. Analysis tooling, no user surface. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.loop.overnight-agent-contract",
@@ -42507,7 +42531,10 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Unusual for this codebase: a standing contract instructing an AI coding agent to keep modelling the award queue overnight, with a defined stuck-protocol and memory/inbox wake mechanism (qig-memory namespace 'bsuite').",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "LOOP.md resolves. A contract document, not a runtime surface - recorded so it is not mistaken for unbuilt code. D9 engine/data-asset: a run exists - consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; approval is the PI enforcer's call."
+  }
  },
  {
   "id": "pkg.auth.oauth-client",
