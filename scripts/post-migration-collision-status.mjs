@@ -77,6 +77,41 @@ export function statusFor(pr, collisions, runUrl) {
   }
 }
 
+/**
+ * The clearing status for a PR the scan no longer judges — one that ADDS NO
+ * migration under the fixed, base...head-scoped scan
+ * (check-migration-collisions-across-open-prs.mjs's own FOLLOW header,
+ * 2026-09-04). Such a PR gets no FRESH verdict from this run — nothing about
+ * it changed the scan's opinion, because the scan has no opinion on it — but
+ * it may be sitting under a STALE status this exact context posted before
+ * the whole-tree bug was fixed, and a stale failure that nothing ever
+ * overwrites blocks the PR forever. Pure, so it is testable without a
+ * network call.
+ */
+export function clearanceFor(runUrl) {
+  return {
+    state: 'success',
+    context: CONTEXT,
+    target_url: runUrl,
+    description: 'This branch adds no migration — a prior status on this context was stale and is cleared.',
+  }
+}
+
+/** Read the existing status for CONTEXT on one commit, or null if none exists. */
+function existingStatus(scope, sha) {
+  const raw = execFileSync(
+    'gh',
+    ['api', `repos/${OWNER}/${scope}/commits/${sha}/status`],
+    { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] },
+  )
+  const doc = JSON.parse(raw)
+  const statuses = Array.isArray(doc.statuses) ? doc.statuses : []
+  // The API returns every status ever posted for this SHA, newest first per
+  // GitHub's own documented ordering — the first match for CONTEXT is the
+  // current one shown in the PR's checks UI.
+  return statuses.find((s) => s.context === CONTEXT) || null
+}
+
 function post(scope, sha, body) {
   const args = ['api', '--method', 'POST', `repos/${OWNER}/${scope}/statuses/${sha}`]
   for (const [k, v] of Object.entries(body)) args.push('-f', `${k}=${v}`)
@@ -127,6 +162,11 @@ function selfTest() {
   ok('a colliding flag with no matching version still fails, with a generic reason',
     s4.state === 'failure' && s4.description.includes('another open PR'))
 
+  const clear = clearanceFor('http://run')
+  ok('a clearance for an out-of-scope PR is state=success', clear.state === 'success')
+  ok('a clearance uses the SAME context — otherwise it clears nothing, it adds a second context', clear.context === CONTEXT)
+  ok('a clearance says WHY, not just that it is fine', clear.description.toLowerCase().includes('stale'))
+
   console.log(`\npost-migration-collision-status: ${pass}/${pass + fail} self-test(s) passed`)
   return fail ? 1 : 0
 }
@@ -160,7 +200,41 @@ function main() {
       console.error(`::warning::could not post status to ${pr.scope}#${pr.pr}: ${msg.slice(0, 200)}`)
     }
   }
-  console.log(`post-migration-collision-status: ${posted} posted, ${failed} could not be posted`)
+
+  // CLEAR STALE STATUSES on every PR the scan saw but did not judge this run —
+  // one that adds no migration under the fixed, base...head-scoped scan. Such
+  // a PR may be sitting under a FAILURE this exact context posted before the
+  // whole-tree bug (2026-09-04) was fixed; nothing else will ever overwrite
+  // it, since a PR that never gains a migration never gets a fresh verdict
+  // again. Checked, not assumed: only a PR that ACTUALLY carries a non-success
+  // CONTEXT status gets a clearing post — a PR with no status at all (the
+  // common, growing case going forward) gets none, matching "a PR that adds
+  // no migration receives no status" for every PR that was never wrongly
+  // flagged in the first place.
+  const judged = new Set((doc.prs || []).map((pr) => `${pr.scope}#${pr.pr}`))
+  let cleared = 0
+  for (const pr of doc.allOpenPrs || []) {
+    const key = `${pr.scope}#${pr.pr}`
+    if (judged.has(key) || !pr.sha) continue
+    let existing
+    try {
+      existing = existingStatus(pr.scope, pr.sha)
+    } catch (err) {
+      const msg = (err && err.message) || String(err)
+      console.error(`::warning::could not read existing status for ${key}: ${msg.slice(0, 200)}`)
+      continue
+    }
+    if (!existing || existing.state === 'success') continue // nothing stale to clear
+    try {
+      post(pr.scope, pr.sha, clearanceFor(runUrl))
+      cleared++
+      console.log(`  cleared ${key}  ${pr.sha.slice(0, 8)}  (was ${existing.state})`)
+    } catch (err) {
+      const msg = (err && err.message) || String(err)
+      console.error(`::warning::could not clear stale status on ${key}: ${msg.slice(0, 200)}`)
+    }
+  }
+  console.log(`post-migration-collision-status: ${posted} posted, ${cleared} stale status(es) cleared, ${failed} could not be posted`)
   // Posting is reporting, not judging. The scan step owns the pass/fail verdict; this
   // step failing would mask a clean scan as a broken one.
   process.exit(0)
