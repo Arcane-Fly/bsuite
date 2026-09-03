@@ -269,6 +269,49 @@ if (process.argv.includes('--self-test')) {
       failed += 1;
     }
   }
+  // findUncoveredDataGridFiles: the coverage-gap detector itself.
+  const coverageFiles = [
+    { path: 'a.tsx', text: '<DataGrid columns={c} data={d} />' },
+    { path: 'b.tsx', text: '<DataGrid columns={c} data={d} onRowClick={f} />' },
+    { path: 'c.tsx', text: '<table><tr><td>plain</td></tr></table>' },
+  ];
+  const coverageCases = [
+    [new Set(), new Set(), ['a.tsx renders <DataGrid> and is in neither clickThrough nor rowClickExceptions. Wire onRowClick and add the path to clickThrough, or add it to rowClickExceptions with a reason.'], 'a bare DataGrid file in neither set is a gap'],
+    [new Set(['a.tsx']), new Set(), [], 'in clickThrough only — covered, and it does have onRowClick... but a.tsx has NONE, so the click-through check (not this one) would fail it; this function only checks COVERAGE, not correctness'],
+    [new Set(), new Set(['a.tsx']), [], 'documented exception — covered'],
+    [new Set(['a.tsx']), new Set(['a.tsx']), ['a.tsx is in BOTH clickThrough and rowClickExceptions — pick one.'], 'in both sets is a contradiction, not double coverage'],
+    [new Set(), new Set(), [], 'a file with NO DataGrid at all is never a coverage problem — checked via c.tsx below'],
+  ];
+  for (const [ct, ex, expected] of coverageCases.slice(0, 4)) {
+    const got = findUncoveredDataGridFiles([coverageFiles[0]], ct, ex);
+    if (JSON.stringify(got) !== JSON.stringify(expected)) {
+      console.error(`SELF-TEST FAIL: coverage case — expected ${JSON.stringify(expected)}, got ${JSON.stringify(got)}`);
+      failed += 1;
+    }
+  }
+  {
+    const got = findUncoveredDataGridFiles([coverageFiles[2]], new Set(), new Set());
+    if (got.length !== 0) {
+      console.error(`SELF-TEST FAIL: a file with no <DataGrid> must never be reported — got ${JSON.stringify(got)}`);
+      failed += 1;
+    }
+  }
+
+  // invalidExceptionReasons: a placeholder reason must not satisfy the gate.
+  const reasonCases = [
+    [[{ path: 'x.tsx', reason: 'a genuinely explained reason with real content' }], [], 'a real reason passes'],
+    [[{ path: 'x.tsx', reason: '' }], ['x.tsx'], 'an empty reason fails'],
+    [[{ path: 'x.tsx', reason: 'n/a' }], ['x.tsx'], 'a short placeholder fails'],
+    [[{ path: 'x.tsx' }], ['x.tsx'], 'a missing reason field fails'],
+  ];
+  for (const [input, expected, why] of reasonCases) {
+    const got = invalidExceptionReasons(input);
+    if (JSON.stringify(got) !== JSON.stringify(expected)) {
+      console.error(`SELF-TEST FAIL: ${why} — expected ${JSON.stringify(expected)}, got ${JSON.stringify(got)}`);
+      failed += 1;
+    }
+  }
+
   if (failed > 0) {
     console.error(`\nSELF-TEST FAILED (${failed}). The counter is broken; its numbers must not be believed.`);
     process.exit(2);
@@ -277,11 +320,12 @@ if (process.argv.includes('--self-test')) {
     cases.filter((c) => c[1] === 0).length +
     gridCases.filter((c) => c[1] === 0).length +
     clickCases.filter((c) => c[1] === false).length +
-    convCases.filter((c) => c[1] === false).length;
-  console.log(
-    `self-test OK — ${cases.length + gridCases.length + clickCases.length + convCases.length} controls, ` +
-      `including ${negatives} that must NOT count.`,
-  );
+    convCases.filter((c) => c[1] === false).length +
+    4 /* coverageCases with an empty expected-problems array */ +
+    reasonCases.filter((c) => c[1].length === 0).length;
+  const totalControls =
+    cases.length + gridCases.length + clickCases.length + convCases.length + 5 /* coverage */ + reasonCases.length;
+  console.log(`self-test OK — ${totalControls} controls, including ${negatives} that must NOT count.`);
   process.exit(0);
 }
 
@@ -329,6 +373,60 @@ function hasRowClick(text) {
     i = text.indexOf('onRowClick', i + 1);
   }
   return false;
+}
+
+/*
+ * FULL onRowClick COVERAGE — not just the historically-protected set.
+ *
+ * The click-through check above only ever consults `clickThrough`, which
+ * started as the 14 crm7 files that had row-level click-through BEFORE their
+ * conversion (see the doc comment on the baseline). A file converted to
+ * DataGrid WITHOUT prior click-through — which is most of them; DataGrid
+ * adoption is not gated on having had a `<TableRow onClick>` first — never
+ * entered that list, and is invisible to this gate FOREVER once converted.
+ *
+ * Measured 2026-09-03: 22 files in crm7 render `<DataGrid>`. Exactly ONE
+ * (`hr/disciplinary.tsx`) was in `clickThrough`. Six had `onRowClick` anyway,
+ * by discipline rather than by gate — the other sixteen had no check on them
+ * at all, in either direction: nothing would have failed if one of the six
+ * lost its onRowClick tomorrow, and nothing failed while sixteen shipped with
+ * none.
+ *
+ * This closes it. EVERY file rendering `<DataGrid>` must be in EXACTLY ONE
+ * of two baked sets:
+ *   - `clickThrough[app]`       — must render `onRowClick`
+ *   - `rowClickExceptions[app]` — a documented reason it deliberately does not
+ * A file in NEITHER is the gap this function exists to name. A file in BOTH
+ * is a contradiction — the baseline should say what happened, not both.
+ *
+ * Pure and file-content-driven so it can be self-tested without touching disk,
+ * matching every other detector in this file.
+ */
+function findUncoveredDataGridFiles(files, clickThroughSet, exceptionPaths) {
+  const problems = [];
+  for (const { path: rel, text } of files) {
+    if (!usesDataGrid(text)) continue;
+    const inClickThrough = clickThroughSet.has(rel);
+    const inExceptions = exceptionPaths.has(rel);
+    if (inClickThrough && inExceptions) {
+      problems.push(`${rel} is in BOTH clickThrough and rowClickExceptions — pick one.`);
+    } else if (!inClickThrough && !inExceptions) {
+      problems.push(
+        `${rel} renders <DataGrid> and is in neither clickThrough nor rowClickExceptions. ` +
+          'Wire onRowClick and add the path to clickThrough, or add it to rowClickExceptions with a reason.',
+      );
+    }
+  }
+  return problems;
+}
+
+/*
+ * A `rowClickExceptions` entry with no real reason is a way PAST this gate,
+ * not an answer to it — "" or a token placeholder would satisfy the presence
+ * check above while recording nothing a reviewer could act on.
+ */
+function invalidExceptionReasons(exceptions) {
+  return exceptions.filter((e) => !e.reason || e.reason.trim().length < 15).map((e) => e.path);
 }
 /*
  * The OPENING TAG of the element starting at `from`, or '' if it never closes.
@@ -468,6 +566,14 @@ if (updating) {
       'this capability." The set is a UNION and only grows.',
     apps: measured,
     clickThrough: Object.fromEntries(APPS.map((a) => [a, unionClickThrough(a)])),
+    _rowClickExceptionsDoc:
+      'Files that render <DataGrid> and deliberately do NOT need onRowClick, with a stated reason. ' +
+      'HAND-CURATED, never derived by this script — --update carries it forward UNCHANGED. A file ' +
+      'must be in exactly one of clickThrough or rowClickExceptions; findUncoveredDataGridFiles fails ' +
+      'a file in neither (new, unreviewed) or both (contradictory).',
+    // Hand-curated judgement, not a scan result: --update must carry this forward
+    // verbatim, never regenerate or drop it.
+    rowClickExceptions: existingBaseline?.rowClickExceptions ?? {},
   };
   writeFileSync(BASELINE, `${JSON.stringify(banked, null, 2)}\n`);
   console.log(`banked: ${JSON.stringify(measured)}`);
@@ -538,6 +644,27 @@ for (const app of APPS) {
   }
 }
 
+/*
+ * FULL COVERAGE CHECK — every DataGrid file is in exactly one baked set.
+ * See findUncoveredDataGridFiles's doc comment for why this is separate from
+ * the click-through loop above (that one only ever reads `clickThrough`).
+ */
+let uncoveredCount = 0;
+for (const app of APPS) {
+  const clickThroughSet = new Set(baseline.clickThrough?.[app] ?? []);
+  const exceptionEntries = baseline.rowClickExceptions?.[app] ?? [];
+  const exceptionPaths = new Set(exceptionEntries.map((e) => e.path));
+  const badReasons = invalidExceptionReasons(exceptionEntries);
+  for (const p of badReasons) {
+    problems.push(`${app} rowClickExceptions: ${p} has no real reason recorded (need 15+ characters).`);
+  }
+  const src = join(ROOT, app, 'src');
+  const appFiles = walk(src).map((f) => ({ path: relative(ROOT, f), text: readFileSync(f, 'utf8') }));
+  const gaps = findUncoveredDataGridFiles(appFiles, clickThroughSet, exceptionPaths);
+  uncoveredCount += gaps.length;
+  for (const g of gaps) problems.push(g);
+}
+
 const totalNow = APPS.reduce((sum, a) => sum + measured[a].handRolled, 0);
 const gridNow = APPS.reduce((sum, a) => sum + measured[a].dataGrid, 0);
 
@@ -555,6 +682,9 @@ console.log(
 console.log(
   `click-through: ${protectedFiles} file(s) protected, ${protectedFiles - stillHandRolled} converted and ` +
     `keeping onRowClick, ${stillHandRolled} not yet converted.`,
+);
+console.log(
+  `onRowClick coverage: every DataGrid file is accounted for (${uncoveredCount} gap(s)).`,
 );
 
 /* ═══════════════════════════════════════════════════════════════════════════
