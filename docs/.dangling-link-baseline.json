@@ -1,0 +1,15 @@
+{
+  "findings": 58,
+  "scanned": 456,
+  "perRoot": {
+    "docs": 331,
+    "crm7": 52,
+    "conduit": 16,
+    "business-suite-unified": 28,
+    "R80.4": 27,
+    "braden": 22,
+    "throughput": 29
+  },
+  "banked": "2026-09-03",
+  "note": "findings/scanned banked from CI (run 33711402459) per PI ruling — not this worktree's own run, which measured 455 scanned (one fewer parent doc than CI's checkout at push time). perRoot is this worktree's raw per-app .md count, used only as the presence guard's floor (assert-docs-trees-present.mjs counts more broadly than this script's historical-filtered scan, so these floors are conservative — never higher than what a real checkout will measure)."
+}

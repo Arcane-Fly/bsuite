@@ -246,6 +246,15 @@ if (process.argv.includes('--self-test')) {
 const SUBS = readFileSync('.gitmodules', 'utf8')
   .split('\n').filter((l) => l.includes('path =')).map((l) => l.split('=')[1].trim())
   .concat(['packages']);
+// MACHINE-LOCAL, NOT REPO STATE — and CI has none of it, permanently.
+//
+// Measured 2026-09-03: a developer machine with the skills hub cloned classifies
+// `.agents/skills/.../visual-probe.js` as EXTERNAL (3 such citations); the SAME
+// commit in CI, where no `~/.agents` exists and never will, classifies the exact
+// same three as UNRESOLVED — through no fault of the citation. This is not a bug
+// to fix; it is why the UNRESOLVED ceiling below is banked from a CI RUN, never
+// from a local one — a local baseline would be permanently, silently wrong by
+// however many hub-only citations the corpus carries.
 const HUB = process.env.HOME ? join(process.env.HOME, '.agents') : null;
 
 function walk(d, out = []) {

@@ -103,9 +103,25 @@ jobs:
       - name: Dangling markdown links and stale @bsuite pins (monotonic ceiling)
         run: node scripts/check-docs-links-and-pins.mjs
 
+      # EVERY STEP FROM HERE ON RUNS `if: always()`.
+      #
+      # A GitHub Actions job stops at the first failing step by default. The
+      # step above is EXPECTED to fail on this PR's first run (no baseline
+      # banked yet — that is the whole point: this job's own log is where the
+      # true numbers get read from before they are committed). Without
+      # `always()`, that one expected failure would have silently skipped
+      # EVERY step after it — the supersession ratchet's number, and both
+      # report-only scripts, measured on 2026-09-03 during exactly this
+      # bootstrapping run: the job stopped at the dangling-link step and
+      # never even started the supersession one. `always()` on a step still
+      # lets that step's OWN exit code fail the job once baselines are
+      # banked and something genuinely regresses — it only stops one gate's
+      # expected pre-baseline failure from hiding every gate after it.
       - name: Self-test the supersession guard (proves it can fail)
+        if: always()
         run: node scripts/audit-doc-supersession.mjs --self-test
       - name: Which documents are superseded (equality ratchet)
+        if: always()
         run: node scripts/audit-doc-supersession.mjs
 
       # REPORT-ONLY — neither carries a ratchet. Each names something the two
@@ -114,6 +130,7 @@ jobs:
       # or a follow-up pass applies"), and it already refuses to pass silently
       # over zero coverage (SystemExit(2) if it scanned zero files or links).
       - name: Suggest renames for dangling doc links (report-only)
+        if: always()
         run: python3 scripts/check-docs-renamed-links.py
 
       # REPORT-ONLY. Inline code-path references inside backticks — a doc
@@ -123,4 +140,5 @@ jobs:
       # yet: PROPOSED (spec-declared-unbuilt) and MOVED/AMBIGUOUS/GONE need a
       # judgement call this PR does not make.
       - name: Inline source-path references (report-only)
+        if: always()
         run: node scripts/check-docs-source-paths.mjs

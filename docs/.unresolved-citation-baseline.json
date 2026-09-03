@@ -1,5 +1,6 @@
 {
-  "findings": 15,
-  "scanned": 335,
-  "banked": "2026-09-03"
+  "findings": 18,
+  "scanned": 336,
+  "banked": "2026-09-03",
+  "note": "Banked from CI (run 33711402393), not a local worktree — see the HUB comment in check-doc-citations-resolve.mjs. A local machine with ~/.agents cloned will legitimately measure fewer UNRESOLVED (those 3 read as EXTERNAL there); CI never has that directory, so CI's number is the one this ceiling must hold."
 }
