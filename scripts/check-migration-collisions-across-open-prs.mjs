@@ -37,10 +37,49 @@
  */
 
 import { execFileSync } from 'node:child_process'
+import { readFileSync, mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 import path from 'node:path'
 import { compareForCollision } from './lib/migration-collision-compare.mjs'
 
 export const SCOPES = ['crm7', 'business-suite-unified', 'conduit', 'braden', 'throughput', 'R80.4']
+
+// The same authority check-migration-collisions-at-branch-tips.mjs reads —
+// duplicated here rather than imported, because that file runs its own
+// main() as TOP-LEVEL module code with no `import.meta.url` guard (it
+// resolves a root path and calls `process.exit(0)` unconditionally at load
+// time), so importing anything from it would execute its whole CLI as a side
+// effect of loading this one function.
+export const APPLIER_WORKFLOW_RELATIVE_PATH = '.github/workflows/supabase-migrate.yml'
+
+/**
+ * Read MIGRATION_FLOOR from the applier workflow. An anchored key/value scan,
+ * not a YAML parse and not a regex
+ * (precedent__bsuite__20260812__regex_is_forbidden_parse_instead, Tier 2).
+ * Identical logic to check-migration-collisions-at-branch-tips.mjs's own
+ * extractFloor — see this file's header for why it is copied, not imported.
+ */
+export function extractFloor(workflowText) {
+  for (const raw of workflowText.split('\n')) {
+    const line = raw.trim()
+    if (!line.startsWith('MIGRATION_FLOOR:')) continue
+    let value = line.slice('MIGRATION_FLOOR:'.length).trim()
+    const hash = value.indexOf('#')
+    if (hash !== -1) value = value.slice(0, hash).trim()
+    if (
+      (value.startsWith("'") && value.endsWith("'") && value.length > 1) ||
+      (value.startsWith('"') && value.endsWith('"') && value.length > 1)
+    ) {
+      value = value.slice(1, -1)
+    }
+    if (!value) continue
+    let allDigits = true
+    for (const ch of value) if (ch < '0' || ch > '9') allDigits = false
+    if (!allDigits) continue
+    return value
+  }
+  return null
+}
 
 /** A migration filename's version: a character walk, never a regex.
  *  (precedent__bsuite__20260812__regex_is_forbidden_parse_instead, Tier 2, binding.) */
@@ -117,45 +156,90 @@ function sh(cmd, args, cwd) {
 function openPrHeads(scope, root) {
   const dir = path.join(root, scope)
   try {
-    const raw = sh('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName,headRefOid', '--limit', '100'], dir)
+    const raw = sh('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName,headRefOid,baseRefName', '--limit', '100'], dir)
     return JSON.parse(raw || '[]')
   } catch {
     return null                              // UNREADABLE, which is not "no PRs"
   }
 }
 
-function migrationsOnBranch(scope, root, branch) {
+function listMigrationTree(dir, ref) {
+  // NOT --name-only: the blob sha is what lets collisions() tell ONE file on two
+  // branches from TWO DIFFERENT files claiming one version.
+  const listing = sh('git', ['ls-tree', '-r', ref, 'supabase/migrations/'], dir)
+  // `archive/` IS NOT A MIGRATION SET. This gate asks what the applier will RUN,
+  // and `supabase db push` reads only the top level of supabase/migrations —
+  // subdirectories are history, filed away, already applied.
+  //
+  // Without this, crm7's 658 archived files each look like a live claim on their
+  // version. Measured 2026-08-28: two unrelated PRs, one in crm7 and one in BSU,
+  // were reported as colliding on 20260728120000 because crm7 carries an ARCHIVED
+  // copy of a migration BSU still has at the top level. Neither PR added a
+  // migration at all. A collision gate that fires on history teaches everyone to
+  // merge through it, which is exactly when it stops catching the real thing.
+  //
+  // (lint-migrations-revoke-anon.mjs is the opposite case and must KEEP reading
+  // archive/: a REVOKE that ran in June is still in force, so its question —
+  // what privileges does the database hold — is answered by the whole history.)
+  const byPath = new Map()
+  if (!listing) return byPath
+  for (const line of listing.split('\n')) {
+    if (!line) continue
+    // `<mode> <type> <sha>\t<path>` — split on the tab, then walk the left side.
+    const tab = line.indexOf('\t')
+    if (tab < 0) continue
+    const file = line.slice(tab + 1)
+    if (file.includes('/archive/')) continue
+    const meta = line.slice(0, tab).split(' ').filter(Boolean)
+    byPath.set(file, meta.length === 3 ? meta[2] : null)
+  }
+  return byPath
+}
+
+/**
+ * Migrations this PR itself ADDS — files present at the branch tip that are
+ * NOT present at its merge-base with its own base branch. Not the whole tree
+ * at the tip.
+ *
+ * FOLLOW (2026-09-04): the prior version of this function listed the ENTIRE
+ * `supabase/migrations/` tree at HEAD, which for every scope includes every
+ * migration ever merged, including ones from months before this PR existed.
+ * Measured: `20260504010000` — a May migration inherited from `development`
+ * by every open PR in every scope — was reported as a cross-scope collision
+ * on braden#594, conduit#679 and crm7#2384, none of which touch migrations
+ * at all. The applier only cares about a version TWO PRs would each try to
+ * introduce for the first time; a version both already inherited from the
+ * same shared history is not at risk, no matter how many scopes carry it.
+ *
+ * `baseBranch` is the PR's own declared base (almost always `development`,
+ * occasionally `main` for a hotfix) — read from the PR itself via
+ * `gh pr list`'s `baseRefName`, never assumed.
+ *
+ * THROWS if `baseBranch` is missing, rather than folding into the
+ * catch-all below and returning `[]`. This file's whole posture is
+ * fail-closed (an unreadable scope is not an empty one, see `openPrHeads`);
+ * a PR with no resolvable base would otherwise report "adds nothing" and a
+ * real added migration on it goes unseen — the FOLLOW (2026-09-04) fix
+ * trading a false positive for a false negative rather than a loud failure.
+ */
+function migrationsAddedByBranch(scope, root, branch, baseBranch, prNumber) {
+  if (!baseBranch) {
+    throw new Error(`${scope}#${prNumber} (${branch}): no baseRefName from gh pr list — cannot resolve a merge-base, refusing to report an empty added-set`)
+  }
   const dir = path.join(root, scope)
   try {
-    sh('git', ['fetch', 'origin', branch, '--quiet'], dir)
-    // NOT --name-only: the blob sha is what lets collisions() tell ONE file on two
-    // branches from TWO DIFFERENT files claiming one version.
-    const listing = sh('git', ['ls-tree', '-r', 'FETCH_HEAD', 'supabase/migrations/'], dir)
-    // `archive/` IS NOT A MIGRATION SET. This gate asks what the applier will RUN,
-    // and `supabase db push` reads only the top level of supabase/migrations —
-    // subdirectories are history, filed away, already applied.
-    //
-    // Without this, crm7's 658 archived files each look like a live claim on their
-    // version. Measured 2026-08-28: two unrelated PRs, one in crm7 and one in BSU,
-    // were reported as colliding on 20260728120000 because crm7 carries an ARCHIVED
-    // copy of a migration BSU still has at the top level. Neither PR added a
-    // migration at all. A collision gate that fires on history teaches everyone to
-    // merge through it, which is exactly when it stops catching the real thing.
-    //
-    // (lint-migrations-revoke-anon.mjs is the opposite case and must KEEP reading
-    // archive/: a REVOKE that ran in June is still in force, so its question —
-    // what privileges does the database hold — is answered by the whole history.)
-    if (!listing) return []
+    sh('git', ['fetch', 'origin', branch, baseBranch, '--quiet'], dir)
+    const atHead = listMigrationTree(dir, `refs/remotes/origin/${branch}`)
+    const mergeBase = sh('git', ['merge-base', `origin/${baseBranch}`, `refs/remotes/origin/${branch}`], dir)
+    const atBase = listMigrationTree(dir, mergeBase)
     const out = []
-    for (const line of listing.split('\n')) {
-      if (!line) continue
-      // `<mode> <type> <sha>\t<path>` — split on the tab, then walk the left side.
-      const tab = line.indexOf('\t')
-      if (tab < 0) continue
-      const file = line.slice(tab + 1)
-      if (file.includes('/archive/')) continue
-      const meta = line.slice(0, tab).split(' ').filter(Boolean)
-      out.push({ file, blob: meta.length === 3 ? meta[2] : null })
+    for (const [file, blob] of atHead) {
+      // Present at the merge-base under the SAME PATH means this PR did not
+      // introduce it — whether or not the content matches is irrelevant here;
+      // a PR that edits a pre-existing migration file in place is a different
+      // (and separately gated) risk, not a NEW version claim.
+      if (atBase.has(file)) continue
+      out.push({ file, blob })
     }
     return out
   } catch {
@@ -264,6 +348,145 @@ function selfTest() {
       { scope: 'crm7', pr: 1, version: '20260101000000', file: 'x.sql', blob: 'aaaa', content: 'SELECT 1;\n' },
       { scope: 'conduit', pr: 2, version: '20260101000000', file: 'y.sql', blob: 'bbbb' },
     ]).length, 1)
+
+  // extractFloor — same cases check-migration-collisions-at-branch-tips.mjs's
+  // own self-test uses, since this is a deliberate duplicate of that function.
+  t('extractFloor reads a quoted YAML value', extractFloor("env:\n  MIGRATION_FLOOR: '20260611000000'\n"), '20260611000000')
+  t('extractFloor strips a trailing comment', extractFloor('  MIGRATION_FLOOR: "20260611000000"  # raised 2026-06-10\n'), '20260611000000')
+  t('extractFloor returns null when the key is absent', extractFloor('env:\n  SOMETHING_ELSE: 1\n'), null)
+  t('extractFloor rejects a non-numeric value', extractFloor('  MIGRATION_FLOOR: latest\n'), null)
+
+  // FAIL CLOSED on a missing baseRefName: this must THROW, naming the PR, not
+  // return [] — a silent [] reads as "this PR adds nothing", which is a false
+  // negative on exactly the kind of PR this scan cannot properly evaluate.
+  {
+    let threw = null
+    try {
+      migrationsAddedByBranch('crm7', '/nonexistent', 'some-branch', undefined, 4242)
+    } catch (err) {
+      threw = err
+    }
+    t('a missing baseBranch throws rather than silently returning []', threw !== null, true)
+    t('the thrown error names the scope and PR number',
+      threw ? threw.message.includes('crm7#4242') : false, true)
+  }
+
+  // ---------------------------------------------------------------------
+  // migrationsAddedByBranch — THE ACTUAL BUG. A real disposable repo and the
+  // real function, not a hand-built entries array: the earlier tests above
+  // exercise collisions() on entries that already assume "added-only"
+  // semantics, which is exactly what let the whole-tree bug ship unnoticed —
+  // nothing tested the DIFF computation itself.
+  //
+  // SHAPE: a bare repo as `origin`, a working clone with `development` and a
+  // `feature` branch, mirroring real CI (each scope dir is a clone with an
+  // `origin` remote `migrationsAddedByBranch`'s `git fetch origin` expects).
+  //
+  //   development: X (shared floor migration, inherited by everything below)
+  //        \
+  //         feature: Y (a genuinely NEW migration this branch adds)
+  //   development: Z (an unrelated later commit, "another open PR")
+  // ---------------------------------------------------------------------
+  {
+    const work = mkdtempSync(path.join(tmpdir(), 'mig-added-test-'))
+    const bareOrigin = path.join(work, 'origin.git')
+    const root = path.join(work, 'root')
+    const scope = 'testscope'
+    const clonePath = path.join(root, scope)
+    try {
+      mkdirSync(root, { recursive: true })
+      sh('git', ['init', '-q', '--bare', bareOrigin], work)
+      sh('git', ['clone', '-q', bareOrigin, clonePath], work)
+      sh('git', ['config', 'user.email', 'test@test.local'], clonePath)
+      sh('git', ['config', 'user.name', 'test'], clonePath)
+      sh('git', ['checkout', '-q', '-b', 'development'], clonePath)
+
+      mkdirSync(path.join(clonePath, 'supabase', 'migrations'), { recursive: true })
+      writeFileSync(path.join(clonePath, 'supabase/migrations/20260504010000_shared_floor.sql'), 'select 1;\n')
+      sh('git', ['add', '.'], clonePath)
+      sh('git', ['commit', '-q', '-m', 'X: shared floor migration, inherited by everything'], clonePath)
+      sh('git', ['push', '-q', 'origin', 'development'], clonePath)
+
+      sh('git', ['checkout', '-q', '-b', 'feature'], clonePath)
+      writeFileSync(path.join(clonePath, 'supabase/migrations/20261120000000_new_thing.sql'), 'create table t();\n')
+      sh('git', ['add', '.'], clonePath)
+      sh('git', ['commit', '-q', '-m', 'Y: a genuinely new migration'], clonePath)
+      sh('git', ['push', '-q', 'origin', 'feature'], clonePath)
+
+      sh('git', ['checkout', '-q', 'development'], clonePath)
+      writeFileSync(path.join(clonePath, 'README.md'), 'unrelated\n')
+      sh('git', ['add', '.'], clonePath)
+      sh('git', ['commit', '-q', '-m', 'Z: unrelated later commit on development'], clonePath)
+      sh('git', ['push', '-q', 'origin', 'development'], clonePath)
+
+      const added = migrationsAddedByBranch(scope, root, 'feature', 'development')
+      t('a feature branch reports ONLY the migration it added, not the shared floor it inherited',
+        added.map((e) => e.file).sort(),
+        ['supabase/migrations/20261120000000_new_thing.sql'])
+
+      // THE ACTUAL REGRESSION: two branches that each only INHERIT the shared
+      // floor migration (neither adds anything new) must report ZERO added
+      // migrations each — this is what the whole-tree version got wrong,
+      // reporting the shared floor migration as "added" by both and colliding
+      // them. `development` itself, diffed against its own tip, obviously adds
+      // nothing; the meaningful case is a SECOND feature branch that also only
+      // carries the inherited floor migration.
+      sh('git', ['checkout', '-q', '-b', 'feature-b', 'development'], clonePath)
+      sh('git', ['push', '-q', 'origin', 'feature-b'], clonePath)
+      const addedB = migrationsAddedByBranch(scope, root, 'feature-b', 'development')
+      t('a branch that only inherits the shared floor migration adds NOTHING — the exact regression', addedB.length, 0)
+    } finally {
+      rmSync(work, { recursive: true, force: true })
+    }
+  }
+
+  // END-TO-END POSITIVE CONTROL: two DIFFERENT scopes, each genuinely adding a
+  // NEW migration at the SAME version with DIFFERENT content — the real risk
+  // this whole gate exists for. Runs the FULL pipeline (migrationsAddedByBranch
+  // -> versionOf -> collisions()), not the pure collisions() function alone,
+  // so a fix that accidentally suppresses genuine collisions while fixing the
+  // false-positive bug would be caught here.
+  {
+    const work = mkdtempSync(path.join(tmpdir(), 'mig-added-cross-scope-'))
+    const root = path.join(work, 'root')
+    try {
+      mkdirSync(root, { recursive: true })
+      const entries = []
+      for (const [scope, content] of [['crm7', 'create table a();\n'], ['conduit', 'create table b();\n']]) {
+        const bareOrigin = path.join(work, `${scope}.git`)
+        const clonePath = path.join(root, scope)
+        sh('git', ['init', '-q', '--bare', bareOrigin], work)
+        sh('git', ['clone', '-q', bareOrigin, clonePath], work)
+        sh('git', ['config', 'user.email', 'test@test.local'], clonePath)
+        sh('git', ['config', 'user.name', 'test'], clonePath)
+        sh('git', ['checkout', '-q', '-b', 'development'], clonePath)
+        mkdirSync(path.join(clonePath, 'supabase', 'migrations'), { recursive: true })
+        writeFileSync(path.join(clonePath, 'supabase/migrations/20260101000000_base.sql'), 'select 1;\n')
+        sh('git', ['add', '.'], clonePath)
+        sh('git', ['commit', '-q', '-m', 'base'], clonePath)
+        sh('git', ['push', '-q', 'origin', 'development'], clonePath)
+
+        sh('git', ['checkout', '-q', '-b', 'feature'], clonePath)
+        writeFileSync(path.join(clonePath, 'supabase/migrations/20261120000000_colliding.sql'), content)
+        sh('git', ['add', '.'], clonePath)
+        sh('git', ['commit', '-q', '-m', 'colliding migration'], clonePath)
+        sh('git', ['push', '-q', 'origin', 'feature'], clonePath)
+
+        for (const { file, blob } of migrationsAddedByBranch(scope, root, 'feature', 'development')) {
+          const version = versionOf(file)
+          if (version) entries.push({ scope, pr: 1, branch: 'feature', version, file, blob })
+        }
+      }
+      const found = collisions(entries)
+      t('two scopes each genuinely ADDING the same new version collide', found.length, 1)
+      t('the collision names both scopes',
+        found.length === 1 ? [...new Set(found[0].entries.map((e) => e.scope))].sort() : [],
+        ['conduit', 'crm7'])
+    } finally {
+      rmSync(work, { recursive: true, force: true })
+    }
+  }
+
   const bad = cases.filter((c) => !c.ok)
   for (const c of cases) {
     console.log(`  ${c.ok ? 'ok  ' : 'FAIL'} ${c.name}${c.ok ? '' : ` — got ${JSON.stringify(c.got)}, want ${JSON.stringify(c.want)}`}`)
@@ -314,17 +537,51 @@ function main() {
   if (process.argv.includes('--self-test')) process.exit(selfTest())
   const root = process.cwd()
 
+  const applierPath = path.join(root, APPLIER_WORKFLOW_RELATIVE_PATH)
+  let floor
+  try {
+    floor = extractFloor(readFileSync(applierPath, 'utf8'))
+  } catch {
+    floor = null
+  }
+  if (!floor) {
+    console.error(`::error::could not read MIGRATION_FLOOR from ${APPLIER_WORKFLOW_RELATIVE_PATH} — refusing to scan with an unknown floor.`)
+    process.exit(2)
+  }
+
   const entries = []
   const unreadable = []
+  const allOpenPrs = []
   let prCount = 0
   for (const scope of SCOPES) {
     const prs = openPrHeads(scope, root)
     if (prs === null) { unreadable.push(scope); continue }
     for (const pr of prs) {
       prCount++
-      for (const { file, blob } of migrationsOnBranch(scope, root, pr.headRefName)) {
+      // EVERY open PR, whether or not it touches a migration — the poster
+      // needs this full set to know which PRs it must actively CLEAR a stale
+      // status from, not just which ones it has a fresh verdict for.
+      allOpenPrs.push({ scope, pr: pr.number, sha: pr.headRefOid })
+      let added
+      try {
+        added = migrationsAddedByBranch(scope, root, pr.headRefName, pr.baseRefName, pr.number)
+      } catch (err) {
+        // FAIL CLOSED, same posture as an unreadable scope above: a PR this
+        // scan could not properly evaluate is an ABSENT result, not a clean
+        // one — reporting nothing for it would be a false negative, not a
+        // false positive, and this scan has already shipped one of those.
+        console.error(`::error::${(err && err.message) || err}`)
+        unreadable.push(`${scope}#${pr.number}`)
+        continue
+      }
+      for (const { file, blob } of added) {
         const version = versionOf(file)
-        if (version) entries.push({ scope, pr: pr.number, branch: pr.headRefName, sha: pr.headRefOid, version, file, blob })
+        if (!version) continue
+        // Sub-floor versions were applied long before either PR existed — the
+        // same rule check-migration-collisions-at-branch-tips.mjs's classify()
+        // uses, applied here to a PR's OWN added set rather than its full tree.
+        if (version < floor) continue
+        entries.push({ scope, pr: pr.number, branch: pr.headRefName, sha: pr.headRefOid, version, file, blob })
       }
     }
   }
@@ -364,6 +621,13 @@ function main() {
     process.stdout.write(
       JSON.stringify({
         prs: [...seen.values()],
+        // Every open PR the scan actually saw, migration or not — see FOLLOW
+        // (2026-09-04) on migrationsAddedByBranch's own header for why `prs`
+        // above no longer includes a PR that adds nothing: the poster diffs
+        // this list against `prs` to find PRs that need a STALE status
+        // cleared (one this scan's earlier, whole-tree bug wrongly failed),
+        // not just ones it has a fresh verdict for.
+        allOpenPrs,
         collisions: found.map((c) => ({
           version: c.version,
           claimants: c.entries.map((e) => ({ scope: e.scope, pr: e.pr, file: e.file })),
