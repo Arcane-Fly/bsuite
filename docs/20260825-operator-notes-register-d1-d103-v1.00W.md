@@ -350,7 +350,7 @@ Not a docx export: two asks the operator put to the email-p0 lane in chat on 3 S
 
 ## Addendum — D-163 to D-165, findings raised on 2026-09-03 by the lanes' own gates
 
-Not operator asks: two class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
+Not operator asks: three class findings surfaced by the corrective run's reviews and enforcer runs, registered so they have a row before they have a diff. Verdicts: docs/00-roadmap/operator-notes-verdicts.json.
 
 | ID | Finding (source) | Asks for | Surface | App | Category |
 |---|---|---|---|---|---|
