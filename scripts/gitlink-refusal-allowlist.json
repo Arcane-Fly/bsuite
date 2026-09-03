@@ -32,7 +32,7 @@
     "conduit, R80.4 and throughput all read as ALREADY CURRENT (their bsuite",
     "gitlink already equals their own main tip), so no entries were needed for",
     "them here. crm7 newly refuses instead \u2014 its bsuite development gitlink",
-    "(70aef71f) is crm7's own DEVELOPMENT tip, not main, so it now sits AHEAD of",
+    "(70aef71f) is a development-only crm7 commit (not on crm7 main), not main, so it now sits AHEAD of",
     "crm7's main (1fd4fd82) and the forward-only rule correctly won't move it",
     "backward. That is a real, unresolved finding (see bsuite#2939's PR body,",
     "which makes the same \"both at main\" claim and is false for crm7 specifically)",

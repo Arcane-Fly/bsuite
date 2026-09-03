@@ -14,7 +14,7 @@
  *
  * bsuite#2939 does exactly this for crm7 (measured live, 2026-09-03): it
  * re-points the parent's crm7 gitlink to 70aef71fb520c60eee3ddf982322335cc0a50bbe
- * — crm7's own DEVELOPMENT tip, 24 commits AHEAD of crm7's actual main
+ * — a development-only crm7 commit (not on crm7 main), 24 commits AHEAD of crm7's actual main
  * (1fd4fd8297c67bfe23f9cceaf79b54ca9c481468) — while the PR's own body claims
  * "both at main". `git -C crm7 merge-base --is-ancestor 70aef71f origin/main`
  * answers NO: shipping that pointer would make bsuite `main` read a crm7 tree
@@ -46,8 +46,10 @@
  *    remote inside this job, specifically so a stale or unrelated local
  *    checkout of the submodule cannot produce a false pass.
  *  - It does NOT run against `development`. The parent's development gitlinks
- *    intentionally track each app's development head (see the header of
- *    advance-submodule-pointers.mjs), which is correctly NOT on that app's main
+* It does NOT run against development: the parent's development gitlinks track each app's
+* MAIN as well (precedent parent-gitlinks-track-submodule-main-not-development); the gate is
+* scoped to main-bound PRs because that is where a development-only pointer becomes shipped,
+* not because development gitlinks are expected to sit off their app's main.
  *    — running this rule there would refuse every ordinary development gitlink.
  *  - It does NOT resolve anything. A refusal names the app and the two SHAs; a
  *    human decides whether to re-point to the app's main or wait for that app's

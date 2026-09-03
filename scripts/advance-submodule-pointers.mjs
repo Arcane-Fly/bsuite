@@ -274,7 +274,7 @@ function selfTest() {
     chk('a malformed first_seen is ignored',
       loadAllowedRefusals(JSON.stringify({ refusals: [entry('crm7', { first_seen: '3 Sept 2026' })] }), NOW).has('crm7'), false)
     // THE RATCHET, THE PART THAT ACTUALLY BITES: an entry younger than the limit
-    // is honoured; the SAME entry, seen 8 days ago instead of 2, is not — it must
+    // is honoured; the SAME entry, seen 9 days ago instead of 2, is not — it must
     // stop suppressing the failure entirely on its own, with no human action.
     chk('an entry within the age limit is still allowed',
       loadAllowedRefusals(JSON.stringify({ refusals: [entry('crm7', { first_seen: '2026-08-27' }) ] }), NOW).has('crm7'), true) // exactly 7d
