@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * advance-submodule-pointers — keep the parent's gitlinks level with each app's
- * development head, so guards stop reporting the pointer as an app defect.
+ * MAIN tip, so guards stop reporting the pointer as an app defect.
  *
  * WHY THIS EXISTS
  * ───────────────
@@ -19,6 +19,21 @@
  *
  * Each guard was correct about what it read. None of them was reading the app
  * that actually ships. Hours went into chasing app defects that did not exist.
+ *
+ * THE TARGET IS EACH APP'S MAIN, NOT ITS DEVELOPMENT (2026-09-03).
+ * The parent's gitlinks track each app's MAIN tip — precedent
+ * precedent__bsuite__20260824__parent-gitlinks-track-submodule-main-not-development.
+ * This script originally compared the recorded gitlink against each app's
+ * `origin/development` head. That predicate refused every app whose own
+ * development→main promotion is a normal merge commit, BY CONSTRUCTION: a
+ * promotion merge leaves the app's development and main branches diverged from
+ * each other (development gains its own next round of work; main gains only
+ * the merge), so "is the gitlink an ancestor of development" goes NO the moment
+ * an app promotes, even though the gitlink is still exactly where it should be
+ * — sitting at the app's main. conduit, R80.4 and throughput were refused for
+ * exactly this reason on 2026-09-03, none of them for a real defect. The fix is
+ * not a workaround for those three apps; it is comparing against the ref this
+ * script was always supposed to track.
  *
  * SAFETY: FORWARD ONLY.
  * A pointer that moves BACKWARD silently reverts an app — the parent would then
@@ -58,7 +73,7 @@ export function evaluate(entries) {
         app: e.app,
         why:
           `${e.app}/ is not an initialised git repository in this checkout, so its ` +
-          `development head cannot be read. This is a CHECKOUT failure, not history ` +
+          `main tip cannot be read. This is a CHECKOUT failure, not history ` +
           `divergence: git resolves refs from the parent repo when a submodule ` +
           `directory has no .git, which silently yields the PARENT's own head for ` +
           `every submodule. Check that the checkout passed a cross-repo token.`,
@@ -66,7 +81,7 @@ export function evaluate(entries) {
       continue
     }
     if (!e.head) {
-      refuse.push({ app: e.app, why: `could not read its development head` })
+      refuse.push({ app: e.app, why: `could not read its main tip` })
       continue
     }
     if (e.recorded === e.head) {
@@ -176,6 +191,36 @@ function selfTest() {
       },
       { refuse: 1, advance: 0, notARepo: false },
     ],
+    [
+      // THE PROMOTION-MERGE-COMMIT SHAPE (2026-09-03). A development→main
+      // promotion merge leaves an app's development and main diverged from
+      // each other by construction — development keeps moving, main gains
+      // only the merge commit. conduit, R80.4 and throughput were refused by
+      // the OLD (development-targeting) predicate on exactly this shape, for
+      // no real defect. This case fails loudly if collect() ever asks for
+      // origin/development again instead of origin/main.
+      'a promotion-merge-commit shape: development has diverged from main, but the gitlink still advances cleanly against MAIN',
+      (args) => {
+        if (args[0] === 'ls-tree') return `160000 commit recorded123\tcrm7`
+        if (args[0] === 'rev-parse' && args[1] === '--show-toplevel') return path.resolve(process.cwd(), 'crm7')
+        if (args[0] === 'fetch') {
+          if (args[3] !== 'main') {
+            throw new Error(`collect() must fetch origin/main, not origin/${args[3]} — a promotion merge diverges development from main by construction`)
+          }
+          return ''
+        }
+        if (args[0] === 'rev-parse') {
+          if (args[1] !== 'origin/main') {
+            throw new Error(`collect() must read origin/main as the target head, not ${args[1]}`)
+          }
+          return 'mainpromoted999'
+        }
+        if (args[0] === 'merge-base') return '' // recorded IS an ancestor of the new main tip -> advances
+        if (args[0] === 'rev-list') return '2'
+        return ''
+      },
+      { refuse: 0, advance: 1, notARepo: false },
+    ],
   ]
 
   for (const [name, fakeGit, want] of collectCases) {
@@ -204,7 +249,11 @@ function selfTest() {
   const sixResult = evaluate(sixUncloned)
   // ---- the refusal allowlist, both directions and the ways it must NOT fire ----
   {
-    const A = loadAllowedRefusals('{"refusals":[{"app":"R80.4","reason":"standing divergence"}]}')
+    const NOW = new Date('2026-09-03T00:00:00Z')
+    const entry = (app, extra = {}) => ({
+      app, reason: 'standing divergence', first_seen: '2026-09-01', review_condition: 'when reconciled', ...extra,
+    })
+    const A = loadAllowedRefusals(JSON.stringify({ refusals: [entry('R80.4')] }), NOW)
     let ok = true
     const chk = (name, got, want) => { if (got !== want) { ok = false; console.error(`  FAIL allowlist: ${name} got ${got}, want ${want}`) } }
     chk('a listed app is allowed', A.has('R80.4'), true)
@@ -213,13 +262,28 @@ function selfTest() {
     // An entry with no reason is not an entry — a waiver with no stated reason is a
     // waiver nobody can review.
     chk('a reasonless entry is ignored',
-      loadAllowedRefusals('{"refusals":[{"app":"crm7","reason":"  "}]}').has('crm7'), false)
+      loadAllowedRefusals(JSON.stringify({ refusals: [entry('crm7', { reason: '  ' })] }), NOW).has('crm7'), false)
     chk('a missing reason field is ignored',
-      loadAllowedRefusals('{"refusals":[{"app":"crm7"}]}').has('crm7'), false)
+      loadAllowedRefusals(JSON.stringify({ refusals: [{ app: 'crm7', first_seen: '2026-09-01', review_condition: 'x' }] }), NOW).has('crm7'), false)
+    // THE RATCHET: an entry missing first_seen or review_condition is not an entry
+    // either — a waiver with no age and no exit condition can never expire.
+    chk('a missing first_seen field is ignored',
+      loadAllowedRefusals(JSON.stringify({ refusals: [{ app: 'crm7', reason: 'x', review_condition: 'x' }] }), NOW).has('crm7'), false)
+    chk('a missing review_condition field is ignored',
+      loadAllowedRefusals(JSON.stringify({ refusals: [{ app: 'crm7', reason: 'x', first_seen: '2026-09-01' }] }), NOW).has('crm7'), false)
+    chk('a malformed first_seen is ignored',
+      loadAllowedRefusals(JSON.stringify({ refusals: [entry('crm7', { first_seen: '3 Sept 2026' })] }), NOW).has('crm7'), false)
+    // THE RATCHET, THE PART THAT ACTUALLY BITES: an entry younger than the limit
+    // is honoured; the SAME entry, seen 8 days ago instead of 2, is not — it must
+    // stop suppressing the failure entirely on its own, with no human action.
+    chk('an entry within the age limit is still allowed',
+      loadAllowedRefusals(JSON.stringify({ refusals: [entry('crm7', { first_seen: '2026-08-27' }) ] }), NOW).has('crm7'), true) // exactly 7d
+    chk('an entry past the age limit is EXPIRED, not allowed',
+      loadAllowedRefusals(JSON.stringify({ refusals: [entry('crm7', { first_seen: '2026-08-25' }) ] }), NOW).has('crm7'), false) // 9d
     // An unreadable allowlist must allow NOTHING — refusals then fail, the safe direction.
-    chk('unparseable json allows nothing', loadAllowedRefusals('{not json').size, 0)
-    chk('an empty doc allows nothing', loadAllowedRefusals('{}').size, 0)
-    console.log(`  ${ok ? 'ok  ' : 'FAIL'} refusal-allowlist cases`)
+    chk('unparseable json allows nothing', loadAllowedRefusals('{not json', NOW).size, 0)
+    chk('an empty doc allows nothing', loadAllowedRefusals('{}', NOW).size, 0)
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'} refusal-allowlist cases (incl. the 7-day ratchet)`)
     if (!ok) return 1
   }
 
@@ -240,8 +304,9 @@ function selfTest() {
       `forward advance, BACKWARD refusal, rewritten-history refusal, unreadable-head refusal, ` +
       `mixed batch) + ${collectCases.length} collect() cases driving a fake git ` +
       `(UNCLONED submodule escaping to the parent, a healthy clone advancing, a genuine ` +
-      `divergence) + a ${APPS.length}-submodule positive control asserting the ` +
-      `escape-to-parent is never again reported as history divergence.`,
+      `divergence, a promotion-merge-commit shape proving collect() reads origin/main ` +
+      `and never origin/development) + a ${APPS.length}-submodule positive control ` +
+      `asserting the escape-to-parent is never again reported as history divergence.`,
   )
   return bad
 }
@@ -252,10 +317,10 @@ const realGit = (args, cwd = process.cwd()) =>
 /**
  * IS THIS DIRECTORY ITS OWN GIT REPOSITORY?
  *
- * This question is the whole bug. `git rev-parse origin/development` run with cwd
+ * This question is the whole bug. `git rev-parse origin/main` run with cwd
  * set to an EMPTY `crm7/` does not fail — git walks up the tree, finds the parent's
  * .git, and answers from the PARENT. So every submodule returned the parent's own
- * development head, all six came back identical, and the descendant check correctly
+ * main tip, all six came back identical, and the descendant check correctly
  * refused all six with "NOT a descendant … this is history divergence".
  *
  * The message was wrong in the most expensive possible way: it named an app-history
@@ -301,8 +366,12 @@ export function collect(git = realGit, apps = APPS) {
     let headIsDescendantOfRecorded = false
     let behind = 0
     try {
-      git(['fetch', '-q', 'origin', 'development'], app)
-      head = git(['rev-parse', 'origin/development'], app)
+      // MAIN, not development — see the file header (2026-09-03). A promotion
+      // merge commit leaves an app's development and main diverged from each
+      // other by construction, so comparing against development refuses every
+      // app the moment it promotes, for no real defect.
+      git(['fetch', '-q', 'origin', 'main'], app)
+      head = git(['rev-parse', 'origin/main'], app)
       try {
         git(['merge-base', '--is-ancestor', recorded, head], app)
         headIsDescendantOfRecorded = true
@@ -315,15 +384,32 @@ export function collect(git = realGit, apps = APPS) {
   return entries
 }
 
-/** Standing refusals that are the CORRECT answer, keyed app -> reason. */
-export function loadAllowedRefusals(raw) {
+// A STANDING REFUSAL IS NOT PERMANENT (2026-09-03 ratchet).
+//
+// A reason-only entry never expires, and an allowlist that never expires is how
+// a "resolved by hand next week" waiver quietly becomes forever. Every entry
+// now carries `first_seen` (YYYY-MM-DD, the date the refusal was first observed)
+// and `review_condition` (the human-readable condition under which it should be
+// removed). An entry older than REFUSAL_MAX_AGE_DAYS stops suppressing the
+// failure — it is EXPIRED, not honoured — so the workflow goes red again on its
+// own schedule instead of staying quiet until someone remembers to look.
+const REFUSAL_MAX_AGE_DAYS = 7
+
+/** Standing refusals that are the CORRECT answer, keyed app -> {reason, first_seen, review_condition}. */
+export function loadAllowedRefusals(raw, now = new Date()) {
   const m = new Map()
   try {
     const doc = typeof raw === 'string' ? JSON.parse(raw) : raw
     for (const r of doc?.refusals || []) {
-      if (r && typeof r.app === 'string' && typeof r.reason === 'string' && r.reason.trim()) {
-        m.set(r.app, r.reason)
-      }
+      if (!r || typeof r.app !== 'string') continue
+      if (typeof r.reason !== 'string' || !r.reason.trim()) continue
+      if (typeof r.first_seen !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(r.first_seen)) continue
+      if (typeof r.review_condition !== 'string' || !r.review_condition.trim()) continue
+      const firstSeen = new Date(`${r.first_seen}T00:00:00Z`)
+      if (Number.isNaN(firstSeen.getTime())) continue
+      const ageDays = (now.getTime() - firstSeen.getTime()) / 86_400_000
+      if (ageDays > REFUSAL_MAX_AGE_DAYS) continue // EXPIRED — see the block comment above
+      m.set(r.app, { reason: r.reason, first_seen: r.first_seen, review_condition: r.review_condition })
     }
   } catch { /* an unreadable allowlist allows nothing — refusals then fail, which is the safe direction */ }
   return m
@@ -367,20 +453,24 @@ function main() {
   }
 
   // A refusal is a real finding and must fail — UNLESS it is a standing one that
-  // cannot be resolved from here.
+  // cannot be resolved from here (e.g. an app whose own main has genuinely
+  // diverged from the recorded gitlink and needs a human reconciliation). A
+  // correct refusal that fails the whole job leaves this workflow permanently
+  // red, and a workflow that has been red for weeks is one nobody reads —
+  // which is precisely how a genuinely NEW refusal arrives looking exactly
+  // like an old, already-understood one. See scripts/gitlink-refusal-allowlist.json.
   //
-  // R80.4 has been refused on every run since its development picked up a duplicate
-  // of main's commit, and the refusal is CORRECT: the parent pins its main exactly,
-  // which is where the promotion invariant wants the pointer. But a correct refusal
-  // that fails the job leaves this workflow permanently red, and a workflow that has
-  // been red for weeks is one nobody reads — which is precisely how a genuinely NEW
-  // refusal arrives looking exactly like the old one.
-  //
-  // Allowlisted refusals are REPORTED and do not fail. Everything else still fails.
+  // Allowlisted refusals are REPORTED and do not fail. Everything else still fails
+  // (though as of 2026-09-03 that failure no longer blocks the safe advances —
+  // see the workflow's own "Advance the pointers" step for why).
   const unexpected = refuse.filter((r) => !ALLOWED_REFUSALS.has(r.app))
   const expected = refuse.filter((r) => ALLOWED_REFUSALS.has(r.app))
   for (const r of expected) {
-    console.log(`    (allowlisted refusal) ${r.app} — ${ALLOWED_REFUSALS.get(r.app)}`)
+    const entry = ALLOWED_REFUSALS.get(r.app)
+    console.log(
+      `    (allowlisted refusal, first seen ${entry.first_seen}, expires after ` +
+        `${REFUSAL_MAX_AGE_DAYS}d) ${r.app} — ${entry.reason} — remove when: ${entry.review_condition}`,
+    )
   }
   // A DEAD ENTRY IS NOT HARMLESS. An app that has stopped being refused but is still
   // listed here silently pre-authorises the next divergence in that app, which is how
