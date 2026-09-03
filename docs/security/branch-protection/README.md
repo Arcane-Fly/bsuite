@@ -89,7 +89,7 @@ it needs no token — and fails the build when any required context is unproduci
 path-filtered, `if:`-gated, or scoped to a branch it is not required on. It runs on every PR
 inside the `LANE-WATCHER — every guard states what it examined` job, which is itself required
 on both branches. Prove it can fail with `node scripts/check-required-contexts-producible.mjs
---self-test` (7 cases, one planted defect each).
+--self-test` (11 cases, one planted defect or one positive control each; the count is the script's own summary line).
 
 ## What these dumps do NOT tell you
 
