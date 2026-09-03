@@ -117,7 +117,7 @@ function sh(cmd, args, cwd) {
 function openPrHeads(scope, root) {
   const dir = path.join(root, scope)
   try {
-    const raw = sh('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName', '--limit', '100'], dir)
+    const raw = sh('gh', ['pr', 'list', '--state', 'open', '--json', 'number,headRefName,headRefOid', '--limit', '100'], dir)
     return JSON.parse(raw || '[]')
   } catch {
     return null                              // UNREADABLE, which is not "no PRs"
@@ -324,7 +324,7 @@ function main() {
       prCount++
       for (const { file, blob } of migrationsOnBranch(scope, root, pr.headRefName)) {
         const version = versionOf(file)
-        if (version) entries.push({ scope, pr: pr.number, branch: pr.headRefName, version, file, blob })
+        if (version) entries.push({ scope, pr: pr.number, branch: pr.headRefName, sha: pr.headRefOid, version, file, blob })
       }
     }
   }
@@ -336,10 +336,43 @@ function main() {
     process.exit(2)
   }
 
-  console.log(`check-migration-collisions-across-open-prs: ${SCOPES.length} scope(s), ${prCount} open PR(s), ${entries.length} migration file(s) on their branches`)
+  // In --json mode stdout carries ONLY the JSON document; the human summary goes to
+  // stderr so a consumer can parse stdout without stripping a preamble first.
+  const say = process.argv.includes('--json') ? console.error : console.log
+  say(`check-migration-collisions-across-open-prs: ${SCOPES.length} scope(s), ${prCount} open PR(s), ${entries.length} migration file(s) on their branches`)
 
   attachContentForDivergentGroups(entries, root)
   const found = collisions(entries)
+
+  // --json makes the result ACTIONABLE by something other than a human reading a log.
+  // This gate has been correct and unheeded: on 2026-09-03 at 12:32Z it named crm7#2377
+  // and business-suite-unified#1121 as both claiming 20261119000000, and #2377 merged at
+  // 12:53Z regardless — because a scheduled run's failure appears on no PR, blocks no
+  // merge, and notifies nobody. The workflow consumes this to post a commit status onto
+  // each PR head, in its OWN repo, where the merge button is.
+  if (process.argv.includes('--json')) {
+    const colliding = new Set()
+    for (const c of found) for (const e of c.entries) colliding.add(`${e.scope}#${e.pr}`)
+    const seen = new Map()
+    for (const e of entries) {
+      const key = `${e.scope}#${e.pr}`
+      if (!seen.has(key)) {
+        seen.set(key, { scope: e.scope, pr: e.pr, sha: e.sha, colliding: colliding.has(key), versions: [] })
+      }
+      seen.get(key).versions.push(e.version)
+    }
+    process.stdout.write(
+      JSON.stringify({
+        prs: [...seen.values()],
+        collisions: found.map((c) => ({
+          version: c.version,
+          claimants: c.entries.map((e) => ({ scope: e.scope, pr: e.pr, file: e.file })),
+        })),
+      }) + '\n',
+    )
+    process.exit(found.length ? 1 : 0)
+  }
+
   for (const c of found) {
     console.error(`::error::VERSION ${c.version} is claimed by ${new Set(c.entries.map((e) => `${e.scope}#${e.pr}`)).size} different open PRs:`)
     for (const e of c.entries) {
@@ -354,7 +387,7 @@ function main() {
     console.error('  silently SKIPPED — its DDL never runs and the pipeline reports success.')
     console.error('  Renumber the newer migration to an unused timestamp BEFORE either PR merges.')
   } else {
-    console.log('  no version is claimed by more than one open PR')
+    say('  no version is claimed by more than one open PR')
   }
   process.exit(found.length ? 1 : 0)
 }
