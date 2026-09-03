@@ -103,6 +103,6 @@ Measured by a read-only lane under the PI (claude-code-bsuite-pi) from `origin/d
 2. **H6 (trusted publishing / NPM_TOKEN)** — small, mechanical, fully measured this pass (16 files, exact list derivable from `git grep`), and a security-adjacent gap (a live fallback token sitting next to OIDC in 16 workflows) that a single PR can close in one sitting — high leverage-per-effort.
 3. **E1/E2 (permission vocabulary + shared-package adoption)** — both open/partial with concrete, countable remainders (crm7's `permissions.ts` still live; 65+13 duplicate UI files still undeleted despite the packages already being dependencies) — this is the class of work the audit says is silently recurring estate-wide (F-15, F-20), and briefing it now prevents another week of parallel drift.
 
-## Not independently measured this pass (time-budgeted), D7, J12
+## Not independently measured this pass (time-budgeted)
 
-B4, D1–D3, E3, E4, F3, F4, G3, H2–H5, I1, I2, I4, I5, J6, J8, J11 — no repo/gh evidence gathered; status left as recorded in the audit (open by default) rather than guessed. A follow-up pass should target these with the same app-tree + `gh search code` + required-contexts method used above.
+B4, D1–D3, D7, E3, E4, F3, F4, G3, H2–H5, I1, I2, I4, I5, J6, J8, J11, J12 — no repo/gh evidence gathered (22 rows); status left as recorded in the audit (open by default) rather than guessed. A follow-up pass should target these with the same app-tree + `gh search code` + required-contexts method used above.
