@@ -98,6 +98,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 | Trying a migration **before** you ship it (`pnpm supabase:rehearse`) | [`docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md`](docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md) |
 | AI SDK standards, multi-file refactor tooling, reusable code patterns | [`docs/20260731-agent-engineering-patterns-v1.00W.md`](docs/20260731-agent-engineering-patterns-v1.00W.md) |
 | Layout, z-index scale, DOM autopsy | [`docs/20260731-frontend-layout-zindex-standards-v1.00W.md`](docs/20260731-frontend-layout-zindex-standards-v1.00W.md) |
+| Design judgment — priorities, the known answers, why a rule exists | [`DESIGN.md`](./DESIGN.md) — layer 1; values live in `packages/theme`, enforcement in `scripts/theme-gates.sh` |
 | Theme tokens, both brands | `packages/theme/README.md` + the `bsuite-brand-system` skill |
 | Status: what is open, shipped, applied | Ask the live source — `gh issue list`, `gh pr list`, `schema_migrations`. The plan dashboard was **retired 2026-08-10**: [`docs/20260810-plan-dashboard-retirement-v1.00F.md`](docs/20260810-plan-dashboard-retirement-v1.00F.md) |
 | E2E testing status | [`docs/testing/README.md`](docs/testing/README.md) |
