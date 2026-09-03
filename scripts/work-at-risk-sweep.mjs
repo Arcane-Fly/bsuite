@@ -17,13 +17,17 @@
  *
  *   WORK-AT-RISK   ahead of development, no open PR, tip commit >24h old.
  *                  Listed in the standing issue. Never touched.
- *   STALE-MERGED   ahead_by 0 (fully contained in development) OR a merged PR
- *                  exists for it, AND no open PR, AND GitHub branch
- *                  protection is not set on it. Candidate for deletion —
- *                  never main/master/development, defended at the deletion
- *                  call site as well as in classification, so a caller that
- *                  gets classify() to say the wrong thing still cannot delete
- *                  a protected name.
+ *   STALE-MERGED   ahead_by 0 (fully contained in development) OR a merged
+ *                  PR's head sha equals this branch's CURRENT tip (not
+ *                  matched by branch NAME alone — a reused name with new,
+ *                  unmerged commits on it must never read as merged; fixed
+ *                  2026-09-04 after braden/chore/lockfile-reach was found
+ *                  misclassified this way), AND no open PR, AND GitHub
+ *                  branch protection is not set on it. Candidate for
+ *                  deletion — never main/master/development, defended at
+ *                  the deletion call site as well as in classification, so
+ *                  a caller that gets classify() to say the wrong thing
+ *                  still cannot delete a protected name.
  *   everything else is left alone and not reported.
  *
  * It does NOT prove a branch is safe to delete beyond "GitHub says it has no
@@ -78,14 +82,24 @@ export function ageHours(dateIso, now = new Date()) {
  * classification bug fails identically in both places rather than only in
  * whichever surface happened to be exercised.
  */
-export function classify({ branch, aheadBy, hasOpenPR, merged, tipAgeHours, protectedFlag }) {
+export function classify({ branch, aheadBy, hasOpenPR, mergedAtTip, tipAgeHours, protectedFlag }) {
   if (PROTECTED_NAMES.has(branch)) {
     return { verdict: 'PROTECTED', reason: 'main/master/development are never classified or deleted by this tool' };
   }
   if (hasOpenPR) {
     return { verdict: 'OK', reason: 'has an open PR' };
   }
-  if (aheadBy === 0 || merged) {
+  // `mergedAtTip` must already be scoped to the CURRENT tip sha before it
+  // reaches here — never a name-only match. Fixed 2026-09-04: prInfo()
+  // used to report "merged" true for ANY closed+merged PR ever recorded
+  // against this branch NAME, so a long-lived name reused across several
+  // merged PRs (braden/chore/lockfile-reach: #513/#504/#495) read as
+  // merged even after brand-new, unmerged commits landed on it. A branch
+  // is stale-merged only when its CURRENT tip is contained — ahead_by 0
+  // against development, or a merged PR's head sha equals this exact tip
+  // (the squash-merge case: the branch's own commits never became
+  // ancestors of development, but this specific content already shipped).
+  if (aheadBy === 0 || mergedAtTip) {
     if (protectedFlag) {
       return { verdict: 'OK', reason: 'fully merged/contained, but GitHub branch protection forbids deletion' };
     }
@@ -93,7 +107,7 @@ export function classify({ branch, aheadBy, hasOpenPR, merged, tipAgeHours, prot
       verdict: 'STALE-MERGED',
       reason: aheadBy === 0
         ? 'fully contained in development (ahead_by 0, no open PR)'
-        : 'a merged PR was found for this branch (no open PR)',
+        : "a merged PR's head sha matches the current tip (no open PR) — this exact content already shipped, e.g. via squash merge",
     };
   }
   if (aheadBy === null || aheadBy === undefined) {
@@ -162,7 +176,7 @@ async function aheadByRemote(repo, branch) {
   }
 }
 
-async function prInfo(repo, branch) {
+async function prInfo(repo, branch, tipSha) {
   // `--method GET` is NOT optional here: `gh api` silently switches to POST
   // the moment any `-f`/`-F` field is present unless the method is pinned,
   // which against /pulls means "create a pull request" rather than "list
@@ -170,12 +184,16 @@ async function prInfo(repo, branch) {
   // i.e. it tried to OPEN a PR from a branch that already exists).
   const stdout = await ghApi([
     `repos/${OWNER}/${repo}/pulls`, '--method', 'GET', '-f', `head=${OWNER}:${branch}`, '-f', 'state=all',
-    '--jq', '[.[] | {state: .state, merged_at: .merged_at}]',
+    '--jq', '[.[] | {state: .state, merged_at: .merged_at, head_sha: .head.sha}]',
   ]);
   const prs = JSON.parse(stdout || '[]');
   return {
     hasOpenPR: prs.some((p) => p.state === 'open'),
-    merged: prs.some((p) => p.merged_at),
+    // ONLY a merged PR whose head sha equals the branch's CURRENT tip
+    // counts. Matching by branch name alone (the pre-2026-09-04 bug)
+    // conflates "this exact content was merged" with "this name once had
+    // something merged, unrelated to what is on it now" — see classify().
+    mergedAtTip: prs.some((p) => p.merged_at && p.head_sha === tipSha),
   };
 }
 
@@ -187,7 +205,16 @@ async function deleteRemoteBranch(repo, branch) {
   await run('gh', ['api', '-X', 'DELETE', `repos/${OWNER}/${repo}/git/refs/heads/${branch}`]);
 }
 
-/** Sweep one repo. Returns { repo, rows, error }. Never throws. */
+/**
+ * Sweep one repo. Returns { repo, rows, error }. Never throws — per-branch,
+ * not just per-repo: a transient gh api failure on ONE branch (rate limit,
+ * timeout, a 5xx) used to abort the whole repo via an uncaught Promise.all
+ * rejection, silently dropping every other branch's report along with it.
+ * Fixed 2026-09-04 (Copilot review, PR #3039): each branch's fetch is
+ * wrapped individually, and a failure becomes an ERROR row rather than a
+ * thrown exception — the sweep, the issue and the JSON output all still get
+ * written for every branch that DID resolve.
+ */
 export async function sweepRepo(repo, deps) {
   let branches;
   try {
@@ -198,19 +225,32 @@ export async function sweepRepo(repo, deps) {
   const rows = [];
   for (const b of branches) {
     if (PROTECTED_NAMES.has(b.name)) continue; // not examined per the task's own scope
-    const [ahead, pr, date] = await Promise.all([
-      deps.aheadBy(repo, b.name),
-      deps.prInfo(repo, b.name),
-      deps.commitDate(repo, b.sha),
-    ]);
+    let ahead;
+    let pr;
+    let date;
+    try {
+      [ahead, pr, date] = await Promise.all([
+        deps.aheadBy(repo, b.name),
+        deps.prInfo(repo, b.name, b.sha),
+        deps.commitDate(repo, b.sha),
+      ]);
+    } catch (e) {
+      const msg = String((e && (e.stderr || e.message)) || e).split('\n')[0].slice(0, 200);
+      rows.push({
+        repo, branch: b.name, sha: b.sha, aheadBy: null, hasOpenPR: null, mergedAtTip: null,
+        tipAgeHours: null, protectedFlag: !!b.protected, verdict: 'ERROR',
+        reason: `transient failure fetching branch data: ${msg}`,
+      });
+      continue; // the rest of this repo's branches still get examined
+    }
     const tipAgeHours = date ? ageHours(date) : null;
     const verdict = classify({
-      branch: b.name, aheadBy: ahead, hasOpenPR: pr.hasOpenPR, merged: pr.merged,
+      branch: b.name, aheadBy: ahead, hasOpenPR: pr.hasOpenPR, mergedAtTip: pr.mergedAtTip,
       tipAgeHours: tipAgeHours ?? 0, protectedFlag: !!b.protected,
     });
     rows.push({
       repo, branch: b.name, sha: b.sha, aheadBy: ahead, hasOpenPR: pr.hasOpenPR,
-      merged: pr.merged, tipAgeHours, protectedFlag: !!b.protected, ...verdict,
+      mergedAtTip: pr.mergedAtTip, tipAgeHours, protectedFlag: !!b.protected, ...verdict,
     });
   }
   return { repo, rows, branchesSeen: branches.length, error: null };
@@ -359,26 +399,53 @@ async function selfTest() {
     git(work, ['commit', '-q', '-m', 'just pushed']);
     git(work, ['push', '-q', 'origin', 'feat/fresh-wip']);
 
+    // Case 5 (D1/D7 fix, reported live 2026-09-04 against braden/chore/lockfile-reach):
+    // a branch name that was merged in the PAST (an old commit, OLD_SHA) and
+    // then received NEW, unmerged commits on the SAME name afterward. The
+    // live bug: prInfo() matched a merged PR by BRANCH NAME across all of
+    // history, so this reads as "merged" even though the CURRENT tip was
+    // never part of any merged PR.
+    git(work, ['checkout', '-q', '-b', 'chore/reused-name-then-new-work', 'development']);
+    fs.writeFileSync(path.join(work, 'reused.txt'), 'this content was merged once, long ago\n');
+    git(work, ['add', 'reused.txt']);
+    git(work, ['commit', '-q', '-m', 'the commit an old, unrelated merged PR pointed at']);
+    const reusedNameOldSha = git(work, ['rev-parse', 'HEAD']);
+    fs.writeFileSync(path.join(work, 'reused-new-work.txt'), 'new work pushed to the SAME branch name after that old PR merged\n');
+    git(work, ['add', 'reused-new-work.txt']);
+    git(work, ['commit', '-q', '-m', 'new, unmerged work on the reused name'], { GIT_AUTHOR_DATE: old, GIT_COMMITTER_DATE: old });
+    git(work, ['push', '-q', 'origin', 'chore/reused-name-then-new-work']);
+
     git(work, ['fetch', '-q', 'origin']);
 
     const localAheadBy = (branch) => Number(git(work, ['rev-list', '--count', `origin/development..origin/${branch}`]));
     const localTipDate = (branch) => git(work, ['log', '-1', '--format=%cI', `origin/${branch}`]);
 
     const rows = {
+      // Fixed (was Phase A red-run proof): mergedAtTip is now computed the
+      // way prInfo() computes it for real — a merged PR's head sha must
+      // equal the branch's CURRENT tip. reusedNameOldSha is an ancestor
+      // commit, not the tip, so this correctly comes back false and the
+      // branch falls through to the ordinary age/ahead_by check below.
+      'chore/reused-name-then-new-work': classify({
+        branch: 'chore/reused-name-then-new-work', aheadBy: localAheadBy('chore/reused-name-then-new-work'),
+        hasOpenPR: false,
+        mergedAtTip: reusedNameOldSha === git(work, ['rev-parse', 'origin/chore/reused-name-then-new-work']),
+        tipAgeHours: ageHours(localTipDate('chore/reused-name-then-new-work'), now), protectedFlag: false,
+      }),
       'feat/at-risk': classify({
-        branch: 'feat/at-risk', aheadBy: localAheadBy('feat/at-risk'), hasOpenPR: false, merged: false,
+        branch: 'feat/at-risk', aheadBy: localAheadBy('feat/at-risk'), hasOpenPR: false, mergedAtTip: false,
         tipAgeHours: ageHours(localTipDate('feat/at-risk'), now), protectedFlag: false,
       }),
       'chore/merged-empty': classify({
-        branch: 'chore/merged-empty', aheadBy: localAheadBy('chore/merged-empty'), hasOpenPR: false, merged: false,
+        branch: 'chore/merged-empty', aheadBy: localAheadBy('chore/merged-empty'), hasOpenPR: false, mergedAtTip: false,
         tipAgeHours: ageHours(localTipDate('chore/merged-empty'), now), protectedFlag: false,
       }),
       'feat/active-with-pr': classify({
-        branch: 'feat/active-with-pr', aheadBy: localAheadBy('feat/active-with-pr'), hasOpenPR: true, merged: false,
+        branch: 'feat/active-with-pr', aheadBy: localAheadBy('feat/active-with-pr'), hasOpenPR: true, mergedAtTip: false,
         tipAgeHours: ageHours(localTipDate('feat/active-with-pr'), now), protectedFlag: false,
       }),
       'feat/fresh-wip': classify({
-        branch: 'feat/fresh-wip', aheadBy: localAheadBy('feat/fresh-wip'), hasOpenPR: false, merged: false,
+        branch: 'feat/fresh-wip', aheadBy: localAheadBy('feat/fresh-wip'), hasOpenPR: false, mergedAtTip: false,
         tipAgeHours: ageHours(localTipDate('feat/fresh-wip'), now), protectedFlag: false,
       }),
     };
@@ -387,6 +454,17 @@ async function selfTest() {
     t('a branch merged into development (ahead_by 0) is STALE-MERGED', rows['chore/merged-empty'].verdict === 'STALE-MERGED', rows['chore/merged-empty'].verdict);
     t('an old, unmerged branch WITH an open PR is OK, not at risk', rows['feat/active-with-pr'].verdict === 'OK', rows['feat/active-with-pr'].verdict);
     t('fresh WIP (<24h, no PR) is OK — the detector does not cry wolf', rows['feat/fresh-wip'].verdict === 'OK', rows['feat/fresh-wip'].verdict);
+    t('a reused branch name (old merged PR, NEW unmerged tip) is WORK-AT-RISK, not STALE-MERGED-by-name (D1/D7 fix, live case braden/chore/lockfile-reach)', rows['chore/reused-name-then-new-work'].verdict === 'WORK-AT-RISK', rows['chore/reused-name-then-new-work'].verdict);
+
+    // Positive control for the same fix, at the pure classify() level (no git
+    // needed): when a merged PR's head sha DOES match the current tip — the
+    // ordinary squash-merge case, where the branch's own commits never
+    // became ancestors of development but this exact content already
+    // shipped — STALE-MERGED must still fire even though ahead_by > 0.
+    const squashMerged = classify({
+      branch: 'chore/squash-merged', aheadBy: 3, hasOpenPR: false, mergedAtTip: true, tipAgeHours: 100, protectedFlag: false,
+    });
+    t('mergedAtTip true (head sha matches the current tip) is STALE-MERGED even when ahead_by > 0 — the squash-merge case', squashMerged.verdict === 'STALE-MERGED', squashMerged.verdict);
 
     // The deletion path, for real, against the disposable bare repo.
     let removeCalled = false;
@@ -420,6 +498,39 @@ async function selfTest() {
     t('self-test harness ran without throwing', false, String(e && e.stack || e));
   } finally {
     fs.rmSync(tmp, { recursive: true, force: true });
+  }
+
+  // sweepRepo() must survive one branch's transient failure and still report
+  // every other branch (Copilot review PRRT_kwDORZN-FM6fDDXK, PR #3039):
+  // a per-branch Promise.all with no catch used to throw straight out of
+  // sweepRepo(), aborting the WHOLE repo's report — no issue, no JSON, no
+  // sign anything ran, contradicting the "Never throws" contract in its own
+  // docstring. Pure JS mocks, no git and no network needed.
+  try {
+    // 'feat/boom' is listed FIRST specifically to prove continuation, not
+    // just survival — if the loop stopped at the first failure, 'feat/ok'
+    // (which comes after it) would never be reached.
+    const failingDeps = {
+      listBranches: async () => ([
+        { name: 'feat/boom', sha: 'bbb222', protected: false },
+        { name: 'feat/ok', sha: 'aaa111', protected: false },
+      ]),
+      aheadBy: async (_repo, branch) => {
+        if (branch === 'feat/boom') throw new Error('simulated transient gh api failure (rate limit)');
+        return 2;
+      },
+      prInfo: async () => ({ hasOpenPR: false, mergedAtTip: false }),
+      commitDate: async () => new Date(Date.now() - 48 * 3_600_000).toISOString(),
+    };
+    const result = await sweepRepo('fake-repo', failingDeps);
+    const boomRow = result.rows.find((r) => r.branch === 'feat/boom');
+    const okRow = result.rows.find((r) => r.branch === 'feat/ok');
+    t('sweepRepo() does not throw when one branch\'s fetch fails', result.rows.length === 2, JSON.stringify(result.rows));
+    t('the failing branch is recorded as an ERROR row, not silently dropped', !!boomRow && boomRow.verdict === 'ERROR', JSON.stringify(boomRow));
+    t('the error text is preserved on the ERROR row', !!boomRow && /simulated transient gh api failure/.test(boomRow.reason || ''), JSON.stringify(boomRow));
+    t('a branch listed AFTER the failing one is still fetched and classified normally', !!okRow && okRow.verdict === 'WORK-AT-RISK', JSON.stringify(okRow));
+  } catch (e) {
+    t('sweepRepo() error-handling self-test ran without throwing out of the test itself', false, String(e && e.stack || e));
   }
 
   console.log(`\n[work-at-risk-sweep --self-test] ${cases.length - failed}/${cases.length} case(s) passed.`);
