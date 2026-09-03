@@ -41028,7 +41028,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Several electable components (commissions, bonuses, salary sacrifice) are explicitly labelled as not priced by the engine even though they are electable.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/qualifying-earnings.ts + its suite: 34 assertions, all passing under node --test. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.wic-rate-resolution",
@@ -41068,7 +41071,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Ladder: tenant-class rate > tenant-global rate > published regulator rate > refuse (never substitutes an average).",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/lib/wic-rate.ts + its suite: 16 assertions, all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.payroll-tax",
@@ -41121,7 +41127,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/payroll-tax.ts + its suite: 85 assertions - the heaviest of the six - all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.super-wc-basis",
@@ -41168,7 +41177,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/super-wc-basis.test.ts: 20 assertions, all passing. NOTE for the next reader: there is no super-wc-basis.ts - the implementation is accruesSuperAndWC in src/awards/calc-types.ts, which the test imports. The row's anchor names the TEST, and that is not a missing implementation. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.contingent-costs",
@@ -41220,7 +41232,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/contingent-costs.ts + its suite: 60 assertions, all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.compliance.boot-four-week",
@@ -41257,7 +41272,10 @@
   ],
   "origin": "pass1-code-truth",
   "notes": "Restricted by operator ruling to custom rates only (not award or EBA); returns a $ difference, deliberately never a PASS/FAIL verdict.",
-  "dod_status": "not-evaluated"
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "src/awards/boot-four-week.ts + its suite: 22 assertions, all passing. D9 engine: a run exists - these are consumed by the charge calculator, and public.charge_rate_quotes holds 13 rows all from non-demo non-fixture tenants. ADR-0010: in-progress, not approved; the compliance-calculator class has 6 members and approval is the PI enforcer's call."
+  }
  },
  {
   "id": "r80.calc.engagement-term-progression",
