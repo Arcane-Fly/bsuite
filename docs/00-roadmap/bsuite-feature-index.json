@@ -12631,7 +12631,10 @@
    "crm7/src/components/workflows/WorkflowCanvasInner",
    "packages/workflow-canvas"
   ],
-  "dod_status": "approved",
+  "dod_status": {
+   "state": "in-progress",
+   "evidence": "crm7#2339 - canvas is card 1 of 7 at 72vh (was card 7, capped 560px); both lists are @bsuite/data-grid with ul/ol count 2->0; a step row centres and selects that step on the canvas (previously inert); first tests for the page assert presence and wiring. tsc clean, eslint clean, 178 tests passing across 12 files. \u2014 NOT approved: ADR-0010 treats a class as closed class-wide or not at all, and sibling_class entity-crud has 146 rows of which this is the only one evaluated. 1 of 146 is not a class."
+  },
   "dod_evaluated_at": "2026-09-02",
   "dod_evidence": "crm7#2339 - canvas is card 1 of 7 at 72vh (was card 7, capped 560px); both lists are @bsuite/data-grid with ul/ol count 2->0; a step row centres and selects that step on the canvas (previously inert); first tests for the page assert presence and wiring. tsc clean, eslint clean, 178 tests passing across 12 files.",
   "db_objects": [],
@@ -12734,7 +12737,6 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated",
   "supersedes": [
    {
     "id": "crm7.whs.workflow",
