@@ -12631,7 +12631,7 @@
    "crm7/src/components/workflows/WorkflowCanvasInner",
    "packages/workflow-canvas"
   ],
-  "dod_status": "approved",
+  "dod_status": "not-evaluated",
   "dod_evaluated_at": "2026-09-02",
   "dod_evidence": "crm7#2339 - canvas is card 1 of 7 at 72vh (was card 7, capped 560px); both lists are @bsuite/data-grid with ul/ol count 2->0; a step row centres and selects that step on the canvas (previously inert); first tests for the page assert presence and wiring. tsc clean, eslint clean, 178 tests passing across 12 files.",
   "db_objects": [],
@@ -12734,7 +12734,6 @@
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "",
-  "dod_status": "not-evaluated",
   "supersedes": [
    {
     "id": "crm7.whs.workflow",
@@ -18414,36 +18413,11 @@
   ],
   "doc_count": 6,
   "sibling_class": "legacy-redirect-shell",
-  "sibling_count": 3,
+  "sibling_count": 2,
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [],
   "origin": "pass1-code-truth",
   "notes": "Superseded by Developer > Database console (D-66 consolidation); files retained but not reachable from current nav",
-  "dod_status": "not-evaluated"
- },
- {
-  "id": "bsu.admin.dead-admin-file",
-  "name": "Legacy Admin.tsx (dead)",
-  "module": "business-suite-unified",
-  "capability_area": "Platform administration",
-  "surface_type": "page",
-  "entry_point": "orphan file, shadowed by Admin/index.tsx",
-  "route": null,
-  "code_anchors": [
-   "business-suite-unified/src/pages/Admin.tsx"
-  ],
-  "db_objects": [],
-  "build_status": "unwired",
-  "ui_touched": true,
-  "doc_coverage": "undocumented",
-  "docs": [],
-  "doc_count": 0,
-  "sibling_class": "legacy-redirect-shell",
-  "sibling_count": 3,
-  "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
-  "compliance_risk": [],
-  "origin": "pass1-code-truth",
-  "notes": "Historical bundler-shadowing bug source; not the active Admin route",
   "dod_status": "not-evaluated"
  },
  {
@@ -23544,7 +23518,7 @@
   "docs": [],
   "doc_count": 0,
   "sibling_class": "legacy-redirect-shell",
-  "sibling_count": 3,
+  "sibling_count": 2,
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [],
   "origin": "pass1-code-truth",
