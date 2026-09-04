@@ -27,7 +27,8 @@ Jodie's existing writes through the service layer. The shape asked for, 07:28 AW
 [`20260903-jodie-automation-notifications-design-v1.00W.md`](./20260903-jodie-automation-notifications-design-v1.00W.md)
 (operator-approved 2026-09-03, *"sounds good. go."*) and its
 [implementation plan](./20260903-jodie-automation-notifications-implementation-v1.00W.md).
-**Both are currently UNTRACKED in the parent working tree — commit them before this starts.**
+**Both were untracked in the parent working tree when this was scoped; they are committed
+in this PR** so the approved design cannot die with the next `git submodule update`.
 
 ---
 
@@ -167,9 +168,12 @@ lands.**
 **Task 1 — The registry.** `registerWriteIntent` + the resolver, with the zod schema as the
 one validator. No consumers yet.
 
-**Task 2 — The dial reaches the tools.** `ToolExecutionContext` carries the resolved level;
-`createToolRegistry` filters by it. Bite: at `off`, assert the registry contains no write
-tool. **This alone closes finding 1 and can ship ahead of the rest.**
+**Task 2 — The dial reaches the tools.** The resolved level is passed to
+`createToolRegistry`, which filters by it — an explicit parameter rather than a
+`ToolExecutionContext` field, because no individual tool consults the level and putting it in
+the context every tool receives would imply a per-tool decision that does not exist. Bite: at
+`off`, assert the registry contains no write tool. **This alone closes finding 1 and can ship
+ahead of the rest.** Shipped as crm7#2396.
 
 **Task 3 — Panel renders an intent.** The Jodie panel renders a registered `Form` inline,
 pre-filled, with the app's Save. Inline create for related records.
