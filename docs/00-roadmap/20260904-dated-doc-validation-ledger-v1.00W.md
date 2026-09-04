@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 17
+iteration: 18
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 17
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 18
 
 ## Scope and method
 
-This is an interim iteration-17 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-18 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -60,7 +60,7 @@ validated.
 
 | # | Path | Verdict | Evidence / exact remaining check |
 |---:|---|---|---|
-| 1 | docs/00-roadmap/20260808-data-workspace-implementation-plan-v1.00W.md | UNVERIFIABLE | E-OPEN; verify claimed workspace routes, tables, and persistence against `business-suite-unified/src`. |
+| 1 | docs/00-roadmap/20260808-data-workspace-implementation-plan-v1.00W.md | UNVERIFIABLE | Source walk confirms bounded editable-admin mechanics at `crm7/src/components/admin/BrowseDataTab.tsx:5-17` and `crm7/src/services/browseDataService.ts:801-839`; this supports route/RPC mechanics only. No live entity/field census, usage coverage, persistence replay, authentication, or RLS proof was produced. |
 | 2 | docs/00-roadmap/20260808-intake-and-onboarding-findings-v1.00W.md | UNVERIFIABLE | E-OPEN; verify each onboarding finding against the owning page and Supabase query. |
 | 3 | docs/00-roadmap/20260808-operator-decision-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify each decision has a current consumer and no superseding ruling. |
 | 4 | docs/00-roadmap/20260809-autonomous-run-report-v1.00W.md | UNVERIFIABLE | E-OPEN; verify reported commands, commits, and outputs from git and source. |
@@ -73,7 +73,7 @@ validated.
 | 11 | docs/00-roadmap/20260810-document-provenance-who-creates-what-v1.00F.md | UNVERIFIABLE | E-OPEN; verify producer/consumer ownership from scripts and docs tooling. |
 | 12 | docs/00-roadmap/20260810-four-axis-identity-model-and-backlog-sequence-v1.00W.md | UNVERIFIABLE | E-OPEN; verify identity fields and sequence consumers across apps. |
 | 13 | docs/00-roadmap/20260810-r804-carryover-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify R80.4 carryover against `R80.4/src` and current package version. |
-| 14 | docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md | UNVERIFIABLE | Exact gate evidence: `bash scripts/theme-gates.sh --quick` → `10 passed, 1 failed`; `G11 -> 2 convertible inline colour style(s)`; outstanding gate: `G11 — no NEW convertible inline colour styles`. Exact role-token anchors remain `packages/theme/src/css/vars.css:152`, `:154`, and `:165-166`. Authenticated rendered-browser and deployed-domain validation remain open; this records the current G11 failure and does not apply a codemod. |
+| 14 | docs/00-roadmap/20260810-theme-ui-ux-outstanding-register-v1.00W.md | UNVERIFIABLE | `bash scripts/theme-gates.sh --quick` returned `10 passed, 1 failed`; G11 reports `2 convertible inline colour style(s)`. Role-token anchors remain `packages/theme/src/css/vars.css:152`, `:154`, and `:165-166`. No codemod, authenticated browser replay, or deployed-domain proof was produced; the G11 failure remains open. |
 | 15 | docs/00-roadmap/20260811-crm7-full-spectrum-review-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify each finding against `crm7/src` and tests. |
 | 16 | docs/00-roadmap/20260811-financial-reports-retire-recommendation-v1.00W.md | UNVERIFIABLE | E-OPEN; verify report routes, imports, and live data consumers. |
 | 17 | docs/00-roadmap/20260811-persona-review-v1.00W.md | UNVERIFIABLE | E-OPEN; verify persona claims against route guards and rendered navigation. |
@@ -139,16 +139,16 @@ validated.
 | 77 | docs/20260826-futurebuild-production-acceptance-v1.00D.md | UNVERIFIABLE | E-OPEN; verify acceptance claims with deployed evidence. |
 | 78 | docs/20260826-morning-brief-v1.00W.md | UNVERIFIABLE | E-OPEN; verify dated operational facts against current state. |
 | 79 | docs/20260826-morning-ledger-v1.00A.md | UNVERIFIABLE | E-OPEN; reconcile rows with primary source state. |
-| 80 | docs/20260826-page-builder-2x-layout-in-production-measured-v1.00A.md | VALIDATED-DRIFTED | The implementation mechanics are current: `packages/page-builder/src/canvasCardLayout.tsx:140-164` derives independent child slots and defaults cards to width 6; `packages/page-builder/src/DraggableCardPage.tsx:121,171` uses that builder; `packages/page-builder/src/usePageGridLayout.ts:71,103,159-170` versions persisted layouts and invalidates stale versions; `packages/page-builder/src/PageGridLayout.tsx:1612-1621` persists responsive drag/resize changes. The document's production measurements remain bounded historical evidence (20 pages, worst CLS 0.0155, and 1,068/1,729 omitted-width usages), not an estate-wide current measurement; re-run the production sample before using those numbers as present-day performance claims. |
-| 81 | docs/20260826-route-surface-map-v1.00W.md | UNVERIFIABLE | E-OPEN; replay route census across all six apps. |
+| 80 | docs/20260826-page-builder-2x-layout-in-production-measured-v1.00A.md | VALIDATED-DRIFTED | Iteration 18 source walk confirms current mechanics at `packages/page-builder/src/canvasCardLayout.tsx:140-164`, `DraggableCardPage.tsx:121,171`, `usePageGridLayout.ts:71,103,159-170`, and `PageGridLayout.tsx:1612-1621`: independent child slots, width-6 defaults, version invalidation, and persisted drag/resize. The measurements remain bounded historical evidence (20 pages, worst CLS 0.0155, and 1,068/1,729 omitted-width usages), not current estate-wide proof; no current production sample or browser replay was produced. |
+| 81 | docs/20260826-route-surface-map-v1.00W.md | UNVERIFIABLE | `node scripts/check-route-surface-map.mjs` checked 1,157 items with 0 problems (558 inventory routes/rows, 41 edge slugs, 74 deployed routes); `bash scripts/audit-routes.sh --inventory` reports 47 routes across six apps (18 public, 29 authenticated). These are static consistency checks only: no runtime, authenticated, RLS, or deployment proof was produced. |
 | 82 | docs/20260826-supabase-advisor-posture-measured-v1.00A.md | UNVERIFIABLE | E-OPEN; re-run advisors/live catalog checks. |
 | 83 | docs/20260826-the-seven-anon-security-definer-functions-v1.00A.md | UNVERIFIABLE | E-OPEN; verify functions with `pg_get_functiondef` and source callers. |
 | 84 | docs/20260828-messaging-platform-design-v1.00W.md | UNVERIFIABLE | E-OPEN; verify messaging routes, tables, and realtime wiring. |
 | 85 | docs/20260828-unearned-completion-markers-triage-plan-v1.00W.md | UNVERIFIABLE | E-OPEN; replay each marker check against current records. |
 | 86 | docs/20260829-enhanceddatatable-is-not-a-one-edit-conversion-v1.00W.md | VALIDATED-DRIFTED | Current source supports the architectural warning but not a blanket conversion: `crm7/src/components/common/DataTable/EnhancedDataTable.tsx:597-599` consumes `row.original` for display/click behaviour, while the document's cited footprint was historical. The verified persistence-capable alternative is the separate `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` path backed by `crm7/src/services/browseDataService.ts:801-839`; shared `packages/data-grid/src/types.ts:53-104,181-188` requires host edit configuration/renderers and an async callback. Verdict: retain the separation between read-listing tables and editable grids, but re-measure the document's numeric usage counts before treating them as current. |
-| 87 | docs/20260829-what-the-capability-denials-actually-do-v1.00D.md | UNVERIFIABLE | E-OPEN; verify denial behavior through guards, RLS, and tests. |
+| 87 | docs/20260829-what-the-capability-denials-actually-do-v1.00D.md | UNVERIFIABLE | `node scripts/audit-role-capability-divergence.mjs` self-tests passed (`17 roles, 91 permissions`) but exited 2 because neither `ROLE_CAPABILITIES_JSON` nor Supabase credentials were provided; the script explicitly refused to report zero divergence against an unreached database. No live denial, RLS, or authenticated functional proof was produced. |
 | 88 | docs/20260829-why-a-good-speed-score-and-a-slow-app-v1.00D.md | UNVERIFIABLE | E-OPEN; reproduce performance evidence and inspect network/render paths. |
-| 89 | docs/20260830-nav-route-reachability-across-the-five-non-crm7-apps-v1.00D.md | UNVERIFIABLE | E-OPEN; `scripts/audit-routes.sh --inventory` currently reports a bounded 47-route inventory across six apps (18 public, 29 authenticated), but it does not replay per-app navigation reachability or positive controls. `scripts/check-route-surface-map.mjs` is a static consistency gate and explicitly does not prove runtime reachability, table reachability, or RLS. Re-run authenticated per-app route checks with positive controls. |
+| 89 | docs/20260830-nav-route-reachability-across-the-five-non-crm7-apps-v1.00D.md | UNVERIFIABLE | Static checks remain bounded: `scripts/audit-routes.sh --inventory` reports 47 routes across six apps (18 public, 29 authenticated), while `scripts/check-route-surface-map.mjs` checks inventory/map consistency. Neither replays per-app navigation or positive controls, and neither proves table reachability, authentication, RLS, or deployment behaviour. |
 | 90 | docs/20260830-text-contrast-across-the-estate-v1.00D.md | UNVERIFIABLE | E-OPEN; `scripts/check-content-contrast-tier.mjs` currently reports 457 package source files examined and 0 source violations, but this is not rendered proof. The prior browser result is historical, and no current `R80.4/scripts/contrast-probe.js` run was recorded; re-run the browser probe across light/dark themes and remaining surfaces. |
 | 91 | docs/20260903-visual-authoring-consolidation-decision-v1.00D.md | VALIDATED-CURRENT | E-CARRY; prior narrow audit confirmed the consolidated authoring direction and source anchors. |
 | 92 | docs/20260904-component-registry-and-storybook-consumer-audit-v1.00W.md | VALIDATED-DRIFTED | E-REG; generator is in sync at 174 components, but Storybook consumer claims require the pending focused consumer walk. |
@@ -172,10 +172,10 @@ validated.
 | 110 | docs/plans/20260811-feature-builder-world-class-refined-v1.00W.md | VALIDATED-DRIFTED | E-CARRY + source anchors; feature-builder exists, but “world class/fewest clicks” remains unproven until interaction and persistence gaps are closed. |
 | 111 | docs/plans/20260811-post-persona-execution-refined-v1.00W.md | UNVERIFIABLE | E-OPEN; verify persona execution against current routes and guards. |
 | 112 | docs/plans/20260814-nav-route-remediation-v1.00D.md | UNVERIFIABLE | E-OPEN; replay navigation route checks across apps. |
-| 113 | docs/plans/20260814-portals-and-surface-class-remediation-v1.00D.md | UNVERIFIABLE | E-OPEN; verify every portal/surface class against source and route map. |
-| 114 | docs/plans/20260817-estate-completion-plan-v1.00D.md | UNVERIFIABLE | E-OPEN; reconcile plan completion claims with current issues and branches. |
-| 115 | docs/plans/20260824-agent-compliance-enforcement-refined-v1.00W.md | UNVERIFIABLE | E-OPEN; verify enforcement hooks and instruction-file consumers. |
-| 116 | docs/plans/20260827-estate-lifecycle-process-refined-v1.00D.md | UNVERIFIABLE | E-OPEN; verify lifecycle process against scripts and live records. |
+| 113 | docs/plans/20260814-portals-and-surface-class-remediation-v1.00D.md | UNVERIFIABLE | Opened the seven-phase draft: it requires RLS checks, surface-class sweeps, validation loops, cross-red-team review, and live preview/deployment evidence. No implementation or closure evidence was produced, so the plan remains unverified. |
+| 114 | docs/plans/20260817-estate-completion-plan-v1.00D.md | UNVERIFIABLE | Opened the draft completion plan and its 46-finding acceptance criteria. `scripts/check-doc-classification.mjs` and `scripts/estate-align.mjs` provide static anchors only; they do not prove current issue, branch, implementation, or gate completion. |
+| 115 | docs/plans/20260824-agent-compliance-enforcement-refined-v1.00W.md | UNVERIFIABLE | Opened the historical point-in-time plan. Current anchors exist at `scripts/bsuite-notes-cycle.mjs:172-202` and `scripts/estate-align.mjs:213-399`, but proposed enforcement remains unevidenced: no per-agent identity, inbox participation, or historical-count verification was produced. |
+| 116 | docs/plans/20260827-estate-lifecycle-process-refined-v1.00D.md | UNVERIFIABLE | Opened the lifecycle draft and confirmed named script/hook anchors (`bsuite-notes-cycle.mjs`, `estate-align.mjs`, `check-doc-naming.mjs`, `check-doc-classification.mjs`, `audit-doc-completion.mjs`, and `.github/workflows/estate-alignment.yml`). No current intake receipt, seven-repo reconciliation, archive manifest, or lifecycle evidence record was replayed. |
 | 117 | docs/plans/20260901-workflow-canvas-implementation-v1.00A.md | DUPLICATE-CLUSTER | Focused source walk confirms the live shared implementation: `useWorkflowController.ts` schedules graph changes with a 900 ms debounce, saves through `saveVersionGraph`, flushes pending edits on unmount, and exposes draft/publish/rename/duplicate flows. `service.ts` updates `workflow_definition_versions.graph` only for draft rows; `crm7/src/components/workflows/WorkflowCanvasInner.tsx` is the crm7 adapter. This is direct persistence evidence, not the former `E-OPEN` inference; consolidate competing proposals on this shared controller/service path. |
 | 118 | docs/plans/20260903-jodie-automation-notifications-design-v1.00W.md | UNVERIFIABLE | E-OPEN; verify notification design against routes, API handlers, and data writes. |
 | 119 | docs/plans/20260903-jodie-automation-notifications-implementation-v1.00W.md | UNVERIFIABLE | E-OPEN; verify implementation with source imports, tests, and runtime calls. |
