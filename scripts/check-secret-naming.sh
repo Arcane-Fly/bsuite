@@ -833,7 +833,10 @@ self_test_r7() {
 # before relying on it (never a memory of a past derivation), and assert R7
 # catches a read of it. `st7o_*` names throughout — see the FOLLOW 65 note on
 # `self_test`/`check_r1` above for why a shared name like `app` would risk a
-# dynamic-scoping collision with `check_r7`'s own (non-`local`) loop variable.
+# dynamic-scoping collision. `check_r7` does declare its loop variable `local`
+# today; the prefixes stay because that is a property of the callee this
+# function cannot see, and a future edit that drops the `local` must not be
+# able to break a caller silently.
 self_test_r7_one() {
   local st7o_app="$1"
   local st7o_name="$2"
@@ -902,8 +905,14 @@ self_test_r7_secret_class() {
     echo "self-test (R7 _SECRET): CANNOT RUN — ${st7s_env} not checked out" >&2
     return 1
   fi
-  if ! ( cd "$st7s_app" && git diff --quiet -- .env.example ); then
-    echo "self-test (R7 _SECRET): CANNOT RUN — ${st7s_env} already has uncommitted changes; refusing to append/revert it and risk discarding them" >&2
+  # BOTH worktree AND index. `git diff --quiet` alone sees only unstaged work,
+  # so a STAGED edit slipped past this guard: the append still ran, and the
+  # trap's `git checkout -- .env.example` then restored from the INDEX and
+  # `git reset` unstaged it. No content was lost, but the person's staging was,
+  # and a guard that says "refusing to risk discarding them" must not be
+  # deciding which half of their work counts.
+  if ! ( cd "$st7s_app" && git diff --quiet -- .env.example && git diff --cached --quiet -- .env.example ); then
+    echo "self-test (R7 _SECRET): CANNOT RUN — ${st7s_env} already has uncommitted changes (staged or unstaged); refusing to append/revert it and risk discarding them" >&2
     return 1
   fi
 
