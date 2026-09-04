@@ -98,7 +98,7 @@ validated.
 | 36 | docs/20260815-vercel-platform-audit-and-res-regression-v1.00W.md | UNVERIFIABLE | E-OPEN; verify Vercel settings and RES evidence against deployment data. |
 | 37 | docs/20260817-au-compliance-audit-v1.00W.md | UNVERIFIABLE | E-OPEN; verify statutory claims and linked implementation boundaries. |
 | 38 | docs/20260817-award-coverage-real-placement-scope-v1.00W.md | UNVERIFIABLE | E-OPEN; verify award/placement claims against `R80.4` and owning records. |
-| 39 | docs/20260817-built-unlanded-and-unwired-register-v1.00W.md | UNVERIFIABLE | The register was opened, but no complete item-by-item replay was retained. Verify every item by source import, route registration, saved-state/read-back, authenticated browser reachability, deployment identity, and live data/RLS behaviour; an import or route inventory alone is insufficient. |
+| 39 | docs/20260817-built-unlanded-and-unwired-register-v1.00W.md | UNVERIFIABLE | Replayed the register's bounded negative-search method against current tracked config/source roots: `grep -n -F "InvoiceLineItemBuilder" crm7/eslint.config.js`, `grep -n -F "report-form-dialog" crm7/eslint.config.js`, and `grep -n -F "user-management" throughput/eslint.config.js` each returned no output with exit **1**; equivalent separate `git -C crm7 grep -n -F "InvoiceLineItemBuilder" -- '*eslint.config.*'`, `git -C crm7 grep -n -F "report-form-dialog" -- '*eslint.config.*'`, and `git -C throughput grep -n -F "user-management" -- '*eslint.config.*'` also returned no matches/exit **1**. Positive control: the historical register itself contains the named paths at its recorded lines (`:186-187`, `:206`, `:208`, `:211`, `:545`). This establishes only that the cited current config matches are absent; it does not prove historical fixes, imports/routes, saved-state/read-back, authenticated reachability, deployment identity, or live data/RLS behaviour. |
 | 40 | docs/20260817-completion-proof-v1.00W.md | UNVERIFIABLE | The proof document was opened, but its historical assertions were not treated as current evidence. Replay each named command and deployment observation with captured output, then test the claimed user flow through the deployed authenticated surface; source inspection cannot substitute for those observations. |
 | 41 | docs/20260817-coverage-gap-closure-v1.00W.md | UNVERIFIABLE | E-OPEN; verify coverage claims against tests and source census. |
 | 42 | docs/20260817-estate-completion-ledger-v1.00W.md | UNVERIFIABLE | E-OPEN; reconcile status rows with current issues, branches, and source. |
@@ -133,7 +133,7 @@ validated.
 | 71 | docs/20260825-overnight-ninety-item-clearance-directive-v1.00A.md | UNVERIFIABLE | E-OPEN; verify all 90 items against current primary state. |
 | 72 | docs/20260825-remeasured-clearance-brief-v1.00A.md | UNVERIFIABLE | E-OPEN; replay measurements and compare current results. |
 | 73 | docs/20260826-backend-surface-asymmetries-v1.00D.md | UNVERIFIABLE | E-OPEN; verify API/database asymmetries against source and schema. |
-| 74 | docs/20260826-bsuite-open-findings-register-v1.00W.json | UNVERIFIABLE | The JSON register was opened for triage, but no complete parse-and-reconciliation transcript was retained. Parse every row, resolve its referenced issue/PR or source path, and compare state against the live tracker; a static JSON parse cannot prove that a finding remains open, fixed, or deployed. |
+| 74 | docs/20260826-bsuite-open-findings-register-v1.00W.json | UNVERIFIABLE | Independent Node JSON parse succeeded: `generated="2026-09-02"`, `operator_testing_findings.count=142`, and stored `operator_testing_findings.repeat_offences=26`. A recursive walk of the parsed object counting records where `repeat_offence === true` found **28** paths under `operator_testing_findings.findings[...]` (including indices `1,5,9,34,36,44,49,72,74,75,77,80,81,83,84,87,88,105,106,107,108,119,122,124,132,134,136,139`). The stored aggregate therefore reconciles as **26 vs independently derived 28**, an inconsistency in the source aggregate/records that must be preserved rather than silently resolved. This static parse does not prove any finding's current issue/PR state, deployment, or live RLS behaviour. |
 | 75 | docs/20260826-doc-completion-verdict-v1.00A.md | UNVERIFIABLE | The verdict document was opened and its historical completion assertions remain bounded. Replay its checks against the current inventory, source evidence, issue state, and deployment evidence; the completion self-test validates checker mechanics, not the verdict for every dated document. |
 | 76 | docs/20260826-four-decisions-for-braden-v1.00D.md | UNVERIFIABLE | E-OPEN; verify each decision's consumer and current status. |
 | 77 | docs/20260826-futurebuild-production-acceptance-v1.00D.md | UNVERIFIABLE | E-OPEN; verify acceptance claims with deployed evidence. |
@@ -269,7 +269,7 @@ static inventories, historical observations, or source anchors into runtime proo
 
 | Row | Evidence captured | Validation boundary; required next proof |
 |---:|---|---|
-| 20 | `grep -nE 'target-branch|security' .github/workflows/security-audit.yml .github/workflows/security-definer-must-justify-itself.yml .github/dependabot.yml` located the security workflow, the SECURITY DEFINER gate, and Dependabot `target-branch: "development"` at `.github/dependabot.yml:18,65`. | Repository controls are not proof that a signal is currently exposed, fixed, or deployed. Live catalog evidence, source callers, and authenticated/deployed observation remain required. |
+| 20 | Separate bounded searches, `grep -n 'target-branch' .github/workflows/security-audit.yml .github/workflows/security-definer-must-justify-itself.yml .github/dependabot.yml` and `grep -n 'security' .github/workflows/security-audit.yml .github/workflows/security-definer-must-justify-itself.yml .github/dependabot.yml`, located the security workflow, the SECURITY DEFINER gate, and Dependabot `target-branch: "development"` at `.github/dependabot.yml:18,65`. | Repository controls are not proof that a signal is currently exposed, fixed, or deployed. Live catalog evidence, source callers, and authenticated/deployed observation remain required. |
 | 39 | The bounded historical lint/config replay found **no current matches** for the register's named paths. This negative result is recorded, not treated as proof that historical items are absent or fixed. | Reconcile each item with its historical source/config context, then verify import, route, saved-state/read-back, authenticated browser reachability, deployment identity, and live data/RLS behaviour. |
 | 40 | Concrete source anchors: `R80.4/src/lib/award-rate-cache.ts:48` names `award_rate_cache`; `crm7/src/services/chargeCalcSourceAdapters.ts:203-212` documents the adapter; `crm7/src/services/requoteOnRiseService.ts:15-28` records the cache repoint; `crm7/src/components/entity/selectors/AwardRateSelector.tsx:68-77` retains the classification join. | These identify readers and tables, not current rows, API responses, deployment identity, or completed authenticated rate correctness. Replay named commands and test the deployed surface before promotion. |
 | 57 | `node scripts/audit-doc-completion.mjs --self-test` returned **`38/38 self-tests pass`**; the independent dated-path replay returned **128 unique paths with no missing or duplicate ledger rows**. | Self-tests use fixtures and inventory proves assignment arithmetic; neither validates every substantive document claim, live issue state, deployment state, or closure. |
@@ -296,14 +296,14 @@ references, and incidental prose. It does not treat an absent direct import as p
 
 Reproducible command evidence:
 
-* `node scripts/generate-component-registry.mjs --self-test` → `component-registry --self-test: OK (14 cases)`.
-* `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
-* `node scripts/generate-feature-index.mjs --self-test` → `generate-feature-index --self-test: OK (12 cases)`.
-* `node scripts/generate-feature-index.mjs --check` → `feature-index: in sync (661 rows)`.
-* Parsing `docs/00-roadmap/bsuite-feature-index.json` and counting its authoritative rows → **661 rows, 28 modules,
+- `node scripts/generate-component-registry.mjs --self-test` → `component-registry --self-test: OK (14 cases)`.
+- `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
+- `node scripts/generate-feature-index.mjs --self-test` → `generate-feature-index --self-test: OK (12 cases)`.
+- `node scripts/generate-feature-index.mjs --check` → `feature-index: in sync (661 rows)`.
+- Parsing `docs/00-roadmap/bsuite-feature-index.json` and counting its authoritative rows → **661 rows, 28 modules,
   57 capability areas**. The feature-index Markdown headline now also states **661**, matching the generated
   JSON/check output; the named-index verdict is therefore `VALIDATED-CURRENT`.
-* The registry generator source at `scripts/generate-component-registry.mjs:31-32, 133-169` defines the ten shared
+- The registry generator source at `scripts/generate-component-registry.mjs:31-32, 133-169` defines the ten shared
   package scan, package-export discovery, and direct `@bsuite/*` app-import semantics. This bounds all five census
   classifications above.
 
