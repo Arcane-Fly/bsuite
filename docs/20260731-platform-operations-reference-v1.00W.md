@@ -166,8 +166,10 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
   silent fallback: legacy API keys can be DISABLED on a project while the
   key itself stays registered, so a disabled legacy key answers every
   request with `401 Invalid API key` rather than failing loudly as
-  absent (`crm7/api/ai/_shared/usageWriter.ts` is the live example, and
-  where this bit production on 2026-09-03/04). Never in client source —
+  absent (`crm7/api/ai/_shared/usageWriter.ts` is the incident's example —
+  its own fallback to the legacy name bit us in production on
+  2026-09-03/04; crm7#2394 and crm7#2401 fix it, neither promoted to crm7
+  main yet). Never in client source —
   enforced by `scripts/check-secret-naming.sh` R1, self-tested with a
   planted `process.env.SUPABASE_SECRET_KEY` read.
 - Canonical app URL env var map (`VITE_APP_URL`) for all 6 apps:

@@ -11,7 +11,11 @@
 #       (frontend reads via `process.env.NEXT_PUBLIC_*`)
 #   - Server-side API routes (Vercel functions): SUPABASE_URL, SUPABASE_SECRET_KEY
 #       (SUPABASE_SERVICE_ROLE_KEY is the legacy name for the same credential —
-#       see R1 below; crm7/api/ai/_shared/usageWriter.ts is the live consumer)
+#       see R1 below; crm7/api/ai/_shared/usageWriter.ts is the incident's
+#       consumer. At the parent's pinned crm7 tree it still reads only the
+#       legacy name; crm7#2394 (crm7 development) adds the modern-name read
+#       and crm7#2401 (crm7 development, FOLLOW 66) drops the legacy
+#       fallback entirely — neither is promoted to crm7 main yet)
 #   - EDGE FUNCTIONS: do not read a key name directly. Use `getPublishableKey()`
 #       from `supabase/functions/_shared/supabase-keys.ts`.
 #
@@ -40,7 +44,8 @@
 # This script enforces 6 rules across the parent monorepo AND each submodule:
 #   R1) Vite-app source must NOT read `process.env.SUPABASE_*` (server-only names in client bundle,
 #       including `SUPABASE_SECRET_KEY` — the modern replacement for `SUPABASE_SERVICE_ROLE_KEY`,
-#       added 2026-09-04 after it read by omission; see crm7/api/ai/_shared/usageWriter.ts).
+#       added 2026-09-04 after this rule's own pattern was found to allow it
+#       through by omission; see crm7/api/ai/_shared/usageWriter.ts).
 #   R2) Vite-app source must NOT read `import.meta.env.NEXT_PUBLIC_SUPABASE_*` (wrong meta-framework).
 #   R3) Next.js (conduit) consumer source must NOT use `import.meta.env` at all.
 #   R4) CLIENT source must NOT reference `SUPABASE_ANON_KEY` (use the `VITE_`/`NEXT_PUBLIC_`
@@ -387,11 +392,16 @@ serverless_dirs_for() {
 # credential, new opaque name (`sb_secret_…` instead of an HS256 JWT). R1's
 # pattern named the legacy name only, so a Vite client reading the modern
 # name would have passed by omission — exactly the shape of gap this guard
-# exists to close. `crm7/api/ai/_shared/usageWriter.ts` is the one live
-# consumer of the modern name today, and it is already exempt by the
-# `serverless_dirs_for` mechanism below (it lives under `crm7/api/`, a
-# declared serverless dir) — this addition changes what CLIENT code is
-# banned from reading, not that file's own server-side read.
+# exists to close. `crm7/api/ai/_shared/usageWriter.ts` is the incident's
+# consumer, exempt either way by the `serverless_dirs_for` mechanism below
+# (it lives under `crm7/api/`, a declared serverless dir) — this addition
+# changes what CLIENT code is banned from reading, not that file's own
+# server-side read. At the parent's pinned crm7 tree it still reads only
+# the legacy `SUPABASE_SERVICE_ROLE_KEY` name; crm7#2394 (crm7 development)
+# adds the modern-name read and crm7#2401 (crm7 development, FOLLOW 66)
+# drops the legacy fallback entirely — neither is promoted to crm7 main
+# yet, so "the modern name" is what this rule bans, not yet what that file
+# reads in production.
 check_r1() {
   local issues=""
   for app in "${VITE_APPS[@]}"; do
@@ -676,7 +686,11 @@ EOF
   check_r1
 
   local result=1
-  if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -q "$st_fixture"; then
+  # -F: the fixture path is a literal string, not a regex. Unescaped, the
+  # `.` in the filename (and any future fixture name) matches any
+  # character, so a diagnostics line with a similarly-shaped path could
+  # spuriously match.
+  if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -qF "$st_fixture"; then
     echo "self-test: PASS — R1 caught the planted \`process.env.SUPABASE_SECRET_KEY\` read in $st_fixture"
     result=0
   else
