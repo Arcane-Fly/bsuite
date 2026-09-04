@@ -48,6 +48,12 @@
       "verdict": "FAIL",
       "summary": "Inventory, totals, ledger-only scope, and six source spot-checks passed, including page-builder, EnhancedDataTable/DataGrid, schema, and workflow canvas. Rows 51, 63, 89, and 90 were promoted using their documents' historical assertions without replayed commands or independent source-file evidence in the ledger, violating acceptance criterion 6. Overall status remains building with 110 UNVERIFIABLE rows.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-5.md"
+    },
+    {
+      "iteration": 6,
+      "verdict": "FAIL",
+      "summary": "Rows 51, 63, 89, and 90 are correctly UNVERIFIABLE with exact missing evidence; the 128-row bijection, 5/6/3/114 totals, 174-component registry check, corrected EntityTableWidget ruling, non-direct-save RelationshipCanvas caveat, and ledger-only commit scope all pass. Iteration evidence accuracy fails because fresh replay finds 25 @dnd-kit files rather than 26 and 19 react-grid-layout files rather than 21. Overall remains building with 114 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-6.md"
     }
   ]
 }
