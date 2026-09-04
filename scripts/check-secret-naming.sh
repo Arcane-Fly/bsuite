@@ -784,60 +784,171 @@ EOF
 # first time this file's self-test called into it (bsuite#465 FOLLOW 65). The
 # fix there was to give the CALLER distinct names rather than touch the
 # unrelated callee; same discipline here, one level further down the alphabet.
+# One (app, name) plant per suffix class, checked independently, rather than
+# one plant total (FOLLOW 96).
+#
+# THE GAP THIS CLOSES. The original self-test derived ONE name from crm7's
+# set (`head -n1`, alphabetically first) and planted only that. crm7 declares
+# names in TWO classes (`_KEY`: AI_GATEWAY_API_KEY: `_TOKEN`: SENTRY_AUTH_TOKEN),
+# so a regex regression that silently drops ONE alternative from
+# `server_only_secret_names_for`'s suffix filter — the enforcer's own measured
+# case: `(_KEY|_TOKEN|_SECRET|_PASSWORD)` losing `_KEY` — does not empty the
+# derived set. It just removes AI_GATEWAY_API_KEY from it, `head -n1` picks
+# SENTRY_AUTH_TOKEN instead (still present, still genuinely caught), and the
+# self-test reports PASS while a REAL `AI_GATEWAY_API_KEY` read anywhere in
+# crm7 client source would now slip through R7 undetected. One plant per class
+# means a regression in any single alternative fails ONLY that class's case,
+# never absorbed by a sibling class surviving in the same app.
+#
+# _SECRET has no real declared example anywhere in the estate today (checked
+# 2026-09-04: zero `_SECRET`-suffixed lines across all 5 Vite apps'
+# .env.example files, zero `process.env.*_SECRET` reads in their source —
+# STRIPE_SECRET_KEY-shaped names end in `_KEY`, not `_SECRET`). Synthesised in
+# `self_test_r7_secret_class` below rather than skipped: the one class with no
+# live example is exactly where a dropped alternative would hide longest,
+# since nothing would ever exercise it by accident either.
 self_test_r7() {
-  local st7_app="crm7"
-  local st7_rel="src/__check_secret_naming_r7_selftest__.ts"
-  local st7_fixture="${st7_app}/${st7_rel}"
+  local st7_overall=0
 
-  if [ ! -d "${st7_app}/src" ]; then
-    echo "self-test (R7): CANNOT RUN — ${st7_app}/src is not checked out (submodule not initialised)" >&2
+  local -a st7_real_cases=(
+    'crm7:AI_GATEWAY_API_KEY:_KEY'
+    'crm7:SENTRY_AUTH_TOKEN:_TOKEN'
+    'braden:EMAIL_PASSWORD:_PASSWORD'
+  )
+  local st7_case st7c_app st7c_rest st7c_name st7c_class
+  for st7_case in "${st7_real_cases[@]}"; do
+    st7c_app="${st7_case%%:*}"
+    st7c_rest="${st7_case#*:}"
+    st7c_name="${st7c_rest%%:*}"
+    st7c_class="${st7c_rest#*:}"
+    self_test_r7_one "$st7c_app" "$st7c_name" "$st7c_class" || st7_overall=1
+  done
+
+  self_test_r7_secret_class || st7_overall=1
+
+  return "$st7_overall"
+}
+
+# Plant a single real (app, name) pair, confirming it is STILL live-derived
+# before relying on it (never a memory of a past derivation), and assert R7
+# catches a read of it. `st7o_*` names throughout — see the FOLLOW 65 note on
+# `self_test`/`check_r1` above for why a shared name like `app` would risk a
+# dynamic-scoping collision with `check_r7`'s own (non-`local`) loop variable.
+self_test_r7_one() {
+  local st7o_app="$1"
+  local st7o_name="$2"
+  local st7o_class="$3"
+  local st7o_rel="src/__check_secret_naming_r7_selftest__.ts"
+  local st7o_fixture="${st7o_app}/${st7o_rel}"
+
+  if [ ! -d "${st7o_app}/src" ]; then
+    echo "self-test (R7 ${st7o_class}): CANNOT RUN — ${st7o_app}/src is not checked out (submodule not initialised)" >&2
     return 1
   fi
 
-  # Derive the planted name LIVE from crm7/.env.example rather than hardcoding
-  # one. A hardcoded literal (e.g. "AI_GATEWAY_API_KEY") would keep "passing"
-  # even after that name left the derived set — the self-test would then be
-  # asserting nothing, silently, on the exact class of drift R7 exists to
-  # catch. Asserting the set is non-empty FIRST closes the other half of that
-  # gap: an .env.example edit that empties crm7's server-only set entirely
-  # would otherwise leave nothing to plant and no test to fail.
-  local st7_names
-  st7_names=$(server_only_secret_names_for "$st7_app")
-  if [ -z "$st7_names" ]; then
-    echo "self-test (R7): FAIL — ${st7_app}/.env.example declares no server-only secret (_KEY/_TOKEN/_SECRET/_PASSWORD) to plant a violation with" >&2
+  local st7o_derived
+  st7o_derived=$(server_only_secret_names_for "$st7o_app")
+  if ! printf '%s\n' "$st7o_derived" | grep -qxF "$st7o_name"; then
+    echo "self-test (R7 ${st7o_class}): FAIL — ${st7o_app}/.env.example no longer derives ${st7o_name} (derived set: $(printf '%s' "$st7o_derived" | tr '\n' ' '))" >&2
     return 1
   fi
-  local st7_name
-  st7_name=$(printf '%s\n' "$st7_names" | head -n1)
 
-  trap '( cd "'"$st7_app"'" && git reset -q -- "'"$st7_rel"'" ) 2>/dev/null; rm -f "'"$st7_fixture"'"' EXIT
+  trap '( cd "'"$st7o_app"'" && git reset -q -- "'"$st7o_rel"'" ) 2>/dev/null; rm -f "'"$st7o_fixture"'"' EXIT
 
   {
     echo '// Planted by scripts/check-secret-naming.sh --self-test. Never committed.'
-    echo "export const leaked = process.env.${st7_name}"
-  } > "$st7_fixture"
-  ( cd "$st7_app" && git add -- "$st7_rel" )
+    echo "export const leaked = process.env.${st7o_name}"
+  } > "$st7o_fixture"
+  ( cd "$st7o_app" && git add -- "$st7o_rel" )
 
   VIOLATIONS=0
   DIAGNOSTICS=""
   check_r7
 
-  local st7_result=1
-  if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -qF "$st7_fixture"; then
-    echo "self-test (R7): PASS — caught the planted \`process.env.${st7_name}\` read in $st7_fixture"
-    st7_result=0
+  local st7o_result=1
+  if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -qF "$st7o_fixture"; then
+    echo "self-test (R7 ${st7o_class}): PASS — caught the planted \`process.env.${st7o_name}\` read in $st7o_fixture"
+    st7o_result=0
   else
     {
-      echo "self-test (R7): FAIL — did NOT catch a planted \`process.env.${st7_name}\` read in $st7_fixture"
+      echo "self-test (R7 ${st7o_class}): FAIL — did NOT catch a planted \`process.env.${st7o_name}\` read in $st7o_fixture"
       echo "diagnostics were:"
       printf '%s\n' "$DIAGNOSTICS"
     } >&2
   fi
 
-  ( cd "$st7_app" && git reset -q -- "$st7_rel" ) 2>/dev/null
-  rm -f "$st7_fixture"
+  ( cd "$st7o_app" && git reset -q -- "$st7o_rel" ) 2>/dev/null
+  rm -f "$st7o_fixture"
   trap - EXIT
-  return "$st7_result"
+  return "$st7o_result"
+}
+
+# The `_SECRET` class: no real declared example exists anywhere in the estate
+# (see the header comment on `self_test_r7` above), so this appends one
+# throwaway line to a real `.env.example` — proving the FULL pipeline
+# (file -> derivation -> regex -> grep) for this class exactly as it would
+# run for a real one — and reverts it unconditionally. Refuses to run rather
+# than risk discarding a developer's own uncommitted `.env.example` edit if
+# this is ever invoked outside a clean checkout. `st7s_*` names, same reason
+# as `st7o_*` above.
+self_test_r7_secret_class() {
+  local st7s_app="crm7"
+  local st7s_env="${st7s_app}/.env.example"
+  local st7s_name="SELFTEST_SYNTHETIC_CLIENT_SECRET"
+  local st7s_rel="src/__check_secret_naming_r7_selftest_secret__.ts"
+  local st7s_fixture="${st7s_app}/${st7s_rel}"
+
+  if [ ! -f "$st7s_env" ]; then
+    echo "self-test (R7 _SECRET): CANNOT RUN — ${st7s_env} not checked out" >&2
+    return 1
+  fi
+  if ! ( cd "$st7s_app" && git diff --quiet -- .env.example ); then
+    echo "self-test (R7 _SECRET): CANNOT RUN — ${st7s_env} already has uncommitted changes; refusing to append/revert it and risk discarding them" >&2
+    return 1
+  fi
+
+  trap '
+    ( cd "'"$st7s_app"'" && git checkout -q -- .env.example; git reset -q -- "'"$st7s_rel"'" ) 2>/dev/null
+    rm -f "'"$st7s_fixture"'"
+  ' EXIT
+
+  printf '\n%s=selftest-value\n' "$st7s_name" >> "$st7s_env"
+
+  local st7s_derived
+  st7s_derived=$(server_only_secret_names_for "$st7s_app")
+  if ! printf '%s\n' "$st7s_derived" | grep -qxF "$st7s_name"; then
+    echo "self-test (R7 _SECRET): FAIL — appending ${st7s_name} to ${st7s_env} did not make it derivable (derived set: $(printf '%s' "$st7s_derived" | tr '\n' ' '))" >&2
+    ( cd "$st7s_app" && git checkout -q -- .env.example )
+    trap - EXIT
+    return 1
+  fi
+
+  {
+    echo '// Planted by scripts/check-secret-naming.sh --self-test. Never committed.'
+    echo "export const leaked = process.env.${st7s_name}"
+  } > "$st7s_fixture"
+  ( cd "$st7s_app" && git add -- "$st7s_rel" )
+
+  VIOLATIONS=0
+  DIAGNOSTICS=""
+  check_r7
+
+  local st7s_result=1
+  if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -qF "$st7s_fixture"; then
+    echo "self-test (R7 _SECRET): PASS — caught the planted \`process.env.${st7s_name}\` read in $st7s_fixture"
+    st7s_result=0
+  else
+    {
+      echo "self-test (R7 _SECRET): FAIL — did NOT catch a planted \`process.env.${st7s_name}\` read in $st7s_fixture"
+      echo "diagnostics were:"
+      printf '%s\n' "$DIAGNOSTICS"
+    } >&2
+  fi
+
+  ( cd "$st7s_app" && git checkout -q -- .env.example; git reset -q -- "$st7s_rel" ) 2>/dev/null
+  rm -f "$st7s_fixture"
+  trap - EXIT
+  return "$st7s_result"
 }
 
 if [ "${1:-}" = "--self-test" ]; then
