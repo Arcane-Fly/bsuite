@@ -31,10 +31,13 @@
  *
  * Exempt: `border-border-interactive` and `border-border-strong` (different,
  * already-registered tokens), and any `border-border` whose variant chain
- * carries at least one interaction or component-state variant — `hover:`,
- * `focus-visible:`, `group-hover:`, `data-[state=open]:`, `aria-expanded:`,
- * `disabled:` — because that is a reveal-on-interaction accent whose RESTING
- * state carries no visible border to begin with. See RESTING_VARIANT_RE.
+ * carries at least one variant that actually names hover, focus, or active
+ * (bare, prefixed like `group-hover:`/`peer-focus:`, or an arbitrary bracket
+ * like `[&:hover]:`) — because that is a reveal-on-TRANSIENT-interaction
+ * accent whose RESTING state carries no visible border to begin with.
+ * `aria-expanded:`, `data-[state=open]:`, `disabled:` and the like do NOT
+ * qualify: none of them name hover/focus/active, and all of them can persist
+ * indefinitely (FOLLOW 105). See isTransientInteraction.
  *
  * This is deliberately simpler than "matches its container's fill" — that
  * requires tracking ancestor background tokens, which is a moving target as
@@ -284,16 +287,30 @@ function extractOpeningTag(source, startIdx) {
 /**
  * Tailwind variants that describe a RESTING state — the control looks like
  * this without the user doing anything: a theme, a breakpoint, a media
- * query, a direction, a container query or a structural position. A
- * `border-border` behind one of these is as bare as one with no variant at
- * all (bsuite FOLLOW 68: `dark:border-border` is the resting dark-mode
- * boundary, and it had been walking through the `:` exemption). Any other
- * variant (`hover:`, `focus-visible:`, `group-hover:`, `data-[state=open]:`,
- * `aria-expanded:`, `disabled:` …) is an interaction or component state and
- * stays exempt — the resting boundary must be drawn by a different token.
+ * query, a direction, a container query, a structural position, OR a
+ * persistent component/ARIA state. A `border-border` behind one of these is
+ * as bare as one with no variant at all.
+ *
+ * FOLLOW 68 found `dark:border-border` walking through a blanket `:`
+ * exemption — fixed by requiring the variant to actually be listed here.
+ * FOLLOW 105 (crm7#2409 enforcer, one layer further down the same bug) found
+ * the fix itself still exempted `aria-expanded:`, `disabled:`,
+ * `data-[state=open]:`, `group-data-*:`, `peer-checked:` as "interaction or
+ * component state" — but every one of those PERSISTS for as long as the
+ * underlying condition holds (a field stays invalid, a control stays
+ * disabled, a panel stays open) exactly like `dark:` persists for as long as
+ * the theme is dark. None of them are momentary.
+ *
+ * So there is exactly one question, asked uniformly of every variant
+ * regardless of prefix or bracket form: does it actually name hover, focus,
+ * or active — the three interactions that are genuinely transient and
+ * disappear the instant the pointer or keyboard focus moves on? Everything
+ * else (`dark`, `sm`, `aria-expanded`, `data-[state=open]`, `disabled`,
+ * `group-data-[state=open]`, `peer-checked`, …) is resting.
  */
-const RESTING_VARIANT_RE =
-  /^(dark|light|sm|md|lg|xl|2xl|max-[\w-]+|min-[\w-]+|print|screen|portrait|landscape|motion-safe|motion-reduce|rtl|ltr|contrast-more|contrast-less|forced-colors|supports-.+|@.+|first|last|only|odd|even|first-of-type|last-of-type|empty|\*|\*\*)$/
+function isTransientInteraction(variant) {
+  return /\b(?:hover|focus|active)\b/i.test(variant)
+}
 
 /** Split a variant chain on `:` while keeping `[…]` arbitrary variants whole. */
 function splitVariants(chain) {
@@ -314,23 +331,20 @@ function splitVariants(chain) {
 
 /**
  * True when every variant on the class is a resting one, i.e. the class still
- * paints the control's default boundary. An arbitrary variant (`[&:hover]`)
- * counts as interaction when it names hover/focus/active, resting otherwise.
+ * paints the control's default boundary. A chain with at least one variant
+ * that names hover/focus/active (bare, prefixed, or arbitrary-bracket) is
+ * interaction-gated and stays exempt; everything else is resting.
  */
 function variantsAreAllResting(chain) {
   const parts = splitVariants(chain.replace(/^!/, ''))
   if (parts.length === 0) return true
-  return parts.every((v) => {
-    // word-bounded: `[data-inactive]` must not read as `active`
-    if (v.startsWith('[')) return !/\b(hover|focus|active)\b/i.test(v)
-    return RESTING_VARIANT_RE.test(v)
-  })
+  return parts.every((v) => !isTransientInteraction(v))
 }
 
 /**
  * Bare `border-border` hits inside a tag's text: no variant, or only resting
- * variants (see RESTING_VARIANT_RE). A following `-` means a longer,
- * already-registered token (`border-border-interactive`,
+ * variants (see variantsAreAllResting / isTransientInteraction). A following
+ * `-` means a longer, already-registered token (`border-border-interactive`,
  * `border-border-strong`) — exempt.
  */
 function bareBorderBorderHits(tagText) {
@@ -555,9 +569,47 @@ function selfTest() {
     [],
   )
   check(
-    'allows group-hover:border-border and data-[state=open]:border-border',
+    'allows group-hover:border-border — a group ancestor\'s HOVER genuinely is transient',
+    offendingUses('<button className="group-hover:border-border">Go</button>'),
+    [],
+  )
+  check(
+    'FLAGS data-[state=open]:border-border — an open component state persists at rest too (FOLLOW 105)',
+    offendingUses('<button className="border border-border-interactive data-[state=open]:border-border">Go</button>')
+      .length,
+    1,
+  )
+  check(
+    'FLAGS group-data-[state=open]:border-border — a group ancestor\'s data-state is not momentary either',
     offendingUses(
-      '<button className="group-hover:border-border data-[state=open]:border-border">Go</button>',
+      '<button className="border border-border-interactive group-data-[state=open]:border-border">Go</button>',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS peer-checked:border-border — a checked custom checkbox stays checked at rest',
+    offendingUses(
+      '<button className="border border-border-interactive peer-checked:border-border">Go</button>',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS aria-expanded:border-border — an expanded panel stays expanded, not just while clicked',
+    offendingUses(
+      '<button className="border border-border-interactive aria-expanded:border-border">Go</button>',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS disabled:border-border — a disabled control can be disabled indefinitely',
+    offendingUses('<button className="border border-transparent disabled:border-border">Go</button>')
+      .length,
+    1,
+  )
+  check(
+    'allows peer-focus:border-border — a peer\'s FOCUS genuinely is transient',
+    offendingUses(
+      '<button className="border border-border-interactive peer-focus:border-border">Go</button>',
     ),
     [],
   )
