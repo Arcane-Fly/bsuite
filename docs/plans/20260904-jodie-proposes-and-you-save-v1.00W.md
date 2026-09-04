@@ -48,6 +48,15 @@ documents four bug classes made by hand at those call sites.
 PostgREST that is `UPDATE … SET id = …` across every row the caller's RLS admits. A
 tenant-wide overwrite, avoided by luck, not by design.
 
+**4 — And the dial's own default is maximum autonomy.** `ai_quotas` holds **zero rows for
+all seven tenants**. The dial UI exists and is mounted
+(`crm7/src/pages/settings/configuration.tsx:1379` renders `JodieOverageSettings`, which
+upserts `automation_level` and the overage cap), and **nobody has ever saved it**. With no
+row, `evaluateJodieTurn` falls back to `ceilingForLicence(...)` — so the four enterprise
+tenants resolve to `auto_act`, the most permissive level there is, by omission rather than
+by choice. Nothing is broken: the synthetic quota is the documented fallback and the code
+path works. But "we never asked" currently reads as "do everything without asking".
+
 **Sibling count: 20 write tool modules across 2 apps** — crm7 16 of 25, conduit 4 of 8.
 Enumerated by grepping every non-test module under each app's `src/lib/ai/tools/` for a
 mutating `fetch` or `.insert/.update/.upsert`. No proposal concept exists in code anywhere.
@@ -153,6 +162,18 @@ pre-filled, with the app's Save. Inline create for related records.
 **Task 4 — Convert crm7's 16 write modules to intent producers**, one entity at a time, each
 with the sibling page's service as the single writer. Retire the raw `/api/db` write path per
 module as it converts.
+
+**Task 4b — The default becomes `suggest`, once proposing exists.** Change the no-row
+fallback in `evaluateJodieTurn` from `ceilingForLicence(...)` to `suggest`, so a tenant that
+has never chosen gets "Jodie proposes, you save" rather than "Jodie acts". **Sequenced
+deliberately after Task 3:** dropping the default today removes capability with nothing to
+replace it, which is why Task 2 kept the ceiling fallback and changed no behaviour.
+
+**Do not seed `ai_quotas` from a migration.** The precedent is the calendar-permission work
+of 2026-09-03, where writing `role_capabilities` rows for live customers from a deployment
+was refused for the same reason: it changes seven real tenants' settings as a side effect of
+a release, and it makes the stored row lie about whether anyone ever chose it. The fallback
+constant is the thing to change; the row appears when a tenant saves.
 
 **Task 5 — Conduit's 4 modules**, same pattern, once crm7's is proven.
 

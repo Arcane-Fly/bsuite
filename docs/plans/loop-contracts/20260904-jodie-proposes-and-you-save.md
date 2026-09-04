@@ -19,7 +19,7 @@ routes, the design changes and this contract is rewritten before any tool is con
     },
     {
       "id": "dial-reaches-the-tools",
-      "what": "ToolExecutionContext carries the resolved automation level and createToolRegistry filters by it. Bite: at `off` the registry contains no write tool. Closes finding 1 and may ship alone.",
+      "what": "The resolved automation level reaches createToolRegistry, which filters by it (shipped as a parameter rather than a ToolExecutionContext field — no tool consults it). Bite: at `off` the registry contains no write tool. Closes finding 1 and may ship alone.",
       "resolve": { "evidence": "docs/validation/20260904-jodie-dial-gates-tools.md" }
     },
     {
@@ -36,6 +36,11 @@ routes, the design changes and this contract is rewritten before any tool is con
       "id": "no-module-writes-raw",
       "what": "Every AI tool module writes through a registered intent; none writes straight to PostgREST. Ratchet — this number only falls.",
       "resolve": { "baseline": "docs/validation/20260904-jodie-raw-write-modules.json:raw_write_modules==0" }
+    },
+    {
+      "id": "default-level-is-suggest",
+      "what": "With the propose surface live, a tenant with no ai_quotas row resolves to `suggest`, not to the licence ceiling. No migration seeds live tenants — the fallback constant changes and the row still appears only when someone saves.",
+      "resolve": { "evidence": "docs/validation/20260904-jodie-default-level-is-suggest.md" }
     },
     {
       "id": "workflows-honour-the-ceiling",
