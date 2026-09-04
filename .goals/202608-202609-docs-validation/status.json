@@ -1,7 +1,7 @@
 {
   "goal_id": "202608-202609-docs-validation",
   "status": "building",
-  "iteration": 1,
+  "iteration": 2,
   "builder_model": "Claude Sonnet 5 (copilot)",
   "inspector_model": "Claude Sonnet 5 (copilot)",
   "initial_sha": "8afa0b032590e7b9774e11e4eedacfc272a06fc2",
@@ -14,7 +14,10 @@
       "registry_count": 3,
       "verdict_rows": 127,
       "status": "builder-complete",
-      "note": "Iteration-1 triage ledger created with source-backed carry-forwards, fresh registry/footprint evidence, conflict rulings, and explicit iteration-2 remainder."
+      "note": "Iteration-1 triage ledger created with source-backed carry-forwards, fresh registry/footprint evidence, conflict rulings, and explicit iteration-2 remainder.",
+      "verdict": "FAIL",
+      "inspector_summary": "Independently verified (subagent Inspector dispatch returned no artifact, so the orchestrator ran the check directly): RelationshipCanvas.tsx has 0 persistence calls (grep confirmed), contradicting the ledger's 'wins because it provides an actual interactive canvas' ruling. Git hygiene clean, one commit, no sweep. Fix required in iteration 2: correct the ruling to substrate-winner-not-capability-winner, re-check EntityTableWidget for the same shallow-read pattern, continue UNVERIFIABLE rows in priority order.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-1.md"
     }
   ]
 }
