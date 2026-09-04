@@ -25,8 +25,8 @@
  * ───────────────────────────────────────────────────────────────────────────
  * A `<input>`, `<select>`, `<textarea>` or `<button>` element's opening tag
  * may never carry the BARE `border-border` class — not `hover:border-border`,
- * not `dark:border-border`, not `border-border-interactive`, not
- * `border-border-strong`: those are either a different (already-registered)
+ * not `border-border-interactive`, not `border-border-strong`: those are either
+ * an interaction state or a different (already-registered)
  * token or a deliberate reveal-on-interaction accent whose RESTING state
  * carries no visible border to begin with. Only the unprefixed, resting-state
  * token is banned on these four element types.
@@ -178,11 +178,55 @@ function extractOpeningTag(source, startIdx) {
 }
 
 /**
- * Bare (non-variant-prefixed, non-`-interactive`/`-strong`) `border-border`
- * hits inside a tag's text. A preceding `:` means a Tailwind variant
- * (`hover:`, `dark:`, `group-hover:`, …) — exempt, since the RESTING state
- * carries no such border. A following `-` means a longer, already-registered
- * token (`border-border-interactive`, `border-border-strong`) — exempt.
+ * Tailwind variants that describe a RESTING state — the control looks like
+ * this without the user doing anything: a theme, a breakpoint, a media
+ * query, a direction, a container query or a structural position. A
+ * `border-border` behind one of these is as bare as one with no variant at
+ * all (bsuite FOLLOW 68: `dark:border-border` is the resting dark-mode
+ * boundary, and it had been walking through the `:` exemption). Any other
+ * variant (`hover:`, `focus-visible:`, `group-hover:`, `data-[state=open]:`,
+ * `aria-expanded:`, `disabled:` …) is an interaction or component state and
+ * stays exempt — the resting boundary must be drawn by a different token.
+ */
+const RESTING_VARIANT_RE =
+  /^(dark|light|sm|md|lg|xl|2xl|max-[\w-]+|min-[\w-]+|print|screen|portrait|landscape|motion-safe|motion-reduce|rtl|ltr|contrast-more|contrast-less|forced-colors|supports-.+|@.+|first|last|only|odd|even|first-of-type|last-of-type|empty|\*|\*\*)$/
+
+/** Split a variant chain on `:` while keeping `[…]` arbitrary variants whole. */
+function splitVariants(chain) {
+  const out = []
+  let depth = 0
+  let cur = ''
+  for (const ch of chain) {
+    if (ch === '[') depth++
+    if (ch === ']') depth--
+    if (ch === ':' && depth === 0) {
+      out.push(cur)
+      cur = ''
+    } else cur += ch
+  }
+  out.push(cur)
+  return out.filter(Boolean)
+}
+
+/**
+ * True when every variant on the class is a resting one, i.e. the class still
+ * paints the control's default boundary. An arbitrary variant (`[&:hover]`)
+ * counts as interaction when it names hover/focus/active, resting otherwise.
+ */
+function variantsAreAllResting(chain) {
+  const parts = splitVariants(chain.replace(/^!/, ''))
+  if (parts.length === 0) return true
+  return parts.every((v) => {
+    if (v.startsWith('[')) return !/hover|focus|active/i.test(v)
+    return RESTING_VARIANT_RE.test(v)
+  })
+}
+
+/**
+ * Bare `border-border` hits inside a tag's text: no variant, or only resting
+ * variants (see RESTING_VARIANT_RE). A following `-` means a longer,
+ * already-registered token (`border-border-interactive`,
+ * `border-border-strong`) — exempt.
  */
 function bareBorderBorderHits(tagText) {
   const hits = []
@@ -192,10 +236,15 @@ function bareBorderBorderHits(tagText) {
     const at = tagText.indexOf(needle, from)
     if (at === -1) break
     from = at + needle.length
-    const before = tagText[at - 1]
     const after = tagText[at + needle.length]
-    if (before === ':') continue
     if (after === '-') continue
+    if (tagText[at - 1] === ':') {
+      // walk back over the variant chain to the class boundary
+      let b = at - 1
+      while (b > 0 && !/[\s'"`{(,]/.test(tagText[b - 1])) b--
+      const chain = tagText.slice(b, at - 1)
+      if (!variantsAreAllResting(chain)) continue
+    }
     hits.push(at)
   }
   return hits
@@ -296,9 +345,49 @@ function selfTest() {
     [],
   )
   check(
-    'allows dark:border-border',
-    offendingUses('<input className="border border-border-interactive dark:border-border" />'),
+    'flags dark:border-border — dark mode is a resting state (FOLLOW 68)',
+    offendingUses('<input className="border border-border-interactive dark:border-border" />').length,
+    1,
+  )
+  check(
+    'flags md:border-border — a breakpoint is a resting state',
+    offendingUses('<select className="border md:border-border"></select>').length,
+    1,
+  )
+  check(
+    'flags dark:md:border-border — a chain of resting variants is still resting',
+    offendingUses('<button className="dark:md:border-border">Go</button>').length,
+    1,
+  )
+  check(
+    'allows focus-visible:border-border',
+    offendingUses('<input className="border border-transparent focus-visible:border-border" />'),
     [],
+  )
+  check(
+    'allows dark:hover:border-border — one interaction variant in the chain clears it',
+    offendingUses('<input className="border border-transparent dark:hover:border-border" />'),
+    [],
+  )
+  check(
+    'allows group-hover:border-border and data-[state=open]:border-border',
+    offendingUses(
+      '<button className="group-hover:border-border data-[state=open]:border-border">Go</button>',
+    ),
+    [],
+  )
+  check(
+    'allows an arbitrary variant naming hover, flags one that does not',
+    [
+      offendingUses('<input className="[&:hover]:border-border" />').length,
+      offendingUses('<input className="[&>svg]:border-border" />').length,
+    ],
+    [0, 1],
+  )
+  check(
+    'flags dark:border-border inside a template literal expression',
+    offendingUses("<input className={`border ${dark ? 'dark:border-border' : ''}`} />").length,
+    1,
   )
   check(
     'does NOT flag a non-control element (<div>) — container edges are dividers',
