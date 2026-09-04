@@ -102,6 +102,6 @@ jobs:
         run: |
           {
             echo "### ${APP} audit"
-            echo "- Ran \`pnpm audit --audit-level=high --prod\`"
+            echo "- Ran \`pnpm audit --audit-level=high --prod --ignore-registry-errors\` (a registry outage passes with a pnpm warning in the job log; read the log, not just this summary)"
             echo "- Status: ${STATUS}"
           } >> "$GITHUB_STEP_SUMMARY"
