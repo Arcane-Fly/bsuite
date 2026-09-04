@@ -164,11 +164,15 @@ Two passes, stopping here.
 
 ## Tasks
 
-**Task 0 — Spike: can the forms be lifted?** Three entities of different shapes (simple
-create, a form with a related-record picker, an edit with derived fields). Render each
-outside its route with a pre-filled payload and save through its service. Output: a go/no-go
-and the registry's home (`packages/jodie` vs crm7-local). **Nothing else starts until this
-lands.**
+**Task 0 — Spike: can the forms be lifted?** **DONE 2026-09-04 — PARTIAL, go.**
+[Verdict](../validation/20260904-jodie-form-lift-spike-v1.00F.md): the shape works and already exists
+in-tree (`ApprenticePlacementForm` mounts with no route context, pre-fills from a prop, and
+saves through its own service), but only 2 of crm7's form surfaces have it. The registry
+mechanism belongs in `packages/jodie` where conduit can reach it; the entries stay per-app.
+One constraint: a form pre-fills only the fields its own `defaultsFor()` maps, so an intent
+carries a per-intent schema, not a database row type.
+**Still open from the decomposition:** whether a related-record picker can create inline —
+D8.5 makes that non-negotiable, and it should be spiked before any conversion work.
 
 **Task 1 — The registry.** `registerWriteIntent` + the resolver, with the zod schema as the
 one validator. No consumers yet.
@@ -183,9 +187,19 @@ ahead of the rest.** Shipped as crm7#2396.
 **Task 3 — Panel renders an intent.** The Jodie panel renders a registered `Form` inline,
 pre-filled, with the app's Save. Inline create for related records.
 
-**Task 4 — Convert crm7's 16 write modules to intent producers**, one entity at a time, each
+**Task 4 — Convert crm7's write modules to intent producers**, one entity at a time, each
 with the sibling page's service as the single writer. Retire the raw `/api/db` write path per
 module as it converts.
+
+> **Re-sequenced by the Task 0 spike, 2026-09-04
+> ([verdict](../validation/20260904-jodie-form-lift-spike-v1.00F.md)).** This task was written as
+> though tool readiness were the constraint. It is not — **form readiness** is. An intent can
+> only be registered where a self-contained form exists, and crm7 has **2** of those against
+> **18** controlled forms (the page owns submit) and **47** pages with embedded `<form>` and no
+> component at all. So the order is form-by-form, not module-by-module, and the larger half of
+> this task is converting a controlled form into a self-contained one — moving submit and its
+> service call out of the page without changing what the page does. Start with the two that
+> already qualify: `ApprenticePlacementForm` and `new-risk-assessment-form`.
 
 **Task 4b — The default becomes `suggest`, once proposing exists.** Change the no-row
 fallback in `evaluateJodieTurn` from `ceilingForLicence(...)` to `suggest`, so a tenant that
