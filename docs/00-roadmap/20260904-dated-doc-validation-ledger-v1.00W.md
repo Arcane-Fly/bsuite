@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 7
+iteration: 9
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 7
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 9
 
 ## Scope and method
 
-This is an interim iteration-7 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-9 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -26,6 +26,9 @@ own checkboxes.
 Fresh evidence captured for this pass:
 
 - `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
+- `bash scripts/audit-routes.sh --inventory` → **47 routes across 6 apps (18 public, 29 authenticated)**; this is an inventory check, not authenticated reachability proof.
+- `node scripts/check-route-surface-map.mjs` → **1,157 items checked, 0 problems**; inventory 558 and mapped rows 558. This is static map consistency, not runtime reachability, table reachability, or RLS proof.
+- `node scripts/check-content-contrast-tier.mjs` → **457 source files examined; 0 violations**. This is a static source scan, not rendered browser contrast evidence.
 - Source grep for React Flow/xyflow across all six app source trees → **21** matching
   source files.
 - Dependency footprint command (run from the bsuite root): `find business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src -type f \( -name '*.ts' -o -name '*.tsx' \) -print0 | xargs -0 grep -l -F '@dnd-kit' | sort -u | wc -l` → **@dnd-kit=25**. The scope is exactly those six app source roots and TypeScript files; tests are not excluded, and `sort -u` deduplicates paths before counting matching files.
@@ -192,9 +195,10 @@ validated.
 | `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-DRIFTED | Opened; its prose headline says **662 features**, while the generated section says **661 features**. Fresh related-family source grep `grep -rl 'reactflow\|@xyflow\|ReactFlow' business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src --include='*.ts' --include='*.tsx' \| sort -u \| wc -l` → **21** files. The generated section remains authoritative for its own 661-row output; the one-feature discrepancy and rows lacking a source/route/test require reconciliation. |
 | `docs/00-roadmap/bsuite-component-registry.json` | VALIDATED-CURRENT | Parsed successfully; generator check reports `in sync (174 components)`. This is the machine-readable registry, with the generated output treated as authoritative over prose. |
 
-## Iteration 7 focused source findings
+## Iteration 9 focused source findings
 
-Iteration 7 reviewed rows **32, 51, 63, 89, and 90**, while carrying forward the
+Iteration 9 re-ran the bounded route, route-map, contrast, registry, and
+`EnhancedDataTable` measurements, while carrying forward the
 focused evidence for rows **52, 55, 80, 86, and 117**. The ten-row pass is explicit:
 
 | Row | Result | Boundary preserved |
@@ -205,14 +209,16 @@ focused evidence for rows **52, 55, 80, 86, and 117**. The ten-row pass is expli
 | 55 | DUPLICATE-CLUSTER | Interactive relationship canvas plus store save path wins; read-only visualizer is not an editor. |
 | 63 | UNVERIFIABLE | Historical duplicate measurements are not current evidence; the census is blocked by unavailable `@supabase/supabase-js`. |
 | 80 | VALIDATED-DRIFTED | Persisted per-card layout mechanics hold; historical production measurements are not current estate-wide proof. |
-| 86 | VALIDATED-DRIFTED | Read-listing and editable-grid separation holds; historical usage counts require remeasurement. |
+| 86 | VALIDATED-DRIFTED | Read-listing and editable-grid separation holds. A current historical-style grep (`grep -rln 'EnhancedDataTable' crm7/src --include='*.tsx'`) returns **43** files, while a current non-test `.tsx` scan returns **35**; neither is apples-to-apples with the document's historical **46 files / 43 pages** scope, so the numeric footprint remains bounded historical evidence rather than a definitive drift measurement. |
 | 89 | UNVERIFIABLE | Bounded route inventory and static map checks do not establish runtime reachability or positive-control results. |
 | 90 | UNVERIFIABLE | Current source guard output is not rendered evidence; the browser probe and 104 app-local claims remain unverified. |
 | 117 | DUPLICATE-CLUSTER | Shared workflow controller/service persistence path wins over competing proposals. |
 
 This pass therefore promotes only bounded claims. “Current” means the measured or
 source-backed claim itself is supported; it does not convert an unresolved operator
-decision or an incomplete estate-wide sweep into completion.
+decision or an incomplete estate-wide sweep into completion. In particular, the route
+inventory/map outputs do not prove authenticated reachability, and the contrast output
+does not prove rendered browser contrast.
 
 ## Focused source findings and iteration-2 remainder
 
@@ -242,9 +248,11 @@ feature row to a source file, route, test, or explicit `UNVERIFIABLE` dispositio
 Summary: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
 6 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 114 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
-VALIDATED-DRIFTED. This remains an interim iteration-7 artefact. The remaining gap is
+VALIDATED-DRIFTED. This remains an interim iteration-9 artefact. The remaining gap is
 explicitly **114/114 inventory rows still UNVERIFIABLE (89.0625%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
-reported plainly rather than represented as completion. No source, migration, or audited
-document was edited or deleted; only this ledger and its goal status were updated.
+reported plainly rather than represented as completion. The explicit blocker remains
+**114 unresolved `UNVERIFIABLE` rows**; this ledger is not an audit-complete claim and
+the status remains `building`. No source, migration, or audited document was edited or
+deleted; this iteration changes only this ledger.
