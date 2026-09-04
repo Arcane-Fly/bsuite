@@ -38,7 +38,7 @@ because a package or component exists.
 | Capability | Winner and evidence | Loser disposition |
 |---|---|---|
 | Page authoring renderer | The consolidated authoring direction wins: live page-builder components plus the existing customization validation record. Evidence: `EntityTableWidget.tsx` and `docs/audits/20260904-customization-authoring-genuine-validation-v1.00W.md`. | Earlier competing renderer proposals should carry a superseded pointer to `docs/20260903-visual-authoring-consolidation-decision-v1.00D.md`; do not maintain parallel renderer contracts. |
-| Schema relationship canvas | The React Flow/xyflow direction wins because `RelationshipCanvas.tsx` and `xyflowThemeTokens.ts` provide an actual interactive canvas and token seam. | Static/diagram-only alternatives are `DUPLICATE-CLUSTER`; consolidate around the live canvas and retain only a pointer. |
+| Schema relationship canvas | React Flow/xyflow is the supported interactive canvas substrate: `RelationshipCanvas.tsx` has connectable nodes and `xyflowThemeTokens.ts` provides the token seam. This does **not** establish a functional persistence winner: `RelationshipCanvas.tsx` has no direct save call. Relationship edits flow through `EntityPanel.tsx` → `featureBuilderStore.ts` → `saveDraft()`. | `SchemaVisualizer.tsx` is read-only (`nodesConnectable={false}`), so static/diagram-only alternatives cannot evidence editable persistence. Retain the live canvas direction, but do not claim the canvas itself persists until that path is separately wired and validated. |
 | Data surface | Airtable-class `EntityTableWidget` wins over bespoke report-only tables for editable records because it is the shortest path to inspect and edit entity data. | Report-only/table proposals remain conditional until their live read/write path is evidenced. |
 | Grid/layout | Per-card grid behavior wins only where `react-grid-layout` is wired with persisted layout state; a whole-page drag abstraction loses on independent resize/drag semantics. | Competing whole-block layouts are `DUPLICATE-CLUSTER` and should point at the persisted page-grid contract. |
 | Branding | Three-tier branding/inheritance wins over local palette literals; role-token evidence is required. | Literal-colour specifications are `VALIDATED-DRIFTED` where source has moved to role tokens, and should be corrected by owners. |
@@ -106,7 +106,7 @@ validated.
 | 52 | docs/20260822-data-surface-consolidation-decision-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY; Airtable-class `EntityTableWidget` direction wins; pointer required from competing data-surface specs. |
 | 53 | docs/20260822-estate-doc-inventory-v1.00W.md | VALIDATED-DRIFTED | Inventory claim is 126; fresh `sort -u` inventory is 127 because the 20260904 registry audit was added later. |
 | 54 | docs/20260822-knowledge-classification-standard-v1.00A.md | UNVERIFIABLE | E-OPEN; verify classification consumers and generated indexes. |
-| 55 | docs/20260822-schema-builder-ux-remediation-spec-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY; live schema-builder/canvas evidence wins; reconcile with `RelationshipCanvas.tsx` and `SchemaVisualizer.tsx`. |
+| 55 | docs/20260822-schema-builder-ux-remediation-spec-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY + focused source walk; `RelationshipCanvas.tsx` is interactive (`nodesConnectable`) but has no direct persistence call. Real entity/relationship edits flow through `EntityPanel.tsx` into `featureBuilderStore.ts`, whose `saveDraft()` performs the Supabase update/insert. `SchemaVisualizer.tsx` is read-only (`nodesConnectable={false}`), so it is not evidence of editable relationships. |
 | 56 | docs/20260822-session-findings-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify every finding against source and session evidence. |
 | 57 | docs/20260824-doc-completion-bar-measured-v1.00F.md | UNVERIFIABLE | E-OPEN; replay its measurement commands and compare current docs. |
 | 58 | docs/20260824-estate-execution-backlog-v1.00W.md | UNVERIFIABLE | E-OPEN; reconcile backlog with live issues and branches. |
@@ -168,7 +168,7 @@ validated.
 | 114 | docs/plans/20260817-estate-completion-plan-v1.00D.md | UNVERIFIABLE | E-OPEN; reconcile plan completion claims with current issues and branches. |
 | 115 | docs/plans/20260824-agent-compliance-enforcement-refined-v1.00W.md | UNVERIFIABLE | E-OPEN; verify enforcement hooks and instruction-file consumers. |
 | 116 | docs/plans/20260827-estate-lifecycle-process-refined-v1.00D.md | UNVERIFIABLE | E-OPEN; verify lifecycle process against scripts and live records. |
-| 117 | docs/plans/20260901-workflow-canvas-implementation-v1.00A.md | DUPLICATE-CLUSTER | E-OPEN + xyflow count; compare implementation claims with existing canvas source and consolidate on the live React Flow direction. |
+| 117 | docs/plans/20260901-workflow-canvas-implementation-v1.00A.md | DUPLICATE-CLUSTER | Focused source walk confirms the live shared implementation: `useWorkflowController.ts` schedules graph changes with a 900 ms debounce, saves through `saveVersionGraph`, flushes pending edits on unmount, and exposes draft/publish/rename/duplicate flows. `service.ts` updates `workflow_definition_versions.graph` only for draft rows; `crm7/src/components/workflows/WorkflowCanvasInner.tsx` is the crm7 adapter. This is direct persistence evidence, not the former `E-OPEN` inference; consolidate competing proposals on this shared controller/service path. |
 | 118 | docs/plans/20260903-jodie-automation-notifications-design-v1.00W.md | UNVERIFIABLE | E-OPEN; verify notification design against routes, API handlers, and data writes. |
 | 119 | docs/plans/20260903-jodie-automation-notifications-implementation-v1.00W.md | UNVERIFIABLE | E-OPEN; verify implementation with source imports, tests, and runtime calls. |
 | 120 | docs/plans/codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W.md | UNVERIFIABLE | E-OPEN; verify parity claims against R80.4 and source-backed pay-item groups. |
@@ -194,6 +194,9 @@ The customization bar is not inherited from the plans. `RelationshipCanvas.tsx`,
 `SortableColumnList.tsx`, `PreviewPane.tsx`, `featureBuilderStore.ts`, and
 `SchemaVisualizer.tsx` are real implementation anchors; their existence validates
 capability, not the stronger claims “world class”, “highest UX”, or “fewest clicks”.
+The relationship canvas is interactive but non-persisting in its own component;
+the validated feature-builder save path is `EntityPanel.tsx` →
+`featureBuilderStore.ts` → `saveDraft()`. `SchemaVisualizer.tsx` remains read-only.
 Iteration 2 must perform the interaction-level walk: create/edit/reorder/preview,
 persist, reload, keyboard/focus, empty/loading/error states, and sibling-surface
 enumeration. It must also open the exact registry/index prose and compare every
