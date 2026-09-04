@@ -4,11 +4,11 @@ authority: none
 owner: bsuite
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 4
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 5
 
 ## Scope and method
 
-This is an interim iteration-4 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-5 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -84,7 +84,7 @@ validated.
 | 29 | docs/20260806-schema-authoring-and-tenancy-scope-v1.00A.md | UNVERIFIABLE | E-OPEN; verify schema ownership, tenant predicates, and authoring APIs. |
 | 30 | docs/20260810-plan-dashboard-retirement-v1.00F.md | VALIDATED-CURRENT | Opened; current `AGENTS.md` and `CLAUDE.md` identify the plan dashboard as retired. |
 | 31 | docs/20260813-operator-directive-notes-backlog-remediation-v1.00D.md | UNVERIFIABLE | E-OPEN; verify each directive against current issue/source state. |
-| 32 | docs/20260813-portals-redesign-brainstorm-v1.00D.md | UNVERIFIABLE | E-OPEN; verify portal claims against all portal routes and live data paths. |
+| 32 | docs/20260813-portals-redesign-brainstorm-v1.00D.md | UNVERIFIABLE | E-OPEN; the document's route review identifies 14/20 curated destinations pointing to internal staff pages and correctly questions the portal-shell model, but it explicitly leaves product/security decisions open and has no live validation. Verify every portal destination, role guard, tenant-scoped data path, and authenticated browser flow before promotion. |
 | 33 | docs/20260814-notes-backlog-verification-register-v1.00F.md | UNVERIFIABLE | E-OPEN; reconcile each note with current issue and source evidence. |
 | 34 | docs/20260814-phase0-scope-remediation-delivery-v1.00W.md | UNVERIFIABLE | E-OPEN; verify delivery claims against commits and deployed route. |
 | 35 | docs/20260814-portals-operator-rulings-v1.00A.md | UNVERIFIABLE | E-OPEN; verify ruling consumers and portal authorization. |
@@ -103,7 +103,7 @@ validated.
 | 48 | docs/20260820-datum-directive-to-bsuite-lane-v1.00W.md | UNVERIFIABLE | E-OPEN; verify datum directive consumers and current lane output. |
 | 49 | docs/20260821-airtable-class-data-surface-plan-v1.00F.md | VALIDATED-DRIFTED | Focused re-check: `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx:176-177` proves the widget reads rows with `.select('*')` but contains no insert/update/edit/save/mutation path. The editable admin path is instead `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` → `crm7/src/services/browseDataService.ts:801-839` → `commitBulkUpdate`; the plan's editable-widget claim has drifted and must not be treated as current. |
 | 50 | docs/20260821-atmosphere-evaluation-v1.00F.md | UNVERIFIABLE | E-OPEN; verify atmosphere claims against current product and source. |
-| 51 | docs/20260822-border-elevation-token-system-spec-v1.00F.md | UNVERIFIABLE | E-OPEN; verify tokens and computed styles in shared theme consumers. |
+| 51 | docs/20260822-border-elevation-token-system-spec-v1.00F.md | VALIDATED-DRIFTED | Focused read confirms the shadow ramp, surface ladder, and resting accent-ring defects were implemented and the cited deployed/gate checks reportedly pass. The document's “verified” visual claim has drifted from its own acceptance bar: `scripts/visual-probe.js` is absent and many theme/consumer matrix cells were not inspected. Re-run the complete computed-style and visual matrix before treating the frozen spec as fully current. |
 | 52 | docs/20260822-data-surface-consolidation-decision-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY + corrected source ruling: the verified editable Airtable-class admin winner is `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` → `crm7/src/services/browseDataService.ts:801-839` → `commitBulkUpdate`. `EntityTableWidget.tsx:176-177` is read/display only (`.from(entityType).select('*')`) and is not an editable winner. The verified path is limited to the admin browse surface and its DataGrid commit/rollback contract; it does not prove every data surface is editable. |
 | 53 | docs/20260822-estate-doc-inventory-v1.00W.md | VALIDATED-DRIFTED | Inventory claim is 126; fresh `sort -u` inventory is 128 because the 20260904 registry audit and this ledger were added later. |
 | 54 | docs/20260822-knowledge-classification-standard-v1.00A.md | UNVERIFIABLE | E-OPEN; verify classification consumers and generated indexes. |
@@ -115,7 +115,7 @@ validated.
 | 60 | docs/20260824-role-capabilities-merged-not-applied-root-cause-v1.00F.md | UNVERIFIABLE | E-OPEN; verify role capability reads/writes and deployment state. |
 | 61 | docs/20260824-role-capabilities-zero-consumer-finding-v1.00F.md | UNVERIFIABLE | E-OPEN; verify consumers with source import census. |
 | 62 | docs/20260825-atmosphere-is-nocodb-and-the-licence-already-ruled-v1.00A.md | UNVERIFIABLE | E-OPEN; verify product/library and licence claims against package manifests. |
-| 63 | docs/20260825-braden-group-duplicated-documents-v1.00D.md | UNVERIFIABLE | E-OPEN; verify duplicates by content and current references. |
+| 63 | docs/20260825-braden-group-duplicated-documents-v1.00D.md | VALIDATED-CURRENT | Focused read records reproducible evidence of 162 byte-identical duplicate rows, including 10 sensitive rows, 29 unique rows protected from deletion, and no current third-party exposure. `scripts/remediate-duplicated-documents.mjs` is the named remediation path. The measured finding is current as an audit result; deletion remains intentionally pending operator approval and is not represented as completed remediation. |
 | 64 | docs/20260825-consolidation-assessment-v1.00W.md | UNVERIFIABLE | E-OPEN; verify each consolidation recommendation against current imports. |
 | 65 | docs/20260825-estate-consolidated-findings-v1.00W.md | UNVERIFIABLE | E-OPEN; replay cited checks and reconcile findings. |
 | 66 | docs/20260825-full-surface-clearance-prompt-v1.00A.md | UNVERIFIABLE | E-OPEN; verify each surface in route/source census. |
@@ -141,8 +141,8 @@ validated.
 | 86 | docs/20260829-enhanceddatatable-is-not-a-one-edit-conversion-v1.00W.md | VALIDATED-DRIFTED | Current source supports the architectural warning but not a blanket conversion: `crm7/src/components/common/DataTable/EnhancedDataTable.tsx:597-599` consumes `row.original` for display/click behaviour, while the document's cited footprint was historical. The verified persistence-capable alternative is the separate `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` path backed by `crm7/src/services/browseDataService.ts:801-839`; shared `packages/data-grid/src/types.ts:53-104,181-188` requires host edit configuration/renderers and an async callback. Verdict: retain the separation between read-listing tables and editable grids, but re-measure the document's numeric usage counts before treating them as current. |
 | 87 | docs/20260829-what-the-capability-denials-actually-do-v1.00D.md | UNVERIFIABLE | E-OPEN; verify denial behavior through guards, RLS, and tests. |
 | 88 | docs/20260829-why-a-good-speed-score-and-a-slow-app-v1.00D.md | UNVERIFIABLE | E-OPEN; reproduce performance evidence and inspect network/render paths. |
-| 89 | docs/20260830-nav-route-reachability-across-the-five-non-crm7-apps-v1.00D.md | UNVERIFIABLE | E-OPEN; replay route reachability in each app. |
-| 90 | docs/20260830-text-contrast-across-the-estate-v1.00D.md | UNVERIFIABLE | E-OPEN; rerun contrast checks against current computed styles. |
+| 89 | docs/20260830-nav-route-reachability-across-the-five-non-crm7-apps-v1.00D.md | VALIDATED-CURRENT | Focused read documents corrected app-specific instrumentation and positive controls: zero unreachable nav entries in BSU, throughput, conduit, and braden; R80.4 is correctly `n/a`. The prior failures were instrumentation errors, and the bounded applicable-app result is supported by the corrected route audit. |
+| 90 | docs/20260830-text-contrast-across-the-estate-v1.00D.md | VALIDATED-DRIFTED | Focused read confirms three measured AA failures were fixed/recorded and the P7 instrumentation defects were corrected. It also states that 104 app-local claims remain unverified, so the document cannot support a complete estate-wide current claim. Re-run the computed-style contrast sweep across the remaining surfaces before promoting the broad audit. |
 | 91 | docs/20260903-visual-authoring-consolidation-decision-v1.00D.md | VALIDATED-CURRENT | E-CARRY; prior narrow audit confirmed the consolidated authoring direction and source anchors. |
 | 92 | docs/20260904-component-registry-and-storybook-consumer-audit-v1.00W.md | VALIDATED-DRIFTED | E-REG; generator is in sync at 174 components, but Storybook consumer claims require the pending focused consumer walk. |
 | 93 | docs/archive/20260805-stash-cleanup-manifest-v1.00W.md | UNVERIFIABLE | E-OPEN; verify each manifest path and whether the archived object still exists. |
@@ -190,6 +190,28 @@ validated.
 | `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-DRIFTED | Opened; its prose headline says **662 features**, while the generated section says **661 features**. Fresh related-family source grep `grep -rl 'reactflow\|@xyflow\|ReactFlow' business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src --include='*.ts' --include='*.tsx' \| sort -u \| wc -l` → **21** files. The generated section remains authoritative for its own 661-row output; the one-feature discrepancy and rows lacking a source/route/test require reconciliation. |
 | `docs/00-roadmap/bsuite-component-registry.json` | VALIDATED-CURRENT | Parsed successfully; generator check reports `in sync (174 components)`. This is the machine-readable registry, with the generated output treated as authoritative over prose. |
 
+## Iteration 5 focused source findings
+
+Iteration 5 reviewed rows **32, 51, 63, 89, and 90**, while carrying forward the
+focused evidence for rows **52, 55, 80, 86, and 117**. The ten-row pass is explicit:
+
+| Row | Result | Boundary preserved |
+|---:|---|---|
+| 32 | UNVERIFIABLE | Substantial portal route analysis, but no authenticated live validation and open product/security decisions. |
+| 51 | VALIDATED-DRIFTED | Implementation and reported deployment checks hold; the complete visual matrix does not. |
+| 52 | DUPLICATE-CLUSTER | Editable admin browse/DataGrid path wins; `EntityTableWidget` is read/display only. |
+| 55 | DUPLICATE-CLUSTER | Interactive relationship canvas plus store save path wins; read-only visualizer is not an editor. |
+| 63 | VALIDATED-CURRENT | Duplicate measurements are reproducible; operator-controlled deletion is pending, not falsely marked remediated. |
+| 80 | VALIDATED-DRIFTED | Persisted per-card layout mechanics hold; historical production measurements are not current estate-wide proof. |
+| 86 | VALIDATED-DRIFTED | Read-listing and editable-grid separation holds; historical usage counts require remeasurement. |
+| 89 | VALIDATED-CURRENT | Corrected positive-control route audit supports zero unreachable entries in applicable apps; R80.4 is `n/a`. |
+| 90 | VALIDATED-DRIFTED | Three measured failures/fixes hold, but 104 app-local claims remain unverified. |
+| 117 | DUPLICATE-CLUSTER | Shared workflow controller/service persistence path wins over competing proposals. |
+
+This pass therefore promotes only bounded claims. “Current” means the measured or
+source-backed claim itself is supported; it does not convert an unresolved operator
+decision or an incomplete estate-wide sweep into completion.
+
 ## Focused source findings and iteration-2 remainder
 
 The customization bar is not inherited from the plans. `RelationshipCanvas.tsx`,
@@ -215,11 +237,11 @@ persist, reload, keyboard/focus, empty/loading/error states, and sibling-surface
 enumeration. It must also open the exact registry/index prose and compare every
 feature row to a source file, route, test, or explicit `UNVERIFIABLE` disposition.
 
-Summary: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
-6 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 114 UNVERIFIABLE.** Separately, **3 named
+Summary: **128 dated paths inventoried; 128 assigned a verdict; 7 VALIDATED-CURRENT;
+8 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 110 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
-VALIDATED-DRIFTED. This remains an interim iteration-4 artefact. The remaining gap is
-explicitly **114/114 inventory rows still UNVERIFIABLE (89.0625%)**, so **100% claim-level
+VALIDATED-DRIFTED. This remains an interim iteration-5 artefact. The remaining gap is
+explicitly **110/110 inventory rows still UNVERIFIABLE (85.9375%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
 reported plainly rather than represented as completion. No source, migration, or audited
