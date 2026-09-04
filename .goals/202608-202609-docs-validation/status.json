@@ -138,6 +138,12 @@
       "verdict": "PASS",
       "summary": "The sole iteration-19 blocker is fixed: row 113's unreplayable '787 portal-related source files/paths' claim is removed in full (grep for '787' across the ledger returns no match) and replaced with an explicit E-OPEN statement of what a genuine portal-surface census would require; its other anchors independently re-verified against the source plan. Row 81's anchor is also corrected from the inaccurate YAML-front-matter cite to the true title/553-rows/TOTAL-553 locations. The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, rows 114/116 script outputs, accepted architecture rulings (RelationshipCanvas non-persisting, EntityTableWidget read-only), good GPG signatures on all four commits since the iteration-18 baseline, and ledger-only Builder scope all independently re-verified with no regressions. This is a narrow iteration PASS only; overall remains building with 113/128 rows still UNVERIFIABLE and the ledger's own summary disclaiming full completion.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-20.md"
+    },
+    {
+      "iteration": 22,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/113 arithmetic, 174-component registry, 661-row feature index, accepted architecture rulings, building status, good GPG signature, ledger-only Builder scope, and conservative live-evidence boundaries all pass. Iteration 22 fails acceptance criterion 6 because most focused rows replace generic E-OPEN wording with generic opened/replay-later prose rather than retaining concrete document-specific command or source outcomes. Row 74 particularly omits the required successful JSON parse and structural/count transcript; rows 20, 39, 40, 57, 75, 82, 83, and 88 likewise need bounded evidence recorded in the ledger. Row 90 is correctly evidenced and bounded.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-22.md"
     }
   ]
 }
