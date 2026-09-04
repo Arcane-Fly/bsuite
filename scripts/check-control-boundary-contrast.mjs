@@ -24,12 +24,17 @@
  * THE RULE
  * ───────────────────────────────────────────────────────────────────────────
  * A `<input>`, `<select>`, `<textarea>` or `<button>` element's opening tag
- * may never carry the BARE `border-border` class — not `hover:border-border`,
- * not `border-border-interactive`, not `border-border-strong`: those are either
- * an interaction state or a different (already-registered)
- * token or a deliberate reveal-on-interaction accent whose RESTING state
- * carries no visible border to begin with. Only the unprefixed, resting-state
- * token is banned on these four element types.
+ * may never carry a RESTING `border-border` class. Resting means: no variant
+ * at all, or only variants that describe how the control sits before the
+ * user touches it — `dark:`, `md:`, `print:`, `rtl:`, `first:`, `@lg:` and
+ * their kin. Those are banned exactly like the bare token.
+ *
+ * Exempt: `border-border-interactive` and `border-border-strong` (different,
+ * already-registered tokens), and any `border-border` whose variant chain
+ * carries at least one interaction or component-state variant — `hover:`,
+ * `focus-visible:`, `group-hover:`, `data-[state=open]:`, `aria-expanded:`,
+ * `disabled:` — because that is a reveal-on-interaction accent whose RESTING
+ * state carries no visible border to begin with. See RESTING_VARIANT_RE.
  *
  * This is deliberately simpler than "matches its container's fill" — that
  * requires tracking ancestor background tokens, which is a moving target as
@@ -217,7 +222,8 @@ function variantsAreAllResting(chain) {
   const parts = splitVariants(chain.replace(/^!/, ''))
   if (parts.length === 0) return true
   return parts.every((v) => {
-    if (v.startsWith('[')) return !/hover|focus|active/i.test(v)
+    // word-bounded: `[data-inactive]` must not read as `active`
+    if (v.startsWith('[')) return !/\b(hover|focus|active)\b/i.test(v)
     return RESTING_VARIANT_RE.test(v)
   })
 }
@@ -238,11 +244,15 @@ function bareBorderBorderHits(tagText) {
     from = at + needle.length
     const after = tagText[at + needle.length]
     if (after === '-') continue
-    if (tagText[at - 1] === ':') {
+    // `variant:!border-border` — Tailwind's important marker sits between the
+    // chain and the utility; step over it so the chain is still classified.
+    let prev = at - 1
+    if (tagText[prev] === '!') prev--
+    if (tagText[prev] === ':') {
       // walk back over the variant chain to the class boundary
-      let b = at - 1
+      let b = prev
       while (b > 0 && !/[\s'"`{(,]/.test(tagText[b - 1])) b--
-      const chain = tagText.slice(b, at - 1)
+      const chain = tagText.slice(b, prev)
       if (!variantsAreAllResting(chain)) continue
     }
     hits.push(at)
@@ -383,6 +393,30 @@ function selfTest() {
       offendingUses('<input className="[&>svg]:border-border" />').length,
     ],
     [0, 1],
+  )
+  check(
+    'allows hover:!border-border — the important marker sits after the chain',
+    offendingUses(
+      '<input className="border-transparent hover:!border-border dark:hover:!border-border" />',
+    ),
+    [],
+  )
+  check(
+    'flags dark:!border-border — important does not change a resting variant',
+    offendingUses('<input className="dark:!border-border" />').length,
+    1,
+  )
+  check(
+    'flags [data-inactive]:border-border — "active" inside "inactive" is not an interaction',
+    offendingUses('<button className="[data-inactive]:border-border">Go</button>').length,
+    1,
+  )
+  check(
+    'allows [&:active]:border-border and [&[data-inactive]:hover]:border-border',
+    offendingUses(
+      '<button className="[&:active]:border-border [&[data-inactive]:hover]:border-border">Go</button>',
+    ),
+    [],
   )
   check(
     'flags dark:border-border inside a template literal expression',
