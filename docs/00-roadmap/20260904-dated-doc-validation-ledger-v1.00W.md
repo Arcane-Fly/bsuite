@@ -4,18 +4,18 @@ authority: none
 owner: bsuite
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, iteration 3
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 4
 
 ## Scope and method
 
-This is the iteration-1 record for the genuine-validation audit. The authoritative
+This is an interim iteration-4 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
 
-That command returns **127** paths, not the goal's historical 126. The extra path is
-`docs/20260904-component-registry-and-storybook-consumer-audit-v1.00W.md`, which was
-added after the goal's opening count. I have not silently dropped it. Each row below
+That command returns **128** paths, not the goal's historical 126. The extra paths are
+the later registry audit and this ledger itself, which matches the filename glob. I have
+not silently dropped either. Each row below
 has exactly one permitted verdict. `UNVERIFIABLE` means the document was opened and
 triaged, but its claims need a focused source walk before they can be promoted; the
 row states the precise next verification target rather than inheriting the document's
@@ -24,7 +24,8 @@ own checkboxes.
 Fresh evidence captured for this pass:
 
 - `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
-- Source grep for React Flow/xyflow → **9** matching source files.
+- Source grep for React Flow/xyflow across all six app source trees → **21** matching
+	source files.
 - Source grep for `@dnd-kit` → **26** matching source files.
 - Source grep for `react-grid-layout` → **21** matching source files.
 - Reviewed implementation anchors: `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx`, `business-suite-unified/src/lib/schemaBuilderService.ts`, `business-suite-unified/src/lib/xyflowThemeTokens.ts`, `business-suite-unified/src/lib/feature-builder/types.ts`, `business-suite-unified/src/lib/feature-builder/index.ts`, `business-suite-unified/src/stores/featureBuilderStore.ts`, `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx`, `SortableColumnList.tsx`, `PreviewPane.tsx`, and `SchemaVisualizer.tsx`.
@@ -103,8 +104,8 @@ validated.
 | 49 | docs/20260821-airtable-class-data-surface-plan-v1.00F.md | VALIDATED-DRIFTED | Focused re-check: `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx:176-177` proves the widget reads rows with `.select('*')` but contains no insert/update/edit/save/mutation path. The editable admin path is instead `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` → `crm7/src/services/browseDataService.ts:801-839` → `commitBulkUpdate`; the plan's editable-widget claim has drifted and must not be treated as current. |
 | 50 | docs/20260821-atmosphere-evaluation-v1.00F.md | UNVERIFIABLE | E-OPEN; verify atmosphere claims against current product and source. |
 | 51 | docs/20260822-border-elevation-token-system-spec-v1.00F.md | UNVERIFIABLE | E-OPEN; verify tokens and computed styles in shared theme consumers. |
-| 52 | docs/20260822-data-surface-consolidation-decision-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY; Airtable-class `EntityTableWidget` direction wins; pointer required from competing data-surface specs. |
-| 53 | docs/20260822-estate-doc-inventory-v1.00W.md | VALIDATED-DRIFTED | Inventory claim is 126; fresh `sort -u` inventory is 127 because the 20260904 registry audit was added later. |
+| 52 | docs/20260822-data-surface-consolidation-decision-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY + corrected source ruling: the verified editable Airtable-class admin winner is `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` → `crm7/src/services/browseDataService.ts:801-839` → `commitBulkUpdate`. `EntityTableWidget.tsx:176-177` is read/display only (`.from(entityType).select('*')`) and is not an editable winner. The verified path is limited to the admin browse surface and its DataGrid commit/rollback contract; it does not prove every data surface is editable. |
+| 53 | docs/20260822-estate-doc-inventory-v1.00W.md | VALIDATED-DRIFTED | Inventory claim is 126; fresh `sort -u` inventory is 128 because the 20260904 registry audit and this ledger were added later. |
 | 54 | docs/20260822-knowledge-classification-standard-v1.00A.md | UNVERIFIABLE | E-OPEN; verify classification consumers and generated indexes. |
 | 55 | docs/20260822-schema-builder-ux-remediation-spec-v1.00D.md | DUPLICATE-CLUSTER | Focused source walk: `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx:492` enables connectable nodes, but the canvas has no direct save call. `business-suite-unified/src/pages/Developer/FeatureBuilder/index.tsx:63-68` invokes `saveDraft()`, and `business-suite-unified/src/stores/featureBuilderStore.ts:107-137` obtains the authenticated user then performs Supabase `.update(payload)` or `.insert(payload)`. `SchemaVisualizer.tsx` is read-only (`nodesConnectable={false}`), so it is not evidence of editable relationships. Keep the interactive canvas plus verified store save path as the winner; competing schema-canvas specs should point here. |
 | 56 | docs/20260822-session-findings-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify every finding against source and session evidence. |
@@ -179,13 +180,14 @@ validated.
 | 125 | docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md | UNVERIFIABLE | E-OPEN; replay rehearsal commands locally without applying a migration. |
 | 126 | docs/validation/20260804-plans-closure-audit-v1.00W.md | UNVERIFIABLE | E-OPEN; replay closure audit against current plans and issues. |
 | 127 | docs/validation/20260805-operator-notes-defect-register-v1.00W.md | UNVERIFIABLE | E-OPEN; reconcile every defect with current source and issue state. |
+| 128 | docs/00-roadmap/20260904-dated-doc-validation-ledger-v1.00W.md | VALIDATED-CURRENT | E-REG; this ledger is present in the exact mandated `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print \| sort -u` inventory and is represented once here. Its interim status and remaining gap are stated below. |
 
 ## Named registries and indexes
 
 | Path | Verdict | Genuine check |
 |---|---|---|
 | `docs/00-roadmap/BSUITE-COMPONENT-REGISTRY.md` | VALIDATED-DRIFTED | Opened and compared with `node scripts/generate-component-registry.mjs --check`: generated registry is synchronised at 174 components. Any prose count differing from 174 is drift; the generator is authoritative. |
-| `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-DRIFTED | Opened; feature claims were compared to the source anchors and fresh 9/26/21 footprint counts. It is not a generated completeness proof; feature rows lacking a source/route/test remain drifted until the focused index walk. |
+| `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-DRIFTED | Opened; its prose headline says **662 features**, while the generated section says **661 features**. Fresh related-family source grep `grep -rl 'reactflow\|@xyflow\|ReactFlow' business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src --include='*.ts' --include='*.tsx' \| sort -u \| wc -l` → **21** files. The generated section remains authoritative for its own 661-row output; the one-feature discrepancy and rows lacking a source/route/test require reconciliation. |
 | `docs/00-roadmap/bsuite-component-registry.json` | VALIDATED-CURRENT | Parsed successfully; generator check reports `in sync (174 components)`. This is the machine-readable registry, with the generated output treated as authoritative over prose. |
 
 ## Focused source findings and iteration-2 remainder
@@ -197,6 +199,14 @@ capability, not the stronger claims “world class”, “highest UX”, or “f
 The relationship canvas is interactive but non-persisting in its own component;
 the validated feature-builder save path is `EntityPanel.tsx` →
 `featureBuilderStore.ts` → `saveDraft()`. `SchemaVisualizer.tsx` remains read-only.
+Iteration 4 corrected the row-52 data-surface ruling: `EntityTableWidget.tsx` is read-only,
+while `BrowseDataTab.tsx` is the verified editable admin winner. Its exact path enables
+editable columns at lines 750–751, maps and awaits edits at lines 754–764, invalidates
+the query at lines 768–771, throws on failed/partial persistence at lines 773–794, and
+mounts the shared `DataGrid` edit callback at lines 1247–1254. This is an admin-surface
+proof with explicit limits, not an estate-wide Airtable claim. The feature index also
+requires reconciliation of its 662 prose headline against 661 generated features; the
+fresh React Flow/xyflow footprint across all six app source trees is 21 matching source files.
 Iteration 3 performed focused source walks for the editable data path, layout persistence,
 and schema-builder save path. Many more iterations are required before the remaining
 rows can be deep-validated; this ledger does not compress that incompleteness into
@@ -205,10 +215,12 @@ persist, reload, keyboard/focus, empty/loading/error states, and sibling-surface
 enumeration. It must also open the exact registry/index prose and compare every
 feature row to a source file, route, test, or explicit `UNVERIFIABLE` disposition.
 
-Summary: **127 dated paths inventoried; 127 assigned a verdict; 3 named registries
-assigned a verdict; 4 VALIDATED-CURRENT; 6 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER;
-114 UNVERIFIABLE.** These are iteration-3 counts: rows 49, 80, and 86 received
-focused source validation, while 114 rows still require their stated checks. Many
-more iterations are required for the full-set criterion; that incompleteness is
-reported plainly rather than represented as completion. No recommended fix was
-implemented, and no file in the audited trees was deleted.
+Summary: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
+6 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 114 UNVERIFIABLE.** Separately, **3 named
+registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
+VALIDATED-DRIFTED. This remains an interim iteration-4 artefact. The remaining gap is
+explicitly **114/114 inventory rows still UNVERIFIABLE (89.0625%)**, so **100% claim-level
+validation has not been achieved** and no world-class/completeness conclusion is licensed.
+Many more iterations are required for the full-set criterion; that incompleteness is
+reported plainly rather than represented as completion. No source, migration, or audited
+document was edited or deleted; only this ledger and its goal status were updated.
