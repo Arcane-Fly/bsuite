@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 16
+iteration: 17
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 16
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 17
 
 ## Scope and method
 
-This is an interim iteration-13 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-17 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -250,7 +250,8 @@ feature row to a source file, route, test, or explicit `UNVERIFIABLE` dispositio
 Summary: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 113 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
-VALIDATED-DRIFTED. This remains an interim iteration-13 artefact. The remaining gap is
+VALIDATED-DRIFTED. The iteration-13 wording retained below is historical context; this
+is the current iteration-17 ledger. The remaining gap is
 explicitly **113/113 inventory rows still UNVERIFIABLE (88.3%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
@@ -348,3 +349,56 @@ This is static source/registry evidence only. It is **not** evidence of live dep
 authenticated reachability, RLS enforcement, visual rendering or contrast, or runtime behaviour.
 The preserved summary is **128 paths; 5 VALIDATED-CURRENT; 7 VALIDATED-DRIFTED; 3
 DUPLICATE-CLUSTER; 0 SUPERSEDED; 113 UNVERIFIABLE**, with status `building`.
+
+## Iteration 17 focused source findings
+
+Iteration 17 replayed the named registry checks and performed a focused source walk of the
+customisation surfaces most likely to be overstated by the dated documents. This iteration
+changes only this ledger; it does not implement, migrate, delete, merge, or promote any
+application capability.
+
+### Evidence-backed findings
+
+| Surface | Current source evidence | Conservative implication |
+|---|---|---|
+| Editable data grid | `crm7/src/components/admin/BrowseDataTab.tsx:764` calls `commitBrowseCellEdits`; `:769-787` handles complete, partial, and failed outcomes; `:1247-1254` mounts the shared edit callback. `crm7/src/services/browseDataService.ts:801` defines the service, `:822` groups edits into `commitBulkUpdate`, and `:855` derives the result status. | This is the source-backed editable-grid winner for the verified CRM7 admin path. It is not evidence that `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx:176-177` is Airtable-class: that widget performs `.from(entityType).select('*')` and has no observed insert, update, inline-edit, or save mutation path. Estate-wide grid parity remains `UNVERIFIABLE`. |
+| Relationship canvas | `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx:386` defines `onConnect`, `:486` passes it to the flow, and `:492` enables `nodesConnectable`. `business-suite-unified/src/pages/Developer/FeatureBuilder/index.tsx:63-68` invokes `saveDraft()`, while `business-suite-unified/src/stores/featureBuilderStore.ts:107-137` authenticates the user and performs Supabase update/insert persistence. | React Flow/xyflow wins as the interactive canvas substrate. The source does not prove that the canvas itself directly persists edits; the evidenced orchestration path is `EntityPanel.tsx` → `featureBuilderStore.ts` → `saveDraft()`. `SchemaVisualizer.tsx` remains read-only (`nodesConnectable={false}`), so canvas persistence and runtime UX remain `UNVERIFIABLE`. |
+| Page grid/layout | `packages/page-builder/src/DraggableCardPage.tsx:163-190` delegates layout behaviour and carries layout version/epoch state. `packages/page-builder/src/PageGridLayout.tsx:1612-1621` handles layout changes and `:1651-1653` handles drag/resize stops; `usePageGridLayout.ts` contains version invalidation, healing, and persistence guards. | Persisted independent-card `react-grid-layout` behaviour wins over whole-block dragging. The source proves mechanics, not authenticated reachability, reload round-trip, or world-class/fewest-clicks UX. `canvasCardLayout.tsx` is supporting/legacy layout code and remains a consolidation target rather than a second contract. |
+| Branding | `packages/theme/src/css/vars.css:152` defines `--role-primary`, `:154` defines `--role-accent`, and `:165-166` define `--role-error`/`--role-destructive`. | Three-tier role-token branding wins over literal palette specifications. Documents prescribing local literal colours are `VALIDATED-DRIFTED` where the implementation has moved to role tokens; rendered tenant inheritance and contrast remain unproven by static source. |
+
+### Registry and index replay
+
+- `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync
+  (174 components)`. The component registry JSON therefore matches the generator's current
+  output; its generator contract counts shared-package exports and direct `@bsuite/*` app
+  imports, not runtime reachability.
+- `docs/00-roadmap/bsuite-feature-index.json` parses to **661 rows, 28 modules, and 57
+  capability areas**. `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` still states **662**, so
+  that Markdown index remains `VALIDATED-DRIFTED` by a one-row numeric mismatch. The
+  registry Markdown/index claims are not promoted beyond the executable/generated evidence.
+- `bash scripts/audit-routes.sh --inventory` reports **47 routes across 6 apps** (**18
+  public, 29 authenticated**); `node scripts/check-route-surface-map.mjs` reports **1,157
+  items checked, 0 problems**. Both are static inventory/map checks, not proof of login,
+  deployed reachability, RLS enforcement, or rendered behaviour.
+- The measured source footprints are **21** React Flow/xyflow matches, **25** `@dnd-kit`
+  matches, and **19** `react-grid-layout` matches across the six app `src` trees for
+  TypeScript files. These are footprint counts only and do not establish complete wiring.
+
+### Conflict rulings carried into iteration 17
+
+The consolidated page-authoring direction remains the winner; competing renderer proposals
+should point to `docs/20260903-visual-authoring-consolidation-decision-v1.00D.md`. React
+Flow/xyflow is the relationship-canvas winner, CRM7 Browse Data is the verified editable-grid
+winner, persisted independent-card page-grid behaviour is the layout winner, and role-token
+branding is the branding winner. Losers must be marked for consolidation or a superseded
+pointer by their owners; no parallel contract is silently treated as current. Dashboard/report
+binding and permission-model claims have no new runtime or end-to-end evidence in this pass
+and therefore remain `UNVERIFIABLE`.
+
+### Boundary and verdict arithmetic
+
+Static source evidence cannot establish authenticated reachability, deployment validity, RLS
+enforcement, browser rendering, persistence round-trip, usability, or complete feature
+wiring. No inventory row is promoted from `UNVERIFIABLE` in iteration 17. The ledger remains
+**128 paths; 5 VALIDATED-CURRENT; 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 0 SUPERSEDED;
+113 UNVERIFIABLE**, with status `building`. Overall completion is expressly not claimed.
