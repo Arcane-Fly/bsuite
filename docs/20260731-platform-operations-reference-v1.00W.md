@@ -160,6 +160,16 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
 - Never commit `.env` / `.env.local` files
 - All client-side vars: `VITE_` (Vite) or `NEXT_PUBLIC_` (Next.js)
 - Server-only vars (API keys): no prefix, access via `process.env`
+- Supabase's server-only credential is `SUPABASE_SECRET_KEY` (the modern
+  opaque `sb_secret_…` key) — `SUPABASE_SERVICE_ROLE_KEY` is the legacy
+  name for the SAME credential (an HS256 JWT) and must not be read as a
+  silent fallback: legacy API keys can be DISABLED on a project while the
+  key itself stays registered, so a disabled legacy key answers every
+  request with `401 Invalid API key` rather than failing loudly as
+  absent (`crm7/api/ai/_shared/usageWriter.ts` is the live example, and
+  where this bit production on 2026-09-03/04). Never in client source —
+  enforced by `scripts/check-secret-naming.sh` R1, self-tested with a
+  planted `process.env.SUPABASE_SECRET_KEY` read.
 - Canonical app URL env var map (`VITE_APP_URL`) for all 6 apps:
   - BSU: prod `https://suite.crm7.app`, dev `https://d.suite.crm7.app`
   - CRM7: prod `https://crm.crm7.app`, dev `https://d.crm.crm7.app`

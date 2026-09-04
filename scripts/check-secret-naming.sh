@@ -9,7 +9,9 @@
 #   - Next.js apps (conduit):
 #       NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
 #       (frontend reads via `process.env.NEXT_PUBLIC_*`)
-#   - Server-side API routes (Vercel functions): SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+#   - Server-side API routes (Vercel functions): SUPABASE_URL, SUPABASE_SECRET_KEY
+#       (SUPABASE_SERVICE_ROLE_KEY is the legacy name for the same credential —
+#       see R1 below; crm7/api/ai/_shared/usageWriter.ts is the live consumer)
 #   - EDGE FUNCTIONS: do not read a key name directly. Use `getPublishableKey()`
 #       from `supabase/functions/_shared/supabase-keys.ts`.
 #
@@ -36,7 +38,9 @@
 #       read the refusal.
 #
 # This script enforces 6 rules across the parent monorepo AND each submodule:
-#   R1) Vite-app source must NOT read `process.env.SUPABASE_*` (server-only names in client bundle).
+#   R1) Vite-app source must NOT read `process.env.SUPABASE_*` (server-only names in client bundle,
+#       including `SUPABASE_SECRET_KEY` — the modern replacement for `SUPABASE_SERVICE_ROLE_KEY`,
+#       added 2026-09-04 after it read by omission; see crm7/api/ai/_shared/usageWriter.ts).
 #   R2) Vite-app source must NOT read `import.meta.env.NEXT_PUBLIC_SUPABASE_*` (wrong meta-framework).
 #   R3) Next.js (conduit) consumer source must NOT use `import.meta.env` at all.
 #   R4) CLIENT source must NOT reference `SUPABASE_ANON_KEY` (use the `VITE_`/`NEXT_PUBLIC_`
@@ -377,6 +381,17 @@ serverless_dirs_for() {
 }
 
 # ---- R1: Vite-app source must NOT read process.env.SUPABASE_* ----
+#
+# `SUPABASE_SECRET_KEY` joined this list 2026-09-04 (FOLLOW 65). It is the
+# modern replacement for `SUPABASE_SERVICE_ROLE_KEY` — same server-only
+# credential, new opaque name (`sb_secret_…` instead of an HS256 JWT). R1's
+# pattern named the legacy name only, so a Vite client reading the modern
+# name would have passed by omission — exactly the shape of gap this guard
+# exists to close. `crm7/api/ai/_shared/usageWriter.ts` is the one live
+# consumer of the modern name today, and it is already exempt by the
+# `serverless_dirs_for` mechanism below (it lives under `crm7/api/`, a
+# declared serverless dir) — this addition changes what CLIENT code is
+# banned from reading, not that file's own server-side read.
 check_r1() {
   local issues=""
   for app in "${VITE_APPS[@]}"; do
@@ -384,7 +399,7 @@ check_r1() {
     local prefix="${app}/"
     local matches
     matches=$(run_git_grep "$app" \
-      'process\.env\.(SUPABASE_URL|SUPABASE_ANON_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_SERVICE_ROLE_KEY)' \
+      'process\.env\.(SUPABASE_URL|SUPABASE_ANON_KEY|SUPABASE_PUBLISHABLE_KEY|SUPABASE_SERVICE_ROLE_KEY|SUPABASE_SECRET_KEY)' \
       "${SRC_GLOBS[@]}" | filter_matches "$prefix")
     local serverless
     serverless=$(serverless_dirs_for "$app")
@@ -608,6 +623,81 @@ check_allowlist_freshness() {
   fi
 }
 
+# ---- --self-test: prove R1 can actually fail before trusting its PASS ----
+#
+# Added 2026-09-04 (FOLLOW 65) alongside `SUPABASE_SECRET_KEY` joining R1's
+# pattern. Plants a real violation of the shape this addition exists to
+# catch (a Vite client reading the modern server-only secret name) in a
+# scratch file inside a real app's client `src/`, runs R1 against it alone,
+# and asserts the violation was caught — then removes the fixture whether or
+# not the assertion held, via a trap so a failure mid-test cannot leave it
+# behind. A rule that always exits 0 and a rule that correctly finds nothing
+# both print PASS; this is what tells them apart. Does not require every
+# submodule to be initialised — only the one app it plants into.
+#
+# STAGED, not just written: `run_git_grep` is plain `git grep` with no
+# `--untracked`, matching how R1 runs for real (CI scans a checked-out
+# tree, not a scratch file nobody added) — an untracked fixture is
+# invisible to it and a self-test built that way passes on a broken rule.
+# `git add` makes it visible without ever committing it; cleanup both
+# unstages and deletes so neither the index nor the working tree keeps it.
+#
+# Variable names are prefixed `st_` and deliberately avoid `app` — bash's
+# `for app in …` inside `check_r1` is NOT `local`, so calling check_r1 from
+# here with a same-named local variable lets that loop clobber THIS
+# function's own copy once it runs (verified: it left `st_app` reading the
+# LAST entry of VITE_APPS, "throughput", after the call returned — cleanup
+# then reset the wrong submodule's nonexistent path and the real fixture
+# was left staged). Fresh names sidestep the collision rather than adding
+# a `local app` to check_r1's loop, which is a separate, working function
+# this task did not otherwise need to touch.
+self_test() {
+  local st_app="business-suite-unified"
+  local st_rel="src/__check_secret_naming_selftest__.ts"
+  local st_fixture="${st_app}/${st_rel}"
+
+  if [ ! -d "${st_app}/src" ]; then
+    echo "self-test: CANNOT RUN — ${st_app}/src is not checked out (submodule not initialised)" >&2
+    return 1
+  fi
+
+  # Trap first, write second: if anything below fails partway, cleanup still
+  # runs rather than leaving a planted file staged or on disk.
+  trap '( cd "'"$st_app"'" && git reset -q -- "'"$st_rel"'" ) 2>/dev/null; rm -f "'"$st_fixture"'"' EXIT
+
+  cat > "$st_fixture" <<'EOF'
+// Planted by scripts/check-secret-naming.sh --self-test. Never committed.
+export const leaked = process.env.SUPABASE_SECRET_KEY
+EOF
+  ( cd "$st_app" && git add -- "$st_rel" )
+
+  VIOLATIONS=0
+  DIAGNOSTICS=""
+  check_r1
+
+  local result=1
+  if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -q "$st_fixture"; then
+    echo "self-test: PASS — R1 caught the planted \`process.env.SUPABASE_SECRET_KEY\` read in $st_fixture"
+    result=0
+  else
+    {
+      echo "self-test: FAIL — R1 did NOT catch a planted \`process.env.SUPABASE_SECRET_KEY\` read in $st_fixture"
+      echo "diagnostics were:"
+      printf '%s\n' "$DIAGNOSTICS"
+    } >&2
+  fi
+
+  ( cd "$st_app" && git reset -q -- "$st_rel" ) 2>/dev/null
+  rm -f "$st_fixture"
+  trap - EXIT
+  return "$result"
+}
+
+if [ "${1:-}" = "--self-test" ]; then
+  self_test
+  exit $?
+fi
+
 check_allowlist_freshness
 check_r1
 check_r2
@@ -654,7 +744,8 @@ fi
   echo "Canonical naming per AGENTS.md §Environment Variables:"
   echo "  Vite apps (BSU, crm7, R80.4, braden, throughput): import.meta.env.VITE_SUPABASE_URL / VITE_SUPABASE_PUBLISHABLE_KEY"
   echo "  Next.js (conduit):                              process.env.NEXT_PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY"
-  echo "  Server-side (API routes):                       SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY"
+  echo "  Server-side (API routes):                       SUPABASE_URL / SUPABASE_SECRET_KEY"
+  echo "                                                  (SUPABASE_SERVICE_ROLE_KEY is the legacy name for the same credential)"
   echo "  Edge functions, publishable key:                getPublishableKey() from _shared/supabase-keys.ts"
   echo "                                                  (reads the platform-injected SUPABASE_PUBLISHABLE_KEYS dictionary)"
   echo "  NEVER in client source:                         SUPABASE_ANON_KEY (deprecated since Supabase 2025 rotation)"
