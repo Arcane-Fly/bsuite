@@ -160,7 +160,7 @@ Two passes, stopping here.
 ## Tasks
 
 **Task 0 — Spike: can the forms be lifted?** **DONE 2026-09-04 — PARTIAL, go.**
-[Verdict](../validation/20260904-jodie-form-lift-spike.md): the shape works and already exists
+[Verdict](../validation/20260904-jodie-form-lift-spike-v1.00F.md): the shape works and already exists
 in-tree (`ApprenticePlacementForm` mounts with no route context, pre-fills from a prop, and
 saves through its own service), but only 2 of crm7's form surfaces have it. The registry
 mechanism belongs in `packages/jodie` where conduit can reach it; the entries stay per-app.
@@ -187,7 +187,7 @@ with the sibling page's service as the single writer. Retire the raw `/api/db` w
 module as it converts.
 
 > **Re-sequenced by the Task 0 spike, 2026-09-04
-> ([verdict](../validation/20260904-jodie-form-lift-spike.md)).** This task was written as
+> ([verdict](../validation/20260904-jodie-form-lift-spike-v1.00F.md)).** This task was written as
 > though tool readiness were the constraint. It is not — **form readiness** is. An intent can
 > only be registered where a self-contained form exists, and crm7 has **2** of those against
 > **18** controlled forms (the page owns submit) and **47** pages with embedded `<form>` and no

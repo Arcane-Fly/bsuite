@@ -5,8 +5,8 @@ owner: bsuite
 evidence:
   - .github/workflows/app-quality-checks.yml
   - scripts/check-exported-not-mounted.mjs
-  - crm7/src/lib/ai/tools/tool-authority.ts
-  - crm7/src/lib/ai/tools/tool-authority.test.ts
+  - crm7/src/lib/ai/tools/tool-authority.ts (planned)
+  - crm7/src/lib/ai/tools/tool-authority.test.ts (planned)
   - crm7/api/ai/chat.ts
 ---
 
