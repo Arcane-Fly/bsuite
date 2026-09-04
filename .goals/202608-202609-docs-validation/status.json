@@ -66,6 +66,12 @@
       "verdict": "PASS",
       "summary": "Exact six-root TypeScript commands independently replay to 25 @dnd-kit files and 19 react-grid-layout files; the ledger explicitly states tests are not excluded and paths are deduplicated with sort -u. The 128-path bijection, 5/6/3/114 arithmetic, prior corrected rulings, 174-component registry gate, and ledger-only Builder scope remain intact. This is a narrow iteration PASS only; overall remains building with 114 UNVERIFIABLE rows.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-8.md"
+    },
+    {
+      "iteration": 9,
+      "verdict": "FAIL",
+      "summary": "Rows 51, 80, 86, 89, 90, and 117 and all fresh command figures were independently verified, but the Builder's focused ten-row pass substituted rows 32/52/55/63 for explicitly assigned rows 14/29/60/61. Those four retain generic E-OPEN text despite available concrete source and scripts, so iteration 9 is incomplete. Overall remains building with 114 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-9.md"
     }
   ]
 }
