@@ -1,7 +1,7 @@
 {
   "goal_id": "202608-202609-docs-validation",
   "status": "building",
-  "iteration": 3,
+  "iteration": 4,
   "builder_model": "Claude Sonnet 5 (copilot)",
   "inspector_model": "Claude Sonnet 5 (copilot)",
   "initial_sha": "8afa0b032590e7b9774e11e4eedacfc272a06fc2",
@@ -30,6 +30,12 @@
       "verdict": "FAIL",
       "summary": "The headline Data-surface ruling is corrected, but row 52 still contradicts it by naming read-only EntityTableWidget as the Airtable-class winner. Current dated-path inventory is 128 versus the ledger's 127, and BSUITE-FEATURE-INDEX.md has an unrecorded 662-versus-661 mismatch. The PI handoff remains stale at iteration 1, and 114 rows still require genuine validation.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-3.md"
+    },
+    {
+      "iteration": 4,
+      "verdict": "FAIL",
+      "summary": "Corrected the self-inclusive inventory to 128 rows, reconciled the ledger with no missing or duplicate paths, corrected row 52 to the BrowseDataTab/DataGrid editable admin winner with EntityTableWidget explicitly read-only, recorded the 662-versus-661 feature-index mismatch and fresh 21-file React Flow/xyflow footprint, and sent fresh PI handoff e2a5a2ff-58bd-4310-8d52-16c0b3218d74. 114 inventory rows remain UNVERIFIABLE, so the full goal is not complete.",
+      "feedback_file": null
     }
   ]
 }
