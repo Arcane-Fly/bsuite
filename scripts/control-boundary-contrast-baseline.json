@@ -1,0 +1,9 @@
+{
+  "_doc": "Banked native + component control-boundary-contrast violation count for THIS repo (packages/). Written by scripts/check-control-boundary-contrast.mjs --update-baseline. Fails on any RISE and on any UNBANKED FALL (equality ratchet — bsuite D-87). Never hand-edit; state WHY a number moved in the commit that re-banks it.",
+  "findings": 0,
+  "scanned": 459,
+  "nativeTagsSeen": 155,
+  "componentTagsSeen": 55,
+  "aliasesResolved": 0,
+  "banked": "2026-09-04"
+}
