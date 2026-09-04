@@ -114,6 +114,12 @@
       "verdict": "PASS",
       "summary": "The exact recorded command now computes both RelationshipCanvas facts: the local file exists and the shared registry has zero matching rows. DraggableCardPage is anchored to its definition at packages/page-builder/src/DraggableCardPage.tsx:163 and barrel export at packages/page-builder/src/index.ts:28, with canvasCardLayout.tsx clearly secondary. The six-root census scope/exclusions, component counts, 128-row bijection, 5/7/3/0/113 arithmetic, prior rulings, 174-component gate, building status, and ledger-only Builder scope all pass. This is a narrow iteration PASS only; overall remains incomplete with 113 UNVERIFIABLE rows.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-16.md"
+    },
+    {
+      "iteration": 17,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, prior architecture rulings, building status, good signature, ledger-only scope, and route gates all pass. Iteration 17 fails because none of the ten assigned rows changed: rows 1, 81, 87, and 113–116 retain generic E-OPEN/future-check prose, while rows 14, 80, and 89 only retain prior evidence. General ledger narrative does not satisfy the required direct source or replayable-command evidence for the focused rows. The current theme quick gate also remains red on G11 with two convertible inline colour styles.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-17.md"
     }
   ]
 }
