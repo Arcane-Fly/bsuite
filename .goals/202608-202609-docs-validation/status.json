@@ -96,6 +96,12 @@
       "verdict": "PASS",
       "summary": "Row 60 now removes non-replayable live catalogue counts, retains the exact local command, stdout, refusal text, and exit code 2, and remains UNVERIFIABLE. The iteration-13 evidence section, exact 128-path bijection, 5/7/3/113 arithmetic, prior rulings, 174-component registry gate, building status, and ledger-only Builder scope all pass. This is a narrow iteration PASS only; overall remains building with 113 UNVERIFIABLE rows.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-13.md"
+    },
+    {
+      "iteration": 14,
+      "verdict": "FAIL",
+      "summary": "All iteration-14 numerical findings and five component classifications independently reproduce, and the 128-row bijection, 5/7/3/0/113 arithmetic, prior rulings, building status, and ledger-only scope remain intact. The iteration fails acceptance criterion 6 because the ledger gives no exact command for the feature-JSON parse and no exact commands/results for the five source/import comparisons; correct conclusions do not replace the required replayable evidence trail.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-14.md"
     }
   ]
 }
