@@ -57,6 +57,34 @@ const BASELINE = 'scripts/plan-currency-baseline.json'
  *
  * Every phrase here is one a person only writes ABOUT the document itself.
  */
+/**
+ * Phrases that can only mean "this IS the current plan".
+ *
+ * THE GATE ASKED A QUESTION IT WOULD NOT ACCEPT AN ANSWER TO. Its own error
+ * says "Say on its face whether it is still the plan" — and every phrase it
+ * recognised meant the plan was dead. A plan that IS current had no way to say
+ * so; the only exit was to be touched since the last merge to main, which is
+ * activity, not a statement.
+ *
+ * That gap has a cost beyond tidiness. A plan merged to DEVELOPMENT is, by
+ * construction, older than the next promotion to main, so the first time main
+ * moves it is flagged — having had no opportunity to go stale. Measured
+ * 2026-09-04: main's last commit was 09:04:21 and three plans merged at
+ * 08:47-08:55 were flagged, nine to seventeen minutes on the wrong side. The
+ * two promotions before that were ten minutes apart, so "touched since the last
+ * merge" cannot separate stale from new at all at that cadence.
+ *
+ * The author of a live plan can now say so, dated, and the gate believes them
+ * for as long as the claim is legible on the page. That is the same standard
+ * the negative markers are held to.
+ *
+ * DELIBERATELY NARROW, for the reason the negative list is: `current` alone
+ * appears in ordinary prose ("the current implementation", "current rates"), and
+ * a gate that accepts a common word fails OPEN. Both phrases below are ones a
+ * person only writes ABOUT the document itself.
+ */
+const STILL_CURRENT_PHRASES = ['still the plan as of', 'current as of']
+
 const CURRENCY_PHRASES = [
   'superseded',
   'historical',
@@ -105,6 +133,7 @@ export function carriesCurrencyMarker(body) {
     if (line.includes(NOT_A_CURRENCY_MARKER)) continue
     const l = line.toLowerCase()
     if (CURRENCY_PHRASES.some((w) => l.includes(w))) return true
+    if (STILL_CURRENT_PHRASES.some((w) => l.includes(w))) return true
   }
   return false
 }
@@ -179,15 +208,32 @@ function selfTest() {
   if (carriesCurrencyMarker('# T\n> Predates the R80.3 → R80.4 restructure (2026-08-06).'))
     fail('the R80.3 relocation note was counted as a currency marker')
 
+  // A LIVE plan can now say it is live, which is what the gate's own error asks
+  // for. Both phrases, because a one-phrase vocabulary is a spelling test.
+  if (!carriesCurrencyMarker('# T\n\n**Still the plan as of 2026-09-04.**'))
+    fail('a dated "still the plan as of" was not accepted')
+  if (!carriesCurrencyMarker('# T\n\nStatus: current as of 2026-09-04.'))
+    fail('a dated "current as of" was not accepted')
+
+  // AND THE CONTROL THAT KEEPS IT NARROW. `current` alone is ordinary prose in a
+  // live plan — accepting it would exempt files that say nothing about
+  // themselves, which is the failure mode the negative list was trimmed to avoid.
+  if (carriesCurrencyMarker('# T\n\nReplaces the current implementation of the rate engine.'))
+    fail('a bare "current" in ordinary prose was treated as a currency marker')
+  if (carriesCurrencyMarker('# T\n\nMigrate customers off the current schema.'))
+    fail('"current schema" was treated as a currency marker')
+
   // A plain plan with no marker must NOT pass — the positive control. Without
   // it, every "pass" above is indistinguishable from a detector that finds nothing.
   if (carriesCurrencyMarker('# Some plan\n\nPhase 1 — do the thing.\n'))
     fail('a plan with no marker was treated as marked')
 
   console.log(
-    'check-plan-currency-markers --self-test: 13 assertions — status letters, what counts as ' +
+    'check-plan-currency-markers --self-test: 17 assertions — status letters, what counts as ' +
       'presenting-as-live including an F file whose boxes contradict its suffix, the three real banners the measurement verified by hand, the ' +
-      'authority:none convention, the R80.3 note that must NOT count, and a positive control ' +
+      'authority:none convention, the R80.3 note that must NOT count, the dated "still the ' +
+      'plan as of" / "current as of" phrases a LIVE plan uses, two controls proving a bare ' +
+      '"current" in ordinary prose does not count, and a positive control ' +
       'that an unmarked plan is still detected.',
   )
   return bad

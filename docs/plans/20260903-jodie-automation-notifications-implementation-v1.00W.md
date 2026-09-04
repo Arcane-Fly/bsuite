@@ -17,6 +17,9 @@ evidence:
 
 **Goal:** Ship the operator-approved design: full-height email reading pane, Raise notice into `/notifications`, per-tenant Jodie automation dial, query overages at 15% markup.
 
+> **Still the plan as of 2026-09-04.** Task 6 ("chat path honours quota + level") shipped its
+> quota half only; the tool-ceiling half is crm7#2396. The remaining tasks stand as written.
+
 **Architecture:** Pure decision functions (levels, markup, quota) live in `crm7/src/lib/ai/` with no runtime imports so `api/ai/chat.ts` can use them. Ledger is sibling tables to SMS (`ai_quotas` / `ai_query_usage`) in the shared Supabase project. Notices write `public.notifications`.
 
 **Tech Stack:** React 19, Vite crm7, Vitest, Supabase RLS, existing `hasAiAccess` / `resolveAiEntitlement`.
