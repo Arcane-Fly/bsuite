@@ -18,6 +18,11 @@ evidence:
 **Date:** 2026-09-04 | **Version:** 1.00W | **Status:** Working — scoped, not started
 **Scope:** feature | **`ui_touched`: YES**
 
+> **Still the plan as of 2026-09-04.** Task 2 (the automation dial reaching the tool
+> registry) is crm7#2396, merged to development and not yet promoted. Task 0 — the spike proving whether crm7's forms can render
+> outside their routes — gates everything after it and has not started. Nothing here is
+> superseded.
+
 **Operator ruling, 2026-09-04 07:49 AWST:** *"I want the one that requires the design work.
 per standing rules best long term solution."* — chosen over the cheaper option of rerouting
 Jodie's existing writes through the service layer. The shape asked for, 07:28 AWST:
