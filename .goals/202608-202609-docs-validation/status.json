@@ -1,0 +1,20 @@
+{
+  "goal_id": "202608-202609-docs-validation",
+  "status": "building",
+  "iteration": 1,
+  "builder_model": "Claude Sonnet 5 (copilot)",
+  "inspector_model": "Claude Sonnet 5 (copilot)",
+  "initial_sha": "8afa0b032590e7b9774e11e4eedacfc272a06fc2",
+  "created_at": "2026-09-04T03:15:00Z",
+  "history": [
+    {
+      "iteration": 1,
+      "artifact": "docs/00-roadmap/20260904-dated-doc-validation-ledger-v1.00W.md",
+      "inventory_count": 127,
+      "registry_count": 3,
+      "verdict_rows": 127,
+      "status": "builder-complete",
+      "note": "Iteration-1 triage ledger created with source-backed carry-forwards, fresh registry/footprint evidence, conflict rulings, and explicit iteration-2 remainder."
+    }
+  ]
+}
