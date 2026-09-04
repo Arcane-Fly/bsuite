@@ -90,6 +90,12 @@
       "verdict": "FAIL",
       "summary": "Rows 14 and 29 now contain the required exact theme-gate evidence, role-token anchors, full migration path, exact line mappings, and baseline/live boundary. The 128-row bijection, 5/7/3/113 arithmetic, prior caveats, 174-component registry, building status, and ledger-only Builder scope remain intact. Row 60 still claims live catalogue counts without the exact SQL or returned rows and still omits the exact local audit refusal text, so the evidence is not replayable. Overall remains building.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-12.md"
+    },
+    {
+      "iteration": 13,
+      "verdict": "PASS",
+      "summary": "Row 60 now removes non-replayable live catalogue counts, retains the exact local command, stdout, refusal text, and exit code 2, and remains UNVERIFIABLE. The iteration-13 evidence section, exact 128-path bijection, 5/7/3/113 arithmetic, prior rulings, 174-component registry gate, building status, and ledger-only Builder scope all pass. This is a narrow iteration PASS only; overall remains building with 113 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-13.md"
     }
   ]
 }
