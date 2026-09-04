@@ -66,18 +66,89 @@
  * never trip the gate. Only text inside an actual opening tag's attributes is
  * examined, and only the TAG TEXT for the four listed element names.
  *
+ * COMPONENT MATCHING (FOLLOW 101)
+ * ───────────────────────────────────────────────────────────────────────────
+ * The native scan above only ever sees `<input>`, `<select>`, `<textarea>`,
+ * `<button>` — lowercase tags. A React wrapper around a native control
+ * (`<Button className="border border-border">`, `crm7/src/components/ai/
+ * AIHeader.tsx`) renders a `<button>` at runtime but is a capitalised
+ * identifier in the SOURCE this gate reads, so it sailed straight past. Three
+ * confirmed live sites (AIHeader.tsx:67/79, user-nav.tsx:38,
+ * AIRetryButton.tsx:50) carried the exact bare/low-contrast `border-border`
+ * boundary this gate exists to catch, unseen, because the matcher was built
+ * as `new RegExp('<(' + CONTROL_TAGS.join('|') + ')...')` over four lowercase
+ * names only.
+ *
+ * Two sources of component control names, UNIONED:
+ *   1. CONTROL_COMPONENTS — a curated list of the shared design-system
+ *      control names (Button, Input, Select, Checkbox, …).
+ *   2. resolveControlAliases() — parses the file's OWN import statements and
+ *      treats any local identifier imported from a module path matching
+ *      `/components/ui/(button|input|select|textarea|toggle|checkbox|radio|
+ *      switch|slider)` as a control, including a renamed import
+ *      (`import { Button as Btn }` -> `Btn` counts). A curated list alone
+ *      always lags the repo as names get renamed or re-exported; the alias
+ *      map is what keeps this structural rather than a list someone forgets
+ *      to update. No word-boundary is enforced after the stem on purpose —
+ *      real shadcn file names are hyphenated compounds of it
+ *      (`radio-group.tsx`, `toggle-group.tsx`, `input-otp.tsx` both exist in
+ *      this estate), so anchoring after the bare stem would silently miss
+ *      exactly the two controls (RadioGroupItem, ToggleGroupItem) already in
+ *      the curated list above.
+ *
+ * Reuses stripComments / extractOpeningTag / bareBorderBorderHits verbatim —
+ * the resting-variant logic that decides bare-vs-exempt does not change
+ * because the tag is capitalised.
+ *
+ * RATCHET, not zero-tolerance
+ * ───────────────────────────────────────────────────────────────────────────
+ * Component matching finds real, PRE-EXISTING violations this gate was blind
+ * to before today — fixing all of them is a separate, larger piece of work.
+ * A JSON baseline committed beside this script (control-boundary-contrast-
+ * baseline.json) banks the current finding/scanned pair; `compareRatchet`
+ * (scripts/lib/ratchet.mjs) fails the build on a RISE or an unbanked FALL,
+ * never on the pre-existing count alone. `--update-baseline` re-banks; never
+ * hand-edit the JSON file.
+ *
  * USAGE
  *   node scripts/check-control-boundary-contrast.mjs
+ *   node scripts/check-control-boundary-contrast.mjs --update-baseline
  *   node scripts/check-control-boundary-contrast.mjs --self-test
  */
 
 import { readFileSync, readdirSync, statSync, existsSync } from 'node:fs'
 import { join, dirname, relative } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { compareRatchet, writeBaseline } from './lib/ratchet.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
+const BASELINE_FILE = join(ROOT, 'scripts', 'control-boundary-contrast-baseline.json')
 
 const CONTROL_TAGS = ['input', 'select', 'textarea', 'button']
+
+/**
+ * Curated component control names — the first of the two UNIONED sources
+ * described in the COMPONENT MATCHING header comment. Kept in sync with the
+ * shared design system's actual control set; the alias map below is what
+ * catches everything this list has not (yet) been told about.
+ */
+const CONTROL_COMPONENTS = new Set([
+  'Button', 'IconButton', 'Input', 'Textarea', 'Select', 'SelectTrigger',
+  'Combobox', 'Toggle', 'ToggleGroupItem', 'Checkbox', 'RadioGroupItem',
+  'Switch', 'Slider',
+])
+
+/**
+ * A control's own module lives under a `components/ui/<stem>` path. Any
+ * local identifier a file imports from a specifier containing this is
+ * treated as a control regardless of its local name — the second UNIONED
+ * source, and the one that keeps the curated list above from silently going
+ * stale. No trailing boundary after the stem: see the COMPONENT MATCHING
+ * header comment for why (`radio-group.tsx`, `toggle-group.tsx`,
+ * `input-otp.tsx` are real file names in this estate and must still match).
+ */
+const CONTROL_IMPORT_PATH_RE =
+  /\/components\/ui\/(button|input|select|textarea|toggle|checkbox|radio|switch|slider)/
 
 /**
  * Floor for the real tree. A guard that scans zero files passes forever, and
@@ -87,6 +158,34 @@ const CONTROL_TAGS = ['input', 'select', 'textarea', 'button']
  * 100 leaves generous room to shrink without ever masking a broken checkout.
  */
 const FILE_FLOOR = 100
+
+/**
+ * Floor for component control tags SEEN (matched, not necessarily
+ * offending) across the scanned tree — the same "checked nothing 'no
+ * violations' and 'no files' print the same way" hazard, but for the new
+ * component-matching pass specifically: a regression in the capitalised-tag
+ * regex, or the curated list going empty, would report a clean scan having
+ * looked at zero component controls. 15 <Button>/<Input>/… tags existed
+ * under packages/ at the time this was written; 5 leaves room to shrink
+ * without masking a broken matcher.
+ */
+const COMPONENT_TAG_FLOOR = 5
+
+/**
+ * Floor for control-import ALIASES resolved (scripts/check-control-boundary-
+ * contrast.mjs's own alias mechanism, see resolveControlAliases below).
+ * Measured 2026-09-04: packages/*›/src in THIS repo imports its own control
+ * primitives by relative path within packages/ui (`./button`, not
+ * `components/ui/button`) rather than through the `components/ui/<stem>`
+ * shape the consumer apps use, so this repo's OWN alias count is genuinely
+ * 0 — set to 0 here rather than a fabricated non-zero floor that would fail
+ * a clean tree. A consumer app's copy of this script (crm7,
+ * business-suite-unified) DOES see that import shape throughout and carries
+ * its own non-zero floor — see that copy's own comment for its measured
+ * count. Do not raise this repo's floor above 0 without first confirming
+ * packages/ has actually started using that import shape.
+ */
+const ALIAS_FLOOR = 0
 
 /** Blank out `//` and `/* *‍/` comments (preserving length), leaving every
  * string/template literal untouched so tag text inside them still scans. */
@@ -280,6 +379,82 @@ export function offendingUses(source) {
   return hits
 }
 
+/**
+ * Every LOCAL identifier `source`'s own import statements bind to a control
+ * module (see CONTROL_IMPORT_PATH_RE) — the alias side of component control
+ * matching. Handles a default import, named imports, and a renamed named
+ * import (`{ Button as Btn }` -> `Btn`). Does NOT resolve a namespace import
+ * (`import * as UI from …`) — a JSX member-expression tag (`<UI.Button>`) is
+ * a different matching problem this gate does not attempt.
+ */
+export function resolveControlAliases(source) {
+  const aliases = new Set()
+  const stmtRe = /import\s+([^'"]*?)\s+from\s+['"]([^'"]+)['"]/g
+  let m
+  while ((m = stmtRe.exec(source))) {
+    const [, rawClause, specifier] = m
+    if (!CONTROL_IMPORT_PATH_RE.test(specifier)) continue
+    const clause = rawClause.replace(/^type\s+/, '').trim()
+
+    const braceMatch = clause.match(/\{([^}]*)\}/)
+    if (braceMatch) {
+      for (let piece of braceMatch[1].split(',')) {
+        piece = piece.replace(/^type\s+/, '').trim()
+        if (!piece) continue
+        const asMatch = piece.match(/^([\w$]+)\s+as\s+([\w$]+)$/)
+        aliases.add(asMatch ? asMatch[2] : piece)
+      }
+    }
+
+    // Default import: whatever sits before a `{` or `*`, if anything.
+    const before = clause.split(/[{*]/)[0].replace(/,\s*$/, '').trim()
+    if (before && /^[\w$]+$/.test(before)) aliases.add(before)
+  }
+  return aliases
+}
+
+/**
+ * Every control-COMPONENT-tag violation in `source`, mirroring offendingUses
+ * above but over capitalised JSX tags matched against the union of
+ * CONTROL_COMPONENTS and this file's own resolved import aliases. Also
+ * returns `seen` — every matched control-component tag, offending or not —
+ * so the caller can report a non-zero "examined" denominator even on a
+ * clean-pass run (see the RATCHET / COMPONENT MATCHING header comment and
+ * LANE-WATCHER's "states what it examined" requirement).
+ */
+export function offendingComponentUses(source) {
+  const stripped = stripComments(source)
+  const aliases = resolveControlAliases(stripped)
+  const hits = []
+  let seen = 0
+  const tagRe = /<([A-Z][\w$]*)(?=[\s/>])/g
+  let m
+  while ((m = tagRe.exec(stripped))) {
+    const tag = m[1]
+    if (!CONTROL_COMPONENTS.has(tag) && !aliases.has(tag)) continue
+    seen++
+    const tagText = extractOpeningTag(stripped, m.index)
+    if (bareBorderBorderHits(tagText).length > 0) hits.push({ tag })
+    tagRe.lastIndex = m.index + tagText.length
+  }
+  return { hits, seen, aliases }
+}
+
+/**
+ * Every native-control opening tag in `source`, matched regardless of
+ * whether it carries a violation — used only to report the "native control
+ * tag(s) seen" denominator. Reuses the exact CONTROL_TAGS alternation
+ * offendingUses builds its own matcher from, so the two can never disagree
+ * about what counts as a native control tag.
+ */
+export function nativeControlTagCount(source) {
+  const stripped = stripComments(source)
+  const tagRe = new RegExp(`<(${CONTROL_TAGS.join('|')})(?=[\\s/>])`, 'g')
+  let n = 0
+  while (tagRe.exec(stripped)) n++
+  return n
+}
+
 function sourceFiles(dir) {
   const out = []
   if (!existsSync(dir)) return out
@@ -451,6 +626,75 @@ function selfTest() {
     1,
   )
 
+  // ── component matching (FOLLOW 101) ─────────────────────────────────────
+  check(
+    'flags a bare border-border on <Button> (curated list, bsuite#3009-shape defect)',
+    offendingComponentUses('<Button className="border border-border">Go</Button>').hits.length,
+    1,
+  )
+  check(
+    'flags border-border/60 on <Button> — an opacity modifier is not a variant (AIRetryButton.tsx:50 shape)',
+    offendingComponentUses(
+      "<Button className={cn('gap-1.5 border-border/60 text-xs', other)}>Retry</Button>",
+    ).hits.length,
+    1,
+  )
+  check(
+    'flags a renamed alias <Btn> when imported from a components/ui/button path',
+    offendingComponentUses(
+      "import { Button as Btn } from '@/components/ui/button'\n" +
+        '<Btn className="border border-border">Go</Btn>',
+    ).hits.length,
+    1,
+  )
+  check(
+    'flags a default-imported alias when imported from a components/ui/button path',
+    offendingComponentUses(
+      "import Btn from '@/components/ui/button'\n<Btn className=\"border-border\">Go</Btn>",
+    ).hits.length,
+    1,
+  )
+  check(
+    'flags the alias even from a hyphenated file (radio-group.tsx is a real file name)',
+    offendingComponentUses(
+      "import { RadioGroupItem as Radio } from '@/components/ui/radio-group'\n" +
+        '<Radio className="border border-border" />',
+    ).hits.length,
+    1,
+  )
+  check(
+    'does NOT resolve an identifier imported from an unrelated path as a control alias',
+    [...resolveControlAliases("import { Btn } from '@/components/icons/star'")],
+    [],
+  )
+  check(
+    'does NOT flag a capitalised NON-control (<Card>) — not in the curated list, no alias',
+    offendingComponentUses('<Card className="border border-border">Hi</Card>').hits.length,
+    0,
+  )
+  check(
+    'does NOT flag hover:border-border alone on a component — resting-variant logic still applies',
+    offendingComponentUses(
+      '<Button className="border border-transparent hover:border-border">Go</Button>',
+    ).hits.length,
+    0,
+  )
+  check(
+    'does NOT flag an aliased identifier the file never actually imported from a control path',
+    offendingComponentUses('<Btn className="border border-border">Go</Btn>').hits.length,
+    0,
+  )
+  check(
+    'counts every native control tag SEEN, not just violations',
+    nativeControlTagCount('<input className="border border-border-interactive" /><button>Go</button>'),
+    2,
+  )
+  check(
+    'counts every matched component control tag SEEN, not just violations',
+    offendingComponentUses('<Button>Go</Button><Card>Hi</Card>').seen,
+    1,
+  )
+
   const failed = cases.filter(([, ok]) => !ok)
   for (const [label, ok, a, e] of cases) if (!ok) console.error(`  ✗ ${label}\n      expected ${e}\n      actual   ${a}`)
   if (failed.length) {
@@ -459,15 +703,18 @@ function selfTest() {
   }
   console.log(
     `check-control-boundary-contrast --self-test: ${cases.length} assertions — every native control tag ` +
-      '(input/select/textarea/button) with a bare resting border-border proven to FAIL; ' +
-      'border-border-interactive, border-border-strong, variant-prefixed uses, non-control ' +
-      'elements, <dialog>, and comments proven to PASS.',
+      '(input/select/textarea/button) and component control tag (curated list + resolved import ' +
+      'aliases) with a bare resting border-border proven to FAIL; border-border-interactive, ' +
+      'border-border-strong, variant-prefixed uses, non-control elements, <dialog>, unresolved ' +
+      'aliases, and comments proven to PASS.',
   )
   return 0
 }
 
 function main() {
   if (process.argv.includes('--self-test')) return selfTest()
+
+  const updateBaseline = process.argv.includes('--update-baseline')
 
   const files = sourceFiles(join(ROOT, 'packages'))
   if (files.length < FILE_FLOOR) {
@@ -479,16 +726,62 @@ function main() {
   }
 
   const problems = []
+  let nativeTagsSeen = 0
+  let componentTagsSeen = 0
+  let aliasesResolved = 0
   for (const f of files) {
     const source = readFileSync(f, 'utf8')
     for (const { tag } of offendingUses(source)) {
       problems.push(`${relative(ROOT, f)} has a <${tag}> whose only boundary is border-border`)
     }
+    nativeTagsSeen += nativeControlTagCount(source)
+
+    const component = offendingComponentUses(source)
+    componentTagsSeen += component.seen
+    aliasesResolved += component.aliases.size
+    for (const { tag } of component.hits) {
+      problems.push(`${relative(ROOT, f)} has a <${tag}> component whose only boundary is border-border`)
+    }
+  }
+
+  if (componentTagsSeen < COMPONENT_TAG_FLOOR) {
+    console.error(
+      `::error::matched ${componentTagsSeen} component control tag(s) under packages/, below the floor of ` +
+        `${COMPONENT_TAG_FLOOR}. That is a broken component-tag read, not a clean tree. Refusing to report a pass.`,
+    )
+    return 2
+  }
+  if (aliasesResolved < ALIAS_FLOOR) {
+    console.error(
+      `::error::resolved ${aliasesResolved} control-import alias(es) under packages/, below the floor of ` +
+        `${ALIAS_FLOOR}. That is a broken alias read, not a clean tree. Refusing to report a pass.`,
+    )
+    return 2
   }
 
   const summary =
-    `check-control-boundary-contrast: ${files.length} source files under packages/ examined; ` +
-    `${problems.length} violation(s).`
+    `check-control-boundary-contrast: ${files.length} source file(s) under packages/ examined; ` +
+    `${nativeTagsSeen} native control tag(s) seen, ${componentTagsSeen} component control tag(s) seen, ` +
+    `${aliasesResolved} control-import alias(es) resolved; ${problems.length} violation(s).`
+
+  if (updateBaseline) {
+    writeBaseline(BASELINE_FILE, {
+      _doc:
+        'Banked native + component control-boundary-contrast violation count for THIS repo (packages/). ' +
+        'Written by scripts/check-control-boundary-contrast.mjs --update-baseline. Fails on any RISE and ' +
+        'on any UNBANKED FALL (equality ratchet — bsuite D-87). Never hand-edit; state WHY a number moved ' +
+        'in the commit that re-banks it.',
+      findings: problems.length,
+      scanned: files.length,
+      nativeTagsSeen,
+      componentTagsSeen,
+      aliasesResolved,
+      banked: new Date().toISOString().slice(0, 10),
+    })
+    console.log(summary)
+    console.log(`\nbanked ${problems.length} finding(s) / ${files.length} scanned to ${BASELINE_FILE}`)
+    return 0
+  }
 
   if (problems.length) {
     console.error('CONTROL BOUNDARY BELOW 3:1 (WCAG 2.1 SC 1.4.11):')
@@ -496,17 +789,27 @@ function main() {
     console.error('')
     console.error(
       "Use 'border-border-interactive' (4.15:1 light / 6.20:1 dark) instead of the bare divider " +
-        "token 'border-border' on native input/select/textarea/button elements. If the element is a " +
-        'container edge rather than a form control, this gate does not apply to it — only the four ' +
-        'listed tag names are scanned.',
+        "token 'border-border' on native input/select/textarea/button elements, OR on a component " +
+        'wrapping one (Button, Input, Select, Checkbox, … — see CONTROL_COMPONENTS and the resolved ' +
+        'import aliases). If the element is a container edge rather than a form control, this gate does ' +
+        'not apply to it. New violations here are NOT tolerated — only the count already banked in ' +
+        `${BASELINE_FILE} is (a ratchet, not a free pass); see that file's own violations for the ` +
+        'pre-existing set this PR deliberately does not fix.',
     )
     console.error('')
-    console.error(summary)
-    return 1
   }
-
   console.log(summary)
-  return 0
+
+  const ratchet = compareRatchet({
+    file: BASELINE_FILE,
+    findings: problems.length,
+    scanned: files.length,
+    mode: 'equality',
+    label: 'control-boundary-contrast',
+    scriptPath: 'scripts/check-control-boundary-contrast.mjs',
+  })
+  console.log(`\n${ratchet.message}`)
+  return ratchet.ok ? 0 : 1
 }
 
 process.exit(main())
