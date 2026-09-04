@@ -72,6 +72,12 @@
       "verdict": "FAIL",
       "summary": "Rows 51, 80, 86, 89, 90, and 117 and all fresh command figures were independently verified, but the Builder's focused ten-row pass substituted rows 32/52/55/63 for explicitly assigned rows 14/29/60/61. Those four retain generic E-OPEN text despite available concrete source and scripts, so iteration 9 is incomplete. Overall remains building with 114 UNVERIFIABLE rows.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-9.md"
+    },
+    {
+      "iteration": 10,
+      "verdict": "FAIL",
+      "summary": "The exact focused row set, 128-row bijection, 6/7/3/112 arithmetic, 174-component registry, caveats, and ledger-only Builder scope pass. Rows 14 and 29 still omit concrete file:line and replayable-command evidence; row 60 is promoted without its live query or an explained function count; row 61 incorrectly cites hardcoded UI role permissions as consumers of the database role_capabilities matrix. Fresh theme replay also reports G11 failing on two inline colour styles. Overall remains building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-10.md"
     }
   ]
 }
