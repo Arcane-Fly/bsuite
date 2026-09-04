@@ -4,7 +4,7 @@
 **Status:** W (Working — promote to A after first cross-link sweep of all 6 submodule READMEs is merged)
 **Scope:** Parent bsuite repo + all six submodule `docs/` folders
 **Purpose:** Single entry point for finding any BSuite documentation. Like-for-like mapping across apps. Every document in every repo must be discoverable from here or from an app's `docs/README.md`.
-**Companions:** `20260504-bsuite-tech-stack-alignment-v1.00W.md` (tech baseline), `docs/README.md` (parent docs index), `docs/adr/README.md` (ADR index)
+**Companions:** `20260731-platform-operations-reference-v1.00W.md` (tech baseline), `docs/README.md` (parent docs index), `docs/adr/README.md` (ADR index)
 
 > **R80.3 → R80.4 corrected 2026-08-17.** R80.3 left the submodule set on 2026-08-06 (`5e000c35`,
 > operator directive) to `~/Desktop/Dev/archived-repos-docs/R80.3`; R80.4 took its place and is what
@@ -64,21 +64,17 @@ Full list in `docs/README.md`. Canonical sources are split into **Living Authori
 | `../AGENTS.md` | Living | Agent/developer guide — project-wide conventions, auth topology, OAuth allowlist (ADR-0004 SSoT), pnpm lockfile recipe, AI Implementation Standards, Frontend Layout & Z-Index Standards |
 | `../CLAUDE.md` | Living | Claude-facing agent brief — mirrors AGENTS.md content |
 | `../MEMORY_PROTOCOL.md` | Living | QIG Memory API persistent session protocol |
-| `00-roadmap/20260112-master-roadmap-v1.00F.md` | W (authoritative) | Master roadmap — SSoT for planning and delivery *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* |
-| `20260425-bsuite-finish-line-roadmap-v1.00W.md` | W | Finish-line roadmap — 154-item P0/P1/P2 execution order |
-| `20260501-merged-execution-backlog-v1.00W.md` | W (active queue) | Active phase-ordered queue post-Phase-0 ratification — single execution queue |
+| `20260817-estate-remaining-work-register-v3.00W.md` | W (authoritative) | Current remaining-work register and evidence source; supersedes the archived v2 register |
+| `20260817-estate-completion-ledger-v1.00W.md` | W | Authoritative status ledger for register items |
 | `20260227-contributing-standards-guide-v1.01W.md` | W | Universal quality + doc standards (supersedes v1.00A) |
 | `20260227-dry-one-shot-architecture-v1.04A.md` | A | DRY one-shot policy — single owning app per entity |
 | `archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` | W | Gap report v2 — current authority (with §11 finish-line reconciliation) |
 | `archive/2026-06/20260319-entity-crosswalk-v1.00D.md` | D | CRM7 entity crosswalk + traceability |
 | `20260424-env-var-contributing-rules-v1.00W.md` | W | Environment variable conventions |
 | `archive/2026-06/20260501-phase-0-completion-report-v1.00W.md` | W | Phase-0 ratification evidence |
-| `20260504-bsuite-tech-stack-alignment-v1.00W.md` | W | **Canonical tech-stack baseline** (this hub's companion) |
-| `20260504-schema-builder-phase-3-plan-v1.00W.md` | W | Schema builder phase 3 plan |
-| `20260504-schema-builder-phase-3-signoff-v1.00W.md` | W | Schema builder phase 3 signoff |
-| `OUTSTANDING.md` | Living | Parent-level outstanding items |
+| `20260731-platform-operations-reference-v1.00W.md` | W | Current platform operations and shared-package baseline |
 | `NEW_ISSUES_FOUND.md` | Living | Recent issues discovered during audits/deploys |
-| `adr/` | Index in `adr/README.md` | Architectural Decision Records (ADR-0001 through ADR-0006) |
+| `adr/` | Index in `adr/README.md` | Architectural Decision Records (ADR-0001 through ADR-0011) |
 | `plans/` | Index in `plans/README.md` | Active implementation plans |
 
 ### 2.2 Code- and Package-Based Authority
@@ -289,26 +285,26 @@ Actual files (verified 2026-05-04, R80.3 — pre-archive):
 
 **Folder:** `throughput/docs/` | **README:** `throughput/docs/README.md` (created 2026-05-04) | **Cross-links:** `throughput/docs/PARENT-DOCS.md`
 
-Key documents: 20+ per-component docs (alert, badge, button, card, input, modal, textarea) + system architecture, Groq architecture/integration, RLS, roadmap, user guide, troubleshooting, navigation UX guide, development, outstanding, quality improvements, conversation map, components guide. See [`throughput/docs/README.md`](archive/README.md) *(archived — was `README.md`)* for the complete list.
+Key documents: 20+ per-component docs (alert, badge, button, card, input, modal, textarea) + system architecture, Groq architecture/integration, RLS, roadmap, user guide, troubleshooting, navigation UX guide, development, outstanding, quality improvements, conversation map, components guide. See [`throughput/docs/README.md`](../throughput/docs/README.md) for the complete list.
 
-**Cross-app role:** Idea hub + Groq AI experimentation. Tailwind has been brought to v4; remaining tech-stack gaps are zero Radix/shadcn adoption, outdated Supabase-JS/Zod, and strict-mode work. See `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` §5 TS-02 → TS-04.
+**Cross-app role:** Idea hub + Groq AI experimentation. Tailwind has been brought to v4; remaining tech-stack gaps are tracked in the current platform operations reference and app issue trackers.
 
 ---
 
 ## 4. Like-for-Like Document Mapping
 
-Every shared concern should be documented in each submodule where it applies, with identical structure and a cross-link back to the parent canonical doc or authoritative source (code/package). This is the target state. Gaps are tracked in `docs/OUTSTANDING.md`.
+Every shared concern should be documented in each submodule where it applies, with identical structure and a cross-link back to the parent canonical doc or authoritative source (code/package). This is the target state. Gaps are tracked in the current remaining-work register.
 
 | Concern | Authoritative source | BSU | CRM7 | Conduit | Braden | R80.4 | Throughput |
 |---|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| OUTSTANDING | `docs/OUTSTANDING.md` (SSoT — `docs/20260501-merged-execution-backlog-v1.00W.md` is the active execution queue) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488); `docs/reference/OUTSTANDING.md` is per-area audit and retained | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | ❌ removed 2026-05-19 (bsuite#488) | `20260425-throughput-outstanding-v1.00W.md` (throughput-local, out of bsuite#488 scope) |
-| Roadmap | `docs/00-roadmap/20260112-master-roadmap-v1.00F.md` *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250829-throughput-roadmap-v1.00W.md` ✅ |
+| Remaining work | `docs/20260817-estate-remaining-work-register-v3.00W.md` + completion ledger | ✅ cross-link | ✅ cross-link | ✅ cross-link | ✅ cross-link | ✅ cross-link | ✅ cross-link |
+| Roadmap | `docs/20260817-estate-remaining-work-register-v3.00W.md` | ✅ cross-link | ✅ `ROADMAP.md` | n/a (lives in parent) | n/a | n/a | `20250829-throughput-roadmap-v1.00W.md` ✅ |
 | Auth topology | `AGENTS.md` §Auth + `CLAUDE.md` mirror (archived snapshot: `archive/parent/2026-04-30-references-approved/20260227-auth-map-reference-v1.00A.md`) | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
 | Theme tokens | `@bsuite/theme` package source | ⚠️ cross-link gap | ⚠️ cross-link gap | ⚠️ cross-link gap | Corporate brand ✅ in `20260316-braden-corporate-theme-reference` | ⚠️ cross-link gap (R80.4) | ⚠️ cross-link gap |
 | Navigation | `crm7/src/config/navigation.ts` (runtime SSoT) | ⚠️ cross-link gap | ✅ (code owner) | ⚠️ cross-link gap | `@bsuite/nav-core` consumer ✅ | ⚠️ cross-link gap (R80.4) | `20251014-throughput-navigation-ux-guide-v1.00W.md` ✅ |
 | Component library | `packages/ui/` (in progress) | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap | ⚠️ gap (R80.4) | full component docs ✅ (20+ files) |
 | DRY architecture | `docs/20260227-dry-one-shot-architecture-v1.04A.md` | ⚠️ cross-link only | ✅ `ENTITY-SELECTORS.md` | ⚠️ cross-link only | n/a | ⚠️ cross-link only (R80.4) | n/a |
-| Tech stack | `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only (R80.4) | ⚠️ cross-link only |
+| Tech stack | `docs/20260731-platform-operations-reference-v1.00W.md` + `AGENTS.md` | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only | ⚠️ cross-link only (R80.4) | ⚠️ cross-link only |
 | Charge calc | `@bsuite/charge-calc` package | n/a | `CHARGE-CALC.md` ✅ | n/a | n/a | `CHARGE-CALC.md` — unverified in R80.4 | n/a |
 | Compliance | R80.3 `20260304-r80-fairwork-api-reference-v1.01W.md` + CRM7 code (archived — R80.4 equivalent unverified) | ⚠️ | ✅ (referenced) | n/a | n/a | ✅ canonical impl (R80.4) | n/a |
 | AI integration | CRM7 code + `AGENTS.md` §AI Implementation Standards | n/a | ✅ canonical | ✅ consumer | n/a | n/a | ✅ Groq-specific |
@@ -365,7 +361,7 @@ Full standards in `docs/20260227-contributing-standards-guide-v1.01W.md`. Essent
 - **Cross-link from submodule → parent for shared concerns** (tech stack, DRY, governance)
 - **Never duplicate parent canonical content** in a submodule — link to it instead
 - **Archive, do not delete.** When content is superseded, move to `docs/archive/[<scope>/]<date>-<reason>/` with an archive note. Scope segment is optional — use `parent` for parent-level archives, `<app>` for app-scoped archives, or omit if the sweep spans scopes (e.g., `docs/archive/2026-05-04-doc-unification/`).
-- **Update roadmaps + execution backlog in the same PR** that ships the work — do not let roadmap and code drift apart. Items shipped from `docs/20260501-merged-execution-backlog-v1.00W.md` must be struck through in the same PR, and only then eligible for archival in the next quarterly pass.
+- **Update the remaining-work register and completion ledger in the same PR** that ships the work — do not let roadmap and code drift apart. Superseded backlog items remain historical in the archive.
 
 ---
 
@@ -400,7 +396,7 @@ The doc review cycle:
 - **Per PR** — if a PR adds a new shared concern, update §4 in the same PR
 - **Quarterly** — archive pass: move superseded plans from `docs/plans/` to `docs/archive/`, **only after** the backlog entries for those plans have been struck through
 
-The active execution queue is `docs/20260501-merged-execution-backlog-v1.00W.md` — consult it before archiving any plan to confirm all items are shipped.
+The current execution authority is `docs/20260817-estate-remaining-work-register-v3.00W.md`, with status in `docs/20260817-estate-completion-ledger-v1.00W.md` — consult both before archiving any plan.
 
 ---
 
@@ -408,16 +404,16 @@ The active execution queue is `docs/20260501-merged-execution-backlog-v1.00W.md`
 
 | Cadence | What gets reviewed | Who runs it | Evidence artifact |
 |---|---|---|---|
-| **Weekly** | `docs/OUTSTANDING.md`, `docs/NEW_ISSUES_FOUND.md`, per-submodule `OUTSTANDING*.md` | Platform lead | Weekly triage note appended to `docs/OUTSTANDING.md` |
-| **Per-release** | `docs/20260425-bsuite-finish-line-roadmap-v1.00W.md` + `docs/20260501-merged-execution-backlog-v1.00W.md` | Release captain | Release notes + roadmap strike-throughs in the promotion PR |
-| **Monthly** | `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` §2/§4/§5 matrices | Shared packages lead | Change Log entry in the tech-stack alignment doc |
-| **Monthly** | Submodule `docs/PARENT-DOCS.md` files (verify byte-identical shared section; CI diff script) | Shared packages lead | Diff note in `docs/OUTSTANDING.md` |
+| **Weekly** | `docs/20260817-estate-remaining-work-register-v3.00W.md`, `docs/NEW_ISSUES_FOUND.md`, per-submodule outstanding records | Platform lead | Weekly triage note in the current register |
+| **Per-release** | Current remaining-work register + completion ledger | Release captain | Release notes + evidence in the promotion PR |
+| **Monthly** | `docs/20260731-platform-operations-reference-v1.00W.md` + `AGENTS.md` | Shared packages lead | Change Log entry in the operations reference |
+| **Monthly** | Submodule `docs/PARENT-DOCS.md` files (verify shared links and scope) | Shared packages lead | Diff note in the current register |
 | **Quarterly** | Archive pass — move superseded plans from `docs/plans/` → `docs/archive/[<scope>/]<date>-<reason>/` | Platform lead | Archive README with archival rationale (see `docs/archive/2026-05-04-doc-unification/README.md` as template) |
 | **Per-PR** | If PR adds a new cross-app concern → update §4 + §4.1 in same PR | PR author | File diff in PR |
 | **Per-PR** | If PR bumps a shared `@bsuite/*` version → update tech-stack alignment §3 in same PR | PR author | File diff in PR |
 | **Per-PR** | If PR ships a merged-backlog item → strike through the item in the backlog in same PR | PR author | Backlog diff in PR |
 
-Any audit that surfaces a new gap must flow into §5 of `docs/20260504-bsuite-tech-stack-alignment-v1.00W.md` (as a TS-XX row) **and** into the owner-prefixed register (§5.1 of that doc) in the same PR.
+Any audit that surfaces a new gap must flow into the current remaining-work register with an owner, evidence path, and validation target in the same PR.
 
 ---
 
@@ -447,10 +443,11 @@ Fast navigation for agents and contributors. Bookmark this section.
 
 ### Governance
 
-- [Master roadmap (SSoT)](./00-roadmap/20260112-master-roadmap-v1.00F.md) *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*
+- [Remaining-work register (SSoT)](./20260817-estate-remaining-work-register-v3.00W.md)
 - [Finish-line roadmap](archive/README.md) *(archived — was `20260425-bsuite-finish-line-roadmap-v1.00W.md`)*
-- [Active execution backlog](archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)*
-- [Tech-stack baseline](archive/README.md) *(archived — was `20260504-bsuite-tech-stack-alignment-v1.00W.md`)*
+- [Remaining-work register](../20260817-estate-remaining-work-register-v3.00W.md)
+- [Completion ledger](../20260817-estate-completion-ledger-v1.00W.md)
+- [Tech-stack baseline](../20260731-platform-operations-reference-v1.00W.md)
 - [Contributing standards](./20260227-contributing-standards-guide-v1.01W.md)
 - [Parent AGENTS.md](../AGENTS.md)
 - [Parent CLAUDE.md](../CLAUDE.md)
@@ -458,12 +455,12 @@ Fast navigation for agents and contributors. Bookmark this section.
 
 ### Per-submodule entry points
 
-- [BSU docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
-- [CRM7 docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
-- [Conduit docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
-- [Braden docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
-- [R80.4 docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)* *(was `../R80.3/docs/`, archived 2026-08-06)*
-- [Throughput docs](archive/README.md) *(archived — was `README.md`)* · [cross-links](archive/README.md) *(archived — was `PARENT-DOCS.md`)*
+- [BSU docs](../business-suite-unified/docs/README.md) · [cross-links](../business-suite-unified/docs/PARENT-DOCS.md)
+- [CRM7 docs](../crm7/docs/README.md) · [cross-links](../crm7/docs/PARENT-DOCS.md)
+- [Conduit docs](../conduit/docs/README.md) · [cross-links](../conduit/docs/PARENT-DOCS.md)
+- [Braden docs](../braden/docs/README.md) · [cross-links](../braden/docs/PARENT-DOCS.md)
+- [R80.4 docs](../R80.4/docs/README.md) · [cross-links](../R80.4/docs/PARENT-DOCS.md)
+- [Throughput docs](../throughput/docs/README.md) · [cross-links](../throughput/docs/PARENT-DOCS.md)
 
 ### Architecture + governance
 
