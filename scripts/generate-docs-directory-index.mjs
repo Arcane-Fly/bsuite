@@ -162,8 +162,7 @@ function walk(dir, found) {
     } else if (e.isFile() && e.name.endsWith('.md')) files.push(e.name)
   }
   if (!files.length) return
-  const hasIndex = files.some((f) => INDEX_NAMES.has(f.toLowerCase()))
-  found.push({ dir, files: files.filter((f) => !INDEX_NAMES.has(f.toLowerCase())), hasIndex })
+  found.push({ dir, files: files.filter((f) => !INDEX_NAMES.has(f.toLowerCase())) })
 }
 
 if (args.includes('--self-test')) {
