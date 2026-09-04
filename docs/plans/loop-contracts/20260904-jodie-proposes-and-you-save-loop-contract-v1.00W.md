@@ -16,6 +16,12 @@ Plan: [`../20260904-jodie-proposes-and-you-save-v1.00W.md`](../20260904-jodie-pr
 `ui_touched`: **YES** — the Jodie panel renders forms a person edits and saves. D8 applies to
 every item below that touches it.
 
+> **Still the plan as of 2026-09-04.** Two of the eight items resolve `met` —
+> `spike-forms-liftable` (the Task 0 verdict) and `dial-reaches-the-tools`
+> (crm7#2396, merged to development). The remaining six are open and none is
+> superseded.
+
+
 Item 1 gates the rest: if the spike says the app's forms cannot be lifted out of their
 routes, the design changes and this contract is rewritten before any tool is converted.
 
@@ -26,22 +32,22 @@ routes, the design changes and this contract is rewritten before any tool is con
       "id": "spike-forms-liftable",
       "what": "Three crm7 forms of different shapes render outside their route, pre-filled, and save through their own service. Go/no-go, and the registry's home named.",
       "gates": ["all"],
-      "resolve": { "evidence": "docs/validation/20260904-jodie-form-lift-spike.md" }
+      "resolve": { "evidence": "docs/validation/20260904-jodie-form-lift-spike-v1.00F.md" }
     },
     {
       "id": "dial-reaches-the-tools",
       "what": "The resolved automation level reaches createToolRegistry, which filters by it (shipped as a parameter rather than a ToolExecutionContext field — no tool consults it). Bite: at `off` the registry contains no write tool. Closes finding 1 and may ship alone.",
-      "resolve": { "evidence": "docs/validation/20260904-jodie-dial-gates-tools.md" }
+      "resolve": { "evidence": "docs/validation/20260904-jodie-dial-gates-tools-v1.00F.md" }
     },
     {
       "id": "write-intent-registry",
       "what": "registerWriteIntent + resolver, zod schema as the single validator, no consumers yet.",
-      "resolve": { "evidence": "docs/validation/20260904-jodie-write-intent-registry.md" }
+      "resolve": { "evidence": "docs/validation/20260904-jodie-write-intent-registry-v1.00F.md" }
     },
     {
       "id": "panel-renders-an-intent",
       "what": "The Jodie panel renders a registered Form inline, pre-filled, saving through the app's own service. Inline create for related records — a departure from the panel to fetch a related record is a FAIL, not partial credit.",
-      "resolve": { "evidence": "docs/validation/20260904-jodie-panel-renders-intent.md" }
+      "resolve": { "evidence": "docs/validation/20260904-jodie-panel-renders-intent-v1.00F.md" }
     },
     {
       "id": "no-module-writes-raw",
@@ -51,12 +57,12 @@ routes, the design changes and this contract is rewritten before any tool is con
     {
       "id": "default-level-is-suggest",
       "what": "With the propose surface live, a tenant with no ai_quotas row resolves to `suggest`, not to the licence ceiling. No migration seeds live tenants — the fallback constant changes and the row still appears only when someone saves.",
-      "resolve": { "evidence": "docs/validation/20260904-jodie-default-level-is-suggest.md" }
+      "resolve": { "evidence": "docs/validation/20260904-jodie-default-level-is-suggest-v1.00F.md" }
     },
     {
       "id": "workflows-honour-the-ceiling",
       "what": "The approved design's 'a send node cannot fire on draft', with a test that bites.",
-      "resolve": { "evidence": "docs/validation/20260904-jodie-workflow-ceiling.md" }
+      "resolve": { "evidence": "docs/validation/20260904-jodie-workflow-ceiling-v1.00F.md" }
     },
     {
       "id": "precedent-recorded",

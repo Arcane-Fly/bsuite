@@ -1,29 +1,25 @@
 -- 20261009000000_schema_builder_reorder_entity_fields_forward.sql
 --
--- FORWARD HOTFIX for public.reorder_entity_fields. Supersedes
--- 20260505000000_field_sort_order_and_reorder_rpc.sql, which is a STRANDED
--- migration: measured 2026-08-31 on tuybltdrdefjblnplpqo it is NOT in
--- supabase_migrations.schema_migrations, and it sits below
--- MIGRATION_FLOOR=20260611000000, so the applier skips it by version and
--- always will. It has never run and never can. The function is absent from
--- pg_proc, so every Schema Builder field-reorder click 404s in crm7, BSU and
--- conduit, all three of which render the control.
+-- ⚠️  DEV-FIXTURE COPY — DO NOT EDIT HERE.
+-- Canonical location: business-suite-unified/supabase/migrations/20261009000000_schema_builder_reorder_entity_fields_forward.sql
+-- This copy exists only so `pnpm --filter @bsuite/schema-builder test` can spin
+-- up a self-contained Supabase fixture. See README.md in this directory for the
+-- hard rule and sync workflow.
 --
--- This file is a NEW version above the ledger high-water mark (20261006000000),
--- per the applier's own prescription: forward hotfixes, never replays.
+-- REHEARSAL: this file is a byte-identical copy of a BSU migration that sorts
+-- ahead of it in a whole-estate replay, so every object it declares already
+-- exists by the time it runs and its catalog census cannot move. That is not a
+-- broken migration — it is what a dev-fixture copy IS. The claim below is the
+-- accurate one, and it sits ABOVE the sync boundary because the BSU canonical
+-- copy must NOT carry it: there the migration really does move the census.
 --
--- Changes from the 20260505 draft, both from the 2026-08-31 red-team:
---   - role checks require `status = 'active'` (every policy on tenant_entities
---     already does; the draft let a suspended admin keep write authority)
---   - platform-level (NULL-tenant) entities require is_platform_developer()
---     per D-66, not "owner in any tenant" — that admitted every tenant owner
---     in the estate to the platform's shared field ordering
---   - EXECUTE revoked from PUBLIC/anon BEFORE the grant to authenticated
---
--- Proven 2026-08-31 against production inside a rolled-back transaction: the
--- function creates, an active tenant admin can reorder, a foreign field id is
--- rejected 22023, and anon holds no EXECUTE.
---
+-- RESTORED 2026-09-04 (FOLLOW 87): the 2026-09-04 gitlink mirror
+-- (2137caec) copied the BSU canonical file in verbatim, including the header
+-- above this boundary, which silently deleted this marker. The parity gate
+-- did not catch it — Check 3 only compares content BELOW the boundary, and a
+-- full-file copy trivially matches itself there. README.md's documented sync
+-- step ("cp ... verbatim") is corrected in the same PR to say so explicitly.
+-- rehearsal: already-enforced
 -- @sync-boundary-below
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
