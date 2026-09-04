@@ -19,7 +19,7 @@ evidence:
 **Scope:** feature | **`ui_touched`: YES**
 
 > **Still the plan as of 2026-09-04.** Task 2 (the automation dial reaching the tool
-> registry) is implemented by crm7#2396, which is open and under gate — not shipped. Task 0 — the spike proving whether crm7's forms can render
+> registry) is crm7#2396, merged to development and not yet promoted. Task 0 — the spike proving whether crm7's forms can render
 > outside their routes — gates everything after it and has not started. Nothing here is
 > superseded.
 
