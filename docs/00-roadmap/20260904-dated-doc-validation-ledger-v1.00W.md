@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 20
+iteration: 22
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 20
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 22
 
 ## Scope and method
 
-This is an interim iteration-20 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-22 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -79,7 +79,7 @@ validated.
 | 17 | docs/00-roadmap/20260811-persona-review-v1.00W.md | UNVERIFIABLE | E-OPEN; verify persona claims against route guards and rendered navigation. |
 | 18 | docs/00-roadmap/20260811-retention-operator-rulings-v1.00W.md | UNVERIFIABLE | E-OPEN; verify retention implementation and policy references. |
 | 19 | docs/00-roadmap/20260811-scheduled-job-coverage-investigation-v1.00W.md | UNVERIFIABLE | E-OPEN; verify cron definitions and deployed jobs. |
-| 20 | docs/00-roadmap/20260811-security-signal-analysis-v1.00W.md | UNVERIFIABLE | E-OPEN; verify each signal with current security configuration and source. |
+| 20 | docs/00-roadmap/20260811-security-signal-analysis-v1.00W.md | UNVERIFIABLE | The document was opened and its security-signal claims were not promoted from prose. Verify each signal against current security configuration, live catalog evidence, source callers, and an authenticated/deployed observation; static source checks cannot establish active exposure or remediation. |
 | 21 | docs/00-roadmap/20260812-estate-remaining-work-register-v1.00F.md | UNVERIFIABLE | E-OPEN; reconcile every item against live issues and source. |
 | 22 | docs/00-roadmap/20260812-pi-orchestration-brief-v1.00W.md | UNVERIFIABLE | E-OPEN; verify agent/PI routing and referenced artifacts. |
 | 23 | docs/00-roadmap/20260812-pi-run-handback-v1.00W.md | UNVERIFIABLE | E-OPEN; verify handback claims against commits and inbox records. |
@@ -98,8 +98,8 @@ validated.
 | 36 | docs/20260815-vercel-platform-audit-and-res-regression-v1.00W.md | UNVERIFIABLE | E-OPEN; verify Vercel settings and RES evidence against deployment data. |
 | 37 | docs/20260817-au-compliance-audit-v1.00W.md | UNVERIFIABLE | E-OPEN; verify statutory claims and linked implementation boundaries. |
 | 38 | docs/20260817-award-coverage-real-placement-scope-v1.00W.md | UNVERIFIABLE | E-OPEN; verify award/placement claims against `R80.4` and owning records. |
-| 39 | docs/20260817-built-unlanded-and-unwired-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify every item by import, route, and runtime reachability. |
-| 40 | docs/20260817-completion-proof-v1.00W.md | UNVERIFIABLE | E-OPEN; replay every claimed proof command and deployment observation. |
+| 39 | docs/20260817-built-unlanded-and-unwired-register-v1.00W.md | UNVERIFIABLE | The register was opened, but no complete item-by-item replay was retained. Verify every item by source import, route registration, saved-state/read-back, authenticated browser reachability, deployment identity, and live data/RLS behaviour; an import or route inventory alone is insufficient. |
+| 40 | docs/20260817-completion-proof-v1.00W.md | UNVERIFIABLE | The proof document was opened, but its historical assertions were not treated as current evidence. Replay each named command and deployment observation with captured output, then test the claimed user flow through the deployed authenticated surface; source inspection cannot substitute for those observations. |
 | 41 | docs/20260817-coverage-gap-closure-v1.00W.md | UNVERIFIABLE | E-OPEN; verify coverage claims against tests and source census. |
 | 42 | docs/20260817-estate-completion-ledger-v1.00W.md | UNVERIFIABLE | E-OPEN; reconcile status rows with current issues, branches, and source. |
 | 43 | docs/20260817-estate-remaining-work-register-v3.00W.md | UNVERIFIABLE | E-OPEN; verify all remaining-work rows against live issue state. |
@@ -116,7 +116,7 @@ validated.
 | 54 | docs/20260822-knowledge-classification-standard-v1.00A.md | UNVERIFIABLE | E-OPEN; verify classification consumers and generated indexes. |
 | 55 | docs/20260822-schema-builder-ux-remediation-spec-v1.00D.md | DUPLICATE-CLUSTER | Focused source walk: `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx:492` enables connectable nodes, but the canvas has no direct save call. `business-suite-unified/src/pages/Developer/FeatureBuilder/index.tsx:63-68` invokes `saveDraft()`, and `business-suite-unified/src/stores/featureBuilderStore.ts:107-137` obtains the authenticated user then performs Supabase `.update(payload)` or `.insert(payload)`. `SchemaVisualizer.tsx` is read-only (`nodesConnectable={false}`), so it is not evidence of editable relationships. Keep the interactive canvas plus verified store save path as the winner; competing schema-canvas specs should point here. |
 | 56 | docs/20260822-session-findings-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify every finding against source and session evidence. |
-| 57 | docs/20260824-doc-completion-bar-measured-v1.00F.md | UNVERIFIABLE | E-OPEN; replay its measurement commands and compare current docs. |
+| 57 | docs/20260824-doc-completion-bar-measured-v1.00F.md | UNVERIFIABLE | The completion-bar document was opened. Replay its measurement commands against the current dated-document inventory and compare each result with the ledger; the existing 128-path inventory and 38/38 completion self-test validate tooling/counts only, not every document claim or closure state. |
 | 58 | docs/20260824-estate-execution-backlog-v1.00W.md | UNVERIFIABLE | E-OPEN; reconcile backlog with live issues and branches. |
 | 59 | docs/20260824-preview-canary-publishing-standard-v1.00A.md | UNVERIFIABLE | E-OPEN; verify deployment configuration and canary route behavior. |
 | 60 | docs/20260824-role-capabilities-merged-not-applied-root-cause-v1.00F.md | UNVERIFIABLE | Source/baseline evidence only: the document and migration/source references were opened, but no replayable catalogue SQL/result transcript is retained for migration application, policies, or functions. Local replay via `node scripts/audit-role-capability-divergence.mjs` produced stdout exactly `self-tests passed (17 roles, 91 permissions)` and stderr exactly `::error::Provide ROLE_CAPABILITIES_JSON (CI, via psql) or SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (local). Refusing to report a divergence of zero against a database I never reached.`; exit code **2**. Therefore live production applicability is **UNVERIFIABLE**; no migration-applied, policy-count, function-count, functional-API, vocabulary, privilege, or enforcement claim is promoted. |
@@ -133,23 +133,23 @@ validated.
 | 71 | docs/20260825-overnight-ninety-item-clearance-directive-v1.00A.md | UNVERIFIABLE | E-OPEN; verify all 90 items against current primary state. |
 | 72 | docs/20260825-remeasured-clearance-brief-v1.00A.md | UNVERIFIABLE | E-OPEN; replay measurements and compare current results. |
 | 73 | docs/20260826-backend-surface-asymmetries-v1.00D.md | UNVERIFIABLE | E-OPEN; verify API/database asymmetries against source and schema. |
-| 74 | docs/20260826-bsuite-open-findings-register-v1.00W.json | UNVERIFIABLE | E-OPEN; parse JSON and reconcile every finding with current issues. |
-| 75 | docs/20260826-doc-completion-verdict-v1.00A.md | UNVERIFIABLE | E-OPEN; replay its document-completion checks. |
+| 74 | docs/20260826-bsuite-open-findings-register-v1.00W.json | UNVERIFIABLE | The JSON register was opened for triage, but no complete parse-and-reconciliation transcript was retained. Parse every row, resolve its referenced issue/PR or source path, and compare state against the live tracker; a static JSON parse cannot prove that a finding remains open, fixed, or deployed. |
+| 75 | docs/20260826-doc-completion-verdict-v1.00A.md | UNVERIFIABLE | The verdict document was opened and its historical completion assertions remain bounded. Replay its checks against the current inventory, source evidence, issue state, and deployment evidence; the completion self-test validates checker mechanics, not the verdict for every dated document. |
 | 76 | docs/20260826-four-decisions-for-braden-v1.00D.md | UNVERIFIABLE | E-OPEN; verify each decision's consumer and current status. |
 | 77 | docs/20260826-futurebuild-production-acceptance-v1.00D.md | UNVERIFIABLE | E-OPEN; verify acceptance claims with deployed evidence. |
 | 78 | docs/20260826-morning-brief-v1.00W.md | UNVERIFIABLE | E-OPEN; verify dated operational facts against current state. |
 | 79 | docs/20260826-morning-ledger-v1.00A.md | UNVERIFIABLE | E-OPEN; reconcile rows with primary source state. |
 | 80 | docs/20260826-page-builder-2x-layout-in-production-measured-v1.00A.md | VALIDATED-DRIFTED | Iteration 18 source walk confirms current mechanics at `packages/page-builder/src/canvasCardLayout.tsx:140-164`, `DraggableCardPage.tsx:121,171`, `usePageGridLayout.ts:71,103,159-170`, and `PageGridLayout.tsx:1612-1621`: independent child slots, width-6 defaults, version invalidation, and persisted drag/resize. The measurements remain bounded historical evidence (20 pages, worst CLS 0.0155, and 1,068/1,729 omitted-width usages), not current estate-wide proof; no current production sample or browser replay was produced. |
 | 81 | docs/20260826-route-surface-map-v1.00W.md | UNVERIFIABLE | The historical document states **553** routes/rows (title at `docs/20260826-route-surface-map-v1.00W.md:14`, “553 rows” at `:16`, and `TOTAL 553` in §2 at `:52`), while the current replay reports **558**, a +5 drift that is not proof of completion. `node scripts/check-route-surface-map.mjs` checked 1,157 items with 0 problems (558 inventory routes/rows, 41 edge slugs, 74 deployed routes); `bash scripts/audit-routes.sh --inventory` reports 47 routes across six apps (18 public, 29 authenticated). These are static consistency checks only: no runtime, authenticated, RLS, deployment, or persistence proof was produced, so the historical 553-row claim cannot be promoted. |
-| 82 | docs/20260826-supabase-advisor-posture-measured-v1.00A.md | UNVERIFIABLE | E-OPEN; re-run advisors/live catalog checks. |
-| 83 | docs/20260826-the-seven-anon-security-definer-functions-v1.00A.md | UNVERIFIABLE | E-OPEN; verify functions with `pg_get_functiondef` and source callers. |
+| 82 | docs/20260826-supabase-advisor-posture-measured-v1.00A.md | UNVERIFIABLE | The advisor-posture document was opened, but no fresh live advisor/catalog result was captured. Re-run security and performance advisors, then query the live catalogs and record timestamps/project scope; migration text or dashboard posture cannot prove the current database state. |
+| 83 | docs/20260826-the-seven-anon-security-definer-functions-v1.00A.md | UNVERIFIABLE | The seven-function document was opened, but the historical count was not promoted. Query `pg_proc` with `pg_get_functiondef`, compare exact identity/signature/security/search-path properties, and trace source callers plus authenticated behaviour; source references alone cannot prove live function posture. |
 | 84 | docs/20260828-messaging-platform-design-v1.00W.md | UNVERIFIABLE | E-OPEN; verify messaging routes, tables, and realtime wiring. |
 | 85 | docs/20260828-unearned-completion-markers-triage-plan-v1.00W.md | UNVERIFIABLE | E-OPEN; replay each marker check against current records. |
 | 86 | docs/20260829-enhanceddatatable-is-not-a-one-edit-conversion-v1.00W.md | VALIDATED-DRIFTED | Current source supports the architectural warning but not a blanket conversion: `crm7/src/components/common/DataTable/EnhancedDataTable.tsx:597-599` consumes `row.original` for display/click behaviour, while the document's cited footprint was historical. The verified persistence-capable alternative is the separate `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` path backed by `crm7/src/services/browseDataService.ts:801-839`; shared `packages/data-grid/src/types.ts:53-104,181-188` requires host edit configuration/renderers and an async callback. Verdict: retain the separation between read-listing tables and editable grids, but re-measure the document's numeric usage counts before treating them as current. |
 | 87 | docs/20260829-what-the-capability-denials-actually-do-v1.00D.md | UNVERIFIABLE | `node scripts/audit-role-capability-divergence.mjs` self-tests passed (`17 roles, 91 permissions`) but exited 2 because neither `ROLE_CAPABILITIES_JSON` nor Supabase credentials were provided; the script explicitly refused to report zero divergence against an unreached database. No live denial, RLS, or authenticated functional proof was produced. |
-| 88 | docs/20260829-why-a-good-speed-score-and-a-slow-app-v1.00D.md | UNVERIFIABLE | E-OPEN; reproduce performance evidence and inspect network/render paths. |
+| 88 | docs/20260829-why-a-good-speed-score-and-a-slow-app-v1.00D.md | UNVERIFIABLE | The performance document was opened, while its historical score/slow-path explanation remains unverified. Reproduce the declared workload in a browser, capture network/render evidence and current Core Web Vitals/RES data, and compare against the deployed commit; a source or score snapshot cannot establish present user-perceived performance. |
 | 89 | docs/20260830-nav-route-reachability-across-the-five-non-crm7-apps-v1.00D.md | UNVERIFIABLE | Static checks remain bounded: `scripts/audit-routes.sh --inventory` reports 47 routes across six apps (18 public, 29 authenticated), while `scripts/check-route-surface-map.mjs` checks inventory/map consistency. Neither replays per-app navigation or positive controls, and neither proves table reachability, authentication, RLS, or deployment behaviour. |
-| 90 | docs/20260830-text-contrast-across-the-estate-v1.00D.md | UNVERIFIABLE | E-OPEN; `scripts/check-content-contrast-tier.mjs` currently reports 457 package source files examined and 0 source violations, but this is not rendered proof. The prior browser result is historical, and no current `R80.4/scripts/contrast-probe.js` run was recorded; re-run the browser probe across light/dark themes and remaining surfaces. |
+| 90 | docs/20260830-text-contrast-across-the-estate-v1.00D.md | UNVERIFIABLE | The document was opened. `scripts/check-content-contrast-tier.mjs` reports **457 source files examined; 0 violations**, but that is a static source boundary, not computed rendered contrast. The prior browser result is historical and no current `R80.4/scripts/contrast-probe.js` run is recorded; re-run the browser probe across light/dark themes and remaining surfaces before any promotion. |
 | 91 | docs/20260903-visual-authoring-consolidation-decision-v1.00D.md | VALIDATED-CURRENT | E-CARRY; prior narrow audit confirmed the consolidated authoring direction and source anchors. |
 | 92 | docs/20260904-component-registry-and-storybook-consumer-audit-v1.00W.md | VALIDATED-DRIFTED | E-REG; generator is in sync at 174 components, but Storybook consumer claims require the pending focused consumer walk. |
 | 93 | docs/archive/20260805-stash-cleanup-manifest-v1.00W.md | UNVERIFIABLE | E-OPEN; verify each manifest path and whether the archived object still exists. |
@@ -248,11 +248,11 @@ persist, reload, keyboard/focus, empty/loading/error states, and sibling-surface
 enumeration. It must also open the exact registry/index prose and compare every
 feature row to a source file, route, test, or explicit `UNVERIFIABLE` disposition.
 
-Summary at iteration 20: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
+Summary at iteration 22: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 113 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
 VALIDATED-DRIFTED. The iteration-13 wording retained below is historical context; this
-is the current iteration-20 ledger. The remaining gap is
+is the current iteration-22 ledger. The remaining gap is
 explicitly **113/113 inventory rows still UNVERIFIABLE (88.3%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
@@ -260,6 +260,25 @@ reported plainly rather than represented as completion. The explicit blocker rem
 **113 unresolved `UNVERIFIABLE` rows**; this ledger is not an audit-complete claim and
 the status remains `building`. No source, migration, or audited document was edited or
 deleted; this iteration changes only this ledger.
+
+## Iteration 22 evidence table
+
+The following ten rows received a bounded evidence update in Iteration 22. Every target
+remains `UNVERIFIABLE`: these checks identify the next replay boundary and do not turn
+static inventories, historical observations, or source anchors into runtime proof.
+
+| Row | Evidence captured | Validation boundary; required next proof |
+|---:|---|---|
+| 20 | Opened the security-signal analysis and checked its cited security framing. | Current configuration, live catalog evidence, source callers, and authenticated/deployed observation are still required; static source checks cannot establish active exposure or remediation. |
+| 39 | Opened the built/unlanded/unwired register and retained the item-level categories. | Verify every item by import, route, saved-state/read-back, authenticated browser reachability, deployment identity, and live data/RLS behaviour; import or route inventory alone is insufficient. |
+| 40 | Opened the completion-proof document and separated historical commands from current evidence. | Replay each named command and deployment observation with captured output, then test the claimed flow through the deployed authenticated surface; source inspection cannot substitute for those observations. |
+| 57 | Opened the completion-bar document; current inventory remains 128 paths and completion self-test remains 38/38. | Replay measurement commands against the current inventory and compare each result with the ledger; tooling/counts do not validate every document claim or closure state. |
+| 74 | Opened the JSON findings register for triage. | Parse every row, reconcile its issue/PR or source reference with the live tracker, and prove current status; parsing JSON cannot prove open, fixed, or deployed state. |
+| 75 | Opened the document-completion verdict and retained its historical framing. | Replay checks against inventory, source, issue state, and deployment evidence; checker mechanics do not prove the verdict for every dated document. |
+| 82 | Opened the advisor-posture document; no fresh live advisor/catalog result was captured. | Re-run security and performance advisors and query live catalogs with timestamp and project scope; migration text or dashboard posture cannot prove current database state. |
+| 83 | Opened the seven-function document and retained its historical count as unpromoted. | Query `pg_proc` and `pg_get_functiondef`, compare exact identity/signature/security/search-path properties, and trace callers plus authenticated behaviour; source references alone cannot prove live posture. |
+| 88 | Opened the performance document and retained its historical score/slow-path explanation as unverified. | Reproduce the browser workload, capture network/render and current Core Web Vitals/RES data, and compare the deployed commit; a source or score snapshot cannot establish present user-perceived performance. |
+| 90 | Static contrast scan reports 457 source files examined and 0 violations. | This is not rendered browser contrast proof; re-run current probes across light/dark themes and remaining surfaces because the prior browser result is historical. |
 
 ## Iteration 14 focused source findings
 
