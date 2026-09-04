@@ -150,6 +150,12 @@
       "verdict": "FAIL",
       "summary": "The 128-row bijection, 5/7/0/3/113 arithmetic, 174-component registry, 661-row feature index, accepted architecture rulings, building status, good GPG signature, ledger-only Builder scope, and conservative live-evidence boundaries all pass. Iteration 23 fails acceptance criterion 6 because row 39 records a negative search without its executable command, exact patterns, or search scope, and row 74 repeats the stored aggregate of 26 repeat offences without disclosing that 28 of the 142 underlying finding records are flagged repeat_offence=true.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-23.md"
+    },
+    {
+      "iteration": 24,
+      "verdict": "PASS",
+      "summary": "Row 39 now records exact executable fixed-string searches, exact files and repository scopes, empty output/exit 1, and a specific historical-register positive control that independently reproduces. Row 74 now distinguishes stored repeat_offences=26 from 28 independently derived repeat_offence=true records among 142 findings, preserves the 26-versus-28 mismatch, and requires reconciliation. The 128-row bijection, 5/7/0/3/113 arithmetic, conservative UNVERIFIABLE boundaries, accepted architecture rulings, 174-component registry, 661-row feature index, building status, good GPG signature, and ledger-only Builder scope all pass. This is a narrow iteration PASS only; overall remains incomplete.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-24.md"
     }
   ]
 }
