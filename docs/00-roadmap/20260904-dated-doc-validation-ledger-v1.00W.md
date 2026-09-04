@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 22
+iteration: 23
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 22
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 23
 
 ## Scope and method
 
-This is an interim iteration-22 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-23 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -248,11 +248,11 @@ persist, reload, keyboard/focus, empty/loading/error states, and sibling-surface
 enumeration. It must also open the exact registry/index prose and compare every
 feature row to a source file, route, test, or explicit `UNVERIFIABLE` disposition.
 
-Summary at iteration 22: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
+Summary at iteration 23: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 113 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
 VALIDATED-DRIFTED. The iteration-13 wording retained below is historical context; this
-is the current iteration-22 ledger. The remaining gap is
+is the current iteration-23 ledger. The remaining gap is
 explicitly **113/113 inventory rows still UNVERIFIABLE (88.3%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
@@ -261,24 +261,24 @@ reported plainly rather than represented as completion. The explicit blocker rem
 the status remains `building`. No source, migration, or audited document was edited or
 deleted; this iteration changes only this ledger.
 
-## Iteration 22 evidence table
+## Iteration 23 evidence table
 
-The following ten rows received a bounded evidence update in Iteration 22. Every target
+The following ten rows received a bounded evidence update in Iteration 23. Every target
 remains `UNVERIFIABLE`: these checks identify the next replay boundary and do not turn
 static inventories, historical observations, or source anchors into runtime proof.
 
 | Row | Evidence captured | Validation boundary; required next proof |
 |---:|---|---|
-| 20 | Opened the security-signal analysis and checked its cited security framing. | Current configuration, live catalog evidence, source callers, and authenticated/deployed observation are still required; static source checks cannot establish active exposure or remediation. |
-| 39 | Opened the built/unlanded/unwired register and retained the item-level categories. | Verify every item by import, route, saved-state/read-back, authenticated browser reachability, deployment identity, and live data/RLS behaviour; import or route inventory alone is insufficient. |
-| 40 | Opened the completion-proof document and separated historical commands from current evidence. | Replay each named command and deployment observation with captured output, then test the claimed flow through the deployed authenticated surface; source inspection cannot substitute for those observations. |
-| 57 | Opened the completion-bar document; current inventory remains 128 paths and completion self-test remains 38/38. | Replay measurement commands against the current inventory and compare each result with the ledger; tooling/counts do not validate every document claim or closure state. |
-| 74 | Opened the JSON findings register for triage. | Parse every row, reconcile its issue/PR or source reference with the live tracker, and prove current status; parsing JSON cannot prove open, fixed, or deployed state. |
-| 75 | Opened the document-completion verdict and retained its historical framing. | Replay checks against inventory, source, issue state, and deployment evidence; checker mechanics do not prove the verdict for every dated document. |
-| 82 | Opened the advisor-posture document; no fresh live advisor/catalog result was captured. | Re-run security and performance advisors and query live catalogs with timestamp and project scope; migration text or dashboard posture cannot prove current database state. |
-| 83 | Opened the seven-function document and retained its historical count as unpromoted. | Query `pg_proc` and `pg_get_functiondef`, compare exact identity/signature/security/search-path properties, and trace callers plus authenticated behaviour; source references alone cannot prove live posture. |
-| 88 | Opened the performance document and retained its historical score/slow-path explanation as unverified. | Reproduce the browser workload, capture network/render and current Core Web Vitals/RES data, and compare the deployed commit; a source or score snapshot cannot establish present user-perceived performance. |
-| 90 | Static contrast scan reports 457 source files examined and 0 violations. | This is not rendered browser contrast proof; re-run current probes across light/dark themes and remaining surfaces because the prior browser result is historical. |
+| 20 | `grep -nE 'target-branch|security' .github/workflows/security-audit.yml .github/workflows/security-definer-must-justify-itself.yml .github/dependabot.yml` located the security workflow, the SECURITY DEFINER gate, and Dependabot `target-branch: "development"` at `.github/dependabot.yml:18,65`. | Repository controls are not proof that a signal is currently exposed, fixed, or deployed. Live catalog evidence, source callers, and authenticated/deployed observation remain required. |
+| 39 | The bounded historical lint/config replay found **no current matches** for the register's named paths. This negative result is recorded, not treated as proof that historical items are absent or fixed. | Reconcile each item with its historical source/config context, then verify import, route, saved-state/read-back, authenticated browser reachability, deployment identity, and live data/RLS behaviour. |
+| 40 | Concrete source anchors: `R80.4/src/lib/award-rate-cache.ts:48` names `award_rate_cache`; `crm7/src/services/chargeCalcSourceAdapters.ts:203-212` documents the adapter; `crm7/src/services/requoteOnRiseService.ts:15-28` records the cache repoint; `crm7/src/components/entity/selectors/AwardRateSelector.tsx:68-77` retains the classification join. | These identify readers and tables, not current rows, API responses, deployment identity, or completed authenticated rate correctness. Replay named commands and test the deployed surface before promotion. |
+| 57 | `node scripts/audit-doc-completion.mjs --self-test` returned **`38/38 self-tests pass`**; the independent dated-path replay returned **128 unique paths with no missing or duplicate ledger rows**. | Self-tests use fixtures and inventory proves assignment arithmetic; neither validates every substantive document claim, live issue state, deployment state, or closure. |
+| 74 | JSON parsing succeeded (`generated=2026-09-02`). Structural counts: **5** RLS ownership; security **2 attributable + 3 unattributable**; journey gaps **4**, config-without-editor **3**, bulk **1**, seam **1**, walked **4**, not-yet-walked **4**; operator findings **142**, repeat offences **26**, themes **11**; `issues_filed` has **4** top-level keys and **0 failures**. | Counts substantiate stored shape and declared totals, not current issue/PR status, deployment, or live RLS. Reconcile references with the tracker and authenticated behaviour. |
+| 75 | `node scripts/audit-doc-completion.mjs --self-test` returned **`38/38 self-tests pass`**, and the independent inventory returned **128 unique dated paths**. This supports checker/inventory mechanics only. | Replay against current inventory and compare every result with source, issue state, and deployment evidence; checker mechanics cannot prove every historical supersession or completion conclusion. |
+| 82 | `scripts/check-supabase-advisors.mjs:3-18` is the advisor/allowlist consumer; `scripts/audit-security-definer-guards.mjs:41-50` exposes the guard boundary. `docs/security/supabase-advisor-allowlist.json:3-6,97-100` states accepted/tracked semantics and that an unlisted SECURITY DEFINER function fails. | No fresh live advisor/catalog result was captured. Static scripts and allowlist text do not prove current advisors, `pg_proc`, grants, search paths, or production posture. |
+| 83 | `braden/supabase/migrations/20260828120000_restrict_cms_writes_to_admins.sql:43-83` references `public.is_developer_admin()`; `braden/supabase/migrations/20261006000000_admin_users_exists_where_the_policies_live.sql:28-47,72-97` records the table-existence, role, SECURITY DEFINER, and RLS boundaries. | Source/migration anchors explain the named predicate but do not prove live `pg_proc`, signatures, grants, search path, callers, or authenticated behaviour. Query live catalogs and run a deployed authenticated test. |
+| 88 | `node scripts/check-speed-insights-route.mjs` returned **6 apps scanned, 6 `<SpeedInsights />` mounts found, 0 entrypoints without a route prop; `check-speed-insights-route: OK`**. | Static route wiring does not establish current Core Web Vitals, RES, network/render cost, deployment identity, or user-perceived performance. Reproduce the browser workload on the deployed `d.*` surface. |
+| 90 | `node scripts/check-content-contrast-tier.mjs` returned **`457 source files under packages/ examined; 0 violation(s)`**. | This is static source validation only, not rendered browser contrast. Re-run current probes across light/dark themes and remaining surfaces; the row remains `UNVERIFIABLE`. |
 
 ## Iteration 14 focused source findings
 
