@@ -122,7 +122,7 @@ import { fileURLToPath } from 'node:url'
 import { compareRatchet, writeBaseline } from './lib/ratchet.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
-const BASELINE_FILE = join('scripts', 'control-boundary-contrast-baseline.json')
+const BASELINE_FILE = join(ROOT, 'scripts', 'control-boundary-contrast-baseline.json')
 
 const CONTROL_TAGS = ['input', 'select', 'textarea', 'button']
 
