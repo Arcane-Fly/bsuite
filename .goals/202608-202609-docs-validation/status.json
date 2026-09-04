@@ -42,6 +42,12 @@
       "verdict": "PASS",
       "summary": "Independent inspection verified every iteration-4 remediation claim: exact 128-path inventory bijection, corrected persisted CRM7 Browse/DataGrid ruling, explicit 662-versus-661 feature-index mismatch, 21-file React Flow/xyflow footprint, 174-component registry check, and current PI handoff. This is a narrow iteration PASS only; 114 UNVERIFIABLE rows remain and overall status stays building.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-4.md"
+    },
+    {
+      "iteration": 5,
+      "verdict": "FAIL",
+      "summary": "Inventory, totals, ledger-only scope, and six source spot-checks passed, including page-builder, EnhancedDataTable/DataGrid, schema, and workflow canvas. Rows 51, 63, 89, and 90 were promoted using their documents' historical assertions without replayed commands or independent source-file evidence in the ledger, violating acceptance criterion 6. Overall status remains building with 110 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-5.md"
     }
   ]
 }
