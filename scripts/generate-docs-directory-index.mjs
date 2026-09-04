@@ -80,9 +80,15 @@ export function splitAtMarker(text) {
   const lines = text.split('\n')
   const i = lines.findIndex((l) => l.trim() === GENERATED_MARKER)
   if (i === -1) return null
-  // Everything above the marker is preserved verbatim, except the generator's
-  // own count line: it wrote that, it may reclaim it, and leaving it there is
-  // how the count goes stale while the table below is correct.
+  // Everything above the marker is preserved AS WRITTEN, with two deliberate
+  // exceptions this function makes and which "verbatim" would misdescribe:
+  //   - the generator's own count line is dropped. It wrote that line, it may
+  //     reclaim it, and leaving it above the marker is how a count goes stale
+  //     while the table below it is correct.
+  //   - trailing blank lines are trimmed, so re-rendering cannot accumulate
+  //     them one run at a time.
+  // Prose, headings and banners are untouched, which is the property that
+  // matters and the one the self-test asserts byte-for-byte.
   const above = lines.slice(0, i).filter((l) => !COUNT_RE.test(l.trim()))
   while (above.length && above[above.length - 1].trim() === '') above.pop()
   return { above, region: lines.slice(i).join('\n') }
@@ -147,17 +153,36 @@ if (args.includes('--self-test')) {
   if (s2 && s2.above.some((l) => /documents, newest first/.test(l)))
     fail('the generator\'s own count line above the marker was preserved and will go stale')
 
-  // A stale ROW must be visible as a difference. Same directory, different
-  // table — the check compares regions, so this cannot come back equal.
-  const a = `${GENERATED_MARKER}\n\n1 document, newest first.\n\n| Document | Status | Dated |\n|---|---|---|\n| [A](a.md) | Working | 2026-01-01 |\n`
-  const b = `${GENERATED_MARKER}\n\n1 document, newest first.\n\n| Document | Status | Dated |\n|---|---|---|\n| [B](b.md) | Working | 2026-01-01 |\n`
-  if (a === b) fail('two different tables compared equal — the check cannot see a stale row')
+  // A stale ROW must be visible as a difference — and this has to go through
+  // render(), the function the check actually compares against. An earlier
+  // version of this assertion compared two hard-coded strings, which is a
+  // tautology: it proved that two different literals are different and said
+  // nothing about whether the generator would notice a missing row. Caught by
+  // Copilot on bsuite#3068, and it is the same defect this file exists to stop.
+  // titleOf() falls back to the basename for unreadable paths, so no fixture
+  // files are needed.
+  const oneDoc = render('docs/x', ['20260101-alpha-v1.00W.md'])
+  const twoDocs = render('docs/x', ['20260101-alpha-v1.00W.md', '20260102-beta-v1.00W.md'])
+  if (oneDoc === twoDocs)
+    fail('render() produced the same region for one document and two — a stale index would be invisible')
+  // BOTH names, and the row COUNT — not one name. An earlier version checked
+  // only for the beta file, and rows sort newest-first, so a render() truncated
+  // to a single row still contained it and the assertion passed while the
+  // generator was dropping documents. The bite is what found that.
+  const rowsIn = (region) => region.split('\n').filter((l) => /^\| \[/.test(l)).length
+  for (const name of ['20260101-alpha-v1.00W.md', '20260102-beta-v1.00W.md']) {
+    if (!twoDocs.includes(name)) fail(`render() dropped ${name} from the table`)
+  }
+  if (rowsIn(twoDocs) !== 2) fail(`render() emitted ${rowsIn(twoDocs)} rows for two documents`)
+  if (rowsIn(oneDoc) !== 1) fail(`render() emitted ${rowsIn(oneDoc)} rows for one document`)
+  if (render('docs/x', ['20260101-alpha-v1.00W.md']) !== oneDoc)
+    fail('render() is not deterministic — the check would report phantom staleness on every run')
 
   console.log(
     bad === 0
-      ? 'generate-docs-directory-index --self-test: 5 assertions — an unmarked README is not ours, ' +
+      ? 'generate-docs-directory-index --self-test: 10 assertions — an unmarked README is not ours, ' +
           'a banner above the marker survives byte-for-byte, the generator reclaims its own count line, ' +
-          'and a changed row is visible as a difference.'
+          'a missing row is visible as a difference THROUGH render(), every document reaches the table and the row COUNT matches, and render() is deterministic.'
       : `generate-docs-directory-index --self-test: ${bad} FAILED`,
   )
   process.exit(bad === 0 ? 0 : 1)
