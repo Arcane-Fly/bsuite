@@ -28,8 +28,8 @@ Fresh evidence captured for this pass:
 - `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
 - Source grep for React Flow/xyflow across all six app source trees → **21** matching
   source files.
-- Source grep for `@dnd-kit` → **25** matching source files.
-- Source grep for `react-grid-layout` → **19** matching source files.
+- Dependency footprint command (run from the bsuite root): `find business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src -type f \( -name '*.ts' -o -name '*.tsx' \) -print0 | xargs -0 grep -l -F '@dnd-kit' | sort -u | wc -l` → **@dnd-kit=25**. The scope is exactly those six app source roots and TypeScript files; tests are not excluded, and `sort -u` deduplicates paths before counting matching files.
+- Dependency footprint command (same six-root, TypeScript scope): `find business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src -type f \( -name '*.ts' -o -name '*.tsx' \) -print0 | xargs -0 grep -l -F 'react-grid-layout' | sort -u | wc -l` → **react-grid-layout=19**. Tests are not excluded; `grep -l` selects each matching file and `sort -u` ensures each path contributes at most once.
 - Reviewed implementation anchors: `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx`, `business-suite-unified/src/lib/schemaBuilderService.ts`, `business-suite-unified/src/lib/xyflowThemeTokens.ts`, `business-suite-unified/src/lib/feature-builder/types.ts`, `business-suite-unified/src/lib/feature-builder/index.ts`, `business-suite-unified/src/stores/featureBuilderStore.ts`, `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx`, `SortableColumnList.tsx`, `PreviewPane.tsx`, and `SchemaVisualizer.tsx`.
 
 The source grep counts are footprint checks, not proof that every consumer is wired.
