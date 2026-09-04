@@ -120,6 +120,12 @@
       "verdict": "FAIL",
       "summary": "The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, prior architecture rulings, building status, good signature, ledger-only scope, and route gates all pass. Iteration 17 fails because none of the ten assigned rows changed: rows 1, 81, 87, and 113–116 retain generic E-OPEN/future-check prose, while rows 14, 80, and 89 only retain prior evidence. General ledger narrative does not satisfy the required direct source or replayable-command evidence for the focused rows. The current theme quick gate also remains red on G11 with two convertible inline colour styles.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-17.md"
+    },
+    {
+      "iteration": 18,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, accepted rulings, building status, good signature, and ledger-only scope pass. Rows 1, 14, 80, 87, 89, and 115 now have bounded evidence. Iteration 18 fails because row 81 does not reconcile the source document's 553-route claim with the current 558-route replay, while rows 113, 114, and 116 still lack concrete file:line anchors or exact command/output; document summaries and artifact existence are not replayable evidence trails.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-18.md"
     }
   ]
 }
