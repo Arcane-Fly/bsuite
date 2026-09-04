@@ -29,7 +29,17 @@ name: Gitlink not behind base
 
 on:
   pull_request:
-    branches: [main]
+    # Widened to `development` 2026-09-04 (operator directive, after
+    # advance-submodule-pointers.yml gained the ability to auto-merge its own
+    # standing PR). Scoped to `main` alone, a bad gitlink could land on
+    # `development` unexamined by ANY guard but the pointer script's own
+    # internal forward-only check — an unattended merge is exactly the case
+    # where nobody is reading a red-but-not-required status, and the failure
+    # would only surface at promotion time, the worst possible moment. The
+    # comparison itself needed no change: `BASE_SHA` below already comes from
+    # `github.event.pull_request.base.sha`, so it reads whichever branch the
+    # PR actually targets rather than assuming `main`.
+    branches: [main, development]
   # DISPATCHABLE ON PURPOSE. Scoped to PRs into `main`, this gate cannot run on the PR
   # that introduces it — so it would ship never once exercised in CI, and its first real
   # run would be on a promotion, which is the worst moment to discover a runtime bug.
