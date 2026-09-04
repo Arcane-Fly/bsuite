@@ -41,7 +41,7 @@
 #       fires. If you change a rule here, first try to SET the name it mandates and
 #       read the refusal.
 #
-# This script enforces 6 rules across the parent monorepo AND each submodule:
+# This script enforces 7 rules across the parent monorepo AND each submodule:
 #   R1) Vite-app source must NOT read `process.env.SUPABASE_*` (server-only names in client bundle,
 #       including `SUPABASE_SECRET_KEY` — the modern replacement for `SUPABASE_SERVICE_ROLE_KEY`,
 #       added 2026-09-04 after this rule's own pattern was found to allow it
@@ -52,6 +52,10 @@
 #       prefixed publishable names). Edge functions are governed by R6, not by this.
 #   R5) No source may read `process.env.VITE_*` from the client bundle path.
 #   R6) An edge function must NOT read the bare, unsettable `SUPABASE_PUBLISHABLE_KEY`.
+#   R7) Vite-app source must NOT read ANY server-only secret declared in that app's
+#       own `.env.example` (STRIPE_SECRET_KEY, AI_GATEWAY_API_KEY, GROQ_API_KEY,
+#       FWC_API_KEY, ... — derived per app, see `server_only_secret_names_for`
+#       below; not Supabase-specific, generalises R1's shape estate-wide).
 #
 # Exit codes:
 #   0 — clean
@@ -571,6 +575,72 @@ check_r5() {
   fi
 }
 
+# ---- R7 helper: derive an app's server-only secret names from its OWN .env.example ----
+#
+# FOLLOW 88. R1-R6 police exactly one credential family (Supabase) via a
+# hand-maintained name list. Every OTHER server-only secret an app declares —
+# Stripe, an AI provider, FWC, email, Sentry — had no equivalent guard at all:
+# nothing stopped a Vite client bundle from reading `process.env.STRIPE_SECRET_KEY`
+# the same way `process.env.SUPABASE_SECRET_KEY` was read before R1 existed.
+#
+# DERIVED, not hand-listed: any name `.env.example` declares that is
+#   (a) NOT prefixed `VITE_` or `NEXT_PUBLIC_` — the estate's own client-exposure
+#       convention (AGENTS.md §Environment Variables); a name without either
+#       prefix was never intended to reach a bundle, by the same logic R1 already
+#       applies to the Supabase names, generalised to every credential, and
+#   (b) NAMED like a credential — ends in `_KEY`, `_TOKEN`, `_SECRET` or
+#       `_PASSWORD`. This is a structural filter, not a hand-list: it matches
+#       every example in the FOLLOW 88 brief (STRIPE_SECRET_KEY,
+#       AI_GATEWAY_API_KEY, GROQ_API_KEY, FWC_API_KEY) while excluding
+#       non-secret server config that also lacks a client prefix — PORT, DEBUG,
+#       ANALYZE, EMAIL_HOST, FWC_RATE_LIMIT_*_MAX, BSU_OAUTH_CLIENT_ID — none of
+#       which are sensitive, all of which would otherwise be false positives.
+#       A future secret only needs to be ADDED to .env.example with a
+#       recognisable suffix; nobody has to remember to extend a list here too.
+#
+# ANTHROPIC_API_KEY / GOOGLE_GENERATIVE_AI_API_KEY (also named in the brief) are
+# conduit-only per its own .env.example — out of scope here, R7 covers
+# VITE_APPS only (the "Vite client source" the brief asks for; conduit's
+# Next.js server/client component boundary is a different analysis R3 already
+# declines to attempt for the same reason).
+server_only_secret_names_for() {
+  local app="$1"
+  [ -f "$app/.env.example" ] || return 0
+  grep -oE '^[A-Z_][A-Z0-9_]*=' "$app/.env.example" \
+    | sed 's/=$//' \
+    | grep -vE '^(VITE_|NEXT_PUBLIC_)' \
+    | grep -E '(_KEY|_TOKEN|_SECRET|_PASSWORD)$' \
+    | sort -u
+}
+
+# ---- R7: Vite-app client source must NOT read a server-only secret declared in that app's own .env.example ----
+check_r7() {
+  local app
+  for app in "${VITE_APPS[@]}"; do
+    [ -d "$app" ] || continue
+    local names
+    names=$(server_only_secret_names_for "$app")
+    [ -z "$names" ] && continue
+    local pattern
+    pattern=$(printf '%s' "$names" | paste -sd'|' -)
+    local prefix="${app}/"
+    local matches
+    matches=$(run_git_grep "$app" \
+      "process\.env\.(${pattern})\\b" \
+      "${SRC_GLOBS[@]}" | filter_matches "$prefix")
+    local serverless
+    serverless=$(serverless_dirs_for "$app")
+    if [ -n "$serverless" ] && [ -n "$matches" ]; then
+      matches=$(printf '%s\n' "$matches" | grep -vE "^${app}/(${serverless})/" || true)
+    fi
+    if [ -n "$matches" ]; then
+      note "R7 VIOLATION — Vite-app client source reads a server-only secret declared in ${app}/.env.example (names checked: $(printf '%s' "$names" | tr '\n' ' ')):"
+      note "$matches"
+      VIOLATIONS=$((VIOLATIONS + 1))
+    fi
+  done
+}
+
 # ---- R0: every allowlist entry must name a file that is actually scanned ----
 #
 # WHY THIS EXISTS. The allowlist is keyed on PATH, so it breaks in two opposite
@@ -707,9 +777,64 @@ EOF
   return "$result"
 }
 
+# ---- --self-test (R7): prove the DERIVED secret-name gate can actually fail ----
+#
+# Named `st7_*`, never `app`/`matches`/etc. — check_r1's own `for app in ...`
+# loop (not `local`) clobbered this function's identically-named variable the
+# first time this file's self-test called into it (bsuite#465 FOLLOW 65). The
+# fix there was to give the CALLER distinct names rather than touch the
+# unrelated callee; same discipline here, one level further down the alphabet.
+self_test_r7() {
+  local st7_app="crm7"
+  local st7_rel="src/__check_secret_naming_r7_selftest__.ts"
+  local st7_fixture="${st7_app}/${st7_rel}"
+
+  if [ ! -d "${st7_app}/src" ]; then
+    echo "self-test (R7): CANNOT RUN — ${st7_app}/src is not checked out (submodule not initialised)" >&2
+    return 1
+  fi
+
+  # AI_GATEWAY_API_KEY: real, present in crm7/.env.example, matches R7's
+  # _KEY suffix filter — not a name invented for this test.
+  trap '( cd "'"$st7_app"'" && git reset -q -- "'"$st7_rel"'" ) 2>/dev/null; rm -f "'"$st7_fixture"'"' EXIT
+
+  cat > "$st7_fixture" <<'EOF'
+// Planted by scripts/check-secret-naming.sh --self-test. Never committed.
+export const leaked = process.env.AI_GATEWAY_API_KEY
+EOF
+  ( cd "$st7_app" && git add -- "$st7_rel" )
+
+  VIOLATIONS=0
+  DIAGNOSTICS=""
+  check_r7
+
+  local st7_result=1
+  if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -qF "$st7_fixture"; then
+    echo "self-test (R7): PASS — caught the planted \`process.env.AI_GATEWAY_API_KEY\` read in $st7_fixture"
+    st7_result=0
+  else
+    {
+      echo "self-test (R7): FAIL — did NOT catch a planted \`process.env.AI_GATEWAY_API_KEY\` read in $st7_fixture"
+      echo "diagnostics were:"
+      printf '%s\n' "$DIAGNOSTICS"
+    } >&2
+  fi
+
+  ( cd "$st7_app" && git reset -q -- "$st7_rel" ) 2>/dev/null
+  rm -f "$st7_fixture"
+  trap - EXIT
+  return "$st7_result"
+}
+
 if [ "${1:-}" = "--self-test" ]; then
-  self_test
-  exit $?
+  r1_result=0
+  self_test || r1_result=$?
+  r7_result=0
+  self_test_r7 || r7_result=$?
+  if [ "$r1_result" -eq 0 ] && [ "$r7_result" -eq 0 ]; then
+    exit 0
+  fi
+  exit 1
 fi
 
 check_allowlist_freshness
@@ -719,6 +844,7 @@ check_r3
 check_r4
 check_r5
 check_r6
+check_r7
 
 # A PASS is a claim about a tree. Refuse to make it about a tree that was not
 # read. Before this guard existed, running the script anywhere the submodules
@@ -765,6 +891,9 @@ fi
   echo "  NEVER in client source:                         SUPABASE_ANON_KEY (deprecated since Supabase 2025 rotation)"
   echo "  NEVER in an edge function:                      bare SUPABASE_PUBLISHABLE_KEY — the SUPABASE_ prefix is"
   echo "                                                  reserved, so this name is UNSETTABLE and always resolves to ''"
+  echo "  NEVER in Vite-app client source:                any *_KEY / *_TOKEN / *_SECRET / *_PASSWORD name that"
+  echo "                                                  app's own .env.example declares without a VITE_/NEXT_PUBLIC_"
+  echo "                                                  prefix (R7, FOLLOW 88) — Stripe, AI providers, FWC, email, Sentry"
   echo ""
   echo "To opt a single line out (e.g. for a documented legacy compat shim), add:"
   echo "    // legacy compat — remove after YYYY-MM-DD"
