@@ -4,7 +4,7 @@ authority: none
 owner: bsuite
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, iteration 1
+# Dated-document genuine-validation ledger — 202608/202609, iteration 3
 
 ## Scope and method
 
@@ -39,7 +39,7 @@ because a package or component exists.
 |---|---|---|
 | Page authoring renderer | The consolidated authoring direction wins: live page-builder components plus the existing customization validation record. Evidence: `EntityTableWidget.tsx` and `docs/audits/20260904-customization-authoring-genuine-validation-v1.00W.md`. | Earlier competing renderer proposals should carry a superseded pointer to `docs/20260903-visual-authoring-consolidation-decision-v1.00D.md`; do not maintain parallel renderer contracts. |
 | Schema relationship canvas | React Flow/xyflow is the supported interactive canvas substrate: `RelationshipCanvas.tsx` has connectable nodes and `xyflowThemeTokens.ts` provides the token seam. This does **not** establish a functional persistence winner: `RelationshipCanvas.tsx` has no direct save call. Relationship edits flow through `EntityPanel.tsx` → `featureBuilderStore.ts` → `saveDraft()`. | `SchemaVisualizer.tsx` is read-only (`nodesConnectable={false}`), so static/diagram-only alternatives cannot evidence editable persistence. Retain the live canvas direction, but do not claim the canvas itself persists until that path is separately wired and validated. |
-| Data surface | Airtable-class `EntityTableWidget` wins over bespoke report-only tables for editable records because it is the shortest path to inspect and edit entity data. | Report-only/table proposals remain conditional until their live read/write path is evidenced. |
+| Data surface | No editable Airtable-class winner is evidenced by `EntityTableWidget`: `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx:176-177` only performs `.from(entityType).select('*')`. The genuine editable-grid winner for the verified admin path is `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254`, which enables editable columns, maps `CellEdit` objects, awaits `commitBrowseCellEdits`, invalidates the browse query, and throws on failed/partial persistence; `crm7/src/services/browseDataService.ts:801-839` groups those edits into `commitBulkUpdate` calls. The shared contract is async at `packages/data-grid/src/types.ts:181-188`, with rejection rollback/error handling in `packages/data-grid/src/DataGrid.tsx:440-452`. | `EntityTableWidget` remains the validated read/display widget, not an editable winner. Read-listing/report proposals remain separate; any document claiming that widget provides inline editing must be corrected or superseded. |
 | Grid/layout | Per-card grid behavior wins only where `react-grid-layout` is wired with persisted layout state; a whole-page drag abstraction loses on independent resize/drag semantics. | Competing whole-block layouts are `DUPLICATE-CLUSTER` and should point at the persisted page-grid contract. |
 | Branding | Three-tier branding/inheritance wins over local palette literals; role-token evidence is required. | Literal-colour specifications are `VALIDATED-DRIFTED` where source has moved to role tokens, and should be corrected by owners. |
 
@@ -100,13 +100,13 @@ validated.
 | 46 | docs/20260817-recovered-verdict-backlog-v1.00W.md | UNVERIFIABLE | E-OPEN; verify recovered verdicts against primary records. |
 | 47 | docs/20260819-estate-session-evidence-v1.00F.md | UNVERIFIABLE | E-OPEN; verify session evidence paths and commit SHAs. |
 | 48 | docs/20260820-datum-directive-to-bsuite-lane-v1.00W.md | UNVERIFIABLE | E-OPEN; verify datum directive consumers and current lane output. |
-| 49 | docs/20260821-airtable-class-data-surface-plan-v1.00F.md | VALIDATED-CURRENT | E-CARRY; prior audit validated `EntityTableWidget.tsx` and the live data-surface direction. |
+| 49 | docs/20260821-airtable-class-data-surface-plan-v1.00F.md | VALIDATED-DRIFTED | Focused re-check: `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx:176-177` proves the widget reads rows with `.select('*')` but contains no insert/update/edit/save/mutation path. The editable admin path is instead `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` → `crm7/src/services/browseDataService.ts:801-839` → `commitBulkUpdate`; the plan's editable-widget claim has drifted and must not be treated as current. |
 | 50 | docs/20260821-atmosphere-evaluation-v1.00F.md | UNVERIFIABLE | E-OPEN; verify atmosphere claims against current product and source. |
 | 51 | docs/20260822-border-elevation-token-system-spec-v1.00F.md | UNVERIFIABLE | E-OPEN; verify tokens and computed styles in shared theme consumers. |
 | 52 | docs/20260822-data-surface-consolidation-decision-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY; Airtable-class `EntityTableWidget` direction wins; pointer required from competing data-surface specs. |
 | 53 | docs/20260822-estate-doc-inventory-v1.00W.md | VALIDATED-DRIFTED | Inventory claim is 126; fresh `sort -u` inventory is 127 because the 20260904 registry audit was added later. |
 | 54 | docs/20260822-knowledge-classification-standard-v1.00A.md | UNVERIFIABLE | E-OPEN; verify classification consumers and generated indexes. |
-| 55 | docs/20260822-schema-builder-ux-remediation-spec-v1.00D.md | DUPLICATE-CLUSTER | E-CARRY + focused source walk; `RelationshipCanvas.tsx` is interactive (`nodesConnectable`) but has no direct persistence call. Real entity/relationship edits flow through `EntityPanel.tsx` into `featureBuilderStore.ts`, whose `saveDraft()` performs the Supabase update/insert. `SchemaVisualizer.tsx` is read-only (`nodesConnectable={false}`), so it is not evidence of editable relationships. |
+| 55 | docs/20260822-schema-builder-ux-remediation-spec-v1.00D.md | DUPLICATE-CLUSTER | Focused source walk: `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx:492` enables connectable nodes, but the canvas has no direct save call. `business-suite-unified/src/pages/Developer/FeatureBuilder/index.tsx:63-68` invokes `saveDraft()`, and `business-suite-unified/src/stores/featureBuilderStore.ts:107-137` obtains the authenticated user then performs Supabase `.update(payload)` or `.insert(payload)`. `SchemaVisualizer.tsx` is read-only (`nodesConnectable={false}`), so it is not evidence of editable relationships. Keep the interactive canvas plus verified store save path as the winner; competing schema-canvas specs should point here. |
 | 56 | docs/20260822-session-findings-register-v1.00W.md | UNVERIFIABLE | E-OPEN; verify every finding against source and session evidence. |
 | 57 | docs/20260824-doc-completion-bar-measured-v1.00F.md | UNVERIFIABLE | E-OPEN; replay its measurement commands and compare current docs. |
 | 58 | docs/20260824-estate-execution-backlog-v1.00W.md | UNVERIFIABLE | E-OPEN; reconcile backlog with live issues and branches. |
@@ -131,13 +131,13 @@ validated.
 | 77 | docs/20260826-futurebuild-production-acceptance-v1.00D.md | UNVERIFIABLE | E-OPEN; verify acceptance claims with deployed evidence. |
 | 78 | docs/20260826-morning-brief-v1.00W.md | UNVERIFIABLE | E-OPEN; verify dated operational facts against current state. |
 | 79 | docs/20260826-morning-ledger-v1.00A.md | UNVERIFIABLE | E-OPEN; reconcile rows with primary source state. |
-| 80 | docs/20260826-page-builder-2x-layout-in-production-measured-v1.00A.md | UNVERIFIABLE | E-OPEN; verify layout measurements and persisted grid behavior in page-builder source. |
+| 80 | docs/20260826-page-builder-2x-layout-in-production-measured-v1.00A.md | VALIDATED-DRIFTED | The implementation mechanics are current: `packages/page-builder/src/canvasCardLayout.tsx:140-164` derives independent child slots and defaults cards to width 6; `packages/page-builder/src/DraggableCardPage.tsx:121,171` uses that builder; `packages/page-builder/src/usePageGridLayout.ts:71,103,159-170` versions persisted layouts and invalidates stale versions; `packages/page-builder/src/PageGridLayout.tsx:1612-1621` persists responsive drag/resize changes. The document's production measurements remain bounded historical evidence (20 pages, worst CLS 0.0155, and 1,068/1,729 omitted-width usages), not an estate-wide current measurement; re-run the production sample before using those numbers as present-day performance claims. |
 | 81 | docs/20260826-route-surface-map-v1.00W.md | UNVERIFIABLE | E-OPEN; replay route census across all six apps. |
 | 82 | docs/20260826-supabase-advisor-posture-measured-v1.00A.md | UNVERIFIABLE | E-OPEN; re-run advisors/live catalog checks. |
 | 83 | docs/20260826-the-seven-anon-security-definer-functions-v1.00A.md | UNVERIFIABLE | E-OPEN; verify functions with `pg_get_functiondef` and source callers. |
 | 84 | docs/20260828-messaging-platform-design-v1.00W.md | UNVERIFIABLE | E-OPEN; verify messaging routes, tables, and realtime wiring. |
 | 85 | docs/20260828-unearned-completion-markers-triage-plan-v1.00W.md | UNVERIFIABLE | E-OPEN; replay each marker check against current records. |
-| 86 | docs/20260829-enhanceddatatable-is-not-a-one-edit-conversion-v1.00W.md | UNVERIFIABLE | E-OPEN; verify table conversion claims against current components and imports. |
+| 86 | docs/20260829-enhanceddatatable-is-not-a-one-edit-conversion-v1.00W.md | VALIDATED-DRIFTED | Current source supports the architectural warning but not a blanket conversion: `crm7/src/components/common/DataTable/EnhancedDataTable.tsx:597-599` consumes `row.original` for display/click behaviour, while the document's cited footprint was historical. The verified persistence-capable alternative is the separate `crm7/src/components/admin/BrowseDataTab.tsx:750-800,1247-1254` path backed by `crm7/src/services/browseDataService.ts:801-839`; shared `packages/data-grid/src/types.ts:53-104,181-188` requires host edit configuration/renderers and an async callback. Verdict: retain the separation between read-listing tables and editable grids, but re-measure the document's numeric usage counts before treating them as current. |
 | 87 | docs/20260829-what-the-capability-denials-actually-do-v1.00D.md | UNVERIFIABLE | E-OPEN; verify denial behavior through guards, RLS, and tests. |
 | 88 | docs/20260829-why-a-good-speed-score-and-a-slow-app-v1.00D.md | UNVERIFIABLE | E-OPEN; reproduce performance evidence and inspect network/render paths. |
 | 89 | docs/20260830-nav-route-reachability-across-the-five-non-crm7-apps-v1.00D.md | UNVERIFIABLE | E-OPEN; replay route reachability in each app. |
@@ -197,13 +197,18 @@ capability, not the stronger claims “world class”, “highest UX”, or “f
 The relationship canvas is interactive but non-persisting in its own component;
 the validated feature-builder save path is `EntityPanel.tsx` →
 `featureBuilderStore.ts` → `saveDraft()`. `SchemaVisualizer.tsx` remains read-only.
-Iteration 2 must perform the interaction-level walk: create/edit/reorder/preview,
+Iteration 3 performed focused source walks for the editable data path, layout persistence,
+and schema-builder save path. Many more iterations are required before the remaining
+rows can be deep-validated; this ledger does not compress that incompleteness into
+false completion. The next iterations must perform the interaction-level walk: create/edit/reorder/preview,
 persist, reload, keyboard/focus, empty/loading/error states, and sibling-surface
 enumeration. It must also open the exact registry/index prose and compare every
 feature row to a source file, route, test, or explicit `UNVERIFIABLE` disposition.
 
 Summary: **127 dated paths inventoried; 127 assigned a verdict; 3 named registries
-assigned a verdict; 5 VALIDATED-CURRENT; 3 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER;
-116 UNVERIFIABLE.** These counts intentionally describe iteration-1 triage, not a
-claim that the 116 rows are complete source validations. No recommended fix was
+assigned a verdict; 4 VALIDATED-CURRENT; 6 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER;
+114 UNVERIFIABLE.** These are iteration-3 counts: rows 49, 80, and 86 received
+focused source validation, while 114 rows still require their stated checks. Many
+more iterations are required for the full-set criterion; that incompleteness is
+reported plainly rather than represented as completion. No recommended fix was
 implemented, and no file in the audited trees was deleted.
