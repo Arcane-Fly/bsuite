@@ -34,12 +34,39 @@ const APPS = ['crm7', 'business-suite-unified', 'conduit', 'braden', 'throughput
 /** An exported symbol that looks like a React component: PascalCase. */
 export function componentExports(srcText) {
   const out = new Set();
-  for (const m of srcText.matchAll(/^export\s+(?:declare\s+)?(?:function|const|class)\s+([A-Z][A-Za-z0-9_]*)/gm)) out.add(m[1]);
-  for (const m of srcText.matchAll(/^export\s*\{([^}]*)\}/gm)) {
-    for (const raw of m[1].split(',')) {
-      const name = raw.trim().split(/\s+as\s+/).pop().trim();
-      if (/^[A-Z][A-Za-z0-9_]*$/.test(name)) out.add(name);
+  const isExportedName = (name) => {
+    if (!name || name.charCodeAt(0) < 65 || name.charCodeAt(0) > 90) return false;
+    for (const char of name.slice(1)) {
+      const code = char.charCodeAt(0);
+      if (!((code >= 65 && code <= 90) || (code >= 97 && code <= 122) || (code >= 48 && code <= 57) || char === '_')) return false;
     }
+    return true;
+  };
+  for (const line of srcText.split('\n')) {
+    let declaration = line.trim();
+    if (!declaration.startsWith('export ')) continue;
+    declaration = declaration.slice(7).trimStart();
+    if (declaration.startsWith('declare ')) declaration = declaration.slice(8).trimStart();
+    const keyword = ['function ', 'const ', 'class '].find((candidate) => declaration.startsWith(candidate));
+    if (!keyword) continue;
+    const candidate = declaration.slice(keyword.length);
+    const stop = [...candidate].findIndex((char) => ' (={}\t;'.includes(char));
+    const name = stop < 0 ? candidate : candidate.slice(0, stop);
+    if (isExportedName(name)) out.add(name);
+  }
+  let cursor = 0;
+  while (true) {
+    const start = srcText.indexOf('export {', cursor);
+    if (start < 0) break;
+    const open = srcText.indexOf('{', start);
+    const close = srcText.indexOf('}', open + 1);
+    if (close < 0) break;
+    for (const raw of srcText.slice(open + 1, close).split(',')) {
+      const aliasAt = raw.indexOf(' as ');
+      const name = (aliasAt >= 0 ? raw.slice(aliasAt + 4) : raw).trim();
+      if (isExportedName(name)) out.add(name);
+    }
+    cursor = close + 1;
   }
   return [...out];
 }
@@ -57,21 +84,34 @@ export function componentExports(srcText) {
  */
 function importedSymbolsByPackage(fileText) {
   const map = new Map();
-  // `import { A, B as C } from '@bsuite/pkg'` — the [\s\S] class is what lets
-  // the brace block span newlines, which is exactly what grep could not do.
-  for (const m of fileText.matchAll(/import\s*(?:type\s*)?\{([\s\S]*?)\}\s*from\s*['"]@bsuite\/([a-z-]+)['"]/g)) {
-    const pkg = m[2];
+  const stripType = (value) => value.startsWith('type ') ? value.slice(5) : value;
+  const lines = fileText.split('\n');
+  for (let i = 0; i < lines.length; i += 1) {
+    let declaration = lines[i].trim();
+    if (!declaration.startsWith('import ')) continue;
+    while (!declaration.includes(' from ') && i + 1 < lines.length) declaration += ` ${lines[++i].trim()}`;
+    const fromAt = declaration.lastIndexOf(' from ');
+    if (fromAt < 0) continue;
+    const moduleText = declaration.slice(fromAt + 6).trim();
+    const quote = moduleText[0];
+    if (quote !== "'" && quote !== '"') continue;
+    const endQuote = moduleText.indexOf(quote, 1);
+    const moduleName = endQuote < 0 ? '' : moduleText.slice(1, endQuote);
+    if (!moduleName.startsWith('@bsuite/')) continue;
+    const pkg = moduleName.slice(8).split('/')[0];
     if (!map.has(pkg)) map.set(pkg, new Set());
-    for (const raw of m[1].split(',')) {
-      const name = raw.trim().split(/\s+as\s+/)[0].replace(/^type\s+/, '').trim();
-      if (name) map.get(pkg).add(name);
+    const clause = stripType(declaration.slice(7, fromAt).trim());
+    const open = clause.indexOf('{');
+    const close = clause.lastIndexOf('}');
+    if (open >= 0 && close > open) {
+      for (const raw of clause.slice(open + 1, close).split(',')) {
+        const aliasAt = raw.indexOf(' as ');
+        const name = stripType(aliasAt >= 0 ? raw.slice(0, aliasAt) : raw).trim();
+        if (name) map.get(pkg).add(name);
+      }
     }
-  }
-  // `import Default from '@bsuite/pkg'`
-  for (const m of fileText.matchAll(/import\s+([A-Z][A-Za-z0-9_]*)\s*(?:,\s*\{[\s\S]*?\}\s*)?from\s*['"]@bsuite\/([a-z-]+)['"]/g)) {
-    const pkg = m[2];
-    if (!map.has(pkg)) map.set(pkg, new Set());
-    map.get(pkg).add(m[1]);
+    const defaultName = clause.slice(0, open >= 0 ? open : clause.length).split(',')[0].trim();
+    if (defaultName && defaultName.charCodeAt(0) >= 65 && defaultName.charCodeAt(0) <= 90) map.get(pkg).add(defaultName);
   }
   return map;
 }
@@ -83,7 +123,7 @@ function readSrc(dir) {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name);
       if (e.isDirectory()) { if (e.name !== 'node_modules' && e.name !== '__tests__') walk(p); }
-      else if (/\.(ts|tsx)$/.test(e.name) && !/\.(test|spec|d)\./.test(e.name)) files.push(p);
+      else if ((e.name.endsWith('.ts') || e.name.endsWith('.tsx')) && !e.name.includes('.test.') && !e.name.includes('.spec.') && !e.name.includes('.d.')) files.push(p);
     }
   };
   walk(dir);
