@@ -144,6 +144,12 @@
       "verdict": "FAIL",
       "summary": "The 128-row bijection, 5/7/3/113 arithmetic, 174-component registry, 661-row feature index, accepted architecture rulings, building status, good GPG signature, ledger-only Builder scope, and conservative live-evidence boundaries all pass. Iteration 22 fails acceptance criterion 6 because most focused rows replace generic E-OPEN wording with generic opened/replay-later prose rather than retaining concrete document-specific command or source outcomes. Row 74 particularly omits the required successful JSON parse and structural/count transcript; rows 20, 39, 40, 57, 75, 82, 83, and 88 likewise need bounded evidence recorded in the ledger. Row 90 is correctly evidenced and bounded.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-22.md"
+    },
+    {
+      "iteration": 23,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/0/3/113 arithmetic, 174-component registry, 661-row feature index, accepted architecture rulings, building status, good GPG signature, ledger-only Builder scope, and conservative live-evidence boundaries all pass. Iteration 23 fails acceptance criterion 6 because row 39 records a negative search without its executable command, exact patterns, or search scope, and row 74 repeats the stored aggregate of 26 repeat offences without disclosing that 28 of the 142 underlying finding records are flagged repeat_offence=true.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-23.md"
     }
   ]
 }
