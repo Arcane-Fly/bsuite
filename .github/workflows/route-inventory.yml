@@ -126,7 +126,11 @@ jobs:
             mkdir -p inventory-drift
             for entry in $PATHS; do
               repo="${entry%%:*}"; p="${entry#*:}"
-              git -C "$repo" --no-pager diff -- "$p" > "inventory-drift/$(echo "$repo-$p" | tr '/' '_').diff" || true
+              # "." would make the parent's file a DOTFILE, which upload-artifact@v4
+              # excludes by default — the one diff this exists to capture would vanish
+              # silently (Copilot + the gate on bsuite#3067). Label the parent "parent".
+              label="$repo"; [ "$repo" = "." ] && label="parent"
+              git -C "$repo" --no-pager diff -- "$p" > "inventory-drift/$(echo "$label-$p" | tr '/' '_').diff" || true
             done
             cp docs/nav/route-inventory.json inventory-drift/regenerated-route-inventory.json
             git submodule status --recursive > inventory-drift/submodule-status.txt
@@ -168,4 +172,5 @@ jobs:
           name: inventory-drift
           path: inventory-drift/
           if-no-files-found: ignore
+          include-hidden-files: true
           retention-days: 14
