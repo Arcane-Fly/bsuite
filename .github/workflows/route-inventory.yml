@@ -117,7 +117,21 @@ jobs:
             fi
           done
           if [ "$drift" -ne 0 ]; then
-            echo "::notice::Drift is usually a submodule pointer moving under a stale committed inventory — regenerate and commit BOTH paths."
+            # FOLLOW 71 (2026-09-04): a 4252-line drift on bsuite#3055 reproduced in
+            # NEITHER a local worktree nor a clean shallow clone at the same gitlinks,
+            # so the 40 lines above were the only evidence and they were not enough.
+            # Capture the whole thing as an artifact: the full diff of both paths, the
+            # regenerated file, the exact submodule commits scanned, and the interpreter
+            # (the runner is Python 3.12; a developer machine may be 3.14).
+            mkdir -p inventory-drift
+            for entry in $PATHS; do
+              repo="${entry%%:*}"; p="${entry#*:}"
+              git -C "$repo" --no-pager diff -- "$p" > "inventory-drift/$(echo "$repo-$p" | tr '/' '_').diff" || true
+            done
+            cp docs/nav/route-inventory.json inventory-drift/regenerated-route-inventory.json
+            git submodule status --recursive > inventory-drift/submodule-status.txt
+            { python3 --version; python3 -c 'import sys,platform; print(sys.version); print(platform.platform())'; } > inventory-drift/python.txt 2>&1
+            echo "::notice::Drift is usually a submodule pointer moving under a stale committed inventory — regenerate and commit BOTH paths. Full diff, regenerated file, submodule commits and interpreter uploaded as the inventory-drift artifact."
             exit 1
           fi
           echo "Both inventory paths are up to date."
@@ -146,3 +160,12 @@ jobs:
             exit 1
           fi
           echo "No cross-submodule imports of parent docs/."
+
+      - name: Upload the drift evidence (FOLLOW 71)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: inventory-drift
+          path: inventory-drift/
+          if-no-files-found: ignore
+          retention-days: 14
