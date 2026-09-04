@@ -298,10 +298,13 @@ function selfTest() {
   // the gate: reverting the scan loop to readdirSync(DIR) left this file's
   // earlier assertion passing while the gate silently went back to one level
   // deep and reported a smaller, greener number. Found by biting it.
-  const seen = scan().live
-  const topLevelOnly = readdirSync(DIR).filter((f) => f.endsWith('.md') && f.toLowerCase() !== 'readme.md')
-  if (seen <= topLevelOnly.length && scanned.length > topLevelOnly.length)
-    fail(`scan() saw ${seen} live of ${topLevelOnly.length} top-level files — it is not using the recursive walk`)
+  // Compare LIKE WITH LIKE. A first version of this assertion compared scan()'s
+  // LIVE count against the total top-level FILE count — 51 against 63 — which
+  // is apples to oranges and failed on correct code. scan()'s own findings are
+  // the observable: a subdirectory path can only appear there if the scan walked
+  // into one.
+  if (scanned.some((f) => f.includes('/')) && !scan().findings.some((f) => f.includes('/')))
+    fail('scan() returned no finding from a subdirectory although the walk found files there — it is not using the recursive walk')
   if (scanned.some((f) => f.toLowerCase().endsWith('readme.md')))
     fail('planFiles() included a README — directory indexes are not plans')
   if (scanned.some((f) => f.startsWith('archive/')))
