@@ -36,6 +36,12 @@
       "verdict": "FAIL",
       "summary": "Corrected the self-inclusive inventory to 128 rows, reconciled the ledger with no missing or duplicate paths, corrected row 52 to the BrowseDataTab/DataGrid editable admin winner with EntityTableWidget explicitly read-only, recorded the 662-versus-661 feature-index mismatch and fresh 21-file React Flow/xyflow footprint, and sent fresh PI handoff e2a5a2ff-58bd-4310-8d52-16c0b3218d74. 114 inventory rows remain UNVERIFIABLE, so the full goal is not complete.",
       "feedback_file": null
+    },
+    {
+      "iteration": 4,
+      "verdict": "PASS",
+      "summary": "Independent inspection verified every iteration-4 remediation claim: exact 128-path inventory bijection, corrected persisted CRM7 Browse/DataGrid ruling, explicit 662-versus-661 feature-index mismatch, 21-file React Flow/xyflow footprint, 174-component registry check, and current PI handoff. This is a narrow iteration PASS only; 114 UNVERIFIABLE rows remain and overall status stays building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-4.md"
     }
   ]
 }
