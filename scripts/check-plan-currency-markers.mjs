@@ -139,6 +139,26 @@ export function scan() {
     const touched = lastTouchedIso(path)
     // A plan someone is actively working is current whatever it says.
     if (mainIso && touched && touched >= mainIso) continue
+    /*
+     * ONE PROMOTION OF GRACE, MEASURED IN TIME AND NOT IN EVENTS.
+     *
+     * The rule above asks "was it touched since the last merge to main". A plan
+     * that merges to DEVELOPMENT is, by construction, older than the next
+     * promotion — so the first time main moves after a plan lands, that plan is
+     * flagged, having had no opportunity to go stale.
+     *
+     * Measured 2026-09-04: main's last commit was 09:04:21 and three plans
+     * merged at 08:47-08:55 were flagged, nine to seventeen minutes on the
+     * wrong side. The two promotions before that were ten minutes apart, so
+     * "since the last merge" cannot separate stale from new at all when
+     * promotions run minutes apart — nothing is touched between two merges ten
+     * minutes apart, stale or not.
+     *
+     * Staleness is a duration, so measure one. A plan committed within the last
+     * day has not sat through anything yet. This narrows the gate rather than
+     * widening it: everything it flagged before, it still flags a day later.
+     */
+    if (touched && Date.now() - Date.parse(touched) < 24 * 60 * 60 * 1000) continue
     findings.push(name)
   }
   return { findings, live, mainIso }
