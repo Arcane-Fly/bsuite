@@ -1,3 +1,14 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - .github/workflows/app-quality-checks.yml
+  - scripts/check-exported-not-mounted.mjs
+  - docs/plans/20260904-jodie-proposes-and-you-save-v1.00W.md
+  - docs/validation/20260904-jodie-raw-write-modules.json
+---
+
 # Loop contract — Jodie proposes, you save
 
 Plan: [`../20260904-jodie-proposes-and-you-save-v1.00W.md`](../20260904-jodie-proposes-and-you-save-v1.00W.md)

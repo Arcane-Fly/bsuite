@@ -1,3 +1,16 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - .github/workflows/app-quality-checks.yml
+  - scripts/check-exported-not-mounted.mjs
+  - crm7/api/ai/chat.ts
+  - crm7/src/lib/ai/automation-level.ts
+  - crm7/src/lib/ai/query-quota.ts
+  - crm7/supabase/migrations/20261118000000_ai_quotas_and_query_usage.sql
+---
+
 # Jodie automation levels, query overages, and email notices
 
 **Date:** 2026-09-03 | **Version:** 1.00W | **Status:** Working (operator-approved)

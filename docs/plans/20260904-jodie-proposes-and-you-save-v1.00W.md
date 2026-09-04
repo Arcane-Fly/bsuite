@@ -1,3 +1,18 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - .github/workflows/app-quality-checks.yml
+  - scripts/check-exported-not-mounted.mjs
+  - crm7/api/ai/chat.ts
+  - crm7/src/lib/ai/evaluateJodieTurn.ts
+  - crm7/src/lib/ai/tools/index.ts
+  - crm7/src/lib/ai/tools/pgrest.ts
+  - crm7/src/lib/ai/tools/unfiltered-writes.test.ts
+  - crm7/src/pages/settings/configuration.tsx
+---
+
 # Jodie proposes, you save — one write path for the assistant and the app
 
 **Date:** 2026-09-04 | **Version:** 1.00W | **Status:** Working — scoped, not started
@@ -190,7 +205,7 @@ constant is the thing to change; the row appears when a tenant saves.
 
 ## Done-contract
 
-`docs/plans/loop-contracts/20260904-jodie-proposes-and-you-save.md`
+`docs/plans/loop-contracts/20260904-jodie-proposes-and-you-save-loop-contract-v1.00W.md`
 
 ## Not done in this scoping pass
 

@@ -1,3 +1,16 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - .github/workflows/app-quality-checks.yml
+  - scripts/check-exported-not-mounted.mjs
+  - crm7/src/components/communications/EmailBody.tsx
+  - crm7/src/components/settings/JodieOverageSettings.tsx
+  - crm7/src/lib/ai/evaluateJodieTurn.ts
+  - crm7/supabase/migrations/20261118000000_ai_quotas_and_query_usage.sql
+---
+
 # Jodie automation + email notices — implementation plan
 
 > **For Claude:** REQUIRED SUB-SKILL: Use executing-plans to implement this plan task-by-task.
