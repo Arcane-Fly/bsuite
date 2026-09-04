@@ -258,3 +258,36 @@ reported plainly rather than represented as completion. The explicit blocker rem
 **113 unresolved `UNVERIFIABLE` rows**; this ledger is not an audit-complete claim and
 the status remains `building`. No source, migration, or audited document was edited or
 deleted; this iteration changes only this ledger.
+
+## Iteration 14 focused source findings
+
+Iteration 14 ran a bounded five-component census and replayed both named generators. The census deliberately separates
+package definitions/exports, direct application imports, package-internal references, Storybook references, test-only
+references, and incidental prose. It does not treat an absent direct import as proof of dead code.
+
+| Component | Evidence-backed classification | Result and boundary |
+|---|---|---|
+| `AppShell` | Shared package export plus four direct app consumers | `packages/ui/src/app-shell.tsx:75` defines the shared component and `packages/ui/src/index.ts:3` exports it. The authoritative registry row is `@bsuite/ui`, `consumerFiles: 4`, `consumingApps: 4` (`crm7`, `business-suite-unified`, `conduit`, `throughput`). `R80.4/src/components/layout/AppShell.tsx` is an app-local same-name component, not a shared-registry consumer. |
+| `Button` | Shared package export with no direct `@bsuite/ui` app consumer; separate local app copies exist | `packages/ui/src/button.tsx:4-17` defines the shared variants and `packages/ui/src/index.ts` exports it, but the authoritative row is `consumerFiles: 0`, `consumingApps: 0`. Package Storybook/tests and app-local `*/components/ui/button.tsx` imports are distinct from direct shared-package consumption. This is a registry-semantics finding, not a dead-code conclusion. |
+| `DataGrid` | Shared package export with direct CRM7 consumers | `packages/data-grid/src/index.ts:20` exports `DataGrid`; the authoritative row is `@bsuite/data-grid`, `consumerFiles: 22`, `consumingApps: 1` (`crm7`). The census found direct imports including `crm7/src/components/admin/BrowseDataTab.tsx`; this supports the previously recorded editable-admin boundary, not an estate-wide Airtable claim. |
+| `DraggableCardPage` | Shared package export with direct consumers in four apps, plus app-local same-name implementation | `packages/page-builder/src/canvasCardLayout.tsx:5-8` documents the extracted layout logic and its cross-app history. The authoritative row is `@bsuite/page-builder`, `consumerFiles: 10`, `consumingApps: 4` (`crm7`, `business-suite-unified`, `braden`, `throughput`). App-local implementations/references are not conflated with the shared-package row. |
+| `RelationshipCanvas` | App-local feature-builder export; not a shared-registry component | `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx:510-518` exports the component and wraps `ReactFlowProvider`. `packages/workflow-canvas/README.md:17-18` explicitly records the relationship as a provider pattern, while the package wrapper is separate. It is absent from `bsuite-component-registry.json` because the generator scans exports under `packages/*/src` and only counts `@bsuite/*` imports from app source; absence is expected under that generator contract, not evidence of missing functionality. |
+
+Reproducible command evidence:
+
+* `node scripts/generate-component-registry.mjs --self-test` → `component-registry --self-test: OK (14 cases)`.
+* `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
+* `node scripts/generate-feature-index.mjs --self-test` → `generate-feature-index --self-test: OK (12 cases)`.
+* `node scripts/generate-feature-index.mjs --check` → `feature-index: in sync (661 rows)`.
+* Parsing `docs/00-roadmap/bsuite-feature-index.json` and counting its authoritative rows → **661 rows, 28 modules,
+  57 capability areas**. The feature-index Markdown headline remains **662**, so the recorded `VALIDATED-DRIFTED`
+  verdict is unchanged; the generated JSON/check output wins.
+* The registry generator source at `scripts/generate-component-registry.mjs:31-32, 133-169` defines the ten shared
+  package scan, package-export discovery, and direct `@bsuite/*` app-import semantics. This bounds all five census
+  classifications above.
+
+No dated-document verdict is promoted from `UNVERIFIABLE` in this iteration. Runtime reachability, authenticated
+navigation, RLS enforcement, live catalogue state, deployment state, rendered contrast, and the remaining claim-level
+document checks still require evidence unavailable to this static pass. The summary therefore remains **128 paths;
+5 VALIDATED-CURRENT; 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 0 SUPERSEDED; 113 UNVERIFIABLE**, with status
+`building`. Only this ledger was edited.
