@@ -1,50 +1,24 @@
 -- 20261009000100_schema_builder_rename_physical_column_hardened.sql
 --
--- FORWARD HOTFIX for public.rename_physical_column, and the fix for a
--- privilege-escalation defect in the version it supersedes.
+-- DEV-FIXTURE COPY - DO NOT EDIT HERE.
+-- Canonical location: business-suite-unified/supabase/migrations/20261009000100_schema_builder_rename_physical_column_hardened.sql
+-- This copy exists only so `pnpm --filter @bsuite/schema-builder test` can spin
+-- up a self-contained Supabase fixture. See README.md in this directory.
 --
--- WHY A NEW VERSION. 20260506000000_rename_physical_column_rpc.sql is a
--- PHANTOM: measured 2026-08-31 on tuybltdrdefjblnplpqo, version 20260506000000
--- IS recorded in supabase_migrations.schema_migrations — under the name
--- `reconciled-2026-05-19`, one of 72 bulk reconcile marker rows — while
--- neither public.schema_mutations_audit nor public.rename_physical_column
--- exists. The ledger is keyed on VERSION ALONE, so the marker burned the
--- version and the applier will never run the file. A replay is impossible;
--- a forward version above the high-water mark (20261006000000) is the
--- prescribed remedy.
+-- REHEARSAL: this file is a byte-identical copy of a BSU migration that sorts
+-- ahead of it in a whole-estate replay, so every object it declares already
+-- exists by the time it runs and its catalog census cannot move. That is not a
+-- broken migration — it is what a dev-fixture copy IS. The claim below is the
+-- accurate one, and it sits ABOVE the sync boundary because the BSU canonical
+-- copy must NOT carry it: there the migration really does move the census.
 --
--- WHY IT IS NOT A COPY. The superseded draft carried a privilege escalation.
--- It derived its ALTER TABLE target from `tenant_entities.name`, which is
--- caller-controlled — `tenant_entities_insert` admits any ACTIVE
--- owner/admin/manager to insert a row with `is_system = false` and ANY name,
--- and no CHECK constraint restricts it. Its role gate then checked membership
--- of the ENTITY'S tenant, which the attacker owns. So tenant scoping applied
--- to the metadata row while the DDL landed on a GLOBAL object: any tenant
--- admin could rename any column on any table in `public`, including
--- user_tenants.role, on which the estate's RLS depends.
---
--- DEMONSTRATED, not theorised. On 2026-08-31, inside a transaction that was
--- rolled back, the unmodified 20260506 function returned
---   {"executed": true, "would_execute":
---    "ALTER TABLE public.zzz_core_lookalike RENAME COLUMN role TO pwned"}
--- for a caller who was merely admin of their own throwaway tenant. The
--- hardened function below, given the identical input, returns
---   {"executed": false, "reason": "no_physical_table"}
--- and the column is untouched.
---
--- THE FIX is public.schema_builder_physical_tables: an allowlist binding each
--- Schema-Builder-managed physical table to its owning tenant, with no client
--- write policy. It ships EMPTY, and that costs nothing — measured 2026-08-31,
--- 0 of 45 tenant_entities rows resolve to a physical public.<name> table, so
--- the physical-rename path has no legitimate target today and every reachable
--- target was a core platform table. Unregistered entities return the
--- `no_physical_table` marker the UI already handles by falling back to the
--- metadata-only rename (FieldEditDialog.tsx:344), so nothing user-visible
--- changes.
---
--- The full threat model (T1-T8 and the accepted residual) is stated inline
--- above the function, per the estate's SECURITY DEFINER rule.
---
+-- RESTORED 2026-09-04 (FOLLOW 87): the 2026-09-04 gitlink mirror
+-- (2137caec) copied the BSU canonical file in verbatim, including the header
+-- above this boundary, which silently deleted this marker. The parity gate
+-- did not catch it — Check 3 only compares content BELOW the boundary, and a
+-- full-file copy trivially matches itself there. README.md's documented sync
+-- step ("cp ... verbatim") is corrected in the same PR to say so explicitly.
+-- rehearsal: already-enforced
 -- @sync-boundary-below
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
