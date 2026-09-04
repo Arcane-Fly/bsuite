@@ -156,6 +156,12 @@
       "verdict": "PASS",
       "summary": "Row 39 now records exact executable fixed-string searches, exact files and repository scopes, empty output/exit 1, and a specific historical-register positive control that independently reproduces. Row 74 now distinguishes stored repeat_offences=26 from 28 independently derived repeat_offence=true records among 142 findings, preserves the 26-versus-28 mismatch, and requires reconciliation. The 128-row bijection, 5/7/0/3/113 arithmetic, conservative UNVERIFIABLE boundaries, accepted architecture rulings, 174-component registry, 661-row feature index, building status, good GPG signature, and ledger-only Builder scope all pass. This is a narrow iteration PASS only; overall remains incomplete.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-24.md"
+    },
+    {
+      "iteration": 25,
+      "verdict": "FAIL",
+      "summary": "Rows 21 and 33 are genuinely superseded, and the 128-row bijection, row-derived 5/7/2/3/111 arithmetic, 174-component registry, 661-row feature index, accepted architecture rulings, building status, good GPG signature, and ledger-only Builder scope all pass. Iteration 25 fails acceptance criterion 6 because rows 3, 42, 43, 46, 56, 58, and 79 still retain generic E-OPEN prose without direct source or replayable-command evidence; row 74's concrete evidence predates this Builder. The ledger summaries also remain stale at 0 SUPERSEDED and 113 UNVERIFIABLE instead of 2 and 111.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-25.md"
     }
   ]
 }
