@@ -1,7 +1,7 @@
 {
   "goal_id": "202608-202609-docs-validation",
   "status": "building",
-  "iteration": 4,
+  "iteration": 19,
   "builder_model": "Claude Sonnet 5 (copilot)",
   "inspector_model": "Claude Sonnet 5 (copilot)",
   "initial_sha": "8afa0b032590e7b9774e11e4eedacfc272a06fc2",
