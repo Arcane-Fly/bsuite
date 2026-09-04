@@ -85,6 +85,25 @@ const BASELINE = 'scripts/plan-currency-baseline.json'
  */
 const STILL_CURRENT_PHRASES = ['still the plan as of', 'current as of']
 
+/**
+ * The positive claim must carry a DATE, and the date is the whole point.
+ *
+ * A substring match on the phrase alone would accept "still the plan as of" with
+ * nothing after it — a claim of currency that cannot be checked and never
+ * expires, which is the exact failure the negative list was narrowed to avoid.
+ * "Superseded" is verifiable by reading the document it points at; "still the
+ * plan" is only verifiable against a date.
+ *
+ * ISO, because that is what every other dated artefact in this repository uses
+ * and because a reviewer can compare it to the last promotion without parsing
+ * prose. Punctuation and markdown emphasis between the phrase and the date are
+ * tolerated — `**Still the plan as of 2026-09-04.**` is the shape people write.
+ */
+const STILL_CURRENT_RE = new RegExp(
+  `(?:${STILL_CURRENT_PHRASES.join('|')})[\\s:*_-]*(\\d{4}-\\d{2}-\\d{2})`,
+  'i',
+)
+
 const CURRENCY_PHRASES = [
   'superseded',
   'historical',
@@ -124,7 +143,14 @@ export function presentsAsLive(filename, body) {
   return /^\s*[-*]\s*\[ \]/m.test(body)
 }
 
-/** Does it say, on its own face, that it is not the current plan? */
+/**
+ * Does it say, on its own face, WHETHER it is the current plan?
+ *
+ * True for either answer: a "not current" marker (`authority: none` or one of
+ * CURRENCY_PHRASES), or a DATED "still current" claim. The gate's question is
+ * whether the document states its own status, not which status it states — an
+ * unmarked plan is the only failure.
+ */
 export function carriesCurrencyMarker(body) {
   // The machine-readable convention first — 18 files already use it.
   if (/^authority:\s*none\s*$/m.test(body.split('---')[1] ?? '')) return true
@@ -133,7 +159,7 @@ export function carriesCurrencyMarker(body) {
     if (line.includes(NOT_A_CURRENCY_MARKER)) continue
     const l = line.toLowerCase()
     if (CURRENCY_PHRASES.some((w) => l.includes(w))) return true
-    if (STILL_CURRENT_PHRASES.some((w) => l.includes(w))) return true
+    if (STILL_CURRENT_RE.test(line)) return true
   }
   return false
 }
@@ -215,6 +241,18 @@ function selfTest() {
   if (!carriesCurrencyMarker('# T\n\nStatus: current as of 2026-09-04.'))
     fail('a dated "current as of" was not accepted')
 
+  // AN UNDATED CLAIM IS NOT A CLAIM. "Still the plan as of" with nothing after
+  // it never expires and cannot be checked — the thing that separates this from
+  // the negative markers is that a reader can compare its date to the last
+  // promotion.
+  if (carriesCurrencyMarker('# T\n\n**Still the plan as of.**'))
+    fail('an undated "still the plan as of" was accepted')
+  if (carriesCurrencyMarker('# T\n\nStatus: current as of the last review.'))
+    fail('"current as of the last review" was accepted without a date')
+  // …and the markdown-emphasised shape people actually write must still pass.
+  if (!carriesCurrencyMarker('# T\n\n**Still the plan as of 2026-09-04.**'))
+    fail('a bold, full-stopped "still the plan as of <date>" was rejected')
+
   // AND THE CONTROL THAT KEEPS IT NARROW. `current` alone is ordinary prose in a
   // live plan — accepting it would exempt files that say nothing about
   // themselves, which is the failure mode the negative list was trimmed to avoid.
@@ -229,7 +267,7 @@ function selfTest() {
     fail('a plan with no marker was treated as marked')
 
   console.log(
-    'check-plan-currency-markers --self-test: 17 assertions — status letters, what counts as ' +
+    'check-plan-currency-markers --self-test: 20 assertions — status letters, what counts as ' +
       'presenting-as-live including an F file whose boxes contradict its suffix, the three real banners the measurement verified by hand, the ' +
       'authority:none convention, the R80.3 note that must NOT count, the dated "still the ' +
       'plan as of" / "current as of" phrases a LIVE plan uses, two controls proving a bare ' +
