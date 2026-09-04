@@ -126,6 +126,12 @@
       "verdict": "FAIL",
       "summary": "The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, accepted rulings, building status, good signature, and ledger-only scope pass. Rows 1, 14, 80, 87, 89, and 115 now have bounded evidence. Iteration 18 fails because row 81 does not reconcile the source document's 553-route claim with the current 558-route replay, while rows 113, 114, and 116 still lack concrete file:line anchors or exact command/output; document summaries and artifact existence are not replayable evidence trails.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-18.md"
+    },
+    {
+      "iteration": 19,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, accepted rulings, building status, good signatures on both commits, and ledger-only scope all pass. Rows 81, 114, and 116 now have fully verified, replayable evidence: row 81 correctly states the 553-vs-558 route drift, row 114's script self-tests and 7/661 DOD-coverage figure replay exactly, and row 116's bsuite-notes-cycle dry-run output (400 paragraphs, 98 images, +0/-0) replays exactly. Iteration 19 fails because row 113 asserts a new, unreplayable numeric claim ('787 portal-related source files/paths') with no command or scope recorded; five independent replay attempts under plausible scopes produced 373, 405, 598, 2,292, and 29, none close to 787.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-19.md"
     }
   ]
 }
