@@ -72,6 +72,14 @@ of its subject.
 re-run.** A widened predicate that finds nothing deserves the same suspicion as a narrow one: a
 control that reads zero indicts the probe before the subject.
 
+*Where the evidence lives, since this entry's whole thesis is that claims must be checkable.* The
+`export function` instance is in crm7 `726e0ccd` — the fix widened the predicate and its own commit
+message names the fault. The `useForm(` and `useState<` instances are **not** reconstructable from
+a diff: they were scratch investigation greps, reported in-session and recorded in the run log,
+never committed. That is a weaker footing than the comment and failure-path examples below, each of
+which is in a named commit, and it is said here rather than left for a reader to discover by
+failing to find them.
+
 ### 2. A comment is a claim about behaviour
 
 An untested assertion sitting next to the code it describes. `Promise.all` shared one catch, so a
