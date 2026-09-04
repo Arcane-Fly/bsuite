@@ -177,8 +177,13 @@ if (args.includes('--self-test')) {
     if (!fs.existsSync(f)) fail(`HAND_WRITTEN names ${f}, which does not exist`)
     if (!why || why.length < 20) fail(`HAND_WRITTEN[${f}] has no usable reason`)
   }
+  // An empty map does NOT let anything through — `undeclared` becomes every
+  // unmarked README and --check fails until each is declared or marked. The
+  // assertion is here to say that in one line at self-test time rather than as
+  // nine UNDECIDED lines on someone's PR, and the message said the opposite of
+  // what the code does until Copilot read it on bsuite#3077.
   if (Object.keys(HAND_WRITTEN).length === 0)
-    fail('HAND_WRITTEN is empty — the undecided gate would pass over everything')
+    fail('HAND_WRITTEN is empty — every unmarked README becomes UNDECIDED and --check fails')
 
   // A README with NO marker is not ours. This is the case that made a
   // whole-file regeneration destroy docs/plans/README.md's R80.3 banner.
