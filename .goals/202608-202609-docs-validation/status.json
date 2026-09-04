@@ -78,6 +78,12 @@
       "verdict": "FAIL",
       "summary": "The exact focused row set, 128-row bijection, 6/7/3/112 arithmetic, 174-component registry, caveats, and ledger-only Builder scope pass. Rows 14 and 29 still omit concrete file:line and replayable-command evidence; row 60 is promoted without its live query or an explained function count; row 61 incorrectly cites hardcoded UI role permissions as consumers of the database role_capabilities matrix. Fresh theme replay also reports G11 failing on two inline colour styles. Overall remains building.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-10.md"
+    },
+    {
+      "iteration": 11,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/113 arithmetic, exact focused row set, preserved prior rulings, 174-component registry, building state, and ledger-only Builder scope pass. Row 61 corrects the client-map category error and row 60 avoids unsupported promotion, but row 14 paraphrases rather than records the exact gate output, row 29 uses approximate pathless anchors, and row 60 still omits the exact live query/result and local audit expected refusal. Overall remains building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-11.md"
     }
   ]
 }
