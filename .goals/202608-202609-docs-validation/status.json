@@ -60,6 +60,12 @@
       "verdict": "FAIL",
       "summary": "The corrected source footprints independently replay to 25 @dnd-kit files and 19 react-grid-layout files; the exact 128-path bijection, 5/6/3/114 arithmetic, required UNVERIFIABLE rows, bounded EntityTableWidget/DataGrid and RelationshipCanvas caveats, 174-component registry check, and ledger-only commit scope all pass. Iteration 7 fails because the ledger does not record reproducible six-app commands/scope for the two corrected footprint figures. Overall remains building.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-7.md"
+    },
+    {
+      "iteration": 8,
+      "verdict": "PASS",
+      "summary": "Exact six-root TypeScript commands independently replay to 25 @dnd-kit files and 19 react-grid-layout files; the ledger explicitly states tests are not excluded and paths are deduplicated with sort -u. The 128-path bijection, 5/6/3/114 arithmetic, prior corrected rulings, 174-component registry gate, and ledger-only Builder scope remain intact. This is a narrow iteration PASS only; overall remains building with 114 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-8.md"
     }
   ]
 }
