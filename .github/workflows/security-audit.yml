@@ -83,7 +83,13 @@ jobs:
             echo "Set BSUITE_CROSS_REPO_PAT (Contents: read on each app repo) — see bsuite#1781."
             exit 1
           fi
-          pnpm audit --audit-level=high --prod || {
+          # --ignore-registry-errors: a registry outage (ECONNRESET/TLS on the
+          # audit endpoint) is not a vulnerability. Without it, 2026-09-04's
+          # outage read as "high/critical" on all six apps at once
+          # (bsuite#3055, FOLLOW 70) — the same fix crm7 and throughput carry
+          # in their required audit steps. pnpm prints its own warning when it
+          # skips the registry, so the degradation stays visible in the log.
+          pnpm audit --audit-level=high --prod --ignore-registry-errors || {
             echo "::error::${APP} has high/critical vulnerabilities"
             exit 1
           }
@@ -96,6 +102,6 @@ jobs:
         run: |
           {
             echo "### ${APP} audit"
-            echo "- Ran \`pnpm audit --audit-level=high --prod\`"
+            echo "- Ran \`pnpm audit --audit-level=high --prod --ignore-registry-errors\` (a registry outage passes with a pnpm warning in the job log; read the log, not just this summary)"
             echo "- Status: ${STATUS}"
           } >> "$GITHUB_STEP_SUMMARY"
