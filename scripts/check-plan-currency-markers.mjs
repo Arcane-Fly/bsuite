@@ -43,6 +43,31 @@ import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 
 const DIR = 'docs/plans'
+
+/**
+ * PLANS LIVE IN SUBDIRECTORIES TOO, AND THIS GATE COULD NOT SEE THEM.
+ *
+ * `readdirSync(DIR)` is one level deep, so `docs/plans/loop-contracts/`,
+ * `inputs/`, `uplift/` and the two parity directories were never scanned — 11
+ * documents, 8 of which present as a live board. A loop contract is precisely
+ * the kind of file someone opens to find out what is outstanding, which is the
+ * reason this gate exists at all.
+ *
+ * Filed as FOLLOW 92 after a status record's own gate noticed the omission.
+ */
+function planFiles(dir = DIR, out = []) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) {
+      // archive/ is excluded by the same reasoning the naming gate uses: a
+      // historical copy is not claiming to be the live plan.
+      if (e.name === 'archive') continue
+      planFiles(`${dir}/${e.name}`, out)
+    } else if (e.name.endsWith('.md') && e.name.toLowerCase() !== 'readme.md') {
+      out.push(`${dir}/${e.name}`.slice(DIR.length + 1))
+    }
+  }
+  return out
+}
 const BASELINE = 'scripts/plan-currency-baseline.json'
 
 /**
@@ -181,11 +206,34 @@ function lastTouchedIso(path) {
   }
 }
 
+/**
+ * MEMOISED, because the self-test calls it and so does main().
+ *
+ * scan() shells out to `git log` once per live-and-unmarked plan, so running it
+ * twice doubled that: measured 0.51 s for one pass and 1.01 s for two on this
+ * tree. Half a second is not much, but it buys nothing.
+ *
+ * The obvious alternative — stop the self-test calling scan() — was rejected on
+ * evidence rather than taste. An earlier version of this file asserted the
+ * recursion against `planFiles()` alone; I then reverted the scan loop to a
+ * one-level read and the self-test still PASSED while the gate silently went
+ * back to one level deep. Testing the helper is not testing the gate, so the
+ * coupling is the point and the cost is what gets removed.
+ *
+ * Safe within a process: the filesystem and the git head do not move mid-run.
+ */
+let scanCache = null
 export function scan() {
+  if (scanCache) return scanCache
+  scanCache = scanUncached()
+  return scanCache
+}
+
+function scanUncached() {
   const mainIso = lastMainMergeIso()
   const findings = []
   let live = 0
-  for (const name of readdirSync(DIR).filter((f) => f.endsWith('.md')).sort()) {
+  for (const name of planFiles().sort()) {
     const path = `${DIR}/${name}`
     const body = readFileSync(path, 'utf8')
     if (!presentsAsLive(name, body)) continue
@@ -261,15 +309,39 @@ function selfTest() {
   if (carriesCurrencyMarker('# T\n\nMigrate customers off the current schema.'))
     fail('"current schema" was treated as a currency marker')
 
+  // THE RECURSION, asserted against the real tree rather than a fixture: a
+  // subdirectory plan must be in the scanned set. Without this the walk could
+  // silently go back to one level deep and the gate would report a smaller,
+  // greener number for the wrong reason.
+  const scanned = planFiles()
+  if (!scanned.some((f) => f.includes('/')))
+    fail('planFiles() found no plan in a subdirectory — the walk is one level deep again')
+
+  // AND THE SCAN MUST USE IT. Asserting planFiles() alone tests a helper, not
+  // the gate: reverting the scan loop to readdirSync(DIR) left this file's
+  // earlier assertion passing while the gate silently went back to one level
+  // deep and reported a smaller, greener number. Found by biting it.
+  // Compare LIKE WITH LIKE. A first version of this assertion compared scan()'s
+  // LIVE count against the total top-level FILE count — 51 against 63 — which
+  // is apples to oranges and failed on correct code. scan()'s own findings are
+  // the observable: a subdirectory path can only appear there if the scan walked
+  // into one.
+  if (scanned.some((f) => f.includes('/')) && !scan().findings.some((f) => f.includes('/')))
+    fail('scan() returned no finding from a subdirectory although the walk found files there — it is not using the recursive walk')
+  if (scanned.some((f) => f.toLowerCase().endsWith('readme.md')))
+    fail('planFiles() included a README — directory indexes are not plans')
+  if (scanned.some((f) => f.startsWith('archive/')))
+    fail('planFiles() descended into archive/ — a historical copy is not claiming to be live')
+
   // A plain plan with no marker must NOT pass — the positive control. Without
   // it, every "pass" above is indistinguishable from a detector that finds nothing.
   if (carriesCurrencyMarker('# Some plan\n\nPhase 1 — do the thing.\n'))
     fail('a plan with no marker was treated as marked')
 
   console.log(
-    'check-plan-currency-markers --self-test: 20 assertions — status letters, what counts as ' +
+    'check-plan-currency-markers --self-test: 24 assertions — status letters, what counts as ' +
       'presenting-as-live including an F file whose boxes contradict its suffix, the three real banners the measurement verified by hand, the ' +
-      'authority:none convention, the R80.3 note that must NOT count, the dated "still the ' +
+      'authority:none convention, the R80.3 note that must NOT count, that the walk reaches SUBDIRECTORIES and skips READMEs and archive/ AND that scan() actually uses it, the dated "still the ' +
       'plan as of" / "current as of" phrases a LIVE plan uses, two controls proving a bare ' +
       '"current" in ordinary prose does not count, and a positive control ' +
       'that an unmarked plan is still detected.',
@@ -306,6 +378,14 @@ function main() {
             'A NEW one fails the gate; an entry that has since been marked or updated ALSO fails,',
             'so it cannot become a place findings go to be forgotten.',
             'Regenerate deliberately with --write-baseline; never to make a red run green.',
+            '',
+            'SCOPE STEP, 2026-09-04 (FOLLOW 92): the bank rose 31 -> 36 and NOT because any',
+            'plan went stale. Until this date the gate read docs/plans one level deep, so',
+            'loop-contracts/, inputs/, uplift/ and the two parity directories were never',
+            'scanned — 11 documents, 8 of which present as a live board. Recursing made five',
+            'pre-existing unmarked plans visible for the first time; a sixth was marked in the',
+            'same commit by its owner. A rise in this number is a decay signal EXCEPT where a',
+            'line like this one records a widening, and there should be very few of these.',
           ],
           unmarked: findings,
         },
@@ -335,7 +415,7 @@ function main() {
   }
 
   console.log(
-    `check-plan-currency-markers: ${live} of ${readdirSync(DIR).filter((f) => f.endsWith('.md')).length} ` +
+    `check-plan-currency-markers: ${live} of ${planFiles().length} ` +
       `file(s) in ${DIR} present as a live board; ${findings.length} carry no currency marker and ` +
       `predate the last promotion (banked ${banked.length}).`,
   )

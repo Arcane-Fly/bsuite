@@ -4,12 +4,21 @@
     "touched since the last promotion to main. This list may only SHRINK.",
     "A NEW one fails the gate; an entry that has since been marked or updated ALSO fails,",
     "so it cannot become a place findings go to be forgotten.",
-    "Regenerate deliberately with --write-baseline; never to make a red run green."
+    "Regenerate deliberately with --write-baseline; never to make a red run green.",
+    "",
+    "SCOPE STEP, 2026-09-04 (FOLLOW 92): the bank rose 31 -> 36 and NOT because any",
+    "plan went stale. Until this date the gate read docs/plans one level deep, so",
+    "loop-contracts/, inputs/, uplift/ and the two parity directories were never",
+    "scanned — 11 documents, 8 of which present as a live board. Recursing made five",
+    "pre-existing unmarked plans visible for the first time; a sixth was marked in the",
+    "same commit by its owner. A rise in this number is a decay signal EXCEPT where a",
+    "line like this one records a widening, and there should be very few of these."
   ],
   "unmarked": [
     "20260302-r80-crm7-integration-audit-v1.00A.md",
     "20260423-gto-billing-reporting-refined-plan-v1.00A.md",
     "20260506-codehouse-parity-and-platform-360-v1.00W.md",
+    "20260506-codehouse-parity/20260506-visual-feature-builder-spec-v1.00W.md",
     "20260511-part-o11-theme-placement-doc-coherence-plan-v1.00W.md",
     "20260513-bsuite-consolidated-hardening-v1.00W.md",
     "20260609-production-readiness-next-steps-plan-v1.00W.md",
@@ -37,6 +46,10 @@
     "20260811-post-persona-execution-refined-v1.00W.md",
     "20260814-portals-and-surface-class-remediation-v1.00D.md",
     "20260817-estate-completion-plan-v1.00D.md",
-    "20260827-estate-lifecycle-process-refined-v1.00D.md"
+    "20260827-estate-lifecycle-process-refined-v1.00D.md",
+    "codehouse-parity/20260817-parity-569-pay-item-groups-spec-v1.00W.md",
+    "inputs/20260814-portals-lane-kickoff-prompt-v1.00W.md",
+    "loop-contracts/20260703-gto-e2e-cycle-loop-contract-v1.00W.md",
+    "uplift/20260507-bsuite-uplift-design-language-v1.00A.md"
   ]
 }

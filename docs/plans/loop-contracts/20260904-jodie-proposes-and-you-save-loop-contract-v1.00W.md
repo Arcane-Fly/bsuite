@@ -16,6 +16,12 @@ Plan: [`../20260904-jodie-proposes-and-you-save-v1.00W.md`](../20260904-jodie-pr
 `ui_touched`: **YES** — the Jodie panel renders forms a person edits and saves. D8 applies to
 every item below that touches it.
 
+> **Still the plan as of 2026-09-04.** Two of the eight items resolve `met` —
+> `spike-forms-liftable` (the Task 0 verdict) and `dial-reaches-the-tools`
+> (crm7#2396, merged to development). The remaining six are open and none is
+> superseded.
+
+
 Item 1 gates the rest: if the spike says the app's forms cannot be lifted out of their
 routes, the design changes and this contract is rewritten before any tool is converted.
 
