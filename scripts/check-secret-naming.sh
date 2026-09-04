@@ -794,14 +794,28 @@ self_test_r7() {
     return 1
   fi
 
-  # AI_GATEWAY_API_KEY: real, present in crm7/.env.example, matches R7's
-  # _KEY suffix filter — not a name invented for this test.
+  # Derive the planted name LIVE from crm7/.env.example rather than hardcoding
+  # one. A hardcoded literal (e.g. "AI_GATEWAY_API_KEY") would keep "passing"
+  # even after that name left the derived set — the self-test would then be
+  # asserting nothing, silently, on the exact class of drift R7 exists to
+  # catch. Asserting the set is non-empty FIRST closes the other half of that
+  # gap: an .env.example edit that empties crm7's server-only set entirely
+  # would otherwise leave nothing to plant and no test to fail.
+  local st7_names
+  st7_names=$(server_only_secret_names_for "$st7_app")
+  if [ -z "$st7_names" ]; then
+    echo "self-test (R7): FAIL — ${st7_app}/.env.example declares no server-only secret (_KEY/_TOKEN/_SECRET/_PASSWORD) to plant a violation with" >&2
+    return 1
+  fi
+  local st7_name
+  st7_name=$(printf '%s\n' "$st7_names" | head -n1)
+
   trap '( cd "'"$st7_app"'" && git reset -q -- "'"$st7_rel"'" ) 2>/dev/null; rm -f "'"$st7_fixture"'"' EXIT
 
-  cat > "$st7_fixture" <<'EOF'
-// Planted by scripts/check-secret-naming.sh --self-test. Never committed.
-export const leaked = process.env.AI_GATEWAY_API_KEY
-EOF
+  {
+    echo '// Planted by scripts/check-secret-naming.sh --self-test. Never committed.'
+    echo "export const leaked = process.env.${st7_name}"
+  } > "$st7_fixture"
   ( cd "$st7_app" && git add -- "$st7_rel" )
 
   VIOLATIONS=0
@@ -810,11 +824,11 @@ EOF
 
   local st7_result=1
   if [ "$VIOLATIONS" -gt 0 ] && printf '%s' "$DIAGNOSTICS" | grep -qF "$st7_fixture"; then
-    echo "self-test (R7): PASS — caught the planted \`process.env.AI_GATEWAY_API_KEY\` read in $st7_fixture"
+    echo "self-test (R7): PASS — caught the planted \`process.env.${st7_name}\` read in $st7_fixture"
     st7_result=0
   else
     {
-      echo "self-test (R7): FAIL — did NOT catch a planted \`process.env.AI_GATEWAY_API_KEY\` read in $st7_fixture"
+      echo "self-test (R7): FAIL — did NOT catch a planted \`process.env.${st7_name}\` read in $st7_fixture"
       echo "diagnostics were:"
       printf '%s\n' "$DIAGNOSTICS"
     } >&2
