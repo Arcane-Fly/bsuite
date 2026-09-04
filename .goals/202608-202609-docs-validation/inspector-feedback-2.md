@@ -7,7 +7,7 @@
 As in iteration 1, this verdict was produced by direct verification rather than by
 trusting the Builder's own summary — the Builder's report claimed rows 55/117 were
 "corrected with source-backed... evidence" and did not mention whether instruction
-#2 (re-verify `EntityTableWidget.tsx`) was carried out at all. It was not, and the
+# 2 (re-verify `EntityTableWidget.tsx`) was carried out at all. It was not, and the
 ledger still repeats the unverified ruling.
 
 ## (a) What was independently verified, and how
@@ -28,12 +28,14 @@ ledger still repeats the unverified ruling.
    file names and pattern already confirmed real in iteration 1's footprint grep.
 3. **Instruction #2 (re-verify `EntityTableWidget.tsx` for real read/write, downgrade if
    it's a shell): NOT DONE.** Independently ran:
+
    ```
    grep -n "\.select(\|\.insert(\|\.update(\|supabase\.from(" \
      business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx
    grep -n "onEdit\|onSave\|mutate\|useMutation\|readOnly\|isEditable\|edit" \
      business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx
    ```
+
    Result: **one `.select('*')` call, zero mutation calls, zero edit/save/mutate
    references of any kind**, in a 303-line file that only fetches schema field
    definitions and rows via `useQuery` and renders them. This is a **read-only** table
