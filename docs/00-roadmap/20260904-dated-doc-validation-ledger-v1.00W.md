@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 6
+iteration: 7
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 6
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 7
 
 ## Scope and method
 
-This is an interim iteration-6 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-7 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -28,8 +28,8 @@ Fresh evidence captured for this pass:
 - `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
 - Source grep for React Flow/xyflow across all six app source trees → **21** matching
   source files.
-- Source grep for `@dnd-kit` → **26** matching source files.
-- Source grep for `react-grid-layout` → **21** matching source files.
+- Source grep for `@dnd-kit` → **25** matching source files.
+- Source grep for `react-grid-layout` → **19** matching source files.
 - Reviewed implementation anchors: `business-suite-unified/src/lib/page-builder/EntityTableWidget.tsx`, `business-suite-unified/src/lib/schemaBuilderService.ts`, `business-suite-unified/src/lib/xyflowThemeTokens.ts`, `business-suite-unified/src/lib/feature-builder/types.ts`, `business-suite-unified/src/lib/feature-builder/index.ts`, `business-suite-unified/src/stores/featureBuilderStore.ts`, `business-suite-unified/src/components/feature-builder/RelationshipCanvas.tsx`, `SortableColumnList.tsx`, `PreviewPane.tsx`, and `SchemaVisualizer.tsx`.
 
 The source grep counts are footprint checks, not proof that every consumer is wired.
@@ -192,9 +192,9 @@ validated.
 | `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-DRIFTED | Opened; its prose headline says **662 features**, while the generated section says **661 features**. Fresh related-family source grep `grep -rl 'reactflow\|@xyflow\|ReactFlow' business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src --include='*.ts' --include='*.tsx' \| sort -u \| wc -l` → **21** files. The generated section remains authoritative for its own 661-row output; the one-feature discrepancy and rows lacking a source/route/test require reconciliation. |
 | `docs/00-roadmap/bsuite-component-registry.json` | VALIDATED-CURRENT | Parsed successfully; generator check reports `in sync (174 components)`. This is the machine-readable registry, with the generated output treated as authoritative over prose. |
 
-## Iteration 6 focused source findings
+## Iteration 7 focused source findings
 
-Iteration 6 reviewed rows **32, 51, 63, 89, and 90**, while carrying forward the
+Iteration 7 reviewed rows **32, 51, 63, 89, and 90**, while carrying forward the
 focused evidence for rows **52, 55, 80, 86, and 117**. The ten-row pass is explicit:
 
 | Row | Result | Boundary preserved |
@@ -242,7 +242,7 @@ feature row to a source file, route, test, or explicit `UNVERIFIABLE` dispositio
 Summary: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
 6 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 114 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
-VALIDATED-DRIFTED. This remains an interim iteration-6 artefact. The remaining gap is
+VALIDATED-DRIFTED. This remains an interim iteration-7 artefact. The remaining gap is
 explicitly **114/114 inventory rows still UNVERIFIABLE (89.0625%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
