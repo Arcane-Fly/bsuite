@@ -206,7 +206,30 @@ function lastTouchedIso(path) {
   }
 }
 
+/**
+ * MEMOISED, because the self-test calls it and so does main().
+ *
+ * scan() shells out to `git log` once per live-and-unmarked plan, so running it
+ * twice doubled that: measured 0.51 s for one pass and 1.01 s for two on this
+ * tree. Half a second is not much, but it buys nothing.
+ *
+ * The obvious alternative — stop the self-test calling scan() — was rejected on
+ * evidence rather than taste. An earlier version of this file asserted the
+ * recursion against `planFiles()` alone; I then reverted the scan loop to a
+ * one-level read and the self-test still PASSED while the gate silently went
+ * back to one level deep. Testing the helper is not testing the gate, so the
+ * coupling is the point and the cost is what gets removed.
+ *
+ * Safe within a process: the filesystem and the git head do not move mid-run.
+ */
+let scanCache = null
 export function scan() {
+  if (scanCache) return scanCache
+  scanCache = scanUncached()
+  return scanCache
+}
+
+function scanUncached() {
   const mainIso = lastMainMergeIso()
   const findings = []
   let live = 0
