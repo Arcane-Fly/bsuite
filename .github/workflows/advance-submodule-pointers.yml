@@ -351,6 +351,41 @@ jobs:
             fi
           fi
 
+          # AUTO-MERGE ONTO `development`, NEVER ONTO `main`.
+          #
+          # `development` requires `required_approving_review_count: 0` — every one of
+          # the ~30 required status checks, no human approval — so the only thing that
+          # was ever waiting on a person here was someone remembering to click "merge"
+          # on an already-green, already-safe-by-construction PR. The content safety
+          # comes from upstream: `scripts/advance-submodule-pointers.mjs` is forward-only
+          # (a backward move is REFUSED, not staged — see the PR body above) and its own
+          # `--self-test` step earlier in this job proves that refusal actually fires.
+          # `--auto` does not weaken any of the ~30 required checks — it only removes
+          # the wait for a human to press the button once they are all green, and does
+          # nothing if any of them are red or never finish. Idempotent: safe to call
+          # every run whether the PR is new, reopened, or just force-pushed with a
+          # newer commit — GitHub re-evaluates auto-merge against whatever the head
+          # commit is at merge time, not the one this call happened to see.
+          #
+          # `--merge` (not `--squash`), matching how #3001 — this workflow's own prior
+          # standing PR — actually merged (a 2-parent merge commit, confirmed against
+          # the API before choosing this): a gitlink-only PR is exactly the shape
+          # `PROCESS: feature -> development` already uses `--merge` for elsewhere in
+          # this estate, and a merge commit keeps each `chore(gitlink): …` advance as
+          # its own commit rather than folding six independent pointer moves into one.
+          #
+          # Non-fatal on failure: this call runs AFTER the PR is confirmed open above.
+          # If enabling auto-merge itself fails (e.g. a transient API error), the
+          # correct, already-pushed advances and the open PR must not be reported as a
+          # job failure over a convenience step — the next hourly run retries this call
+          # regardless, and the PR remains mergeable by hand in the meantime.
+          if gh pr merge "$BR" --auto --merge 2>/tmp/automerge.log; then
+            echo "auto-merge armed on $BR — merges itself once all required checks pass"
+          else
+            echo "::warning title=Could not arm auto-merge::gh pr merge --auto failed for $BR (see below); the PR is open and correct, and can be merged by hand, or will retry next scheduled run."
+            cat /tmp/automerge.log
+          fi
+
       - name: Say so even when there is nothing to do
         if: steps.advance.outputs.changed != 'true'
         run: echo "All submodule pointers already match their app main tips."
