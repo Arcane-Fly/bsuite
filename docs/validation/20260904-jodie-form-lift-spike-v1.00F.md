@@ -11,7 +11,7 @@ evidence:
 
 # Task 0 spike — can crm7's forms be lifted out of their routes?
 
-**Date:** 2026-09-04 | **Verdict: PARTIAL** | Gates every task in
+**Date:** 2026-09-04 | **Verdict: PARTIAL** (spikes 001, 002 and 003 all answered) | Gates every task in
 [`20260904-jodie-proposes-and-you-save-v1.00W.md`](../plans/20260904-jodie-proposes-and-you-save-v1.00W.md)
 
 The question: can a crm7 page form render outside its route, pre-filled from a payload, and
@@ -74,8 +74,30 @@ the state and the service call. Lifting it gives you fields and no Save.
    enforced — Jodie declining to act is better than Jodie acting invisibly, even before she
    can propose.
 
-## What this does not answer
+## Spike 003 — inline create — VALIDATED, and already built
 
-Whether a related-record picker can create inline (spike 003 of the decomposition) — the
-placement form's host-employer field was not exercised, and D8.5 of the plan makes inline
-create non-negotiable. That is the next spike, and it should run before any conversion work.
+D8.5 makes inline create non-negotiable: finishing must not require leaving the page. The
+same form that validated spike 001 already does it.
+
+`host_employer_id` renders as a `ClientSelector` with `QuickCreateEmployerModal` beside it,
+and the modal's `onCreated` calls
+`form.setValue('host_employer_id', client.id, …)` — so the record is created without
+navigating **and the new record is applied to the field**, which is the half of D8.5 that
+usually fails. A departure that returns to an empty picker is a fail, not partial credit;
+this returns with the detail already selected.
+
+Its own comment records why it exists, and it is not a Jodie requirement:
+
+> *"Operator complaint class ("can only select existing", crm7 platform-wide sweep
+> 2026-08-05): host_employer_id is a REQUIRED field with no inline create path. Reuses
+> QuickCreateEmployerModal (same modal wired on /people/new for the equivalent field) rather
+> than building a second employer-create surface."*
+
+So the hardest UX requirement in the plan is met by an existing pattern, built for an operator
+complaint a month ago, reusing the modal from the sibling surface rather than inventing one.
+The registry does not need to solve inline create — it needs to not lose it.
+
+**What remains unproven:** whether the other 19 form components have an equivalent path, or
+whether `ApprenticePlacementForm` is as exceptional here as it is in owning its submit. Given
+2 of 20 own their submit, assume the same ratio until measured, and treat inline create as
+part of the per-form conversion cost rather than as already-solved estate-wide.
