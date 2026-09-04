@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 12
+iteration: 13
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 12
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 13
 
 ## Scope and method
 
-This is an interim iteration-12 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-13 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -27,7 +27,7 @@ Fresh evidence captured for this pass:
 
 - `node scripts/generate-component-registry.mjs --check` → `component-registry: in sync (174 components)`.
 - `bash scripts/theme-gates.sh --quick` → `10 passed, 1 failed`; `G11 -> 2 convertible inline colour style(s)`; outstanding gate: `G11 — no NEW convertible inline colour styles`.
-- `node scripts/audit-role-capability-divergence.mjs` → `self-tests passed (17 roles, 91 permissions)` and exit 2; the audit refuses to report zero divergence without database input.
+- `node scripts/audit-role-capability-divergence.mjs` → stdout exactly `self-tests passed (17 roles, 91 permissions)`; stderr exactly `::error::Provide ROLE_CAPABILITIES_JSON (CI, via psql) or SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (local). Refusing to report a divergence of zero against a database I never reached.`; exit 2.
 - `bash scripts/audit-routes.sh --inventory` → **47 routes across 6 apps (18 public, 29 authenticated)**; this is an inventory check, not authenticated reachability proof.
 - `node scripts/check-route-surface-map.mjs` → **1,157 items checked, 0 problems**; inventory 558 and mapped rows 558. This is static map consistency, not runtime reachability, table reachability, or RLS proof.
 - `node scripts/check-content-contrast-tier.mjs` → **457 source files examined; 0 violations**. This is a static source scan, not rendered browser contrast evidence.
@@ -119,7 +119,7 @@ validated.
 | 57 | docs/20260824-doc-completion-bar-measured-v1.00F.md | UNVERIFIABLE | E-OPEN; replay its measurement commands and compare current docs. |
 | 58 | docs/20260824-estate-execution-backlog-v1.00W.md | UNVERIFIABLE | E-OPEN; reconcile backlog with live issues and branches. |
 | 59 | docs/20260824-preview-canary-publishing-standard-v1.00A.md | UNVERIFIABLE | E-OPEN; verify deployment configuration and canary route behavior. |
-| 60 | docs/20260824-role-capabilities-merged-not-applied-root-cause-v1.00F.md | UNVERIFIABLE | Catalogue evidence: migration `20260905000000_user_has_capability_fail_closed` is applied; a catalogue search for policies and public function definitions referencing `role_capabilities` finds **4 policies** and **6 matching public function definitions**. `role_capabilities_set_updated_at` is the timestamp trigger, leaving **5 functional APIs** after exclusion. Local replay via `node scripts/audit-role-capability-divergence.mjs` reports `self-tests passed (17 roles, 91 permissions)` then exits 2 because it refuses to claim zero divergence without database input. The exact SQL transcript is not retained, and production/live proof is not promoted: live catalogue replay, vocabulary mapping, 28 unreconciled privilege escalations, and enforcement state remain open. The document is closed on 2026-08-29, but this row remains `UNVERIFIABLE`. |
+| 60 | docs/20260824-role-capabilities-merged-not-applied-root-cause-v1.00F.md | UNVERIFIABLE | Source/baseline evidence only: the document and migration/source references were opened, but no replayable catalogue SQL/result transcript is retained for migration application, policies, or functions. Local replay via `node scripts/audit-role-capability-divergence.mjs` produced stdout exactly `self-tests passed (17 roles, 91 permissions)` and stderr exactly `::error::Provide ROLE_CAPABILITIES_JSON (CI, via psql) or SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (local). Refusing to report a divergence of zero against a database I never reached.`; exit code **2**. Therefore live production applicability is **UNVERIFIABLE**; no migration-applied, policy-count, function-count, functional-API, vocabulary, privilege, or enforcement claim is promoted. |
 | 61 | docs/20260824-role-capabilities-zero-consumer-finding-v1.00F.md | VALIDATED-DRIFTED | Focused re-check: the historical zero-consumer finding is superseded by DB-side evidence: migration `20260905000000_user_has_capability_fail_closed`, `public.user_has_capability`, 6 matching public functions (5 functional consumers after excluding `role_capabilities_set_updated_at`), and 4 policies reference `role_capabilities`. CRM7's `src/hooks/usePermissions.ts` and `src/components/auth/permission-guard.tsx` are hardcoded permission sources, not database-matrix consumers, and are therefore not evidence of `public.role_capabilities` usage. Application enforcement, vocabulary reconciliation, and live deployment state remain unverified. |
 | 62 | docs/20260825-atmosphere-is-nocodb-and-the-licence-already-ruled-v1.00A.md | UNVERIFIABLE | E-OPEN; verify product/library and licence claims against package manifests. |
 | 63 | docs/20260825-braden-group-duplicated-documents-v1.00D.md | UNVERIFIABLE | E-OPEN; the historical counts (162 candidates, 10 sensitive rows, 29 unique rows, and exposure/tenant conclusions) cannot be established by reading the document or remediation script. `scripts/remediate-duplicated-documents.mjs` could not reach its census because `@supabase/supabase-js` is unavailable; rerun the read-only census with dependencies and credentials, including eTag equality, sensitive count, unmatched unique rows, tenant membership, and exposure checks. |
@@ -197,9 +197,9 @@ validated.
 | `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-DRIFTED | Opened; its prose headline says **662 features**, while the generated section says **661 features**. Fresh related-family source grep `grep -rl 'reactflow\|@xyflow\|ReactFlow' business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src --include='*.ts' --include='*.tsx' \| sort -u \| wc -l` → **21** files. The generated section remains authoritative for its own 661-row output; the one-feature discrepancy and rows lacking a source/route/test require reconciliation. |
 | `docs/00-roadmap/bsuite-component-registry.json` | VALIDATED-CURRENT | Parsed successfully; generator check reports `in sync (174 components)`. This is the machine-readable registry, with the generated output treated as authoritative over prose. |
 
-## Iteration 12 focused source findings
+## Iteration 13 focused source findings
 
-Iteration 12 focused only on rows **14, 29, 60, 61, 80, 86, 89, 90, 117,
+Iteration 13 carried forward the prior focused findings for rows **14, 29, 60, 61, 80, 86, 89, 90, 117,
 and 51**, while preserving the prior correct evidence for rows **51, 80, 86,
 89, 90, and 117**. The ten-row pass is explicit:
 
@@ -207,7 +207,7 @@ and 51**, while preserving the prior correct evidence for rows **51, 80, 86,
 |---:|---|---|
 | 14 | UNVERIFIABLE | Theme register and exact role-token anchors were confirmed; `bash scripts/theme-gates.sh --quick` returned `10 passed, 1 failed`, `G11 -> 2 convertible inline colour style(s)`, and outstanding `G11 — no NEW convertible inline colour styles`. Authenticated rendered and deployed validation remains open. |
 | 29 | UNVERIFIABLE | Schema ownership, nullable system `tenant_id`, RLS write boundary, `tenant_schema_layout`, and exact `crm7/supabase/migrations/20260101000000_prod_schema_baseline.sql` anchors `:18256`, `:18280`, `:20353`, and `:21744` were confirmed; live catalogue/RLS and authenticated authoring validation remain open. |
-| 60 | UNVERIFIABLE | Applied migration, 4 policies, 6 matching public function definitions, timestamp-trigger exclusion, and 5 functional APIs are recorded as catalogue evidence. `node scripts/audit-role-capability-divergence.mjs` self-tested 17 roles and 91 permissions, then exited 2 rather than claiming zero divergence without DB input; production/live proof remains unverified. |
+| 60 | UNVERIFIABLE | Iteration 13 removes the non-replayable live catalogue counts and retains only source/baseline evidence plus the exact local refusal: stdout `self-tests passed (17 roles, 91 permissions)`; stderr `::error::Provide ROLE_CAPABILITIES_JSON (CI, via psql) or SUPABASE_URL + SUPABASE_SERVICE_ROLE_KEY (local). Refusing to report a divergence of zero against a database I never reached.`; exit code **2**. Live production applicability remains unverified. |
 | 61 | VALIDATED-DRIFTED | Historical zero-consumer finding is superseded by DB-side function/policy evidence; CRM7 hardcoded permission files were removed from the claimed DB-consumer set. Live deployment, application enforcement, and vocabulary reconciliation remain unverified. |
 | 51 | UNVERIFIABLE | Current source inspection does not replay deployment/gate claims; absent visual probe and incomplete matrix remain explicit. |
 | 80 | VALIDATED-DRIFTED | Persisted per-card layout mechanics hold; historical production measurements are not current estate-wide proof. |
@@ -250,7 +250,7 @@ feature row to a source file, route, test, or explicit `UNVERIFIABLE` dispositio
 Summary: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 113 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
-VALIDATED-DRIFTED. This remains an interim iteration-12 artefact. The remaining gap is
+VALIDATED-DRIFTED. This remains an interim iteration-13 artefact. The remaining gap is
 explicitly **113/113 inventory rows still UNVERIFIABLE (88.3%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
