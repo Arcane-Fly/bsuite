@@ -93,6 +93,7 @@ consolidation or deletion — never left standing unaddressed.
   customization-audit`).
 
 ## Not yet reviewed (starting index — Builder iteration 1 must at minimum triage all of these
+
 by name into the ledger, even where deep validation is deferred to a later iteration)
 
 122 of 126 dated docs remain unvalidated at goal creation (4 covered in the prior session,

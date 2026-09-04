@@ -3,14 +3,14 @@ kind: record
 authority: none
 owner: bsuite
 status: building
-iteration: 19
+iteration: 20
 ---
 
-# Dated-document genuine-validation ledger — 202608/202609, interim iteration 19
+# Dated-document genuine-validation ledger — 202608/202609, interim iteration 20
 
 ## Scope and method
 
-This is an interim iteration-18 artefact for the genuine-validation audit. The authoritative
+This is an interim iteration-20 artefact for the genuine-validation audit. The authoritative
 filesystem inventory is the deduplicated output of:
 
 `find docs docs/plans -type f \( -name '202608*' -o -name '202609*' \) -print | sort -u`
@@ -194,7 +194,7 @@ validated.
 | Path | Verdict | Genuine check |
 |---|---|---|
 | `docs/00-roadmap/BSUITE-COMPONENT-REGISTRY.md` | VALIDATED-DRIFTED | Opened and compared with `node scripts/generate-component-registry.mjs --check`: generated registry is synchronised at 174 components. Any prose count differing from 174 is drift; the generator is authoritative. |
-| `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-DRIFTED | Opened; its prose headline says **662 features**, while the generated section says **661 features**. Fresh related-family source grep `grep -rl 'reactflow\|@xyflow\|ReactFlow' business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src --include='*.ts' --include='*.tsx' \| sort -u \| wc -l` → **21** files. The generated section remains authoritative for its own 661-row output; the one-feature discrepancy and rows lacking a source/route/test require reconciliation. |
+| `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` | VALIDATED-CURRENT | Opened; its prose headline and generated section both state **661 features across 28 modules**, and the generator check passes. Fresh related-family source grep `grep -rl 'reactflow\|@xyflow\|ReactFlow' business-suite-unified/src crm7/src conduit/src braden/src R80.4/src throughput/src --include='*.ts' --include='*.tsx' \| sort -u \| wc -l` → **21** files. The generated section remains authoritative for its 661-row output; claim-level source coverage and runtime wiring remain separately bounded by the dated-document rows. |
 | `docs/00-roadmap/bsuite-component-registry.json` | VALIDATED-CURRENT | Parsed successfully; generator check reports `in sync (174 components)`. This is the machine-readable registry, with the generated output treated as authoritative over prose. |
 
 ## Iteration 13 focused source findings
@@ -236,8 +236,9 @@ while `BrowseDataTab.tsx` is the verified editable admin winner. Its exact path 
 editable columns at lines 750–751, maps and awaits edits at lines 754–764, invalidates
 the query at lines 768–771, throws on failed/partial persistence at lines 773–794, and
 mounts the shared `DataGrid` edit callback at lines 1247–1254. This is an admin-surface
-proof with explicit limits, not an estate-wide Airtable claim. The feature index also
-requires reconciliation of its 662 prose headline against 661 generated features; the
+proof with explicit limits, not an estate-wide Airtable claim. The feature index
+previously required reconciliation of its 662 prose headline against 661 generated features;
+that reconciliation is now applied. The
 fresh React Flow/xyflow footprint across all six app source trees is 21 matching source files.
 Iteration 3 performed focused source walks for the editable data path, layout persistence,
 and schema-builder save path. Many more iterations are required before the remaining
@@ -247,11 +248,11 @@ persist, reload, keyboard/focus, empty/loading/error states, and sibling-surface
 enumeration. It must also open the exact registry/index prose and compare every
 feature row to a source file, route, test, or explicit `UNVERIFIABLE` disposition.
 
-Summary: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
+Summary at iteration 20: **128 dated paths inventoried; 128 assigned a verdict; 5 VALIDATED-CURRENT;
 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 113 UNVERIFIABLE.** Separately, **3 named
 registries/indexes** are assigned verdicts: 1 VALIDATED-CURRENT and 2
 VALIDATED-DRIFTED. The iteration-13 wording retained below is historical context; this
-is the current iteration-17 ledger. The remaining gap is
+is the current iteration-20 ledger. The remaining gap is
 explicitly **113/113 inventory rows still UNVERIFIABLE (88.3%)**, so **100% claim-level
 validation has not been achieved** and no world-class/completeness conclusion is licensed.
 Many more iterations are required for the full-set criterion; that incompleteness is
@@ -281,8 +282,8 @@ Reproducible command evidence:
 * `node scripts/generate-feature-index.mjs --self-test` → `generate-feature-index --self-test: OK (12 cases)`.
 * `node scripts/generate-feature-index.mjs --check` → `feature-index: in sync (661 rows)`.
 * Parsing `docs/00-roadmap/bsuite-feature-index.json` and counting its authoritative rows → **661 rows, 28 modules,
-  57 capability areas**. The feature-index Markdown headline remains **662**, so the recorded `VALIDATED-DRIFTED`
-  verdict is unchanged; the generated JSON/check output wins.
+  57 capability areas**. The feature-index Markdown headline now also states **661**, matching the generated
+  JSON/check output; the named-index verdict is therefore `VALIDATED-CURRENT`.
 * The registry generator source at `scripts/generate-component-registry.mjs:31-32, 133-169` defines the ten shared
   package scan, package-export discovery, and direct `@bsuite/*` app-import semantics. This bounds all five census
   classifications above.
@@ -347,7 +348,7 @@ zero direct app imports are not a dead-code conclusion.
 
 This is static source/registry evidence only. It is **not** evidence of live deployment,
 authenticated reachability, RLS enforcement, visual rendering or contrast, or runtime behaviour.
-The preserved summary is **128 paths; 5 VALIDATED-CURRENT; 7 VALIDATED-DRIFTED; 3
+The preserved historical summary is **128 paths; 5 VALIDATED-CURRENT; 7 VALIDATED-DRIFTED; 3
 DUPLICATE-CLUSTER; 0 SUPERSEDED; 113 UNVERIFIABLE**, with status `building`.
 
 ## Iteration 17 focused source findings
@@ -373,8 +374,8 @@ application capability.
   output; its generator contract counts shared-package exports and direct `@bsuite/*` app
   imports, not runtime reachability.
 - `docs/00-roadmap/bsuite-feature-index.json` parses to **661 rows, 28 modules, and 57
-  capability areas**. `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` still states **662**, so
-  that Markdown index remains `VALIDATED-DRIFTED` by a one-row numeric mismatch. The
+  capability areas**. `docs/00-roadmap/BSUITE-FEATURE-INDEX.md` now states **661**, so
+  the prior one-row numeric mismatch is resolved and the Markdown index is current. The
   registry Markdown/index claims are not promoted beyond the executable/generated evidence.
 - `bash scripts/audit-routes.sh --inventory` reports **47 routes across 6 apps** (**18
   public, 29 authenticated**); `node scripts/check-route-surface-map.mjs` reports **1,157
@@ -399,6 +400,7 @@ and therefore remain `UNVERIFIABLE`.
 
 Static source evidence cannot establish authenticated reachability, deployment validity, RLS
 enforcement, browser rendering, persistence round-trip, usability, or complete feature
-wiring. No inventory row is promoted from `UNVERIFIABLE` in iteration 17. The ledger remains
+wiring. Historically, no inventory row was promoted from `UNVERIFIABLE` in iteration 17. The
+ledger remains
 **128 paths; 5 VALIDATED-CURRENT; 7 VALIDATED-DRIFTED; 3 DUPLICATE-CLUSTER; 0 SUPERSEDED;
 113 UNVERIFIABLE**, with status `building`. Overall completion is expressly not claimed.
