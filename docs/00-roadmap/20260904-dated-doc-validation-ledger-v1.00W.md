@@ -2,6 +2,8 @@
 kind: record
 authority: none
 owner: bsuite
+status: building
+iteration: 6
 ---
 
 # Dated-document genuine-validation ledger — 202608/202609, interim iteration 6
