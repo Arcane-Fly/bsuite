@@ -302,14 +302,39 @@ function extractOpeningTag(source, startIdx) {
  * the theme is dark. None of them are momentary.
  *
  * So there is exactly one question, asked uniformly of every variant
- * regardless of prefix or bracket form: does it actually name hover, focus,
- * or active — the three interactions that are genuinely transient and
- * disappear the instant the pointer or keyboard focus moves on? Everything
- * else (`dark`, `sm`, `aria-expanded`, `data-[state=open]`, `disabled`,
- * `group-data-[state=open]`, `peer-checked`, …) is resting.
+ * regardless of prefix or bracket form: is the variant's own FINAL segment
+ * actually the word hover, focus, focus-visible or active — never a
+ * substring match anywhere inside a longer token? `group-hover`/
+ * `peer-focus`/`group-active` still exempt correctly (a group/peer's HOVER,
+ * FOCUS or ACTIVE pseudo-class genuinely is transient). Everything that
+ * does not END in one of the four (`dark`, `sm`, `aria-expanded`,
+ * `data-[state=open]`, `disabled`, `group-data-[state=open]`,
+ * `peer-checked`, …) is resting.
+ *
+ * A same-shape bug one level down (crm7#2409's own enforcer, again):
+ * `data-[state=active]`, `data-[active]` and `group-data-[state=active]`
+ * all contain the SUBSTRING "active" too, but as an attribute VALUE naming
+ * a persistent data-state, not the CSS `:active` pseudo-class — a control
+ * stuck in that state is exactly as resting as `data-[state=open]` is. A
+ * naive `\bactive\b` test (this file's own previous version) matched all
+ * three, because "active" is a whole word inside `[state=active]` too.
+ * None of these three strings actually END in the bare word `active` —
+ * they end in `]` — so anchoring the match to the variant's own tail
+ * (`(?:^|-)active$`) closes the hole without reopening the original one
+ * `\b` was written to close (`inactive` still correctly never matches,
+ * since it ends in `inactive`, not `-active` or `active`).
+ *
+ * An arbitrary bracket variant (`[&:hover]`, `[&[data-inactive]:hover]`) is
+ * classified differently: it must contain an actual colon-prefixed
+ * pseudo-class reference (`:hover`, `:focus`, `:focus-visible`, `:active`),
+ * never a bare word match — `[data-inactive]` and `[data-state=active]`
+ * both correctly fail this too, for the same value-vs-pseudo-class reason.
  */
 function isTransientInteraction(variant) {
-  return /\b(?:hover|focus|active)\b/i.test(variant)
+  if (variant.startsWith('[') && variant.endsWith(']')) {
+    return /:(?:hover|focus-visible|focus|active)\b/i.test(variant)
+  }
+  return /(?:^|-)(?:hover|focus-visible|focus|active)$/i.test(variant)
 }
 
 /** Split a variant chain on `:` while keeping `[…]` arbitrary variants whole. */
@@ -610,6 +635,41 @@ function selfTest() {
     'allows peer-focus:border-border — a peer\'s FOCUS genuinely is transient',
     offendingUses(
       '<button className="border border-border-interactive peer-focus:border-border">Go</button>',
+    ),
+    [],
+  )
+  check(
+    'FLAGS data-[state=active]:border-border — the VALUE "active" names a persistent data-state, not :active',
+    offendingUses(
+      '<button className="border border-border-interactive data-[state=active]:border-border">Go</button>',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS data-[active]:border-border — same shape, shorthand boolean data attribute',
+    offendingUses(
+      '<button className="border border-border-interactive data-[active]:border-border">Go</button>',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS group-data-[state=active]:border-border — a group ancestor\'s data-state VALUE, not its :active',
+    offendingUses(
+      '<button className="border border-border-interactive group-data-[state=active]:border-border">Go</button>',
+    ).length,
+    1,
+  )
+  check(
+    'allows group-active:border-border — a group ancestor\'s CSS :active pseudo-class genuinely is transient',
+    offendingUses(
+      '<button className="border border-border-interactive group-active:border-border">Go</button>',
+    ),
+    [],
+  )
+  check(
+    'allows peer-active:border-border — same, for a peer\'s :active',
+    offendingUses(
+      '<button className="border border-border-interactive peer-active:border-border">Go</button>',
     ),
     [],
   )
