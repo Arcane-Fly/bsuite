@@ -1,7 +1,7 @@
 {
   "goal_id": "202608-202609-docs-validation",
   "status": "building",
-  "iteration": 2,
+  "iteration": 3,
   "builder_model": "Claude Sonnet 5 (copilot)",
   "inspector_model": "Claude Sonnet 5 (copilot)",
   "initial_sha": "8afa0b032590e7b9774e11e4eedacfc272a06fc2",
@@ -18,6 +18,12 @@
       "verdict": "FAIL",
       "inspector_summary": "Independently verified (subagent Inspector dispatch returned no artifact, so the orchestrator ran the check directly): RelationshipCanvas.tsx has 0 persistence calls (grep confirmed), contradicting the ledger's 'wins because it provides an actual interactive canvas' ruling. Git hygiene clean, one commit, no sweep. Fix required in iteration 2: correct the ruling to substrate-winner-not-capability-winner, re-check EntityTableWidget for the same shallow-read pattern, continue UNVERIFIABLE rows in priority order.",
       "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-1.md"
+    },
+    {
+      "iteration": 2,
+      "verdict": "FAIL",
+      "summary": "Fixed the row-55 schema-canvas ruling correctly (verified: featureBuilderStore.saveDraft() does call supabase update/insert). Deepened row 117 (workflow-canvas) with real, checkable evidence. Skipped the explicitly assigned re-check of EntityTableWidget.tsx: independently grepped it and found ZERO edit/mutate/save calls (read-only, one .select() only) while the ledger's Data surface ruling still calls it an editable Airtable-class winner. Rows 80/86 also not touched despite being assigned. ~114 of 127 rows remain UNVERIFIABLE, which is expected at this stage and not itself a failure.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-2.md"
     }
   ]
 }
