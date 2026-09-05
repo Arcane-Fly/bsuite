@@ -233,6 +233,9 @@ jobs:
 
           python3 docs/nav/build-inventory.py
           git add docs/nav/route-inventory.json
+          node scripts/generate-component-registry.mjs
+          git add docs/00-roadmap/BSUITE-COMPONENT-REGISTRY.md \
+            docs/00-roadmap/bsuite-component-registry.json
 
           # Say whether it actually changed. "The step ran" and "the step did something"
           # are different claims, and conflating them is what hid this for a whole run.
