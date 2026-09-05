@@ -391,9 +391,378 @@ function bareBorderBorderHits(tagText) {
       let b = prev
       while (b > 0 && !/[\s'"`{(,]/.test(tagText[b - 1])) b--
       const chain = tagText.slice(b, prev)
-      if (!variantsAreAllResting(chain)) continue
+      if (!variantsAreAllResting(chain)) {
+        /*
+         * AN INTERACTION VARIANT MAY ADD A BOUNDARY. IT MAY NOT TAKE ONE AWAY.
+         *
+         * The exemption above is right for `border-transparent hover:border-border`
+         * — nothing was there, hover adds a faint edge, and the resting state is
+         * what this gate is about. It is WRONG for
+         * `border-border-interactive hover:border-border`, where the control has
+         * a compliant 3:1 boundary at rest and loses it the moment a pointer
+         * arrives. Pointing at a control is when its edge matters most.
+         *
+         * Two on crm7's OrganizationStep did exactly that in light mode while the
+         * dark branch correctly used `hover:border-border-strong` — so the same
+         * file held the right answer next to the wrong one, and the gate exempted
+         * both. Caught by Copilot on the crm7#2398 promotion; ported here from
+         * crm7#2422 because this copy carries the identical exemption.
+         *
+         * The test is the same tag: if a COMPLIANT resting token is present, an
+         * interaction variant dropping to the bare divider is a downgrade, not
+         * decoration.
+         */
+        const compliantAtRest = /\bborder-border-(?:interactive|strong)\b/.test(tagText)
+        /*
+         * DIRECT interaction only — `hover:`, `focus:`, `focus-visible:`,
+         * `active:` on the element itself, never `peer-` or `group-` mediated.
+         *
+         * The distinction is real: a direct variant fires when the person is
+         * interacting with THIS control, which is precisely when its boundary
+         * matters most. A peer- or group- variant fires because something ELSE
+         * was interacted with, and the self-test fixtures deliberately assert
+         * those stay exempt.
+         *
+         * The same argument probably reaches them — a control losing its 3:1
+         * edge because a sibling took focus is still a control without an edge —
+         * but that is someone else's stated call, and overturning it silently
+         * while porting a hover fix would be the wrong way to make it. Left as
+         * an open question rather than folded in (crm7#2422 left it the same).
+         */
+        const direct = splitVariants(chain.replace(/^!/, '')).some((v) =>
+          /^(?:hover|focus-visible|focus|active)$/i.test(v),
+        )
+        if (!compliantAtRest || !direct) continue
+        // falls through to hits.push — a downgrade is reported
+      }
     }
     hits.push(at)
+  }
+  return hits
+}
+
+/**
+ * THIS GATE READS A TAG'S OWN LITERAL SOURCE TEXT. IT DOES NOT EVALUATE
+ * ANYTHING. A `className` computed by a helper function is invisible to
+ * `bareBorderBorderHits` no matter how correct that function's variant
+ * logic becomes — the offending string lives dozens of lines away, in a
+ * `return` statement this file never reads.
+ *
+ * Found live (crm7#2423): `TrainingYearCalendar.tsx` renders
+ * `className={cn(dayCellClasses(cell), 'cursor-pointer hover:border-border')}`
+ * on a real `<button>`; `dayCellClasses()`'s `'non-scheduled'` branch
+ * returns a bare `border-border`. The tag's own text contains neither
+ * "border-border" as a bare token nor any hint that `dayCellClasses`
+ * might produce one — a hand-rolled substring scan cannot know, and must
+ * not guess.
+ *
+ * bsuite's own doctrine already answers what to do with a claim this gate
+ * cannot verify: a class it could not evaluate is UNKNOWN, never a silent
+ * pass. This does not attempt to resolve `dayCellClasses(cell)` — general
+ * JSX/TS evaluation is a different, much larger tool — it flags that a
+ * `className` expression contains content whose string value is not
+ * visible in the tag's own text, so the gap becomes something a human (or
+ * a future, smarter tool) can go look at, instead of a silent hole nobody
+ * knows is there. UNKNOWN NEVER FAILS THE RATCHET: this reports a
+ * scanning gap, not a new violation class, and conflating the two would
+ * make the ratchet unpassable the day this ships, over pre-existing code
+ * nobody has looked at yet.
+ *
+ * A `className` written entirely as string/template literals is safe by
+ * construction — `bareBorderBorderHits` already reads every character of
+ * it, ternary branches and logical fallbacks included, because a ternary's
+ * un-taken branch is still sitting right there in the source. What is NOT
+ * safe is a call to anything other than a known class-merging helper, or a
+ * bare identifier standing in for the class value itself — the merge
+ * helper's OWN argument list is still literal text this file can read;
+ * what it wraps is the part that might not be.
+ */
+const CLASSNAME_MERGE_HELPERS = new Set(['cn', 'clsx', 'classNames', 'cx'])
+
+/**
+ * Given `expr[start]` is an opening quote character (`'`, `"`, or `` ` ``),
+ * returns the index just PAST its matching closing quote.
+ *
+ * A single/double-quoted string is a flat scan for the same character,
+ * skipping `\x` escapes. A template literal is NOT flat: `${...}` can
+ * contain absolutely anything an expression can, including another nested
+ * template literal (`` `a ${`x`} b` ``) or a plain string containing a
+ * literal `}` (`` `a ${cond ? '}' : 'y'}` ``) — either one, scanned
+ * character-by-character for the next bare backtick or brace, closes the
+ * OUTER template early and hands every caller a truncated, wrong string.
+ * So a `${` is followed by a genuine recursive skip: walk forward, and any
+ * quote character encountered — including another backtick — is skipped
+ * via this SAME function before resuming the brace-depth count, so a
+ * nested quote's own contents can never be mistaken for the interpolation
+ * boundary.
+ *
+ * Caught by Copilot on crm7#2426 (the FIRST version of this file used a
+ * naive `c === '`' && expr[i+1]==='$' && expr[i+2]==='{'` check — which
+ * checks whether the CURRENT character is a backtick, when a template
+ * interpolation starts with `$`, not `` ` `` — so that branch could only
+ * ever fire on a template literal that begins with an interpolation and
+ * nothing else, never on the overwhelmingly common `` `text ${x} more` ``
+ * shape. A misclassification in THIS direction — treating a non-literal
+ * expression as literal — is the worse one: it is exactly the "silent
+ * pass on something not actually safe" failure this whole PR exists to
+ * end for `className`, so it earns the same rigour applied here.
+ */
+function skipQuoted(expr, start) {
+  const quote = expr[start]
+  let i = start + 1
+  if (quote !== '`') {
+    while (i < expr.length) {
+      if (expr[i] === '\\') { i += 2; continue }
+      if (expr[i] === quote) return i + 1
+      i++
+    }
+    return i
+  }
+  while (i < expr.length) {
+    const c = expr[i]
+    if (c === '\\') { i += 2; continue }
+    if (c === '`') return i + 1
+    if (c === '$' && expr[i + 1] === '{') {
+      i += 2
+      let depth = 1
+      while (i < expr.length && depth > 0) {
+        const ic = expr[i]
+        if (ic === '\\') { i += 2; continue }
+        if (ic === '"' || ic === "'" || ic === '`') { i = skipQuoted(expr, i); continue }
+        if (ic === '{') depth++
+        else if (ic === '}') depth--
+        i++
+      }
+      continue
+    }
+    i++
+  }
+  return i
+}
+
+/** Depth-aware (paren/bracket/brace/quote) index of the first top-level
+ * occurrence of any character in `chars`, or -1. A separator inside a
+ * nested call, array, object, template `${}`, or string — however deeply
+ * nested, via `skipQuoted` — is never mistaken for a top-level one. */
+function indexOfTopLevel(expr, chars, from = 0) {
+  let depth = 0
+  for (let i = from; i < expr.length; i++) {
+    const c = expr[i]
+    if (c === '"' || c === "'" || c === '`') { i = skipQuoted(expr, i) - 1; continue }
+    if ('([{'.includes(c)) depth++
+    else if (')]}'.includes(c)) depth--
+    else if (depth === 0 && chars.includes(c)) return i
+  }
+  return -1
+}
+
+/** Splits a ternary `cond ? whenTrue : whenFalse` at top level, honouring
+ * nested ternaries (each nested `?` must consume its own `:` first). Not a
+ * ternary (no top-level `?`) returns null. */
+function splitTernary(expr) {
+  const q = indexOfTopLevel(expr, '?')
+  if (q === -1) return null
+  // Walk forward from just after `?`, tracking nested ternary `?`s so the
+  // matching `:` — not an inner ternary's own `:` — is the one found.
+  let nesting = 1
+  let i = q + 1
+  while (i < expr.length && nesting > 0) {
+    const rel = indexOfTopLevel(expr, '?:', i)
+    if (rel === -1) return null // malformed — not confidently a ternary
+    if (expr[rel] === '?') nesting++
+    else nesting--
+    i = rel + 1
+    if (nesting === 0) {
+      return { whenTrue: expr.slice(q + 1, rel), whenFalse: expr.slice(rel + 1) }
+    }
+  }
+  return null
+}
+
+/** Parses a top-level function call `name(args)` spanning the WHOLE
+ * expression (after trimming) — not a call embedded in a larger
+ * expression. Returns `{ name, args }` (args split on top-level commas) or
+ * null. */
+function splitCall(expr) {
+  const m = /^([A-Za-z_$][\w$]*)\(/.exec(expr)
+  if (!m) return null
+  if (!expr.endsWith(')')) return null
+  const argsText = expr.slice(m[0].length, -1)
+  const args = []
+  let start = 0
+  for (;;) {
+    const comma = indexOfTopLevel(argsText, ',', start)
+    if (comma === -1) {
+      if (start < argsText.length || args.length > 0) args.push(argsText.slice(start))
+      break
+    }
+    args.push(argsText.slice(start, comma))
+    start = comma + 1
+  }
+  return { name: m[1], args }
+}
+
+/**
+ * True when `expr` is provably composed only of string/template literal
+ * text that is fully visible right here — see the header comment above
+ * `CLASSNAME_MERGE_HELPERS` for what "provably" excludes and why.
+ */
+function isProvablyLiteralClassExpr(expr) {
+  const s = expr.trim()
+  if (!s) return true // an empty ternary/logical branch hides nothing
+
+  if (s[0] === '(' && s[s.length - 1] === ')' && indexOfTopLevel(s.slice(1, -1), ')') === -1) {
+    return isProvablyLiteralClassExpr(s.slice(1, -1))
+  }
+
+  // A plain string literal, start to finish — no top-level content of the
+  // SAME quote character outside the opening/closing pair (a lone escaped
+  // quote inside doesn't end it, exactly like extractOpeningTag's walk).
+  /*
+   * A plain string or template literal, START TO END — checked with
+   * `skipQuoted`, never by eyeballing the first/last character. Checking
+   * only `s[0]` and `s[s.length-1]` was a second bug of exactly the same
+   * shape as the one Copilot caught in `indexOfTopLevel` (below): it let
+   * `'a' + 'b'` — a plain, safe concatenation of two literals — reach this
+   * branch (starts AND ends with `'`), scan forward, hit the FIRST
+   * string's own closing quote before reaching the real end, and return
+   * `false` outright, never giving the `+` check further down a chance to
+   * see it for what it actually is. `skipQuoted` finds where `s[0]`'s
+   * matching quote ACTUALLY closes; only when that is the end of the
+   * whole expression is this genuinely one literal. When it closes
+   * earlier, this simply is not that shape — falling through (not
+   * returning `false`) is what lets `'a' + 'b'` reach the `+` case below
+   * and be correctly recognised as literal.
+   */
+  if (s[0] === "'" || s[0] === '"' || s[0] === '`') {
+    const closesAt = skipQuoted(s, 0)
+    if (closesAt === s.length) {
+      if (s[0] !== '`') return true // a plain string: every character in it is already visible here
+      // A template literal: every `${...}` interior must itself be
+      // provably literal — the literal TEXT segments between them are,
+      // by definition, visible right here. `skipQuoted`'s own template
+      // branch is reused for the walk (nested quotes/templates included)
+      // so this cannot re-open the bug it was written to close.
+      let i = 1
+      while (i < s.length - 1) {
+        if (s[i] === '\\') { i += 2; continue }
+        if (s[i] === '"' || s[i] === "'" || s[i] === '`') { i = skipQuoted(s, i); continue }
+        if (s[i] === '$' && s[i + 1] === '{') {
+          const exprStart = i + 2
+          i += 2
+          let depth = 1
+          while (i < s.length - 1 && depth > 0) {
+            const ic = s[i]
+            if (ic === '\\') { i += 2; continue }
+            if (ic === '"' || ic === "'" || ic === '`') { i = skipQuoted(s, i); continue }
+            if (ic === '{') depth++
+            else if (ic === '}') { depth--; if (depth === 0) break }
+            i++
+          }
+          if (!isProvablyLiteralClassExpr(s.slice(exprStart, i))) return false
+          i++
+          continue
+        }
+        i++
+      }
+      return true
+    }
+    // Falls through: not one literal spanning the whole expression (e.g.
+    // `'a' + 'b'`, or `` `a` + `${x}` `` ) — the +/ternary/&&/|| cases
+    // below are what actually classify it.
+  }
+
+  const ternary = splitTernary(s)
+  if (ternary) {
+    return (
+      isProvablyLiteralClassExpr(ternary.whenTrue) && isProvablyLiteralClassExpr(ternary.whenFalse)
+    )
+  }
+
+  // `a || b`: either side can be the yielded value. `a && b`: only the
+  // RIGHT side is ever a value — the left is a condition that, if falsy,
+  // yields itself (a non-string cn()/clsx() silently drops), never text
+  // this scanner would need to have read.
+  const or = indexOfTopLevel(s, '|', 0)
+  if (or !== -1 && s[or + 1] === '|') {
+    return (
+      isProvablyLiteralClassExpr(s.slice(0, or)) && isProvablyLiteralClassExpr(s.slice(or + 2))
+    )
+  }
+  const and = indexOfTopLevel(s, '&', 0)
+  if (and !== -1 && s[and + 1] === '&') {
+    return isProvablyLiteralClassExpr(s.slice(and + 2))
+  }
+
+  // String concatenation (`'a ' + (cond ? 'b' : 'c')`) — a real pattern in
+  // this codebase (ComposeForm.tsx, TimeCreditCard.tsx), not a hypothetical
+  // one. Every top-level `+`-separated piece must itself be provably
+  // literal; `+` doubles as numeric addition but a class-string context
+  // never legitimately needs one, so treating it as concatenation-only
+  // costs nothing real.
+  const plus = indexOfTopLevel(s, '+', 0)
+  if (plus !== -1) {
+    const pieces = []
+    let start = 0
+    let at = plus
+    for (;;) {
+      pieces.push(s.slice(start, at))
+      start = at + 1
+      at = indexOfTopLevel(s, '+', start)
+      if (at === -1) {
+        pieces.push(s.slice(start))
+        break
+      }
+    }
+    return pieces.every(isProvablyLiteralClassExpr)
+  }
+
+  const call = splitCall(s)
+  if (call && CLASSNAME_MERGE_HELPERS.has(call.name)) {
+    return call.args.every(isProvablyLiteralClassExpr)
+  }
+
+  // A bare identifier, a member expression, a call to anything other than
+  // a known merge helper, a spread, a numeric/boolean literal standing in
+  // for a class list — the actual string content is not visible here.
+  return false
+}
+
+/**
+ * Every `className={...}` attribute in `tagText` whose expression is NOT
+ * provably composed of literal text — reported as `{ expr }` for each one
+ * (there is at most one `className` per tag, but this stays a list for
+ * symmetry with the other `*Hits` finders and in case a spread duplicates
+ * it). See the header comment above `CLASSNAME_MERGE_HELPERS`.
+ */
+function unresolvableClassNameHits(tagText) {
+  const hits = []
+  const attrRe = /\bclassName\s*=\s*\{/g
+  let m
+  while ((m = attrRe.exec(tagText))) {
+    const braceStart = m.index + m[0].length - 1
+    let depth = 0
+    let inQuote = null
+    let i = braceStart
+    for (; i < tagText.length; i++) {
+      const c = tagText[i]
+      if (inQuote) {
+        if (c === '\\') { i++; continue }
+        if (c === inQuote) inQuote = null
+        continue
+      }
+      if (c === '"' || c === "'" || c === '`') { inQuote = c; continue }
+      if (c === '{') depth++
+      else if (c === '}') {
+        depth--
+        if (depth === 0) break
+      }
+    }
+    const expr = tagText.slice(braceStart + 1, i)
+    if (!isProvablyLiteralClassExpr(expr)) {
+      hits.push({ expr: expr.trim().replace(/\s+/g, ' ').slice(0, 90) })
+    }
+    attrRe.lastIndex = i + 1
   }
   return hits
 }
@@ -417,6 +786,31 @@ export function offendingUses(source) {
   }
   return hits
 }
+
+/**
+ * Every NATIVE control tag whose `className` is not provably literal —
+ * `{ tag, expr }` for each. A separate function, not a change to
+ * `offendingUses`'s return shape: dozens of self-test assertions already
+ * depend on that function returning a bare array of confirmed violations,
+ * and this is a different, non-blocking category (see the header comment
+ * above `CLASSNAME_MERGE_HELPERS`) that must never be mistaken for one by
+ * a caller that only checked `.length`.
+ */
+export function unresolvableClassNameUses(source) {
+  const stripped = stripComments(source)
+  const hits = []
+  const tagRe = new RegExp(`<(${CONTROL_TAGS.join('|')})(?=[\\s/>])`, 'g')
+  let m
+  while ((m = tagRe.exec(stripped))) {
+    const tagText = extractOpeningTag(stripped, m.index)
+    for (const { expr } of unresolvableClassNameHits(tagText)) {
+      hits.push({ tag: m[1], expr })
+    }
+    tagRe.lastIndex = m.index + tagText.length
+  }
+  return hits
+}
+
 
 /**
  * Every LOCAL identifier `source`'s own import statements bind to a control
@@ -465,6 +859,7 @@ export function offendingComponentUses(source) {
   const stripped = stripComments(source)
   const aliases = resolveControlAliases(stripped)
   const hits = []
+  const unresolvable = []
   let seen = 0
   const tagRe = /<([A-Z][\w$]*)(?=[\s/>])/g
   let m
@@ -474,9 +869,12 @@ export function offendingComponentUses(source) {
     seen++
     const tagText = extractOpeningTag(stripped, m.index)
     if (bareBorderBorderHits(tagText).length > 0) hits.push({ tag })
+    // See unresolvableClassNameUses's header comment (above
+    // CLASSNAME_MERGE_HELPERS) — a non-blocking, separate category.
+    for (const { expr } of unresolvableClassNameHits(tagText)) unresolvable.push({ tag, expr })
     tagRe.lastIndex = m.index + tagText.length
   }
-  return { hits, seen, aliases }
+  return { hits, seen, aliases, unresolvable }
 }
 
 /**
@@ -807,6 +1205,163 @@ function selfTest() {
     1,
   )
 
+  // ── hover may ADD a boundary, never take one away (crm7#2422) ──────────
+  check(
+    'FLAGS border-border-interactive hover:border-border — a control that loses its 3:1 edge while pointed at',
+    offendingUses(
+      '<button className="border-2 border-border-interactive hover:border-border">x</button>',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS it in the DARK branch too — dark:hover: is still a direct interaction',
+    offendingUses(
+      '<button className="border-2 border-border-interactive dark:hover:border-border">x</button>',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS focus-visible dropping to the divider — keyboard users lose the edge exactly when they need it',
+    offendingUses(
+      '<button className="border-2 border-border-strong focus-visible:border-border">x</button>',
+    ).length,
+    1,
+  )
+  check(
+    'ALLOWS border-transparent hover:border-border — nothing was there, so hover ADDS an edge',
+    offendingUses(
+      '<button className="border-2 border-transparent hover:border-border">x</button>',
+    ).length,
+    0,
+  )
+  check(
+    'ALLOWS hover:border-border-strong beside a compliant resting token — not a downgrade at all',
+    offendingUses(
+      '<button className="border-2 border-border-interactive hover:border-border-strong">x</button>',
+    ).length,
+    0,
+  )
+  check(
+    'ALLOWS peer-focus:border-border even WITH a compliant resting token — the downgrade rule is direct-interaction only, deliberately',
+    offendingUses(
+      '<button className="border-2 border-border-interactive peer-focus:border-border">x</button>',
+    ).length,
+    0,
+  )
+
+  // ── UNKNOWN: a className this scan cannot prove safe or unsafe (crm7#2424) ──
+  check(
+    'does NOT flag plain string literal className — the whole value is visible right here',
+    unresolvableClassNameUses('<button className="border border-border-interactive">Go</button>')
+      .length,
+    0,
+  )
+  check(
+    'does NOT flag className="..." (no braces at all)',
+    unresolvableClassNameUses('<input className="border" />').length,
+    0,
+  )
+  check(
+    "does NOT flag cn('a', 'b') — a merge helper over two literal arguments",
+    unresolvableClassNameUses("<button className={cn('a', 'b')}>Go</button>").length,
+    0,
+  )
+  check(
+    'does NOT flag a ternary between two literal branches — both are visible right here',
+    unresolvableClassNameUses(
+      "<button className={active ? 'border-border-interactive' : 'border-transparent'}>Go</button>",
+    ).length,
+    0,
+  )
+  check(
+    'does NOT flag `cond && \'literal\'` inside cn() — the condition is never a value',
+    unresolvableClassNameUses(
+      "<button className={cn('border', isOpen && 'border-border-interactive')}>Go</button>",
+    ).length,
+    0,
+  )
+  check(
+    'does NOT flag a template literal whose ${} interpolation is a literal-only ternary',
+    unresolvableClassNameUses(
+      "<button className={`pl-10 ${hasError ? 'border-destructive' : ''}`}>Go</button>",
+    ).length,
+    0,
+  )
+  check(
+    'FLAGS a bare identifier standing in for the whole className — its value is not here',
+    unresolvableClassNameUses('<button className={dayCellClasses}>Go</button>').length,
+    1,
+  )
+  check(
+    'FLAGS a call to a helper OTHER than cn/clsx/classNames/cx — crm7#2423 shape, exactly',
+    unresolvableClassNameUses(
+      "<button className={cn(dayCellClasses(cell), 'cursor-pointer hover:border-border')}>Go</button>",
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS a bare identifier passed as one argument to cn(), the rest of the call still literal',
+    unresolvableClassNameUses("<button className={cn('border', someClassVar)}>Go</button>").length,
+    1,
+  )
+  check(
+    'FLAGS it on a component tag too, not just a native one',
+    offendingComponentUses(
+      "<Button className={cn(dayCellClasses(cell), 'x')}>Go</Button>",
+    ).unresolvable.length,
+    1,
+  )
+  check(
+    'the reported expr is truncated/whitespace-collapsed, not the raw multi-line source',
+    unresolvableClassNameUses(
+      "<button\n  className={cn(\n    dayCellClasses(cell),\n    'x'\n  )}\n>Go</button>",
+    )[0]?.expr.includes('\n'),
+    false,
+  )
+  check(
+    "does NOT flag 'literal ' + (cond ? 'literal2' : 'literal3') — concatenation of literal pieces",
+    unresolvableClassNameUses(
+      "<button className={'flex gap-1.5 ' + (active ? 'bg-primary' : 'text-muted-foreground')}>Go</button>",
+    ).length,
+    0,
+  )
+  check(
+    "FLAGS 'literal ' + someVariable — concatenation does not save a non-literal piece",
+    unresolvableClassNameUses("<button className={'flex gap-1.5 ' + extraClass}>Go</button>").length,
+    1,
+  )
+  check(
+    "does NOT flag 'a' + 'b' — two adjacent quote-delimited literals, not one string skipQuoted " +
+      'must not stop at the first one\'s own closing quote',
+    unresolvableClassNameUses("<button className={'a' + 'b'}>Go</button>").length,
+    0,
+  )
+  check(
+    'does NOT flag a template literal whose ${} interpolation is ANOTHER template literal with no ' +
+      'interpolation of its own — Copilot crm7#2426: the naive scan could only detect an interpolation ' +
+      'starting at the very first character, never mid-string',
+    unresolvableClassNameUses(
+      "<button className={`a ${active ? `hover-on` : `hover-off`} b`}>Go</button>",
+    ).length,
+    0,
+  )
+  check(
+    'FLAGS a template literal whose nested ${} (inside a NESTED template) is non-literal — the outer ' +
+      'skip must not stop at the nested template\'s own closing backtick',
+    unresolvableClassNameUses(
+      "<button className={`a ${active ? `on-${extraClass}` : `off`} b`}>Go</button>",
+    ).length,
+    1,
+  )
+  check(
+    "does NOT flag a template literal containing a plain string with a literal '}' inside an " +
+      'interpolation — brace-depth counting must skip nested quotes, not just count braces blindly',
+    unresolvableClassNameUses(
+      "<button className={`a ${active ? '}' : 'x'} b`}>Go</button>",
+    ).length,
+    0,
+  )
+
   const failed = cases.filter(([, ok]) => !ok)
   for (const [label, ok, a, e] of cases) if (!ok) console.error(`  ✗ ${label}\n      expected ${e}\n      actual   ${a}`)
   if (failed.length) {
@@ -838,6 +1393,7 @@ function main() {
   }
 
   const problems = []
+  const unresolvable = []
   let nativeTagsSeen = 0
   let componentTagsSeen = 0
   let aliasesResolved = 0
@@ -846,6 +1402,9 @@ function main() {
     for (const { tag } of offendingUses(source)) {
       problems.push(`${relative(ROOT, f)} has a <${tag}> whose only boundary is border-border`)
     }
+    for (const { tag, expr } of unresolvableClassNameUses(source)) {
+      unresolvable.push(`${relative(ROOT, f)} has a <${tag}> whose className is not provably literal: ${expr}`)
+    }
     nativeTagsSeen += nativeControlTagCount(source)
 
     const component = offendingComponentUses(source)
@@ -853,6 +1412,11 @@ function main() {
     aliasesResolved += component.aliases.size
     for (const { tag } of component.hits) {
       problems.push(`${relative(ROOT, f)} has a <${tag}> component whose only boundary is border-border`)
+    }
+    for (const { tag, expr } of component.unresolvable) {
+      unresolvable.push(
+        `${relative(ROOT, f)} has a <${tag}> component whose className is not provably literal: ${expr}`,
+      )
     }
   }
 
@@ -874,7 +1438,8 @@ function main() {
   const summary =
     `check-control-boundary-contrast: ${files.length} source file(s) under packages/ examined; ` +
     `${nativeTagsSeen} native control tag(s) seen, ${componentTagsSeen} component control tag(s) seen, ` +
-    `${aliasesResolved} control-import alias(es) resolved; ${problems.length} violation(s).`
+    `${aliasesResolved} control-import alias(es) resolved; ${problems.length} violation(s), ` +
+    `${unresolvable.length} unresolvable className(s) not counted either way (see below).`
 
   if (updateBaseline) {
     writeBaseline(BASELINE_FILE, {
@@ -909,6 +1474,22 @@ function main() {
         'pre-existing set this PR deliberately does not fix.',
     )
     console.error('')
+  }
+  if (unresolvable.length) {
+    console.warn(
+      'UNRESOLVABLE className(s) — NOT counted as a violation OR a pass (crm7#2424):',
+    )
+    for (const u of unresolvable) console.warn(`  ?  ${u}`)
+    console.warn('')
+    console.warn(
+      'This gate reads a tag\'s own literal source text; it cannot see a className computed by a ' +
+        "helper function, a bare variable, or any call other than cn()/clsx()/classNames()/cx(). Each " +
+        'line above is a control whose real className this scan could not prove safe OR prove unsafe — ' +
+        'go read it by eye (see crm7#2423 for a confirmed real instance of this exact shape). This list ' +
+        'NEVER fails the build and is NOT part of the banked ratchet: it reports a scanning gap, not a ' +
+        'violation count, and the true violation total is >= the number above, never exactly it.',
+    )
+    console.warn('')
   }
   console.log(summary)
 
