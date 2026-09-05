@@ -188,7 +188,9 @@ jobs:
               # 137) ahead of a later genuine verification failure (rc=1)
               # leaves rc=137 forever and the real 1 is lost. A 1 always wins;
               # otherwise the first non-zero code standing wins, same as
-              # before. Covered by scripts/test-reach-rc-precedence.sh below.
+              # before. Covered by scripts/test-reach-rc-precedence.sh, wired
+              # in above as its own "Self-test the per-app rc-precedence
+              # line" step.
               if [ "$iter_rc" = "1" ] || [ "$rc" = "0" ]; then rc=$iter_rc; fi
             done
           fi
