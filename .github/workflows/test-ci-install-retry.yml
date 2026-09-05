@@ -1,0 +1,42 @@
+name: CI install-retry self-test
+
+# FOLLOW 113. Runs .github/workflows/test-ci-install-retry.sh on the actual
+# runner, not a local reproduction of it — the class of bug this fix
+# introduced once already (a retry skeleton that only worked under a locally
+# invoked `bash script.sh`, and died on attempt 1 under the runner's real
+# `bash -e {0}` / `bash --noprofile --norc -eo pipefail {0}`) is invisible to
+# any test that does not run under the SAME shell the runner picks.
+#
+# This is deliberately its own workflow, not a step folded into an existing
+# job: it needs to prove the retry skeleton under the runner's default shell
+# with NO `shell:` override, exactly as every fixed install step gets it.
+
+on:
+  pull_request:
+    branches: [main, master, development]
+    paths:
+      - '.github/workflows/test-ci-install-retry.sh'
+      - '.github/workflows/test-ci-install-retry.yml'
+  push:
+    branches: [main, development]
+    paths:
+      - '.github/workflows/test-ci-install-retry.sh'
+      - '.github/workflows/test-ci-install-retry.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  self-test:
+    name: Retry skeleton survives the runner's own shell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # No `shell:` override — this is the exact default every fixed
+      # corepack/pnpm step in this repo also gets: `bash --noprofile --norc
+      # -eo pipefail {0}` on a Linux runner. If the retry skeleton only works
+      # under a DIFFERENT shell invocation, this step fails and says so.
+      - name: Run the retry-skeleton self-test under the runner's default shell
+        run: .github/workflows/test-ci-install-retry.sh
