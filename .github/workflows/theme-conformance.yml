@@ -1031,8 +1031,33 @@ jobs:
       - name: Install and build packages
         shell: bash
         run: |
-          corepack enable
-          pnpm install --no-frozen-lockfile
+          set -uo pipefail
+          # corepack enable's first pnpm invocation fetches the pnpm tarball
+          # from registry.npmjs.org — a registry-side TLS drop here is not a
+          # build failure (FOLLOW 113 / crm7#2422, 2026-09-04: identical
+          # fetch died with ECONNRESET). Bounded retry, backing off; a
+          # non-network failure (e.g. the lockfile mismatch noted above) is
+          # not retried.
+          attempt=1
+          max_attempts=4
+          delay=5
+          network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
+          log="$(mktemp)"
+          while true; do
+            corepack enable && pnpm install --no-frozen-lockfile 2>&1 | tee "$log"
+            rc=${PIPESTATUS[0]}
+            [ "$rc" -eq 0 ] && break
+            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
+              echo "::error::install failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — failing fast"
+              rm -f "$log"
+              exit "$rc"
+            fi
+            echo "::warning::install hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
+            sleep "$delay"
+            delay=$((delay * 3))
+            attempt=$((attempt + 1))
+          done
+          rm -f "$log"
           pnpm -r --filter './packages/**' build
 
       # Six packages once shipped to npm unimportable from Node. The version
@@ -1089,8 +1114,33 @@ jobs:
       - name: Install
         shell: bash
         run: |
-          corepack enable
-          pnpm install --no-frozen-lockfile
+          set -uo pipefail
+          # corepack enable's first pnpm invocation fetches the pnpm tarball
+          # from registry.npmjs.org — a registry-side TLS drop here is not a
+          # build failure (FOLLOW 113 / crm7#2422, 2026-09-04: identical
+          # fetch died with ECONNRESET). Bounded retry, backing off; a
+          # non-network failure (e.g. the lockfile mismatch noted above) is
+          # not retried.
+          attempt=1
+          max_attempts=4
+          delay=5
+          network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
+          log="$(mktemp)"
+          while true; do
+            corepack enable && pnpm install --no-frozen-lockfile 2>&1 | tee "$log"
+            rc=${PIPESTATUS[0]}
+            [ "$rc" -eq 0 ] && break
+            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
+              echo "::error::install failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — failing fast"
+              rm -f "$log"
+              exit "$rc"
+            fi
+            echo "::warning::install hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
+            sleep "$delay"
+            delay=$((delay * 3))
+            attempt=$((attempt + 1))
+          done
+          rm -f "$log"
 
       # …AND THAT IS NOT ENOUGH, which is why this step exists.
       #

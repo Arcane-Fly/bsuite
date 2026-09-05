@@ -45,7 +45,35 @@ jobs:
           # "Unable to locate executable file: pnpm" at the setup-node step.
           package-manager-cache: false
       - name: Setup pnpm
-        run: corepack enable && corepack prepare pnpm@10.33.3 --activate
+        # corepack fetches the pnpm tarball from registry.npmjs.org on every
+        # job. A registry-side TLS drop mid-fetch is not a build failure —
+        # confirmed live on crm7#2422 (2026-09-04, FOLLOW 113): corepack's
+        # own fetch died with ECONNRESET before the TLS handshake completed.
+        # Retry is bounded (4 attempts) and backs off; anything that is NOT
+        # one of the known transient network signatures fails immediately —
+        # a bad version pin or checksum mismatch must never be retried away.
+        run: |
+          set -uo pipefail
+          attempt=1
+          max_attempts=4
+          delay=5
+          network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
+          log="$(mktemp)"
+          while true; do
+            corepack enable && corepack prepare pnpm@10.33.3 --activate 2>&1 | tee "$log"
+            rc=${PIPESTATUS[0]}
+            [ "$rc" -eq 0 ] && break
+            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
+              echo "::error::corepack setup failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — not a recognised transient network error, or attempts exhausted; failing fast"
+              rm -f "$log"
+              exit "$rc"
+            fi
+            echo "::warning::corepack setup hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
+            sleep "$delay"
+            delay=$((delay * 3))
+            attempt=$((attempt + 1))
+          done
+          rm -f "$log"
 
       # Install at workspace root (not from packages/page-builder/) so pnpm
       # uses the package's own pnpm-lock.yaml resolutions (vite@8 + plugin-react@6),

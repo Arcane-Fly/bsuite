@@ -59,7 +59,32 @@ jobs:
       - name: Install typescript (the guard parses TSX, it does not grep it)
         run: |
           set -euo pipefail
-          corepack enable
+          # corepack enable fetches the pnpm tarball from registry.npmjs.org —
+          # a registry-side TLS drop here is not a build failure (FOLLOW 113 /
+          # crm7#2422, 2026-09-04: identical fetch died with ECONNRESET).
+          # Bounded retry, backing off; a non-network failure is not retried.
+          attempt=1
+          max_attempts=4
+          delay=5
+          network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
+          log="$(mktemp)"
+          while true; do
+            set +e
+            corepack enable && corepack prepare --activate 2>&1 | tee "$log"
+            rc=${PIPESTATUS[0]}
+            set -e
+            [ "$rc" -eq 0 ] && break
+            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
+              echo "::error::corepack setup failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — failing fast"
+              rm -f "$log"
+              exit "$rc"
+            fi
+            echo "::warning::corepack setup hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
+            sleep "$delay"
+            delay=$((delay * 3))
+            attempt=$((attempt + 1))
+          done
+          rm -f "$log"
           # The guard hard-refuses to run without a real parser rather than
           # degrading to a regex — same rule as check-own-package-freshness.mjs
           # and for the same reason. A grep counts a COMMENT mentioning
