@@ -44,9 +44,29 @@ jobs:
         # job. A registry-side TLS drop mid-fetch is not a build failure —
         # confirmed live on crm7#2422 (2026-09-04, FOLLOW 113): corepack's
         # own fetch died with ECONNRESET before the TLS handshake completed.
-        # Retry is bounded (4 attempts) and backs off; anything that is NOT
-        # one of the known transient network signatures fails immediately —
-        # a bad version pin or checksum mismatch must never be retried away.
+        #
+        # `corepack prepare --activate` (no version arg) — NOT a hardcoded
+        # `pnpm@10.33.3` — so it resolves the packageManager field of THIS
+        # job's own working-directory (this file's `defaults.run.working-directory`,
+        # same cwd the "Install dependencies" step below runs in), whatever
+        # version that package actually pins. A hardcoded version here was a
+        # DECOY FETCH for any package pinning something else: it pre-warmed a
+        # version nothing downstream needed, while the real fetch stayed
+        # unguarded at "Install dependencies" (caught in review against a real
+        # job log: audit (crm7) printed "Preparing pnpm@11.24.0" here while the
+        # unguarded step separately fetched pnpm-10.33.3.tgz).
+        #
+        # Retry is bounded (4 attempts) and backs off; anything that is NOT one
+        # of the known transient network signatures fails immediately — a bad
+        # version pin or checksum mismatch must never be retried away.
+        #
+        # set +e / set -e brackets the guarded pipeline specifically: this step
+        # runs under the runner's own `bash -e`/`-eo pipefail`, and a failing
+        # pipeline as the LAST element of an && list still trips errexit under
+        # that inherited state — `set -uo pipefail` alone does not clear it.
+        # Without this bracket the step dies here on the first failure, before
+        # rc= is ever read, and the retry below never runs (caught in review by
+        # replaying this exact block under `bash -e`).
         run: |
           set -uo pipefail
           attempt=1
@@ -55,8 +75,12 @@ jobs:
           network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
           log="$(mktemp)"
           while true; do
-            corepack enable && corepack prepare pnpm@10.33.3 --activate 2>&1 | tee "$log"
+            echo "::group::corepack setup attempt ${attempt}/${max_attempts}"
+            set +e
+            corepack enable && corepack prepare --activate 2>&1 | tee "$log"
             rc=${PIPESTATUS[0]}
+            set -e
+            echo "::endgroup::"
             [ "$rc" -eq 0 ] && break
             if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
               echo "::error::corepack setup failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — not a recognised transient network error, or attempts exhausted; failing fast"

@@ -162,8 +162,20 @@ jobs:
           network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
           log="$(mktemp)"
           while true; do
+            echo "::group::install attempt ${attempt}/${max_attempts}"
+            # set +e / set -e brackets the guarded pipeline specifically: this
+            # step runs under the runner's own bash -e / -eo pipefail, and a
+            # failing pipeline as the LAST element of an && list still trips
+            # errexit under that inherited state — set -uo pipefail alone
+            # does not clear it. Without this bracket the step dies here on
+            # the first failure, before rc= is read, and the retry below
+            # never runs (caught in review by replaying this block under
+            # `bash -e`).
+            set +e
             corepack enable && pnpm install --ignore-workspace --no-frozen-lockfile 2>&1 | tee "$log"
             rc=${PIPESTATUS[0]}
+            set -e
+            echo "::endgroup::"
             [ "$rc" -eq 0 ] && break
             if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
               echo "::error::install failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — failing fast"

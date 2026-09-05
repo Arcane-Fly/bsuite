@@ -57,33 +57,18 @@ jobs:
           node-version: 24
 
       - name: Enable corepack (pnpm)
-        # corepack fetches the pnpm tarball from registry.npmjs.org on every
-        # job. A registry-side TLS drop here is not a build failure — FOLLOW
-        # 113 / crm7#2422 (2026-09-04) confirmed corepack's own fetch dying
-        # with ECONNRESET before the TLS handshake completed. Bounded retry,
-        # backing off; a non-network failure fails immediately, not retried.
-        run: |
-          set -uo pipefail
-          attempt=1
-          max_attempts=4
-          delay=5
-          network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
-          log="$(mktemp)"
-          while true; do
-            corepack enable && corepack prepare --activate 2>&1 | tee "$log"
-            rc=${PIPESTATUS[0]}
-            [ "$rc" -eq 0 ] && break
-            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
-              echo "::error::corepack setup failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — failing fast"
-              rm -f "$log"
-              exit "$rc"
-            fi
-            echo "::warning::corepack setup hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
-            sleep "$delay"
-            delay=$((delay * 3))
-            attempt=$((attempt + 1))
-          done
-          rm -f "$log"
+        # FOLLOW 113 correction: `corepack enable` alone never touches the
+        # network — it only installs shims. The real fetch (each app's own
+        # pinned pnpm version) happens on the first pnpm invocation, which is
+        # "Audit app" below, per-matrix-leg, in that app's own directory. A
+        # retry HERE guarded a fetch of THIS repo's root pin (11.24.0) that
+        # nothing downstream used — caught in review against a real job log
+        # (audit (crm7), job 101287118188): this step printed
+        # "Preparing pnpm@11.24.0" while the actually-unguarded "Audit app"
+        # step separately fetched pnpm-10.33.3.tgz (crm7's own pin) and would
+        # have failed uncaught on a registry drop. The retry moved to "Audit
+        # app" below, where the real fetch happens, in the right directory.
+        run: corepack enable
 
       - name: Audit app
         shell: bash
@@ -115,10 +100,38 @@ jobs:
           # (bsuite#3055, FOLLOW 70) — the same fix crm7 and throughput carry
           # in their required audit steps. pnpm prints its own warning when it
           # skips the registry, so the degradation stays visible in the log.
-          pnpm audit --audit-level=high --prod --ignore-registry-errors || {
-            echo "::error::${APP} has high/critical vulnerabilities"
-            exit 1
-          }
+          #
+          # FOLLOW 113: `pnpm audit` is this job's FIRST pnpm invocation, so
+          # it is where corepack actually fetches ${APP}'s own pinned pnpm
+          # version from registry.npmjs.org — a registry-side TLS drop here
+          # is not a build failure (crm7#2422, 2026-09-04: identical fetch
+          # died with ECONNRESET). Retry is bounded and backs off; a genuine
+          # audit failure (real high/critical vulnerabilities — no network
+          # signature in the output) fails on attempt 1, never retried.
+          attempt=1
+          max_attempts=4
+          delay=5
+          network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
+          log="$(mktemp)"
+          while true; do
+            echo "::group::pnpm audit attempt ${attempt}/${max_attempts} (${APP})"
+            set +e
+            pnpm audit --audit-level=high --prod --ignore-registry-errors 2>&1 | tee "$log"
+            rc=${PIPESTATUS[0]}
+            set -e
+            echo "::endgroup::"
+            [ "$rc" -eq 0 ] && break
+            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
+              echo "::error::${APP} audit failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — either high/critical vulnerabilities or attempts exhausted; failing"
+              rm -f "$log"
+              exit "$rc"
+            fi
+            echo "::warning::${APP} audit hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
+            sleep "$delay"
+            delay=$((delay * 3))
+            attempt=$((attempt + 1))
+          done
+          rm -f "$log"
 
       - name: Job summary
         if: always()

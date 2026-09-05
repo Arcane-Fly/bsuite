@@ -132,36 +132,55 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # corepack enable fetches the pnpm tarball from registry.npmjs.org —
-          # a registry-side TLS drop here is not a build failure (FOLLOW 113 /
-          # crm7#2422, 2026-09-04: identical fetch died with ECONNRESET).
-          # Bounded retry, backing off; a non-network failure is not retried.
-          attempt=1
-          max_attempts=4
-          delay=5
+          # FOLLOW 113 correction: `corepack enable` alone never touches the
+          # network — the real fetch is each SCOPE's own pinned pnpm version,
+          # triggered by the first `pnpm install` inside that scope's own
+          # directory, below. Guarding the bare `corepack enable` call here
+          # was a decoy (caught in review): it pre-warmed the ROOT's pin,
+          # which the loop below never uses once it `cd`s into a scope with
+          # its own packageManager field. The retry moved into the loop,
+          # around the actual per-scope install.
+          corepack enable
+
           network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
-          log="$(mktemp)"
-          while true; do
-            set +e
-            corepack enable && corepack prepare --activate 2>&1 | tee "$log"
-            rc=${PIPESTATUS[0]}
-            set -e
-            [ "$rc" -eq 0 ] && break
-            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
-              echo "::error::corepack setup failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — failing fast"
-              rm -f "$log"
-              exit "$rc"
-            fi
-            echo "::warning::corepack setup hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
-            sleep "$delay"
-            delay=$((delay * 3))
-            attempt=$((attempt + 1))
-          done
-          rm -f "$log"
+
+          install_scope_with_retry() {
+            local scope="$1"
+            local attempt=1
+            local max_attempts=4
+            local delay=5
+            local log
+            log="$(mktemp)"
+            while true; do
+              echo "::group::pnpm install ($scope) attempt ${attempt}/${max_attempts}"
+              # set +e / set -e brackets the guarded pipeline specifically:
+              # this step runs under the runner's own bash -e / -eo pipefail,
+              # and a failing pipeline as the LAST element of a subshell/pipe
+              # chain still trips errexit under that inherited state — the
+              # surrounding set -euo pipefail does not clear it mid-script.
+              # Without this bracket the whole step dies on the first
+              # failure, before rc= is read, and this loop never runs
+              # (caught in review by replaying the block under `bash -e`).
+              set +e
+              (cd "$scope" && pnpm install --frozen-lockfile) 2>&1 | tee "$log"
+              rc=${PIPESTATUS[0]}
+              set -e
+              echo "::endgroup::"
+              [ "$rc" -eq 0 ] && return 0
+              if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
+                echo "::error::pnpm install ($scope) failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — failing fast"
+                rm -f "$log"
+                return "$rc"
+              fi
+              echo "::warning::pnpm install ($scope) hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
+              sleep "$delay"
+              delay=$((delay * 3))
+              attempt=$((attempt + 1))
+            done
+          }
+
           for scope in throughput crm7 business-suite-unified conduit braden R80.4; do
-            echo "::group::pnpm install ($scope)"
-            (cd "$scope" && pnpm install --frozen-lockfile)
-            echo "::endgroup::"
+            install_scope_with_retry "$scope"
           done
 
       # --require-scopes=6 is the same positive control as the sibling job —
