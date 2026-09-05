@@ -207,8 +207,8 @@ A shared component nothing imports is not a library — it is dead code with a v
 | `BSUITE_DEV_PORTS` | @bsuite/nav-core | 7 | crm7, business-suite-unified, conduit, throughput |
 | `PageGridLayout` | @bsuite/page-builder | 6 | crm7, business-suite-unified, conduit, braden, throughput |
 | `BSUITE_APP_METADATA` | @bsuite/nav-core | 6 | crm7, business-suite-unified, conduit, braden, throughput, R80.4 |
-| `DataUnavailable` | @bsuite/ui | 5 | crm7, business-suite-unified, throughput |
 | `UpdateAvailableBanner` | @bsuite/nav-core | 5 | crm7, business-suite-unified, braden, throughput, R80.4 |
+| `DataUnavailable` | @bsuite/ui | 4 | crm7, business-suite-unified, throughput |
 | `DataGrid` | @bsuite/data-grid | 4 | crm7 |
 | `AppSwitcher` | @bsuite/nav-core | 4 | business-suite-unified, conduit, throughput, R80.4 |
 | `SchemaBuilder` | @bsuite/schema-builder | 3 | crm7, business-suite-unified, conduit |
