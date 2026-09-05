@@ -549,9 +549,17 @@ function indexOfTopLevel(expr, chars, from = 0) {
   for (let i = from; i < expr.length; i++) {
     const c = expr[i]
     if (c === '"' || c === "'" || c === '`') { i = skipQuoted(expr, i) - 1; continue }
+    // Checked BEFORE the depth adjustment below, not after: a bracket
+    // character can itself be a caller's search target (e.g. the ')' probe
+    // in isProvablyLiteralClassExpr, looking for an outer paren pair's own
+    // matching close). Checking depth first, then unconditionally
+    // depth---ing every close bracket regardless of whether `chars` wanted
+    // it, made this branch dead — a close bracket could never be RETURNED,
+    // only ever consumed as structure, so a caller searching for ')' always
+    // got -1 back, no matter what the string actually contained.
+    if (depth === 0 && chars.includes(c)) return i
     if ('([{'.includes(c)) depth++
     else if (')]}'.includes(c)) depth--
-    else if (depth === 0 && chars.includes(c)) return i
   }
   return -1
 }
@@ -742,16 +750,25 @@ function unresolvableClassNameHits(tagText) {
   while ((m = attrRe.exec(tagText))) {
     const braceStart = m.index + m[0].length - 1
     let depth = 0
-    let inQuote = null
     let i = braceStart
     for (; i < tagText.length; i++) {
       const c = tagText[i]
-      if (inQuote) {
-        if (c === '\\') { i++; continue }
-        if (c === inQuote) inQuote = null
-        continue
-      }
-      if (c === '"' || c === "'" || c === '`') { inQuote = c; continue }
+      // A flat inQuote toggle (this function's own previous version) treats
+      // EVERY quote character as flipping one boolean, with no concept of
+      // nesting — so a template literal's `${...}` hole that itself
+      // contains a NESTED template (`` `a ${`}`} ${danger} b` ``) reads the
+      // nested template's own OPENING backtick as if it closed the outer
+      // one, then reads its literal `}` as the outer expression's real
+      // closing brace: `expr` truncates before `${danger}` is ever reached,
+      // and the truncated remainder can misclassify as literal — a false
+      // PASS on a className this scan never actually read (crm7#2437, the
+      // same class of bug `skipQuoted` above was written to close for
+      // `isProvablyLiteralClassExpr` on crm7#2426). `skipQuoted` already
+      // walks a quote/template correctly, including arbitrarily nested
+      // `${}` holes and the quotes/templates inside THEM, so reusing it
+      // here — exactly as `indexOfTopLevel` does above — skips the whole
+      // quoted/templated span as one unit instead of toggling per-character.
+      if (c === '"' || c === "'" || c === '`') { i = skipQuoted(tagText, i) - 1; continue }
       if (c === '{') depth++
       else if (c === '}') {
         depth--
@@ -1375,6 +1392,23 @@ function selfTest() {
       "<button className={`a ${active ? '}' : 'x'} b`}>Go</button>",
     ).length,
     0,
+  )
+  check(
+    "does NOT flag ('a') + ('b') — parenthesised literal concatenation; indexOfTopLevel's own dead " +
+      "')' branch made the outer-paren strip in isProvablyLiteralClassExpr unconditional, mangling the " +
+      'recursive call on the interior and reaching UNRESOLVABLE instead (crm7#2437)',
+    unresolvableClassNameUses("<button className={('a') + ('b')}>Go</button>").length,
+    0,
+  )
+  check(
+    'FLAGS a className whose NESTED template hides a bare identifier — the naive `inQuote` toggle in ' +
+      "unresolvableClassNameHits closed on the nested template's OWN opening backtick (mistaking it for " +
+      'the outer template closing), truncating the scan before ${danger} was ever read: a false PASS ' +
+      '(crm7#2437)',
+    unresolvableClassNameUses(
+      '<button className={`a ${`}`} ${danger} b`}>Go</button>',
+    ).length,
+    1,
   )
 
   const failed = cases.filter(([, ok]) => !ok)
