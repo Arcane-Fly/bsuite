@@ -40,15 +40,23 @@ WORKFLOW=".github/workflows/consumer-lockfile-reach.yml"
 # is still THERE, just dead), which would have kept this self-test green
 # after a silent revert. Anchoring the match to the whole line — leading
 # indentation and all, nothing before `if`, nothing after the closing `fi` —
-# means a `#` (or anything else) ahead of `if` breaks the match.
-LINE=$(grep -oE '^[[:space:]]+if \[ "\$iter_rc" = "1" \] \|\| \[ "\$rc" = "0" \]; then rc=\$iter_rc; fi$' "$WORKFLOW" || true)
-if [ -z "$LINE" ]; then
-  echo "FAIL: the expected rc-precedence line was not found verbatim in $WORKFLOW." >&2
+# means a `#` (or anything else) ahead of `if` breaks the match. It must also
+# match EXACTLY ONCE: a duplicated live line is drift too, and `eval` must
+# never execute multiple newline-separated matches.
+PATTERN='^[[:space:]]+if \[ "\$iter_rc" = "1" \] \|\| \[ "\$rc" = "0" \]; then rc=\$iter_rc; fi$'
+match_count=$(grep -cE "$PATTERN" "$WORKFLOW" || true)
+if [ "$match_count" -ne 1 ]; then
+  if [ "$match_count" -eq 0 ]; then
+    echo "FAIL: the expected rc-precedence line was not found verbatim in $WORKFLOW." >&2
+  else
+    echo "FAIL: expected exactly one rc-precedence line in $WORKFLOW, found $match_count." >&2
+  fi
   echo "This test greps the real workflow line rather than holding its own copy —" >&2
   echo "if the loop was legitimately rewritten, update this script's expected" >&2
   echo "pattern to match, in the same change." >&2
   exit 1
 fi
+LINE=$(grep -m1 -E "$PATTERN" "$WORKFLOW")
 
 fail=0
 cases=0
