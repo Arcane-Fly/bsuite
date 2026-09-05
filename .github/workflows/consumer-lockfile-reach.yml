@@ -227,7 +227,7 @@ jobs:
               "- \`overrides:\` count unchanged (a silent drop is usually a missing \`pnpm-workspace.yaml\`, and those entries are usually security pins)" \
               "- \`pnpm install --frozen-lockfile\` **succeeds**, not merely parses" \
               "" \
-              "Not auto-merged. A lockfile bump changes what this app installs and goes through review and CI like anything else." \
+              "Auto-merge is armed (merge commit): this PR merges itself once every required check on this repo is green, and never before. Operator decision 2026-09-05." \
               > /tmp/reach-body.md
             printf '%s\n' \
               "chore(deps): reach the published @bsuite/* versions" \
@@ -325,6 +325,15 @@ jobs:
               echo "::error title=$app: branch pushed but PR not created::The change is on '$br' and is correct; only 'gh pr create' failed. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', BSUITE_CROSS_REPO_PAT is missing or expired."
               exit 1
             fi
+            # `--auto` weakens no required checks and is idempotent; it only removes
+            # the human merge click once green. Use `--merge`, not `--squash`, to
+            # preserve the reach PR as a merge commit.
+            gh pr merge -R "$owner/$app" "$br" --auto --merge 2>/tmp/automerge.log \
+              && echo "$app: auto-merge armed" \
+              || {
+                echo "::warning title=$app: could not arm auto-merge::PR is open and correct; merge by hand or next run retries"
+                cat /tmp/automerge.log
+              }
           done
           echo "### Consumer lockfile reach" >> "$GITHUB_STEP_SUMMARY"
           echo "PRs opened/updated: $opened - already current: $skipped" >> "$GITHUB_STEP_SUMMARY"
