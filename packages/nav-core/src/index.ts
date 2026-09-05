@@ -47,3 +47,36 @@ export { sanitizeReturnPath } from './sanitizeReturnPath.js';
 
 export { speedInsightsRoute } from './speedInsightsRoute.js';
 export { useSpeedInsightsRoute } from './useSpeedInsightsRoute.js';
+
+// ---------------------------------------------------------------------------
+// Update notice + unsaved-work guard (1.3.0)
+//
+// Operator directive 2026-09-03 10:48: real clients are using these apps in
+// production, so a rebuild must announce itself and must never take their work.
+// The BUILD half lives at the `@bsuite/nav-core/vite` subpath and is DELIBERATELY
+// not re-exported here — it imports node:child_process and node:fs, and a browser
+// bundle that pulls it in cannot resolve either.
+// ---------------------------------------------------------------------------
+export { useAppUpdateAvailable, DEFAULT_UPDATE_POLL_MS } from './useAppUpdateAvailable.js';
+export type {
+  AppUpdateControl,
+  AppUpdateState,
+  UpdateCheckBroken,
+  UseAppUpdateAvailableOptions,
+} from './useAppUpdateAvailable.js';
+
+export { UpdateAvailableBanner, UPDATE_BANNER_SLOT } from './UpdateAvailableBanner.js';
+export type { UpdateAvailableBannerProps } from './UpdateAvailableBanner.js';
+
+export {
+  useUnsavedChanges,
+  useRegisterDirty,
+  markDirty,
+  markClean,
+  resetUnsavedChanges,
+  UNSAVED_CONFIRM_MESSAGE,
+} from './useUnsavedChanges.js';
+export type { UnsavedChangesState } from './useUnsavedChanges.js';
+
+export { VERSION_JSON_PATH, isSameCommit, normaliseCommit, readInjectedBuildCommit } from './buildInfo.js';
+export type { BuildInfo } from './buildInfo.js';

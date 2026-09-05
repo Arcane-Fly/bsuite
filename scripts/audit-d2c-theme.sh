@@ -199,7 +199,17 @@ C3_PALETTE="(^|[\"' \`])([a-z-]+:)*${PREFIX}-${PALETTE}-[0-9]{2,3}(\/[0-9]+)?"
 # brackets is a bypass, so the value must not begin with var(.
 C3_ARBITRARY="${PREFIX}-\[(#|rgb\(|hsl\(\s*[0-9.]|oklch\(\s*[0-9.])"
 
-# C4 destructive/error rendered red or coral instead of Electric Purple.
+# C4 destructive/error painted with a PALETTE name or a literal instead of the
+# --role-error / --role-destructive token.
+# This comment used to read "rendered red or coral instead of Electric Purple",
+# which states the contract that was OVERTURNED on 2026-08-02: under protanopia
+# purple measured DeltaE 0.006 against primary blue, so the destructive colour
+# and the primary action colour were the same swatch. Error is RED
+# (packages/theme/src/css/vars.css:66,165-166). The regex never changed and did
+# not need to — what it bans is a palette-bound or hardcoded destructive colour,
+# coral included, whichever hue the role currently resolves to. The sentence is
+# the thing that was wrong, and it is the sentence someone reads before
+# "restoring" purple.
 # The `(?<!\w)` equivalent — a hex preceded by a word char is an issue
 # reference (`crm7#1297`, `R80.4#326`), not a colour, and this repo's comments
 # are dense with them. Two of the four C4 hits were issue numbers.

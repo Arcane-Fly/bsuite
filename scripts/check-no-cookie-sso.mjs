@@ -148,21 +148,8 @@ export function docLineIsForbiddenClaim(line) {
  * behind it; matching on the file and the offending text cannot.
  */
 const BANKED_DOC_CLAIMS = [
-  {
-    file: 'conduit/docs/CONSISTENCY-REPORT.md',
-    contains: '- BS OAuth + cookie SSO',
-    fixedBy: 'conduit#676',
-  },
-  {
-    file: 'conduit/docs/UNIFIED-ROADMAP.md',
-    contains: '`@bsuite/auth` consumer (BS OAuth + cookie SSO)',
-    fixedBy: 'conduit#676',
-  },
-  {
-    file: 'business-suite-unified/docs/CONSISTENCY-REPORT.md',
-    contains: '- BS OAuth server, cookie SSO',
-    fixedBy: 'business-suite-unified#1104',
-  },
+  // conduit#676 landed on conduit main (fb984bf2, pointer bsuite#3040): both banked
+  // claims are gone at the recorded pointer, so the bank is empty until a doc regresses.
 ];
 
 /*

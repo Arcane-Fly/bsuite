@@ -1,0 +1,185 @@
+# .github/workflows/css-classes-emitted.yml
+#
+# C10 — a used class token that Tailwind never EMITS a rule for.
+#
+# WHY THIS JOB LIVES IN ITS OWN FILE RATHER THAN IN theme-conformance.yml,
+# where it was written (bsuite#2975).
+#
+# theme-conformance.yml is PATH-FILTERED, deliberately: most of its jobs read
+# CSS/TSX and a Playwright signed-in sweep, and running that on every docs-only
+# PR would be a tax nobody accepted. A path-filtered workflow can never be a
+# REQUIRED check, and the reason is not aesthetic — GitHub does not START a
+# workflow whose `paths:` the PR's changeset misses, so the context never
+# reports, and a required-but-absent context leaves the PR on "Expected —
+# waiting for status to be reported" with every visible check green. The estate
+# has already lost merges to that exact shape (memory: "a PATH-FILTERED
+# required check can NEVER report — 4 of 12 never ran"; job-level `if:` reports
+# SKIPPED, which does not satisfy it either).
+#
+# `paths:` is a WORKFLOW-level trigger, so it cannot be lifted for one job and
+# kept for the other six. Moving the job is the only way to give it an
+# unfiltered trigger without making the Playwright sweep run on every PR. The
+# context string is the JOB name, not the workflow name, so
+# "Every used class token has an emitted rule (C10)" is unchanged by the move
+# and no protection entry has to be rewritten.
+#
+# THE COST, STATED RATHER THAN HIDDEN: this job installs all six apps
+# (`pnpm install --frozen-lockfile` each) and now does so on EVERY pull request
+# into main/master/development instead of only path-matched ones. On the runs
+# this file was extracted from that step is the bulk of the job's wall time.
+# The trade was made on purpose — a gate that cannot block is not a gate — and
+# scripts/check-required-contexts-producible.mjs now fails the build if anyone
+# re-filters it while it is required.
+#
+# Everything else about the job — what it asserts, what it explicitly does NOT
+# assert, the measured per-app counts, and why it needs no `packages/` build —
+# is unchanged and stays in the comment block below.
+
+name: CSS classes emitted
+
+on:
+  # NO `paths:` FILTER. See the header above: this job is a REQUIRED check, and
+  # a required check that can fail to report is a merge deadlock, not a gate.
+  pull_request:
+    branches: [main, master, development]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # C10 — a used class token that Tailwind never EMITS a rule for.
+  #
+  # A different failure from theme-conformance.yml's G10 job ("no
+  # silently-dropped utilities" —
+  # syntax Tailwind v4 cannot parse at all, e.g. a v3 opacity utility). Here
+  # the class token PARSES FINE and Tailwind would happily generate a rule for
+  # it — the failure is that nothing in the app's real `@theme` cascade
+  # registers the custom property the class names, so the build emits nothing
+  # and the element renders with one fewer rule than the author wrote. Exactly
+  # the failure class check-tailwind-sources.mjs exists for on the `@source`
+  # side of the pipeline; this is the same shape one layer downstream, on the
+  # `@theme` side.
+  #
+  # MEASURED CASE (F-58 / D-149): business-suite-unified declares
+  # --bg-shell-elevated / --bg-shell-accent / --bg-shell / --border-shell as
+  # plain :root/.dark custom properties, never inside an `@theme` block. 170
+  # of that app's occurrences are exactly those four tokens; re-measuring with
+  # the finished gate (not the narrower grep the original audit used) found
+  # 551 total in that app on that tree (the four shell tokens are 170 of them,
+  # matching the grep exactly once template-literal classNames were scanned —
+  # the first cut's 540/163 came from `className={`…`}` not being matched at
+  # all — plus text-text-primary, border-border-subtle,
+  # border-border-default and bare bg-/border-warning, text-/bg-success, none
+  # registered in any @theme block the build sees), 8 more in crm7 (a
+  # different token family entirely — text-text-primary, border-shell, and a
+  # dead text-md size utility), and 249 in throughput (border-light-border /
+  # dark:border-dark-border / dark-accent-*, which do not exist ANYWHERE in
+  # that app's tree — not even in a plain :root). BSU has since registered the
+  # four shell tokens (business-suite-unified#1106), so its banked count is
+  # 381. See
+  # scripts/check-css-classes-emitted.mjs's own header for the full account
+  # and .github/theme-css-classes-baseline.json for the banked per-app counts.
+  #
+  # WHAT THIS GATE DOES NOT ASSERT (its own header carries the full list):
+  #   - a runtime-computed class name (`` `bg-${shade}` ``, or a full class
+  #     list held in a variable) — excluded outright, not guessed at;
+  #   - an arbitrary-value or arbitrary-property form (`bg-[#fff]`,
+  #     `bg-(--custom)`) — these carry their own value and need no `@theme`
+  #     registration, so they are not this defect class;
+  #   - that any element actually RECEIVES the rule on a live page —
+  #     audit-applied-tokens.mjs measures the DOM; this gate only proves the
+  #     rule exists in the compiled CSS.
+  #
+  # NOT theme-static-gates.yml either: that workflow carries NO install step
+  # by design (see its own header), and this gate must build each app's REAL CSS
+  # with that app's REAL installed tailwindcss — there is no way to run it
+  # without an install.
+  #
+  # NO "build packages" step, deliberately, unlike theme-conformance.yml's
+  # esm-imports job. Every
+  # app declares `@bsuite/theme` as a REGISTRY semver range
+  # (`"@bsuite/theme": "^1.5.1"`, not `workspace:*`) and this repo's root
+  # `pnpm-workspace.yaml` only includes `packages/*` — apps and packages are
+  # two SEPARATE pnpm projects with no local link between them. An app's own
+  # `pnpm install` below resolves `@bsuite/theme` from the npm registry, dist
+  # already built, regardless of what this repo's own packages/theme/ contains
+  # right now. Building packages/ first would cost CI time and prove nothing
+  # this gate reads.
+  css-classes-emitted:
+    name: Every used class token has an emitted rule (C10)
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout (with submodules — each app's own CSS build lives there)
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Assert the submodules actually checked out
+        shell: bash
+        run: |
+          set -uo pipefail
+          missing=""
+          for a in crm7 conduit business-suite-unified R80.4 throughput braden; do
+            [ -d "$a/src" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "Every app would then FAIL with 'tailwindcss not installed', which reads"
+            echo "like a config problem rather than a checkout problem — check explicitly."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (repo: read on each app)."
+            exit 1
+          fi
+          echo "all six submodules present"
+
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
+      - uses: actions/setup-node@v4
+        with: { node-version: '24.14.0' }
+
+      # Each app is its OWN pnpm project with its OWN lockfile — see the header
+      # comment above for why this gate needs no separate packages/ build.
+      # Loops rather than six separate steps so a seventh covered app is a
+      # one-line change to the app list, matching the house pattern in
+      # per-page-authenticated's "Install each covered app" step above.
+      - name: Install each covered app
+        run: |
+          set -uo pipefail
+          for a in crm7 braden throughput conduit business-suite-unified R80.4; do
+            echo "::group::pnpm install -- $a"
+            ( cd "$a" && pnpm install --frozen-lockfile )
+            echo "::endgroup::"
+          done
+
+      # A gate whose pass and no-op states are indistinguishable hides
+      # defects. This asserts the exit code exactly, the same discipline
+      # check-colour-ban-reaches-converters.mjs's self-test step uses above:
+      # "non-zero" is not good enough, because a probe that CRASHES also exits
+      # non-zero without ever having proven anything.
+      - name: Self-test the guard (proves it can fail)
+        shell: bash
+        run: |
+          set +e
+          node scripts/check-css-classes-emitted.mjs --self-test
+          rc=$?
+          set -e
+          case "$rc" in
+            0) echo "self-test exited 0 — logic cases, the real-build case and the seven entry-point cases passed" ;;
+            1) echo "::error::--self-test FAILED (exit 1). The guard's own detector logic is"
+               echo "broken; the sweep below would not mean anything. See the log above for"
+               echo "which case failed."
+               exit 1 ;;
+            *) echo "::error::--self-test exited $rc, which is not a defined outcome — the"
+               echo "probe likely crashed rather than running its cases. Most likely cause:"
+               echo "no app installed tailwindcss (the step above should prevent this)."
+               exit 1 ;;
+          esac
+
+      - name: Every used class token has an emitted rule, ratcheted against the banked baseline
+        shell: bash
+        run: node scripts/check-css-classes-emitted.mjs

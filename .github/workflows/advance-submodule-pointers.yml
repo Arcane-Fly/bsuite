@@ -23,6 +23,15 @@ on:
   schedule:
     # Hourly. Fast enough that a stale pointer never survives a working session,
     # slow enough not to churn the PR while a merge train is running.
+    #
+    # `schedule:` ALWAYS runs the workflow definition from the repo's DEFAULT
+    # branch (`main` here — confirmed via the API, not assumed), never from
+    # `development`. So merging a change to this file into `development` does
+    # NOT make the next hourly tick use it — the cron keeps running whatever
+    # version is on `main` until this file is promoted there too. Only
+    # `workflow_dispatch` (or `repository_dispatch`) can exercise a
+    # development-only version of this workflow in the meantime, exactly as
+    # the auto-merge line above was verified.
     - cron: '17 * * * *'
   workflow_dispatch: {}
   repository_dispatch:
@@ -46,6 +55,41 @@ jobs:
     name: Advance submodule pointers
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
+        # The App path runs once the operator has registered the App and set
+        # vars.BSUITE_GITHUB_APP_CLIENT_ID + secrets.BSUITE_GITHUB_APP_PRIVATE_KEY on
+        # this repository (docs/security/20260903-github-app-for-estate-automation-v1.00W.md). Until then the
+        # step is skipped and the token expressions below fall through to the PAT;
+        # the fallback is deleted once the first App-authored commit reads
+        # verification.verified=true (the guard further down proves it).
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
+        # A half-configured App (client id set, private key missing or wrong)
+        # must not take the job down: the step is non-fatal and the next step
+        # says so loudly; the token expressions then fall through to the PAT.
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: write
+          permission-pull-requests: write
+          permission-metadata: read
+
+      - name: Say so if the App token could not be minted (falling through to the PAT)
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && steps.app-token.outcome != 'success' }}
+        run: |
+          echo "::warning title=GitHub App token not minted::BSUITE_GITHUB_APP_CLIENT_ID is set but the token step did not succeed (outcome: ${{ steps.app-token.outcome }}). Check secrets.BSUITE_GITHUB_APP_PRIVATE_KEY and the App installation; this run falls through to the PAT (D-169)."
+
       - name: Checkout parent AND the submodules it must read
         uses: actions/checkout@v5
         with:
@@ -71,7 +115,7 @@ jobs:
           # config too, so the script's own `git fetch` inside them works. Same
           # fallback chain every other submodule-consuming workflow here uses.
           submodules: true
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - name: Refuse to scan an empty tree
@@ -122,16 +166,35 @@ jobs:
         with:
           python-version: '3.12'
 
+      # NOT `set -e` here (2026-09-03). An unexpected refusal makes the script exit
+      # 1 — correctly, it IS a real finding — but under `-e` a nonzero pipeline kills
+      # this step immediately (pipefail catches node's status even through `tee`),
+      # which used to skip EVERY step after it: no commit, no push, no PR, not even
+      # for the apps that were perfectly safe to advance. One refused app then held
+      # every advanceable app hostage, which is exactly the all-or-nothing failure
+      # that let a stale pointer sit unfixed for weeks (see the file header).
+      #
+      # The script already stages the safe advances (git update-index) BEFORE it
+      # computes its exit code, so those stages exist on disk regardless of what
+      # node returns. This step reads $? via PIPESTATUS[0] — never `$?` directly,
+      # which after a pipe is `tee`'s status, not node's — records it as an output,
+      # and lets the rest of the job (commit, push, open the PR) proceed. The
+      # refusal is not swallowed: it is still printed loudly above (::error:: per
+      # REFUSED line) and the "Fail loudly" step at the end of this job fails the
+      # whole run on that recorded exit code, AFTER the safe work has shipped.
       - name: Advance the pointers
         id: advance
         run: |
-          set -euo pipefail
+          set -uo pipefail
           node scripts/advance-submodule-pointers.mjs --write | tee /tmp/advance.md
+          advance_exit="${PIPESTATUS[0]}"
+          echo "exit_code=$advance_exit" >> "$GITHUB_OUTPUT"
           if git diff --cached --quiet; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
           else
             echo "changed=true" >> "$GITHUB_OUTPUT"
           fi
+          echo "advance-submodule-pointers exited $advance_exit (0 = no unexpected refusal or dead allowlist entry; nonzero = see the REFUSED/::error:: line(s) above — safe advances, if any, are staged and will still be committed, pushed and opened as a PR by the steps below)"
 
       # THE ROUTE INVENTORY IS DERIVED FROM THE APPS AT THE RECORDED GITLINKS, so the
       # commit that moves a gitlink is the commit that invalidates it. Leaving them in
@@ -208,7 +271,7 @@ jobs:
           # to github.token keeps the workflow runnable in a fork or wherever the PAT
           # is absent — it will fail the same way there, loudly, rather than silently
           # doing nothing.
-          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
         run: |
           set -euo pipefail
           BR=chore/auto-advance-submodule-pointers
@@ -297,6 +360,73 @@ jobs:
             fi
           fi
 
+          # AUTO-MERGE ONTO `development`, NEVER ONTO `main`.
+          #
+          # `development` requires `required_approving_review_count: 0` — every one of
+          # the ~30 required status checks, no human approval — so the only thing that
+          # was ever waiting on a person here was someone remembering to click "merge"
+          # on an already-green, already-safe-by-construction PR. The content safety
+          # comes from upstream: `scripts/advance-submodule-pointers.mjs` is forward-only
+          # (a backward move is REFUSED, not staged — see the PR body above) and its own
+          # `--self-test` step earlier in this job proves that refusal actually fires.
+          # `--auto` does not weaken any of the ~30 required checks — it only removes
+          # the wait for a human to press the button once they are all green, and does
+          # nothing if any of them are red or never finish. Idempotent: safe to call
+          # every run whether the PR is new, reopened, or just force-pushed with a
+          # newer commit — GitHub re-evaluates auto-merge against whatever the head
+          # commit is at merge time, not the one this call happened to see.
+          #
+          # `--merge` (not `--squash`), matching how #3001 — this workflow's own prior
+          # standing PR — actually merged (a 2-parent merge commit, confirmed against
+          # the API before choosing this): a gitlink-only PR is exactly the shape
+          # `PROCESS: feature -> development` already uses `--merge` for elsewhere in
+          # this estate, and a merge commit keeps each `chore(gitlink): …` advance as
+          # its own commit rather than folding six independent pointer moves into one.
+          #
+          # NEVER ONTO `main` — CHECKED, not just asserted in this comment. Copilot
+          # review on bsuite#3079: the paragraph above claimed "development ...
+          # requires zero approvals" as the safety case, but nothing before this line
+          # actually confirmed the PR this call is about to arm still TARGETS
+          # development — a PR's base can be retargeted after the fact (the GitHub UI
+          # allows it, and `gh pr view`/`reopen` above do not re-assert it), and `main`
+          # requires a human-only sign-off `development` does not. Read fresh rather
+          # than assumed: this branch is recreated (`checkout -B`) and force-pushed
+          # every run, so a stale cached base would be exactly the kind of read this
+          # estate has already been burned by trusting.
+          CURRENT_BASE="$(gh pr view "$BR" --json baseRefName -q .baseRefName)"
+          if [ "$CURRENT_BASE" != "development" ]; then
+            echo "::warning title=Refusing to arm auto-merge::$BR targets '$CURRENT_BASE', not 'development' — this workflow only ever creates it against development, so something retargeted it by hand. Not arming auto-merge; fix the base or investigate before merging."
+          # Non-fatal on failure: this call runs AFTER the PR is confirmed open above.
+          # If enabling auto-merge itself fails (e.g. a transient API error), the
+          # correct, already-pushed advances and the open PR must not be reported as a
+          # job failure over a convenience step — the next hourly run retries this call
+          # regardless, and the PR remains mergeable by hand in the meantime.
+          elif gh pr merge "$BR" --auto --merge 2>/tmp/automerge.log; then
+            echo "auto-merge armed on $BR — merges itself once all required checks pass"
+          else
+            echo "::warning title=Could not arm auto-merge::gh pr merge --auto failed for $BR (see below); the PR is open and correct, and can be merged by hand, or will retry next scheduled run."
+            cat /tmp/automerge.log
+          fi
+
       - name: Say so even when there is nothing to do
         if: steps.advance.outputs.changed != 'true'
-        run: echo "All submodule pointers already match their development heads."
+        run: echo "All submodule pointers already match their app main tips."
+
+      # THE JOB STILL GOES RED ON A REFUSAL — just AFTER the safe advances above
+      # have shipped, not instead of them. `if: always()` so this runs whether the
+      # "changed" branch above did or not (an all-refused, nothing-to-advance run
+      # never sets changed=true, and that refusal still has to fail the job), and
+      # even if a step upstream already failed for its own reason.
+      - name: Fail loudly if any refusal was unexpected
+        if: always()
+        run: |
+          code="${{ steps.advance.outputs.exit_code }}"
+          if [ -z "$code" ]; then
+            echo "::error::the 'Advance the pointers' step never recorded an exit code — an earlier step in this job failed first."
+            exit 1
+          fi
+          if [ "$code" != "0" ]; then
+            echo "::error::advance-submodule-pointers found an unexpected refusal or a dead allowlist entry (node exited $code). See the REFUSED / ::error:: line(s) in the 'Advance the pointers' step above — that app needs a human, per scripts/gitlink-refusal-allowlist.json. Any SAFE advances for other apps were still staged, committed, pushed and opened as a PR by the steps above; this failure does not undo them."
+            exit 1
+          fi
+          echo "advance-submodule-pointers: no unexpected refusals, no dead allowlist entries."

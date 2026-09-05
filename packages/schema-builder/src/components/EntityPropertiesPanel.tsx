@@ -179,7 +179,7 @@ export function EntityPropertiesPanel({
               placeholder="e.g. Company Vehicle"
               disabled={descriptiveLocked}
               aria-required={!isEditing}
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
+              className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
             />
           </div>
 
@@ -205,7 +205,7 @@ export function EntityPropertiesPanel({
               className={`w-full rounded-md border bg-card px-3 py-2 font-mono text-xs focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted ${
                 nameError
                   ? 'border-role-error'
-                  : 'border-border'
+                  : 'border-border-interactive'
               }`}
             />
             {nameError ? (
@@ -243,7 +243,7 @@ export function EntityPropertiesPanel({
               }
               placeholder="Brief description"
               disabled={descriptiveLocked}
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
+              className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
             />
           </div>
 
@@ -264,7 +264,7 @@ export function EntityPropertiesPanel({
                 }))
               }
               disabled={isSystem}
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
+              className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:cursor-not-allowed disabled:bg-card disabled:text-muted-foreground dark:disabled:bg-muted"
             >
               {APP_SCOPES.map((scope) => (
                 <option key={scope} value={scope}>
@@ -338,7 +338,7 @@ export function EntityPropertiesPanel({
           <button
             type="button"
             onClick={() => setConfirmDeleteOpen(false)}
-            className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
+            className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
           >
             Cancel
           </button>

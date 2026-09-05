@@ -443,6 +443,21 @@ jobs:
         shell: bash
         run: ./scripts/check-oauth-redirect-uris.sh
 
+      # D-160 step 2 / R3(e): /version.json must be loud when absent. Same
+      # scheduled + workflow_dispatch lane that already curls the live estate
+      # domains (this job). NOT a PR-required check — network-dependent.
+      - name: Self-test the version.json smoke (proves it can fail)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-version-json-served.mjs --self-test
+
+      - name: Smoke /version.json on all 12 estate domains
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-version-json-served.mjs
+
   # ─────────────────────────────────────────────────────────────────────────────
   # JOB 4: Remind about PAT setup if missing
   # ─────────────────────────────────────────────────────────────────────────────

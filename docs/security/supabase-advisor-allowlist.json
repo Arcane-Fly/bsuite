@@ -15,6 +15,7 @@
         "bulk_data_undo(p_change_set_id uuid)",
         "bulk_data_update(p_entity_key text, p_tenant_id uuid, p_row_ids uuid[], p_field_updates jsonb, p_dry_run boolean)",
         "caller_org_ids()",
+        "can_act_on_colleague_calendar(p_user_id uuid, p_tenant_id uuid, p_write boolean)",
         "can_write_role_capability(p_tenant_id uuid, p_capability text)",
         "check_archive_recovery_needed(p_source_table text, p_tenant_id uuid, p_from timestamp with time zone, p_to timestamp with time zone)",
         "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
@@ -382,6 +383,19 @@
       ],
       "reason": "Arrived with the 2026-08-16 P0 sweep (crm7#1749, migration 20260820120000), which moved email integration credentials out of PLAINTEXT `imap_password`/`smtp_password` columns and into Vault, then DROPPED those columns. This RPC is the write half of that move, and `authenticated` EXECUTE is the mechanism, not an oversight: a tenant user connecting their own mailbox must be able to store the credential, and SECURITY DEFINER is required because the caller must NOT be able to read or write `vault.secrets` directly.\n\nVERIFIED LIVE 2026-08-16 against the production catalog, not assumed:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp'.\n  * has_function_privilege('anon', ...) = FALSE. Not reachable unauthenticated.\n  * ACL is exactly postgres=X | service_role=X | authenticated=X — the same shape every other RLS/vault helper in this estate carries.\n\nIts gate was read line by line rather than presumed. Four checks, in order, each raising rather than returning:\n  1. `p_token_field` must be one of access_token / refresh_token / smtp_password / imap_password. This is checked BEFORE the value is used to build the target column name via format('%I'), so the identifier is never attacker-controlled — the validation is what makes the dynamic UPDATE safe, and it is first for that reason.\n  2. auth.uid() must be non-null.\n  3. The secret must be non-empty.\n  4. The caller must hold owner/admin/manager/staff in the INTEGRATION'S OWN tenant, via auth_tenant_id_with_role — the same role list as the table's own tenant_insert/update/delete_email_integrations policies (20260706120000). A missing row and a wrong-tenant row raise the SAME message, so the function cannot be used to probe which integration ids exist.\n\nIt writes ONLY the `*_vault_id` pointer column back onto the row and returns the vault id. It never returns the secret, and there is no read counterpart here — decryption stays behind the pre-existing `email_integration_get_decrypted_token`, whose grants this change left untouched (asserted as a control in the migration's dry-run).\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: the sweep passed on `development` at 10:33 and failed at 11:35 once the applier had run this migration. That is the gate working exactly as designed — a new SECURITY DEFINER function exposed to authenticated MUST fail until a human has justified it. This is that justification.",
       "review": "Re-justify if the signature changes — objects are matched by full signature, so an added parameter creates a NEW unallowlisted finding and correctly re-fails the sweep. Also re-justify if the p_token_field allow-list is ever widened: that list is what makes the dynamic format('%I') UPDATE safe.",
+      "tracked_in": null
+    },
+    {
+      "added": "2026-09-03",
+      "lint": "authenticated_security_definer_function_executable",
+      "mode": "accepted",
+      "object_type": "function",
+      "objects": [
+        "email_integration_confirm_ownership(p_integration_id uuid)",
+        "email_integration_disconnect(p_integration_id uuid)"
+      ],
+      "reason": "Mailbox P0 (BSU#1105/#1108/#1110). Both are browser-called SECURITY DEFINER RPCs because the row's own RLS cannot reach vault.secrets, and a PostgREST DELETE that matches zero rows returns success. authenticated EXECUTE is the mechanism: a person confirming or disconnecting THEIR mailbox must be able to call them; anon is revoked.\n\nAuthorisation is inside the function, not the grant:\n  * confirm_ownership: only the row's user_id = auth.uid() may flip pending_confirmation to active.\n  * disconnect: auth.uid() = row owner, OR tenant owner/admin via auth_tenant_id_with_role, OR JWT role service_role (JWKS-verified at PostgREST; never HS256). Anyone else gets not-found (P0002), not a distinct forbidden, so the id is not a probe.\n  * search_path pinned public, pg_temp. REVOKE ALL FROM PUBLIC, anon.\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: advancing the parent gitlink to BSU main a126ab8 made the live catalog's two new RPCs visible to the advisor. That is the gate working — a new SECURITY DEFINER function exposed to authenticated MUST fail until justified. This is that justification.",
+      "review": "Re-justify if either signature changes. Re-justify if disconnect's tenant-admin limb is ever widened to staff/manager (that is BSU#1107, register-only).",
       "tracked_in": null
     },
     {

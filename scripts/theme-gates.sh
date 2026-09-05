@@ -41,19 +41,50 @@ echo "THEME CONFORMANCE GATES"
 echo "───────────────────────────────────────────────────────────────"
 
 # ── static gates ────────────────────────────────────────────────────────────
+# ROW FILTER — R80.4, not R80.3.
+# G1, G3 and C4 below read scripts/audit-d2c-theme.sh's table by matching the
+# app name at the start of each row. That script emits a row labelled `R80.4`
+# (its APPS list, line 19). These three filters said `R80.3` — the submodule's
+# name before it was renamed — so the R80.4 row matched NOTHING and its counts
+# were silently dropped from all three totals. `.github/workflows/
+# theme-conformance.yml` had the identical bug and fixed it (see its comment at
+# :184); this local runner was not fixed with it, so the command an engineer
+# runs by hand scanned five apps while CI scanned six.
+# Measured on a planted fixture (R80.4 row carrying C1=5, C3=7, C4=3):
+#   pair  old(R80\.3)  new(R80\.4)
+#   C1    1            6
+#   C3    0            7      <- hard-zero gate reporting PASS over 7 bypasses
+#   C4    0            3      <- hard-zero gate reporting PASS over 3 violations
+# A count over rows that cannot match is not a pass; G13 already refuses that
+# shape explicitly ("a count over an empty tree is not a pass") and these three
+# did it silently.
 run G1 "no NEW pure white/black (ratchet vs baseline)" bash -c '
   scripts/audit-d2c-theme.sh > /tmp/tg.txt 2>&1
-  col() { awk -v w="$1" "/^(crm7|conduit|business-suite-unified|R80\\.3|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==w){print \$(i-1); break}}}" /tmp/tg.txt | paste -sd+ | bc; }
+  col() { awk -v w="$1" "/^(crm7|conduit|business-suite-unified|R80\\.4|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==w){print \$(i-1); break}}}" /tmp/tg.txt | paste -sd+ | bc; }
   t=$(col 1); b=$(cat .github/theme-c1-baseline.txt 2>/dev/null || echo 999)
   [ "$t" -le "$b" ] || { echo "C1 rose to $t against baseline $b"; exit 1; }'
 
 run G2 "only contract colours in packages/" scripts/audit-palette-whitelist.py
 run G3 "no palette bypass in app source" bash -c '
   scripts/audit-d2c-theme.sh > /tmp/tg3.txt 2>&1
-  c3=$(awk "/^(crm7|conduit|business-suite-unified|R80\\.3|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==3){print \$(i-1); break}}}" /tmp/tg3.txt | paste -sd+ | bc)
+  c3=$(awk "/^(crm7|conduit|business-suite-unified|R80\\.4|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==3){print \$(i-1); break}}}" /tmp/tg3.txt | paste -sd+ | bc)
   [ "$c3" -eq 0 ] || { echo "C3 palette bypasses: $c3"; exit 1; }'
 run G4 "no app redeclares a package token" scripts/audit-token-ownership.sh
 run G10 "no silently-dropped utilities" scripts/audit-invalid-utilities.sh
+# C10 — a used class token that Tailwind never REGISTERS is a different failure
+# from G10's "utility Tailwind DROPS": here the class parses and Tailwind would
+# happily emit it, but nothing in the @theme cascade names the custom property
+# it needs, so the build produces no rule at all. Measured live (F-58/D-149):
+# business-suite-unified alone carried 540 such occurrences at first measure
+# (551 once template-literal classNames were scanned; 381 after BSU#1106
+# registered the shell tokens), crm7 8, throughput 249 — three apps, not the
+# one the original narrow "bg-shell" audit found.
+# UNLIKE ITS NEIGHBOURS ABOVE, this gate needs each app's own `pnpm install`
+# already done (it builds the app's real CSS via its own installed tailwindcss)
+# and reaches the network via `npx --yes @tailwindcss/cli@<version>` — the same
+# precondition the B:$a / T:$a build-and-test gates below already assume, not a
+# new one this gate introduces.
+run C10 "every used class token has an emitted rule (ratchet)" node scripts/check-css-classes-emitted.mjs
 run G12 "no AA-tuned text token carries an opacity modifier" scripts/check-dimmed-text-tokens.sh
 run G13 "fill-token-as-text does not grow" scripts/check-fill-token-as-text.sh
 # R1 — the per-page checklist in § 2 of the DoD pointed at scripts/audit-routes.sh
@@ -86,7 +117,7 @@ run O1 "no NEW cross-app entity writes (one-shot policy)" bash -c '
   [ "${n:-99}" -le "$b" ] || { echo "cross-app writes rose to $n against baseline $b — run: node scripts/audit-one-shot.mjs --list"; exit 1; }'
 run C4 "destructive colour matches the contract" bash -c '
   scripts/audit-d2c-theme.sh > /tmp/tg4.txt 2>&1
-  c4=$(awk "/^(crm7|conduit|business-suite-unified|R80\\.3|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==4){print \$(i-1); break}}}" /tmp/tg4.txt | paste -sd+ | bc)
+  c4=$(awk "/^(crm7|conduit|business-suite-unified|R80\\.4|throughput|packages|braden) /{s=0; for(i=1;i<=NF;i++) if(\$i==\"/\"){s++; if(s==4){print \$(i-1); break}}}" /tmp/tg4.txt | paste -sd+ | bc)
   [ "$c4" -eq 0 ] || { echo "C4 wrong-destructive: $c4"; exit 1; }'
 
 if [[ $QUICK -eq 1 ]]; then

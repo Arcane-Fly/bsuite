@@ -292,7 +292,7 @@ export function DataUnavailable({
                 type="button"
                 onClick={onRetry}
                 className={cn(
-                  'inline-flex items-center rounded-md border border-border bg-card px-3 py-1.5',
+                  'inline-flex items-center rounded-md border border-border-interactive bg-card px-3 py-1.5',
                   'text-sm font-medium text-foreground',
                   'hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
                 )}

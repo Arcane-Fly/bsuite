@@ -12,7 +12,7 @@
 #   existed. Adding the package is not enough; it needs its own workflow.
 #
 # Authentication: npm Trusted Publishers (OIDC). Requires `id-token: write`
-#   (set below) and nothing else. Do not add an NPM_TOKEN fallback.
+#   (set below) and nothing else. Do not add a long-lived token fallback.
 #
 #   Configured at npmjs.com → @bsuite/data-grid → Settings → Trusted Publisher →
 #   GitHub Actions, with organization GaryOcean428, repository bsuite, and
@@ -24,7 +24,7 @@
 #   publish therefore has to be manual. This one was, on 2026-08-07 —
 #   @bsuite/data-grid@0.1.0 — and OIDC took over from the second onward.
 #
-#   Until then this file carried an NPM_TOKEN fallback, and it failed every run
+#   Until then this file carried a long-lived token fallback, and it failed every run
 #   with `404 Not Found - PUT`. A 404 on PUT means the token AUTHENTICATED and
 #   lacks CREATE permission in the scope; npm returns 404 rather than 403 so it
 #   does not leak which package names exist. That is now moot — and worth not

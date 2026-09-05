@@ -1,0 +1,14 @@
+{
+  "_comment": [
+    "Ceiling for scripts/audit-prod-migration-history.mjs Class C harmless-duplicate ",
+    "groups (same version, comment-only or byte-identical across scopes). `scanned` is the ",
+    "total local *.sql migration file count across MIGRATION_SCOPE_DIRS and must never go ",
+    "DOWN on a healthy run — a drop means a scope failed to check out. `findings` is a ",
+    "CEILING on how many harmless-duplicate version groups may exist without being reviewed ",
+    "and re-banked; it may shrink for free but growing it requires --write-baseline after a ",
+    "human has checked the new group."
+  ],
+  "generated_by": "node scripts/audit-prod-migration-history.mjs --write-baseline",
+  "findings": 12,
+  "scanned": 294
+}

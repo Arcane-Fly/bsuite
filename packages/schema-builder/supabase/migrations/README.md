@@ -58,9 +58,20 @@ git add supabase/migrations/<file>.sql
 git commit -m "feat(bsu): <migration description>"
 gh pr create --base development --title "feat(bsu): <migration description>" --fill
 
-# 3. AFTER the BSU PR merges — copy the final file verbatim into this directory
+# 3. AFTER the BSU PR merges — copy the final file verbatim into this directory,
+#    THEN RESTORE THIS COPY'S OWN HEADER. A bare `cp` overwrites everything,
+#    including the annotation header above `-- @sync-boundary-below` — the ONE
+#    part of the file that is SUPPOSED to differ (DEV-FIXTURE COPY banner, and
+#    a `-- rehearsal: <marker>` line if this migration is a byte-identical
+#    twin that sorts behind another scope's copy in the whole-estate replay —
+#    see supabase-migration-rehearsal.yml). The parity gate will not catch a
+#    dropped header: Check 3 only compares content BELOW the boundary, and a
+#    full-file copy trivially matches itself there. This exact mistake shipped
+#    on 2026-09-04 (bsuite commit 2137caec, caught and fixed as FOLLOW 87) by
+#    following this step literally, without the manual restore that follows.
 cp business-suite-unified/supabase/migrations/<file>.sql \
    packages/schema-builder/supabase/migrations/<file>.sql
+git diff packages/schema-builder/supabase/migrations/<file>.sql  # re-add the header this copy had before, above the marker
 
 # 4. Bump @bsuite/schema-builder version, update CHANGELOG, land via a package PR
 cd packages/schema-builder
@@ -75,6 +86,7 @@ git commit -am "chore(schema-builder): sync migration copy after BSU <file>"
 - ❌ **Do not** rename a file here without renaming it in BSU. Supabase applies by filename, not by content hash. (Parity CI will block the PR.)
 - ❌ **Do not** assume a migration applied in the package's Vitest fixture means it applied in BSU staging or prod. Always verify via `supabase migration list --project-ref tuybltdrdefjblnplpqo`.
 - ❌ **Do not** remove the `-- @sync-boundary-below` marker from any SQL file — the parity CI uses it to locate the body that must match. Without the marker, the check fails closed.
+- ❌ **Do not** `cp` the BSU canonical file over this one without then restoring this copy's own header above the marker. The parity gate cannot see this mistake — it only diffs content below the boundary, which a full-file copy trivially matches. Losing a `-- rehearsal: <marker>` line this way is silent until the migration-rehearsal gate happens to re-examine the file on a later PR.
 
 ### Known gaps
 
