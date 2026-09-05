@@ -1024,6 +1024,21 @@ function selfTest() {
     1,
   )
   check(
+    'FLAGS aria-invalid:border-border — an invalid field stays invalid at rest, not just while touched (crm7#2409)',
+    offendingUses(
+      '<input className="border border-border-interactive aria-invalid:border-border" />',
+    ).length,
+    1,
+  )
+  check(
+    'FLAGS data-[state=closed]:border-border — a collapsed accordion/panel stays closed at rest, ' +
+      'exactly as data-[state=open] stays open; neither is a momentary interaction (crm7#2422 port gap)',
+    offendingUses(
+      '<button className="border border-border-interactive data-[state=closed]:border-border">Go</button>',
+    ).length,
+    1,
+  )
+  check(
     'FLAGS disabled:border-border — a disabled control can be disabled indefinitely',
     offendingUses('<button className="border border-transparent disabled:border-border">Go</button>')
       .length,
