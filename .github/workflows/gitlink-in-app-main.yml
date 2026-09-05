@@ -21,7 +21,18 @@ name: Gitlink on app main
 
 on:
   pull_request:
-    branches: [main]
+    # Widened to `development` 2026-09-04 (operator directive) — same reason
+    # as gitlink-not-behind-base.yml's identical change, landed in the same
+    # PR: `development`'s gitlinks are supposed to sit on each app's OWN MAIN
+    # at all times too (advance-submodule-pointers.mjs's `collect()` reads
+    # `origin/main` for every app regardless of which parent branch it is
+    # advancing — its own self-test throws if anyone repoints it at
+    # `origin/development`), so this is the SAME invariant on both parent
+    # branches, not a new one. `check-gitlink-in-app-main.mjs HEAD` below
+    # takes no base argument and never assumed `main` either way — it checks
+    # the resulting gitlink state itself, so widening this needed no script
+    # change.
+    branches: [main, development]
   # DISPATCHABLE ON PURPOSE — see gitlink-not-behind-base.yml's own note: a gate
   # scoped to PRs into `main` cannot exercise itself on the PR that adds it, so
   # its first real run would otherwise be on a live promotion.
