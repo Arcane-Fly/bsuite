@@ -346,12 +346,32 @@ jobs:
             mv /tmp/pointer-tree.next.json /tmp/pointer-tree.json
           }
 
-          for app in crm7 business-suite-unified conduit R80.4 braden throughput; do
+          # DERIVED FROM .gitmodules, same as consumer-lockfile-reach.yml (:164,
+          # :210 there). A hardcoded list here would silently drop a seventh
+          # submodule from the commit while /tmp/advance.md and the commit
+          # message still claimed it moved.
+          for app in $(git config --file .gitmodules --get-regexp path | awk '{print $2}'); do
             git diff --cached --quiet -- "$app" || add_gitlink "$app"
           done
           for f in docs/nav/route-inventory.json docs/00-roadmap/BSUITE-COMPONENT-REGISTRY.md docs/00-roadmap/bsuite-component-registry.json; do
             git diff --cached --quiet -- "$f" || add_blob "$f"
           done
+
+          # REFUSE AN EMPTY TREE. `git commit` on an empty index used to fail
+          # this outright ("nothing to commit"); `POST git/trees` with an empty
+          # `tree` array does not — it happily returns `base_tree`'s own sha,
+          # and the commit/ref-move below would then force-push a NO-OP commit
+          # over the standing branch. `steps.advance.outputs.changed == 'true'`
+          # gates this whole step and should already guarantee at least one
+          # gitlink diffed, but that guarantee lives in a DIFFERENT step's
+          # read of the index — asserting it again here, at the point that
+          # actually matters, is cheap and the alternative is a "PRs opened"
+          # claim built on nothing.
+          entry_count=$(jq 'length' /tmp/pointer-tree.json)
+          if [ "$entry_count" -eq 0 ]; then
+            echo "::error title=Nothing to commit::steps.advance.outputs.changed was 'true' but no gitlink or regenerated file actually diffed against HEAD when this step read the index. Refusing to create a commit and force-push the standing branch over a no-op."
+            exit 1
+          fi
 
           jq -n --arg base_tree "$base_tree" --slurpfile entries /tmp/pointer-tree.json \
             '{base_tree: $base_tree, tree: $entries[0]}' > /tmp/pointer-tree-body.json
@@ -364,18 +384,26 @@ jobs:
             '{message: $message, tree: $tree, parents: [$parent]}' > /tmp/pointer-commit-body.json
           commit_sha=$(gh api -X POST "repos/$REPO/git/commits" --input /tmp/pointer-commit-body.json --jq .sha)
 
-          gh api -X PATCH "repos/$REPO/git/refs/heads/$BR" -f sha="$commit_sha" -F force=true >/dev/null 2>&1 \
-            || gh api -X POST "repos/$REPO/git/refs" -f ref="refs/heads/$BR" -f sha="$commit_sha" >/dev/null
-
-          # VERIFY IN THE SAME STEP AS THE WRITE. Asserting the intent instead of the
-          # result is how the unsigned commits went unnoticed for as long as they
-          # did — same lesson consumer-lockfile-reach.yml already applies to its own
-          # commit, applied here to this one.
+          # VERIFY BEFORE MOVING THE REF, not after. `git/commits` creates the
+          # commit OBJECT regardless of what, if anything, points to it — it is
+          # fully addressable by its own sha the instant this call returns, so
+          # checking it needs no ref yet. Asserting first means an unsigned
+          # commit is never attached to the standing branch at all: on failure
+          # the object sits unreferenced (eligible for GC, nothing ever reads
+          # it) and `$BR` is left exactly where the last successful run put
+          # it, rather than at a commit callers were just told to distrust.
+          # Move-then-delete-on-failure was the other option; it was not
+          # chosen because it needs a second API call in the failure path to
+          # undo the first, and the branch would briefly point at the bad
+          # commit in between.
           verified=$(gh api "repos/$REPO/commits/$commit_sha" --jq .commit.verification.verified)
           if [ "$verified" != "true" ]; then
-            echo "::error title=Pointer-advance commit is UNSIGNED::repos/$REPO/commits/$commit_sha reads verification.verified=$verified. Expected on the PAT/GITHUB_TOKEN fallback: only a configured GitHub App installation token (D-169) gets a git/commits call signed. Configure vars.BSUITE_GITHUB_APP_CLIENT_ID + secrets.BSUITE_GITHUB_APP_PRIVATE_KEY before this can ship an unsigned-free pointer advance."
+            echo "::error title=Pointer-advance commit is UNSIGNED::repos/$REPO/commits/$commit_sha reads verification.verified=$verified. The App (vars.BSUITE_GITHUB_APP_CLIENT_ID / secrets.BSUITE_GITHUB_APP_PRIVATE_KEY) is configured on this repo, so a variable existing is not the gap — check the App is actually INSTALLED on this repository with contents:write, and that steps.app-token minted successfully (see the 'Say so if the App token could not be minted' step above). The branch '$BR' has NOT been moved; it still points at its last verified commit."
             exit 1
           fi
+
+          gh api -X PATCH "repos/$REPO/git/refs/heads/$BR" -f sha="$commit_sha" -F force=true >/dev/null 2>&1 \
+            || gh api -X POST "repos/$REPO/git/refs" -f ref="refs/heads/$BR" -f sha="$commit_sha" >/dev/null
           echo "pointer-advance commit $commit_sha on $BR: verified"
 
           # `gh pr view <branch>` EXITS 0 FOR A CLOSED PR. The old test only asked

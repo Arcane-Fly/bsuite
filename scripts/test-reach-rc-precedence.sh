@@ -35,7 +35,13 @@ set -uo pipefail
 cd "$(dirname "$0")/.."
 WORKFLOW=".github/workflows/consumer-lockfile-reach.yml"
 
-LINE=$(grep -oE 'if \[ "\$iter_rc" = "1" \] \|\| \[ "\$rc" = "0" \]; then rc=\$iter_rc; fi' "$WORKFLOW" || true)
+# ANCHORED, not a bare substring search: an earlier version of this pattern
+# matched the same text sitting inside a `#`-commented-out line too (the line
+# is still THERE, just dead), which would have kept this self-test green
+# after a silent revert. Anchoring the match to the whole line — leading
+# indentation and all, nothing before `if`, nothing after the closing `fi` —
+# means a `#` (or anything else) ahead of `if` breaks the match.
+LINE=$(grep -oE '^[[:space:]]+if \[ "\$iter_rc" = "1" \] \|\| \[ "\$rc" = "0" \]; then rc=\$iter_rc; fi$' "$WORKFLOW" || true)
 if [ -z "$LINE" ]; then
   echo "FAIL: the expected rc-precedence line was not found verbatim in $WORKFLOW." >&2
   echo "This test greps the real workflow line rather than holding its own copy —" >&2
