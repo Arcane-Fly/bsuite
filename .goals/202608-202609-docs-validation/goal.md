@@ -3,7 +3,7 @@
 ## Origin (operator's own words, verbatim)
 
 > "/operator-intent-lock /ops-open-run /reason-fable This task requires thoroughness and
-> judgement. go to the docs folder and the docs/plans/ folder find all 202608* and 202609*
+> judgement. go to the docs folder and the docs/plans/ folder find all 202608*and 202609*
 > dated docs, the registries, indexes etc. and evaluate by genuine validation against the
 > codebase. the most advanced version of anything is prefered in the event of conflicting
 > specs. react flow, dnd kit, react grid, airtable, in page customization features. anythign
