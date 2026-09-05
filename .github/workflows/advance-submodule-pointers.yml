@@ -275,12 +275,10 @@ jobs:
           # is absent — it will fail the same way there, loudly, rather than silently
           # doing nothing.
           GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
           BR=chore/auto-advance-submodule-pointers
-          git config user.name  'GaryOcean428'
-          git config user.email 'braden.lang77@gmail.com'
-          git checkout -B "$BR"
 
           # Build the commit message in a FILE. Inlining a multi-line message with
           # command substitution inside a YAML block scalar silently mangles the
@@ -295,12 +293,118 @@ jobs:
             echo "for the three false findings that motivated it."
           } > /tmp/commit-msg.txt
 
-          # Committed from the INDEX with no pathspec, deliberately:
-          # `git commit <pathspec>` re-reads those paths from the WORKING TREE and
-          # ignores the index. Submodule dirs here are shallow checkouts, so the
-          # pathspec form can commit nothing and report "working tree clean".
-          git commit -F /tmp/commit-msg.txt
-          git push -f origin "$BR"
+          # THE COMMIT IS MADE THROUGH THE GIT DATA API, NOT `git commit` (FC-BS-4:
+          # instances 6a2ed179, 00e314f5, 6875c3c0, 8b4f85d9, 6dc8f3f8, 3e4f1773).
+          #
+          # This used to run `git config user.name/email` to
+          # 'GaryOcean428' <braden.lang77@gmail.com> and `git commit -F` + `git push
+          # -f`, which lands on `development` under the operator's own name and
+          # address with NO key — `%G?` reads N on every one of those commits.
+          #
+          # consumer-lockfile-reach.yml already fixes the identical problem for a
+          # lockfile-ONLY commit via the CONTENTS API (`PUT contents/{path}`), which
+          # GitHub signs for you. That endpoint cannot be reused here: it writes
+          # exactly one blob at one path and has no way to express a mode-160000
+          # gitlink at all, and this commit has to move up to six of them plus the
+          # regenerated inventory/registry files in ONE commit — splitting them
+          # reopens the exact drift window the "Regenerate the route inventory" step
+          # above exists to close (#2348).
+          #
+          # So this builds a tree and a commit over the GIT DATA API instead
+          # (`git/trees` with entries of type "commit", mode "160000" for the
+          # gitlinks; `git/commits`; then the branch ref), entirely server-side —
+          # nothing local is committed or pushed. Per GitHub's "Commit signing
+          # support for bots and other GitHub Apps", a `git/commits` call comes back
+          # VERIFIED when (a) it is authenticated with a GitHub App installation
+          # token and (b) the request sets NO custom `author`, `committer` or
+          # `signature` field — GitHub then signs it as the App's own bot identity.
+          # Both hold below. On the PAT/GITHUB_TOKEN fallback neither condition (a)
+          # holds, so the commit will NOT be signed — the assertion further down
+          # fails the job loudly on that path rather than shipping an unsigned
+          # pointer commit silently, exactly as the reach workflow already does for
+          # its own commit.
+          base_sha=$(git rev-parse HEAD)
+          base_tree=$(git rev-parse 'HEAD^{tree}')
+
+          echo "[]" > /tmp/pointer-tree.json
+          add_gitlink() { # $1 = submodule path already staged via update-index --cacheinfo
+            local path="$1" sha
+            sha=$(git ls-files -s -- "$path" | awk '{print $2}')
+            [ -n "$sha" ] || return 0
+            jq --arg path "$path" --arg sha "$sha" \
+              '. + [{path: $path, mode: "160000", type: "commit", sha: $sha}]' \
+              /tmp/pointer-tree.json > /tmp/pointer-tree.next.json
+            mv /tmp/pointer-tree.next.json /tmp/pointer-tree.json
+          }
+          add_blob() { # $1 = regenerated file, read from the working tree — it was
+                       # written there directly (python3/node) and `git add`ed, so
+                       # disk content and staged content already agree.
+            local path="$1"
+            jq --arg path "$path" --rawfile content "$path" \
+              '. + [{path: $path, mode: "100644", type: "blob", content: $content}]' \
+              /tmp/pointer-tree.json > /tmp/pointer-tree.next.json
+            mv /tmp/pointer-tree.next.json /tmp/pointer-tree.json
+          }
+
+          # DERIVED FROM .gitmodules, same as consumer-lockfile-reach.yml (:164,
+          # :210 there). A hardcoded list here would silently drop a seventh
+          # submodule from the commit while /tmp/advance.md and the commit
+          # message still claimed it moved.
+          for app in $(git config --file .gitmodules --get-regexp path | awk '{print $2}'); do
+            git diff --cached --quiet -- "$app" || add_gitlink "$app"
+          done
+          for f in docs/nav/route-inventory.json docs/00-roadmap/BSUITE-COMPONENT-REGISTRY.md docs/00-roadmap/bsuite-component-registry.json; do
+            git diff --cached --quiet -- "$f" || add_blob "$f"
+          done
+
+          # REFUSE AN EMPTY TREE. `git commit` on an empty index used to fail
+          # this outright ("nothing to commit"); `POST git/trees` with an empty
+          # `tree` array does not — it happily returns `base_tree`'s own sha,
+          # and the commit/ref-move below would then force-push a NO-OP commit
+          # over the standing branch. `steps.advance.outputs.changed == 'true'`
+          # gates this whole step and should already guarantee at least one
+          # gitlink diffed, but that guarantee lives in a DIFFERENT step's
+          # read of the index — asserting it again here, at the point that
+          # actually matters, is cheap and the alternative is a "PRs opened"
+          # claim built on nothing.
+          entry_count=$(jq 'length' /tmp/pointer-tree.json)
+          if [ "$entry_count" -eq 0 ]; then
+            echo "::error title=Nothing to commit::steps.advance.outputs.changed was 'true' but no gitlink or regenerated file actually diffed against HEAD when this step read the index. Refusing to create a commit and force-push the standing branch over a no-op."
+            exit 1
+          fi
+
+          jq -n --arg base_tree "$base_tree" --slurpfile entries /tmp/pointer-tree.json \
+            '{base_tree: $base_tree, tree: $entries[0]}' > /tmp/pointer-tree-body.json
+          tree_sha=$(gh api -X POST "repos/$REPO/git/trees" --input /tmp/pointer-tree-body.json --jq .sha)
+
+          # NO `author`/`committer` KEY BELOW — see the block comment above. Adding
+          # either, even to name the App's own bot explicitly, is documented to turn
+          # the automatic signature off.
+          jq -n --rawfile message /tmp/commit-msg.txt --arg tree "$tree_sha" --arg parent "$base_sha" \
+            '{message: $message, tree: $tree, parents: [$parent]}' > /tmp/pointer-commit-body.json
+          commit_sha=$(gh api -X POST "repos/$REPO/git/commits" --input /tmp/pointer-commit-body.json --jq .sha)
+
+          # VERIFY BEFORE MOVING THE REF, not after. `git/commits` creates the
+          # commit OBJECT regardless of what, if anything, points to it — it is
+          # fully addressable by its own sha the instant this call returns, so
+          # checking it needs no ref yet. Asserting first means an unsigned
+          # commit is never attached to the standing branch at all: on failure
+          # the object sits unreferenced (eligible for GC, nothing ever reads
+          # it) and `$BR` is left exactly where the last successful run put
+          # it, rather than at a commit callers were just told to distrust.
+          # Move-then-delete-on-failure was the other option; it was not
+          # chosen because it needs a second API call in the failure path to
+          # undo the first, and the branch would briefly point at the bad
+          # commit in between.
+          verified=$(gh api "repos/$REPO/commits/$commit_sha" --jq .commit.verification.verified)
+          if [ "$verified" != "true" ]; then
+            echo "::error title=Pointer-advance commit is UNSIGNED::repos/$REPO/commits/$commit_sha reads verification.verified=$verified. The App (vars.BSUITE_GITHUB_APP_CLIENT_ID / secrets.BSUITE_GITHUB_APP_PRIVATE_KEY) is configured on this repo, so a variable existing is not the gap — check the App is actually INSTALLED on this repository with contents:write, and that steps.app-token minted successfully (see the 'Say so if the App token could not be minted' step above). The branch '$BR' has NOT been moved; it still points at its last verified commit."
+            exit 1
+          fi
+
+          gh api -X PATCH "repos/$REPO/git/refs/heads/$BR" -f sha="$commit_sha" -F force=true >/dev/null 2>&1 \
+            || gh api -X POST "repos/$REPO/git/refs" -f ref="refs/heads/$BR" -f sha="$commit_sha" >/dev/null
+          echo "pointer-advance commit $commit_sha on $BR: verified"
 
           # `gh pr view <branch>` EXITS 0 FOR A CLOSED PR. The old test only asked
           # whether a PR existed, so once the standing PR was closed the workflow
