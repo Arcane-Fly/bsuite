@@ -1054,7 +1054,7 @@ jobs:
             # never runs (caught in review by replaying this block under
             # `bash -e`).
             set +e
-            corepack enable && pnpm install --no-frozen-lockfile 2>&1 | tee "$log"
+            { corepack enable && pnpm install --no-frozen-lockfile; } 2>&1 | tee "$log"
             rc=${PIPESTATUS[0]}
             set -e
             echo "::endgroup::"
@@ -1149,7 +1149,7 @@ jobs:
             # never runs (caught in review by replaying this block under
             # `bash -e`).
             set +e
-            corepack enable && pnpm install --no-frozen-lockfile 2>&1 | tee "$log"
+            { corepack enable && pnpm install --no-frozen-lockfile; } 2>&1 | tee "$log"
             rc=${PIPESTATUS[0]}
             set -e
             echo "::endgroup::"

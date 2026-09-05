@@ -77,7 +77,7 @@ jobs:
           while true; do
             echo "::group::corepack setup attempt ${attempt}/${max_attempts}"
             set +e
-            corepack enable && corepack prepare --activate 2>&1 | tee "$log"
+            { corepack enable && corepack prepare --activate; } 2>&1 | tee "$log"
             rc=${PIPESTATUS[0]}
             set -e
             echo "::endgroup::"
