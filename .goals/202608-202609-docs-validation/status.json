@@ -1,0 +1,131 @@
+{
+  "goal_id": "202608-202609-docs-validation",
+  "status": "building",
+  "iteration": 19,
+  "builder_model": "Claude Sonnet 5 (copilot)",
+  "inspector_model": "Claude Sonnet 5 (copilot)",
+  "initial_sha": "8afa0b032590e7b9774e11e4eedacfc272a06fc2",
+  "created_at": "2026-09-04T03:15:00Z",
+  "history": [
+    {
+      "iteration": 1,
+      "artifact": "docs/00-roadmap/20260904-dated-doc-validation-ledger-v1.00W.md",
+      "inventory_count": 127,
+      "registry_count": 3,
+      "verdict_rows": 127,
+      "status": "builder-complete",
+      "note": "Iteration-1 triage ledger created with source-backed carry-forwards, fresh registry/footprint evidence, conflict rulings, and explicit iteration-2 remainder.",
+      "verdict": "FAIL",
+      "inspector_summary": "Independently verified (subagent Inspector dispatch returned no artifact, so the orchestrator ran the check directly): RelationshipCanvas.tsx has 0 persistence calls (grep confirmed), contradicting the ledger's 'wins because it provides an actual interactive canvas' ruling. Git hygiene clean, one commit, no sweep. Fix required in iteration 2: correct the ruling to substrate-winner-not-capability-winner, re-check EntityTableWidget for the same shallow-read pattern, continue UNVERIFIABLE rows in priority order.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-1.md"
+    },
+    {
+      "iteration": 2,
+      "verdict": "FAIL",
+      "summary": "Fixed the row-55 schema-canvas ruling correctly (verified: featureBuilderStore.saveDraft() does call supabase update/insert). Deepened row 117 (workflow-canvas) with real, checkable evidence. Skipped the explicitly assigned re-check of EntityTableWidget.tsx: independently grepped it and found ZERO edit/mutate/save calls (read-only, one .select() only) while the ledger's Data surface ruling still calls it an editable Airtable-class winner. Rows 80/86 also not touched despite being assigned. ~114 of 127 rows remain UNVERIFIABLE, which is expected at this stage and not itself a failure.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-2.md"
+    },
+    {
+      "iteration": 3,
+      "verdict": "FAIL",
+      "summary": "The headline Data-surface ruling is corrected, but row 52 still contradicts it by naming read-only EntityTableWidget as the Airtable-class winner. Current dated-path inventory is 128 versus the ledger's 127, and BSUITE-FEATURE-INDEX.md has an unrecorded 662-versus-661 mismatch. The PI handoff remains stale at iteration 1, and 114 rows still require genuine validation.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-3.md"
+    },
+    {
+      "iteration": 4,
+      "verdict": "FAIL",
+      "summary": "Corrected the self-inclusive inventory to 128 rows, reconciled the ledger with no missing or duplicate paths, corrected row 52 to the BrowseDataTab/DataGrid editable admin winner with EntityTableWidget explicitly read-only, recorded the 662-versus-661 feature-index mismatch and fresh 21-file React Flow/xyflow footprint, and sent fresh PI handoff e2a5a2ff-58bd-4310-8d52-16c0b3218d74. 114 inventory rows remain UNVERIFIABLE, so the full goal is not complete.",
+      "feedback_file": null
+    },
+    {
+      "iteration": 4,
+      "verdict": "PASS",
+      "summary": "Independent inspection verified every iteration-4 remediation claim: exact 128-path inventory bijection, corrected persisted CRM7 Browse/DataGrid ruling, explicit 662-versus-661 feature-index mismatch, 21-file React Flow/xyflow footprint, 174-component registry check, and current PI handoff. This is a narrow iteration PASS only; 114 UNVERIFIABLE rows remain and overall status stays building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-4.md"
+    },
+    {
+      "iteration": 5,
+      "verdict": "FAIL",
+      "summary": "Inventory, totals, ledger-only scope, and six source spot-checks passed, including page-builder, EnhancedDataTable/DataGrid, schema, and workflow canvas. Rows 51, 63, 89, and 90 were promoted using their documents' historical assertions without replayed commands or independent source-file evidence in the ledger, violating acceptance criterion 6. Overall status remains building with 110 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-5.md"
+    },
+    {
+      "iteration": 6,
+      "verdict": "FAIL",
+      "summary": "Rows 51, 63, 89, and 90 are correctly UNVERIFIABLE with exact missing evidence; the 128-row bijection, 5/6/3/114 totals, 174-component registry check, corrected EntityTableWidget ruling, non-direct-save RelationshipCanvas caveat, and ledger-only commit scope all pass. Iteration evidence accuracy fails because fresh replay finds 25 @dnd-kit files rather than 26 and 19 react-grid-layout files rather than 21. Overall remains building with 114 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-6.md"
+    },
+    {
+      "iteration": 7,
+      "verdict": "FAIL",
+      "summary": "The corrected source footprints independently replay to 25 @dnd-kit files and 19 react-grid-layout files; the exact 128-path bijection, 5/6/3/114 arithmetic, required UNVERIFIABLE rows, bounded EntityTableWidget/DataGrid and RelationshipCanvas caveats, 174-component registry check, and ledger-only commit scope all pass. Iteration 7 fails because the ledger does not record reproducible six-app commands/scope for the two corrected footprint figures. Overall remains building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-7.md"
+    },
+    {
+      "iteration": 8,
+      "verdict": "PASS",
+      "summary": "Exact six-root TypeScript commands independently replay to 25 @dnd-kit files and 19 react-grid-layout files; the ledger explicitly states tests are not excluded and paths are deduplicated with sort -u. The 128-path bijection, 5/6/3/114 arithmetic, prior corrected rulings, 174-component registry gate, and ledger-only Builder scope remain intact. This is a narrow iteration PASS only; overall remains building with 114 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-8.md"
+    },
+    {
+      "iteration": 9,
+      "verdict": "FAIL",
+      "summary": "Rows 51, 80, 86, 89, 90, and 117 and all fresh command figures were independently verified, but the Builder's focused ten-row pass substituted rows 32/52/55/63 for explicitly assigned rows 14/29/60/61. Those four retain generic E-OPEN text despite available concrete source and scripts, so iteration 9 is incomplete. Overall remains building with 114 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-9.md"
+    },
+    {
+      "iteration": 10,
+      "verdict": "FAIL",
+      "summary": "The exact focused row set, 128-row bijection, 6/7/3/112 arithmetic, 174-component registry, caveats, and ledger-only Builder scope pass. Rows 14 and 29 still omit concrete file:line and replayable-command evidence; row 60 is promoted without its live query or an explained function count; row 61 incorrectly cites hardcoded UI role permissions as consumers of the database role_capabilities matrix. Fresh theme replay also reports G11 failing on two inline colour styles. Overall remains building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-10.md"
+    },
+    {
+      "iteration": 11,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/113 arithmetic, exact focused row set, preserved prior rulings, 174-component registry, building state, and ledger-only Builder scope pass. Row 61 corrects the client-map category error and row 60 avoids unsupported promotion, but row 14 paraphrases rather than records the exact gate output, row 29 uses approximate pathless anchors, and row 60 still omits the exact live query/result and local audit expected refusal. Overall remains building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-11.md"
+    },
+    {
+      "iteration": 12,
+      "verdict": "FAIL",
+      "summary": "Rows 14 and 29 now contain the required exact theme-gate evidence, role-token anchors, full migration path, exact line mappings, and baseline/live boundary. The 128-row bijection, 5/7/3/113 arithmetic, prior caveats, 174-component registry, building status, and ledger-only Builder scope remain intact. Row 60 still claims live catalogue counts without the exact SQL or returned rows and still omits the exact local audit refusal text, so the evidence is not replayable. Overall remains building.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-12.md"
+    },
+    {
+      "iteration": 13,
+      "verdict": "PASS",
+      "summary": "Row 60 now removes non-replayable live catalogue counts, retains the exact local command, stdout, refusal text, and exit code 2, and remains UNVERIFIABLE. The iteration-13 evidence section, exact 128-path bijection, 5/7/3/113 arithmetic, prior rulings, 174-component registry gate, building status, and ledger-only Builder scope all pass. This is a narrow iteration PASS only; overall remains building with 113 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-13.md"
+    },
+    {
+      "iteration": 14,
+      "verdict": "FAIL",
+      "summary": "All iteration-14 numerical findings and five component classifications independently reproduce, and the 128-row bijection, 5/7/3/0/113 arithmetic, prior rulings, building status, and ledger-only scope remain intact. The iteration fails acceptance criterion 6 because the ledger gives no exact command for the feature-JSON parse and no exact commands/results for the five source/import comparisons; correct conclusions do not replace the required replayable evidence trail.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-14.md"
+    },
+    {
+      "iteration": 15,
+      "verdict": "FAIL",
+      "summary": "Feature-index counts, four shared-component counts, the six-root scope and exclusions, 128-row bijection, 5/7/3/0/113 arithmetic, prior rulings, 174-component gate, building status, unsupported-live-claim boundary, and ledger-only Builder scope all pass. Iteration 15 fails acceptance criterion 6 because its command hardcodes the RelationshipCanvas conclusion instead of querying the registry, and its purported DraggableCardPage definition/export existence check points to canvasCardLayout.tsx rather than the actual component/barrel export.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-15.md"
+    },
+    {
+      "iteration": 16,
+      "verdict": "PASS",
+      "summary": "The exact recorded command now computes both RelationshipCanvas facts: the local file exists and the shared registry has zero matching rows. DraggableCardPage is anchored to its definition at packages/page-builder/src/DraggableCardPage.tsx:163 and barrel export at packages/page-builder/src/index.ts:28, with canvasCardLayout.tsx clearly secondary. The six-root census scope/exclusions, component counts, 128-row bijection, 5/7/3/0/113 arithmetic, prior rulings, 174-component gate, building status, and ledger-only Builder scope all pass. This is a narrow iteration PASS only; overall remains incomplete with 113 UNVERIFIABLE rows.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-16.md"
+    },
+    {
+      "iteration": 17,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, prior architecture rulings, building status, good signature, ledger-only scope, and route gates all pass. Iteration 17 fails because none of the ten assigned rows changed: rows 1, 81, 87, and 113–116 retain generic E-OPEN/future-check prose, while rows 14, 80, and 89 only retain prior evidence. General ledger narrative does not satisfy the required direct source or replayable-command evidence for the focused rows. The current theme quick gate also remains red on G11 with two convertible inline colour styles.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-17.md"
+    },
+    {
+      "iteration": 18,
+      "verdict": "FAIL",
+      "summary": "The 128-row bijection, 5/7/3/0/113 arithmetic, 174-component registry, 661-row feature index, accepted rulings, building status, good signature, and ledger-only scope pass. Rows 1, 14, 80, 87, 89, and 115 now have bounded evidence. Iteration 18 fails because row 81 does not reconcile the source document's 553-route claim with the current 558-route replay, while rows 113, 114, and 116 still lack concrete file:line anchors or exact command/output; document summaries and artifact existence are not replayable evidence trails.",
+      "feedback_file": ".goals/202608-202609-docs-validation/inspector-feedback-18.md"
+    }
+  ]
+}

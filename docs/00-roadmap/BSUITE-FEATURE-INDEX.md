@@ -9,7 +9,7 @@ evidence:
 
 # BSuite platform — feature index
 
-**v1.00W · 2026-08-26 · 659 features across 13 modules**
+**v1.00W · refreshed 2026-09-03 · 662 features across 28 modules**
 
 Built bottom-up from code (routes, nav manifests, feature flags, migrations, edge functions, package exports), joined to a 1,501-document corpus, then attacked over five adversarial rounds. Every row carries real file paths — code anchors and doc links — not counts.
 
