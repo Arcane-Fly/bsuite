@@ -165,15 +165,17 @@ jobs:
           APPS: ${{ github.event.inputs.apps || 'all' }}
         run: |
           set -uo pipefail
+          rc=0
           if [ "$APPS" = "all" ]; then
-            node scripts/regen-consumer-lockfile.mjs --all --write --json > /tmp/reach.json
+            node scripts/regen-consumer-lockfile.mjs --all --write --json > /tmp/reach.json || rc=$?
           else
             : > /tmp/reach.json
             for a in ${APPS//,/ }; do
-              node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json
+              iter_rc=0
+              node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json || iter_rc=$?
+              if [ "$rc" = "0" ] && [ "$iter_rc" != "0" ]; then rc=$iter_rc; fi
             done
           fi
-          rc=$?
           cat /tmp/reach.json
           # rc 1 is a genuine verification failure and must fail the job. rc 2 is
           # "would change", which cannot occur with --write.
@@ -200,9 +202,17 @@ jobs:
               exit 1
             fi
             br="chore/lockfile-reach"
+            # 2026-09-05: grep returned 1 on a transitive-only diff; pipefail plus
+            # the runner's bash -e killed the step before any output.
             moved=$(git -C "$app" diff -U0 -- pnpm-lock.yaml \
-                    | grep -E "^\+ +'@bsuite/" \
+                    | { grep -E "^\+ +'@bsuite/" || true; } \
                     | sed "s/.*'\(@bsuite[^']*\)'.*/\1/" | sort -u | tr '\n' ' ')
+            if [ -z "$moved" ]; then
+              git -C "$app" checkout -- pnpm-lock.yaml
+              echo "$app: lockfile drift is transitive only, no @bsuite/* moved - skipped"
+              skipped=$((skipped+1))
+              continue
+            fi
             # Built with printf so every line stays inside this YAML block scalar.
             # A bare multi-line string here dedents to column 0 and breaks the file.
             printf '%s\n' \
@@ -217,7 +227,7 @@ jobs:
               "- \`overrides:\` count unchanged (a silent drop is usually a missing \`pnpm-workspace.yaml\`, and those entries are usually security pins)" \
               "- \`pnpm install --frozen-lockfile\` **succeeds**, not merely parses" \
               "" \
-              "Not auto-merged. A lockfile bump changes what this app installs and goes through review and CI like anything else." \
+              "Auto-merge is armed (merge commit): this PR merges itself once every required check on this repo is green, and never before. Operator decision 2026-09-05." \
               > /tmp/reach-body.md
             printf '%s\n' \
               "chore(deps): reach the published @bsuite/* versions" \
@@ -315,6 +325,15 @@ jobs:
               echo "::error title=$app: branch pushed but PR not created::The change is on '$br' and is correct; only 'gh pr create' failed. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', BSUITE_CROSS_REPO_PAT is missing or expired."
               exit 1
             fi
+            # `--auto` weakens no required checks and is idempotent; it only removes
+            # the human merge click once green. Use `--merge`, not `--squash`, to
+            # preserve the reach PR as a merge commit.
+            gh pr merge -R "$owner/$app" "$br" --auto --merge 2>/tmp/automerge.log \
+              && echo "$app: auto-merge armed" \
+              || {
+                echo "::warning title=$app: could not arm auto-merge::PR is open and correct; merge by hand or next run retries"
+                cat /tmp/automerge.log
+              }
           done
           echo "### Consumer lockfile reach" >> "$GITHUB_STEP_SUMMARY"
           echo "PRs opened/updated: $opened - already current: $skipped" >> "$GITHUB_STEP_SUMMARY"
