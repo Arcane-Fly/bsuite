@@ -144,6 +144,15 @@ jobs:
         # meaningless. Fail here rather than open zero PRs and call it clean.
         run: node scripts/regen-consumer-lockfile.mjs --self-test
 
+      # bsuite#3089 (Copilot, thread 3940077853): positive control for the
+      # per-app rc-accumulation line further down this file, in the "Regenerate
+      # every consumer lockfile" step (manual-dispatch path). Greps the real
+      # line out of this workflow and evals it against synthetic exit-code
+      # sequences, so it fails loudly rather than passing on a stale copy if
+      # that line is ever edited without updating this test.
+      - name: Self-test the per-app rc-precedence line
+        run: scripts/test-reach-rc-precedence.sh
+
       - name: Put every submodule on its own development branch
         # THE CHECKOUT LANDS EACH SUBMODULE AT THE PARENT'S RECORDED GITLINK,
         # WHICH IS NOT ITS development. On 2026-08-27 crm7's gitlink was fifteen
@@ -173,7 +182,16 @@ jobs:
             for a in ${APPS//,/ }; do
               iter_rc=0
               node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json || iter_rc=$?
-              if [ "$rc" = "0" ] && [ "$iter_rc" != "0" ]; then rc=$iter_rc; fi
+              # bsuite#3089 (Copilot, thread 3940077853): the old condition
+              # ("$rc" = "0" && iter_rc != "0") latches onto the FIRST non-zero
+              # code and never revisits it, so an app killed by a signal (e.g.
+              # 137) ahead of a later genuine verification failure (rc=1)
+              # leaves rc=137 forever and the real 1 is lost. A 1 always wins;
+              # otherwise the first non-zero code standing wins, same as
+              # before. Covered by scripts/test-reach-rc-precedence.sh, wired
+              # in above as its own "Self-test the per-app rc-precedence
+              # line" step.
+              if [ "$iter_rc" = "1" ] || [ "$rc" = "0" ]; then rc=$iter_rc; fi
             done
           fi
           cat /tmp/reach.json
