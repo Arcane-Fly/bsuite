@@ -165,15 +165,17 @@ jobs:
           APPS: ${{ github.event.inputs.apps || 'all' }}
         run: |
           set -uo pipefail
+          rc=0
           if [ "$APPS" = "all" ]; then
-            node scripts/regen-consumer-lockfile.mjs --all --write --json > /tmp/reach.json
+            node scripts/regen-consumer-lockfile.mjs --all --write --json > /tmp/reach.json || rc=$?
           else
             : > /tmp/reach.json
             for a in ${APPS//,/ }; do
-              node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json
+              iter_rc=0
+              node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json || iter_rc=$?
+              if [ "$rc" = "0" ] && [ "$iter_rc" != "0" ]; then rc=$iter_rc; fi
             done
           fi
-          rc=$?
           cat /tmp/reach.json
           # rc 1 is a genuine verification failure and must fail the job. rc 2 is
           # "would change", which cannot occur with --write.
@@ -200,9 +202,17 @@ jobs:
               exit 1
             fi
             br="chore/lockfile-reach"
+            # 2026-09-05: grep returned 1 on a transitive-only diff; pipefail plus
+            # the runner's bash -e killed the step before any output.
             moved=$(git -C "$app" diff -U0 -- pnpm-lock.yaml \
-                    | grep -E "^\+ +'@bsuite/" \
+                    | { grep -E "^\+ +'@bsuite/" || true; } \
                     | sed "s/.*'\(@bsuite[^']*\)'.*/\1/" | sort -u | tr '\n' ' ')
+            if [ -z "$moved" ]; then
+              git -C "$app" checkout -- pnpm-lock.yaml
+              echo "$app: lockfile drift is transitive only, no @bsuite/* moved - skipped"
+              skipped=$((skipped+1))
+              continue
+            fi
             # Built with printf so every line stays inside this YAML block scalar.
             # A bare multi-line string here dedents to column 0 and breaks the file.
             printf '%s\n' \
