@@ -1,3 +1,21 @@
+---
+kind: record
+authority: none
+owner: bsuite
+evidence:
+  - crm7/lighthouserc.json
+  - crm7/scripts/lighthouse-auth.cjs (planned)
+  - crm7/scripts/__tests__/lighthouse-auth-guard-parity.test.ts (planned)
+  - crm7/.github/workflows/lighthouse-ci.yml
+  - crm7/scripts/ci/resolve-supabase-branch.sh
+  - crm7/tests/e2e/support/project-guard.ts
+  - crm7/tests/e2e/auth.setup.ts
+  - business-suite-unified/lighthouserc.json
+  - braden/lighthouserc.json
+  - throughput/lighthouserc.json
+  - R80.4/lighthouserc.json
+---
+
 # Every Lighthouse gate in the estate measures a page the field score barely weights
 
 **Date:** 2026-09-06 · **Status:** W (Working) · **Issue:** bsuite#2581 · **Reference implementation:** crm7#2507
@@ -79,8 +97,8 @@ got wrong:
    login redirect — looking authenticated while measuring nothing.
 3. **Resolve a non-production database, before the build.** Vite bakes
    `VITE_SUPABASE_URL` in at build time, so the bundle and the auth hook must agree on
-   the project. Call the same `resolve-supabase-branch.sh` the E2E job uses, and the
-   same `project-guard.ts`, so the two cannot drift.
+   the project. Call the same `crm7/scripts/ci/resolve-supabase-branch.sh` the E2E job uses, and the
+   same `crm7/tests/e2e/support/project-guard.ts`, so the two cannot drift.
 4. **Assert a content marker, never a title.** This is the part that decides whether
    the gate is real.
 
@@ -92,7 +110,7 @@ one — which means a gate that skips silently goes green precisely when it stop
 measuring the thing it exists to watch.
 
 This is not hypothetical, and it is not new. crm7#1157 and the 2026-08-17
-reproduction in `wcag-aa.spec.ts` both recorded audits **passing with zero violations
+reproduction in `crm7/tests/e2e/wcag-aa.spec.ts` both recorded audits **passing with zero violations
 against PermissionGate's "Access Denied" card**, because `useDocumentTitle` runs in
 `ProtectedRoute` before every branch — the real page, the spinner and the error card
 all report an identical `document.title`.
@@ -166,7 +184,7 @@ Every one refused rather than quietly measuring the wrong page:
    down a Chrome-resolution branch that *throws* rather than falling back to the system
    install (`@lhci/cli src/utils.js:56`). `CHROME_PATH` is checked before that branch.
 3. **`password grant failed: HTTP 400 (invalid_credentials)`** — a freshly provisioned
-   branch has the fixture *tenants* from `seed.sql` but not the fixture *users*;
+   branch has the fixture *tenants* from `crm7/supabase/seed.sql` but not the fixture *users*;
    `auth.users` is GoTrue's and a hand-inserted row cannot authenticate.
 4. **The real LCP.**
 
