@@ -1,10 +1,10 @@
 -- 20261009000000_schema_builder_reorder_entity_fields_forward.sql
 --
--- DEV-FIXTURE COPY - DO NOT EDIT HERE.
+-- ⚠️  DEV-FIXTURE COPY — DO NOT EDIT HERE.
 -- Canonical location: business-suite-unified/supabase/migrations/20261009000000_schema_builder_reorder_entity_fields_forward.sql
 -- This copy exists only so `pnpm --filter @bsuite/schema-builder test` can spin
--- up a self-contained Supabase fixture. See README.md in this directory.
---
+-- up a self-contained Supabase fixture. See README.md in this directory for the
+-- hard rule and sync workflow.
 --
 -- REHEARSAL: this file is a byte-identical copy of a BSU migration that sorts
 -- ahead of it in a whole-estate replay, so every object it declares already
@@ -12,12 +12,22 @@
 -- broken migration — it is what a dev-fixture copy IS. The claim below is the
 -- accurate one, and it sits ABOVE the sync boundary because the BSU canonical
 -- copy must NOT carry it: there the migration really does move the census.
+--
+-- RESTORED 2026-09-04 (FOLLOW 87): the 2026-09-04 gitlink mirror
+-- (2137caec) copied the BSU canonical file in verbatim, including the header
+-- above this boundary, which silently deleted this marker. The parity gate
+-- did not catch it — Check 3 only compares content BELOW the boundary, and a
+-- full-file copy trivially matches itself there. README.md's documented sync
+-- step ("cp ... verbatim") is corrected in the same PR to say so explicitly.
 -- rehearsal: already-enforced
 -- @sync-boundary-below
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
-
-BEGIN;
+--
+-- FOLLOW 57 class: no begin;/commit; here — the shared applier already wraps
+-- every migration file in --single-transaction, and a file-local COMMIT
+-- would end that outer transaction early. Already applied and recorded in
+-- production (version-keyed ledger), so this is file hygiene only.
 
 -- 1. Backfill NULL / default-0 sort_order deterministically per entity.
 UPDATE public.tenant_field_definitions tfd
@@ -187,5 +197,3 @@ comment on function public.reorder_entity_fields(uuid, uuid[]) is
   'entity''s tenant; platform-level (NULL-tenant) entities require '
   'is_platform_developer() per D-66. The field id array must cover exactly the '
   'active fields of the entity. No dynamic SQL. search_path pinned to ''''.';
-
-COMMIT;

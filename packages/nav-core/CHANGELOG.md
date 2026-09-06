@@ -5,6 +5,74 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [1.3.0] — 2026-09-03 — Update notice and unsaved-work guard
+
+Operator directive 2026-09-03 10:48: "note there are people using the app in
+production i.e. actual clients so stage all work to development branch and
+then ensure their is a platform notice and refresh to update prompt so they
+dont lose work on rebuilds." PI rulings R1–R10 (two red-teams) bind the design.
+
+### Added
+
+- **`useAppUpdateAvailable()`** — compares the commit baked into the RUNNING
+  bundle (`__BUILD_COMMIT__`) with the commit at `/version.json`. ANY
+  difference is `versionChanged` (a rollback moves the commit backwards and is
+  a change too — the word "new" appears nowhere). Polls on mount, every 10 min,
+  and on `visibilitychange`; `cache: 'no-store'`. Asserts `content-type`
+  starts with `application/json` BEFORE parsing; a mismatch logs ONE
+  `console.error` per distinct fault, sets `updateCheckBroken`, and keeps
+  polling. Dismissal keyed by the DETECTED commit in `sessionStorage`. Control
+  `{ enabled, severity }`: `enabled: false` = kill switch (no banner, no
+  polling); `severity: 'critical'` = not dismissible, re-shown every poll.
+  Never reloads.
+- **`<UpdateAvailableBanner/>`** — `role="status" aria-live="polite"`,
+  `data-slot="update-available-banner"`, role tokens only
+  (`bg-role-info/10`, `bg-role-warning/10`, `bg-destructive/10` — names
+  `@bsuite/theme/preset-v4.css` generates; NOT the apps' private `bg-info/10`,
+  which paints nothing in four of six apps). Normal and escalated copy. One
+  Refresh button that calls `confirmLeave()` first; Dismiss hidden when
+  critical. No transition (reduced-motion by having no motion). Inline
+  currentColor SVGs, so no `lucide-react` runtime dependency is added.
+- **`useUnsavedChanges()` / `useRegisterDirty(id, isDirty)`** — a
+  module-level dirty registry (`useSyncExternalStore`) that arms exactly one
+  `beforeunload` while anything is dirty and disarms it when all are clean;
+  `confirmLeave()` prompts with `UNSAVED_CONFIRM_MESSAGE` only when dirty.
+  Measured baseline: ONE `beforeunload` guard across six apps.
+- **`@bsuite/nav-core/vite`** (new subpath export, Node-only, never
+  re-exported from the browser entry): `versionJsonPlugin()` resolves the
+  commit once per build (`VERCEL_GIT_COMMIT_SHA` → `GIT_COMMIT` →
+  `git rev-parse HEAD`), `define`s `__BUILD_COMMIT__` and emits
+  `dist/version.json` via `generateBundle` from the SAME resolution. With no
+  commit it **throws** unless `allowUnknownCommit` (then defines nothing and
+  emits nothing). Also `writeVersionJson(dir)`, `resolveBuildInfo()`,
+  `resolveBuildCommit()`, `gitHeadCommit()` and the `BuildInfo` type, for
+  conduit's route handler.
+- `vite` as an OPTIONAL peer (`>=6`) for the subpath; `@types/node` as a dev
+  dependency for it.
+- README section "Update notice and unsaved-work guard": adoption snippet,
+  the rewrite exclusion, the Cache-Control rule, the smoke check.
+
+### Tests
+
+193 (was 174): positive AND negative controls for detection (same / different /
+prefix-of / rollback / sentinel), content-type-before-parse (body never read on
+`text/html`), one-error-per-fault, polling continues and recovers, kill switch
+on/off/mid-session, critical vs warning dismissibility, dismissal keyed by
+detected commit and not carried to another, escalation clearing a dismissal,
+banner copy with no "new", role-token-only class list, no raw colours / white /
+black / inline style, Refresh confirm paths, the banner never reloading on its
+own, packaging (index never imports `./vite`, no `node:` in browser modules),
+and the plugin's precedence chain, refusal, and define/asset agreement.
+
+### Not in this release (per R10 — each app's adoption PR)
+
+Mounting the banner (11 mount points / 12 render sites), the `vercel.json`
+rewrite exclusion and Cache-Control rule per app, removal of the four
+unconsented reload sites, `useRegisterDirty` on the edit surfaces, the parent
+smoke script and mount gate.
+
+---
+
 ## [0.8.0] — 2026-08-12 — Sidebar tokens rebuilt for Tailwind v4 and OKLCH
 
 ### Fixed

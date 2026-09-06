@@ -1,0 +1,99 @@
+# EVERY GITLINK MAIN SHIPS MUST SIT ON THE APP'S OWN MAIN BRANCH.
+#
+# Added 2026-09-03. check-gitlink-not-behind-base.mjs (Gitlink not behind base)
+# already proves a promotion never moves a pointer BACKWARD relative to what
+# `main` already pinned. That is necessary and it is not sufficient: a pointer
+# can be "ahead" of the OLD value by that check's own definition while pointing
+# at a commit that only ever existed on the app's development branch — never
+# promoted through that app's own review and merge into ITS main.
+#
+# bsuite#2939 does exactly this for crm7, measured live the same day: it
+# re-points the parent's crm7 gitlink to crm7's own DEVELOPMENT tip
+# (70aef71f, 24 commits ahead of crm7's actual main at 1fd4fd82) while the PR's
+# own body claims "both at main". `git -C crm7 merge-base --is-ancestor 70aef71f
+# origin/main` answers NO. Nothing before this gate asked that question.
+#
+# This gate asks it, for all six submodules, against each app's OWN live main —
+# fetched fresh from that app's own remote in this job, never assumed from the
+# parent's submodule checkout. See scripts/check-gitlink-in-app-main.mjs for
+# what it asserts and, explicitly, what it does NOT.
+name: Gitlink on app main
+
+on:
+  pull_request:
+    # Widened to `development` 2026-09-04 (operator directive) — same reason
+    # as gitlink-not-behind-base.yml's identical change, landed in the same
+    # PR: `development`'s gitlinks are supposed to sit on each app's OWN MAIN
+    # at all times too (advance-submodule-pointers.mjs's `collect()` reads
+    # `origin/main` for every app regardless of which parent branch it is
+    # advancing — its own self-test throws if anyone repoints it at
+    # `origin/development`), so this is the SAME invariant on both parent
+    # branches, not a new one. `check-gitlink-in-app-main.mjs HEAD` below
+    # takes no base argument and never assumed `main` either way — it checks
+    # the resulting gitlink state itself, so widening this needed no script
+    # change.
+    branches: [main, development]
+  # DISPATCHABLE ON PURPOSE — see gitlink-not-behind-base.yml's own note: a gate
+  # scoped to PRs into `main` cannot exercise itself on the PR that adds it, so
+  # its first real run would otherwise be on a live promotion.
+  workflow_dispatch:
+    inputs:
+      head:
+        description: 'Ref whose gitlinks are checked against each app''s own main (default: HEAD)'
+        required: false
+        default: 'HEAD'
+
+permissions:
+  contents: read
+
+jobs:
+  gitlink-on-app-main:
+    name: Every gitlink sits on its app's own main
+    runs-on: ubuntu-latest
+    steps:
+      # fetch-depth: 0 because the check runs `git merge-base --is-ancestor`
+      # inside each submodule, and a shallow clone cannot answer an ancestry
+      # question.
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          fetch-depth: 0
+          # Every app is a PRIVATE submodule; the default GITHUB_TOKEN cannot
+          # clone them. House pattern is the cross-repo PAT with a fallback.
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Refuse to scan an empty tree
+        run: scripts/assert-app-trees-present.sh
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          # setup-node@v5 resolves the packageManager field's pnpm before
+          # corepack runs and fails with "Unable to locate executable file: pnpm".
+          package-manager-cache: false
+
+      # Self-test BEFORE trusting a single verdict below — proves the guard can
+      # both fail (a planted development-only SHA, the exact live crm7 shape)
+      # and pass (a clean fixture), not merely that it runs.
+      - name: Self-test the guard (proves it can fail)
+        run: node scripts/check-gitlink-in-app-main.mjs --self-test
+
+      # `submodules: recursive` above can still leave a submodule shallow;
+      # `merge-base --is-ancestor` then answers "no" for a commit that IS an
+      # ancestor, which would refuse a perfectly good pointer.
+      - name: Unshallow the submodules so ancestry is answerable
+        shell: bash
+        run: |
+          set -uo pipefail
+          git submodule foreach --recursive 'git fetch --unshallow origin 2>/dev/null || git fetch origin || true'
+
+      - name: Check this PR's gitlinks against each app's own main
+        if: github.event_name == 'pull_request'
+        run: node scripts/check-gitlink-in-app-main.mjs HEAD
+
+      - name: Check a ref on demand
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        env:
+          HEAD_REF: ${{ inputs.head }}
+        run: node scripts/check-gitlink-in-app-main.mjs "$HEAD_REF"

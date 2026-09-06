@@ -242,6 +242,52 @@ export function callSites(source) {
 // is telling a real absence from the five things that merely look like one.
 // ---------------------------------------------------------------------------
 
+/**
+ * Every relation key a migration CLAIMS to create — tables AND functions.
+ *
+ * The function half was missing, and its absence DEADLOCKED the estate's own
+ * promotion path (found 2026-09-03 on bsuite#2939). The applier
+ * (.github/workflows/supabase-migrate.yml) runs on push to `main` and NOWHERE
+ * ELSE. So a new database function lands on `development` together with the code
+ * that calls it, and does not exist in the live database until the promotion
+ * merges — but this gate BLOCKED that promotion. The function could not be
+ * created until it existed. A deadlock, not a finding, and it was permanent for
+ * every new remote procedure the estate would ever add.
+ *
+ * The excuse machinery was already here and already correct for tables: it
+ * harvested `.tables` from the claim parser and silently dropped `.functions`,
+ * which that same parser had already returned.
+ */
+export function claimKeys(sql) {
+  const claims = claimedObjects(sql);
+  return [...claims.tables, ...claims.functions];
+}
+
+// A migration creating a FUNCTION must be excused exactly as one creating a
+// TABLE is. Both directions, so a regression cannot pass by excusing everything.
+const CLAIM_TESTS = [
+  {
+    name: 'a CREATE OR REPLACE FUNCTION is claimed (the bsuite#2939 deadlock)',
+    sql: 'create or replace function public.set_tenant_oncosts(p_tenant_id uuid) returns void as $$ begin end; $$ language plpgsql;',
+    expect: (k) => k.includes('public.set_tenant_oncosts'),
+  },
+  {
+    name: 'a CREATE TABLE is still claimed (the half that already worked)',
+    sql: 'create table if not exists public.widgets (id uuid primary key);',
+    expect: (k) => k.includes('public.widgets'),
+  },
+  {
+    name: 'a function only MENTIONED in a comment is NOT claimed',
+    sql: '-- create or replace function public.not_real()\nselect 1;',
+    expect: (k) => !k.includes('public.not_real'),
+  },
+  {
+    name: 'a migration claiming neither yields nothing',
+    sql: 'grant select on public.widgets to authenticated;',
+    expect: (k) => k.length === 0,
+  },
+];
+
 const SELF_TESTS = [
   {
     name: 'a plain supabase .from() is a db relation',
@@ -371,6 +417,12 @@ const SELF_TESTS = [
 
 function selfTest() {
   let failed = 0;
+  for (const t of CLAIM_TESTS) {
+    let ok = false;
+    try { ok = t.expect(claimKeys(t.sql)); } catch { ok = false; }
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${t.name}`);
+    if (!ok) { failed++; console.log(`        got: ${JSON.stringify(claimKeys(t.sql))}`); }
+  }
   for (const t of SELF_TESTS) {
     let ok = false;
     try { ok = t.expect(callSites(t.src)); } catch { ok = false; }
@@ -385,8 +437,8 @@ function selfTest() {
   // would still print a proud ratio.
   const mustFind = SELF_TESTS.filter((t) => t.findsSomething).length;
   console.log(
-    `\ncheck-phantom-relations --self-test: ${SELF_TESTS.length - failed}/${SELF_TESTS.length} pass — ` +
-      `${SELF_TESTS.length} case(s) exercised in BOTH directions ` +
+    `\ncheck-phantom-relations --self-test: ${SELF_TESTS.length + CLAIM_TESTS.length - failed}/${SELF_TESTS.length + CLAIM_TESTS.length} pass — ` +
+      `${SELF_TESTS.length} call-site case(s) plus ${CLAIM_TESTS.length} migration-claim case(s), in BOTH directions ` +
       `(${mustFind} that must be FOUND, ${SELF_TESTS.length - mustFind} that must NOT be flagged: ` +
       `storage buckets, builtins, line and block comments, template literals)`,
   );
@@ -474,7 +526,7 @@ function pendingRelations(dirs) {
       if (!e.endsWith('.sql')) continue;
       let sql;
       try { sql = readFileSync(join(dir, e), 'utf8'); } catch { continue; }
-      for (const t of claimedObjects(sql).tables) claimed.add(t);
+      for (const key of claimKeys(sql)) claimed.add(key);
     }
   }
   return claimed;
@@ -523,8 +575,17 @@ for (const root of roots) {
       if (c.kind === 'rpc') {
         if (!functions) continue;
         examined++;
-        if (!functions.has(`public.${c.name}`)) {
-          findings.push({ file, line: c.line, relation: `${c.name}()`, rpc: true });
+        const qualifiedFn = `public.${c.name}`;
+        if (!functions.has(qualifiedFn)) {
+          // The second half of the same defect: even with `pending` populated
+          // with functions, this branch never consulted it, while the table
+          // branch below always has. A remote procedure that a migration ON THIS
+          // BRANCH creates is schema lag, exactly as a table would be.
+          if (pending.has(qualifiedFn)) {
+            pendingFindings.push({ file, line: c.line, relation: `${c.name}()` });
+          } else {
+            findings.push({ file, line: c.line, relation: `${c.name}()`, rpc: true });
+          }
         }
         continue;
       }

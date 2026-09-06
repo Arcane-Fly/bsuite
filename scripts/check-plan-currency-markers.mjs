@@ -43,6 +43,31 @@ import { readFileSync, readdirSync, existsSync, writeFileSync } from 'node:fs'
 import { execFileSync } from 'node:child_process'
 
 const DIR = 'docs/plans'
+
+/**
+ * PLANS LIVE IN SUBDIRECTORIES TOO, AND THIS GATE COULD NOT SEE THEM.
+ *
+ * `readdirSync(DIR)` is one level deep, so `docs/plans/loop-contracts/`,
+ * `inputs/`, `uplift/` and the two parity directories were never scanned — 11
+ * documents, 8 of which present as a live board. A loop contract is precisely
+ * the kind of file someone opens to find out what is outstanding, which is the
+ * reason this gate exists at all.
+ *
+ * Filed as FOLLOW 92 after a status record's own gate noticed the omission.
+ */
+function planFiles(dir = DIR, out = []) {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    if (e.isDirectory()) {
+      // archive/ is excluded by the same reasoning the naming gate uses: a
+      // historical copy is not claiming to be the live plan.
+      if (e.name === 'archive') continue
+      planFiles(`${dir}/${e.name}`, out)
+    } else if (e.name.endsWith('.md') && e.name.toLowerCase() !== 'readme.md') {
+      out.push(`${dir}/${e.name}`.slice(DIR.length + 1))
+    }
+  }
+  return out
+}
 const BASELINE = 'scripts/plan-currency-baseline.json'
 
 /**
@@ -57,6 +82,53 @@ const BASELINE = 'scripts/plan-currency-baseline.json'
  *
  * Every phrase here is one a person only writes ABOUT the document itself.
  */
+/**
+ * Phrases that can only mean "this IS the current plan".
+ *
+ * THE GATE ASKED A QUESTION IT WOULD NOT ACCEPT AN ANSWER TO. Its own error
+ * says "Say on its face whether it is still the plan" — and every phrase it
+ * recognised meant the plan was dead. A plan that IS current had no way to say
+ * so; the only exit was to be touched since the last merge to main, which is
+ * activity, not a statement.
+ *
+ * That gap has a cost beyond tidiness. A plan merged to DEVELOPMENT is, by
+ * construction, older than the next promotion to main, so the first time main
+ * moves it is flagged — having had no opportunity to go stale. Measured
+ * 2026-09-04: main's last commit was 09:04:21 and three plans merged at
+ * 08:47-08:55 were flagged, nine to seventeen minutes on the wrong side. The
+ * two promotions before that were ten minutes apart, so "touched since the last
+ * merge" cannot separate stale from new at all at that cadence.
+ *
+ * The author of a live plan can now say so, dated, and the gate believes them
+ * for as long as the claim is legible on the page. That is the same standard
+ * the negative markers are held to.
+ *
+ * DELIBERATELY NARROW, for the reason the negative list is: `current` alone
+ * appears in ordinary prose ("the current implementation", "current rates"), and
+ * a gate that accepts a common word fails OPEN. Both phrases below are ones a
+ * person only writes ABOUT the document itself.
+ */
+const STILL_CURRENT_PHRASES = ['still the plan as of', 'current as of']
+
+/**
+ * The positive claim must carry a DATE, and the date is the whole point.
+ *
+ * A substring match on the phrase alone would accept "still the plan as of" with
+ * nothing after it — a claim of currency that cannot be checked and never
+ * expires, which is the exact failure the negative list was narrowed to avoid.
+ * "Superseded" is verifiable by reading the document it points at; "still the
+ * plan" is only verifiable against a date.
+ *
+ * ISO, because that is what every other dated artefact in this repository uses
+ * and because a reviewer can compare it to the last promotion without parsing
+ * prose. Punctuation and markdown emphasis between the phrase and the date are
+ * tolerated — `**Still the plan as of 2026-09-04.**` is the shape people write.
+ */
+const STILL_CURRENT_RE = new RegExp(
+  `(?:${STILL_CURRENT_PHRASES.join('|')})[\\s:*_-]*(\\d{4}-\\d{2}-\\d{2})`,
+  'i',
+)
+
 const CURRENCY_PHRASES = [
   'superseded',
   'historical',
@@ -96,7 +168,14 @@ export function presentsAsLive(filename, body) {
   return /^\s*[-*]\s*\[ \]/m.test(body)
 }
 
-/** Does it say, on its own face, that it is not the current plan? */
+/**
+ * Does it say, on its own face, WHETHER it is the current plan?
+ *
+ * True for either answer: a "not current" marker (`authority: none` or one of
+ * CURRENCY_PHRASES), or a DATED "still current" claim. The gate's question is
+ * whether the document states its own status, not which status it states — an
+ * unmarked plan is the only failure.
+ */
 export function carriesCurrencyMarker(body) {
   // The machine-readable convention first — 18 files already use it.
   if (/^authority:\s*none\s*$/m.test(body.split('---')[1] ?? '')) return true
@@ -105,6 +184,7 @@ export function carriesCurrencyMarker(body) {
     if (line.includes(NOT_A_CURRENCY_MARKER)) continue
     const l = line.toLowerCase()
     if (CURRENCY_PHRASES.some((w) => l.includes(w))) return true
+    if (STILL_CURRENT_RE.test(line)) return true
   }
   return false
 }
@@ -126,11 +206,34 @@ function lastTouchedIso(path) {
   }
 }
 
+/**
+ * MEMOISED, because the self-test calls it and so does main().
+ *
+ * scan() shells out to `git log` once per live-and-unmarked plan, so running it
+ * twice doubled that: measured 0.51 s for one pass and 1.01 s for two on this
+ * tree. Half a second is not much, but it buys nothing.
+ *
+ * The obvious alternative — stop the self-test calling scan() — was rejected on
+ * evidence rather than taste. An earlier version of this file asserted the
+ * recursion against `planFiles()` alone; I then reverted the scan loop to a
+ * one-level read and the self-test still PASSED while the gate silently went
+ * back to one level deep. Testing the helper is not testing the gate, so the
+ * coupling is the point and the cost is what gets removed.
+ *
+ * Safe within a process: the filesystem and the git head do not move mid-run.
+ */
+let scanCache = null
 export function scan() {
+  if (scanCache) return scanCache
+  scanCache = scanUncached()
+  return scanCache
+}
+
+function scanUncached() {
   const mainIso = lastMainMergeIso()
   const findings = []
   let live = 0
-  for (const name of readdirSync(DIR).filter((f) => f.endsWith('.md')).sort()) {
+  for (const name of planFiles().sort()) {
     const path = `${DIR}/${name}`
     const body = readFileSync(path, 'utf8')
     if (!presentsAsLive(name, body)) continue
@@ -179,15 +282,68 @@ function selfTest() {
   if (carriesCurrencyMarker('# T\n> Predates the R80.3 → R80.4 restructure (2026-08-06).'))
     fail('the R80.3 relocation note was counted as a currency marker')
 
+  // A LIVE plan can now say it is live, which is what the gate's own error asks
+  // for. Both phrases, because a one-phrase vocabulary is a spelling test.
+  if (!carriesCurrencyMarker('# T\n\n**Still the plan as of 2026-09-04.**'))
+    fail('a dated "still the plan as of" was not accepted')
+  if (!carriesCurrencyMarker('# T\n\nStatus: current as of 2026-09-04.'))
+    fail('a dated "current as of" was not accepted')
+
+  // AN UNDATED CLAIM IS NOT A CLAIM. "Still the plan as of" with nothing after
+  // it never expires and cannot be checked — the thing that separates this from
+  // the negative markers is that a reader can compare its date to the last
+  // promotion.
+  if (carriesCurrencyMarker('# T\n\n**Still the plan as of.**'))
+    fail('an undated "still the plan as of" was accepted')
+  if (carriesCurrencyMarker('# T\n\nStatus: current as of the last review.'))
+    fail('"current as of the last review" was accepted without a date')
+  // …and the markdown-emphasised shape people actually write must still pass.
+  if (!carriesCurrencyMarker('# T\n\n**Still the plan as of 2026-09-04.**'))
+    fail('a bold, full-stopped "still the plan as of <date>" was rejected')
+
+  // AND THE CONTROL THAT KEEPS IT NARROW. `current` alone is ordinary prose in a
+  // live plan — accepting it would exempt files that say nothing about
+  // themselves, which is the failure mode the negative list was trimmed to avoid.
+  if (carriesCurrencyMarker('# T\n\nReplaces the current implementation of the rate engine.'))
+    fail('a bare "current" in ordinary prose was treated as a currency marker')
+  if (carriesCurrencyMarker('# T\n\nMigrate customers off the current schema.'))
+    fail('"current schema" was treated as a currency marker')
+
+  // THE RECURSION, asserted against the real tree rather than a fixture: a
+  // subdirectory plan must be in the scanned set. Without this the walk could
+  // silently go back to one level deep and the gate would report a smaller,
+  // greener number for the wrong reason.
+  const scanned = planFiles()
+  if (!scanned.some((f) => f.includes('/')))
+    fail('planFiles() found no plan in a subdirectory — the walk is one level deep again')
+
+  // AND THE SCAN MUST USE IT. Asserting planFiles() alone tests a helper, not
+  // the gate: reverting the scan loop to readdirSync(DIR) left this file's
+  // earlier assertion passing while the gate silently went back to one level
+  // deep and reported a smaller, greener number. Found by biting it.
+  // Compare LIKE WITH LIKE. A first version of this assertion compared scan()'s
+  // LIVE count against the total top-level FILE count — 51 against 63 — which
+  // is apples to oranges and failed on correct code. scan()'s own findings are
+  // the observable: a subdirectory path can only appear there if the scan walked
+  // into one.
+  if (scanned.some((f) => f.includes('/')) && !scan().findings.some((f) => f.includes('/')))
+    fail('scan() returned no finding from a subdirectory although the walk found files there — it is not using the recursive walk')
+  if (scanned.some((f) => f.toLowerCase().endsWith('readme.md')))
+    fail('planFiles() included a README — directory indexes are not plans')
+  if (scanned.some((f) => f.startsWith('archive/')))
+    fail('planFiles() descended into archive/ — a historical copy is not claiming to be live')
+
   // A plain plan with no marker must NOT pass — the positive control. Without
   // it, every "pass" above is indistinguishable from a detector that finds nothing.
   if (carriesCurrencyMarker('# Some plan\n\nPhase 1 — do the thing.\n'))
     fail('a plan with no marker was treated as marked')
 
   console.log(
-    'check-plan-currency-markers --self-test: 13 assertions — status letters, what counts as ' +
+    'check-plan-currency-markers --self-test: 24 assertions — status letters, what counts as ' +
       'presenting-as-live including an F file whose boxes contradict its suffix, the three real banners the measurement verified by hand, the ' +
-      'authority:none convention, the R80.3 note that must NOT count, and a positive control ' +
+      'authority:none convention, the R80.3 note that must NOT count, that the walk reaches SUBDIRECTORIES and skips READMEs and archive/ AND that scan() actually uses it, the dated "still the ' +
+      'plan as of" / "current as of" phrases a LIVE plan uses, two controls proving a bare ' +
+      '"current" in ordinary prose does not count, and a positive control ' +
       'that an unmarked plan is still detected.',
   )
   return bad
@@ -222,6 +378,14 @@ function main() {
             'A NEW one fails the gate; an entry that has since been marked or updated ALSO fails,',
             'so it cannot become a place findings go to be forgotten.',
             'Regenerate deliberately with --write-baseline; never to make a red run green.',
+            '',
+            'SCOPE STEP, 2026-09-04 (FOLLOW 92): the bank rose 31 -> 36 and NOT because any',
+            'plan went stale. Until this date the gate read docs/plans one level deep, so',
+            'loop-contracts/, inputs/, uplift/ and the two parity directories were never',
+            'scanned — 11 documents, 8 of which present as a live board. Recursing made five',
+            'pre-existing unmarked plans visible for the first time; a sixth was marked in the',
+            'same commit by its owner. A rise in this number is a decay signal EXCEPT where a',
+            'line like this one records a widening, and there should be very few of these.',
           ],
           unmarked: findings,
         },
@@ -251,7 +415,7 @@ function main() {
   }
 
   console.log(
-    `check-plan-currency-markers: ${live} of ${readdirSync(DIR).filter((f) => f.endsWith('.md')).length} ` +
+    `check-plan-currency-markers: ${live} of ${planFiles().length} ` +
       `file(s) in ${DIR} present as a live board; ${findings.length} carry no currency marker and ` +
       `predate the last promotion (banked ${banked.length}).`,
   )

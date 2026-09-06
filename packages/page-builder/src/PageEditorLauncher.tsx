@@ -206,7 +206,7 @@ export function PageEditorLauncher({
           <div className="flex items-center gap-2 shrink-0">
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+              className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-3 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
               onClick={() => setPaletteOpen(true)}
             >
               <Plus className="h-4 w-4" />
@@ -214,7 +214,7 @@ export function PageEditorLauncher({
             </button>
             <button
               type="button"
-              className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+              className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-3 py-2 text-sm font-medium transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
               onClick={handleCancel}
             >
               <X className="h-4 w-4" />

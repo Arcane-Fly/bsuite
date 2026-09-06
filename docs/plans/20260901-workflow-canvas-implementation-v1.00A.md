@@ -19,6 +19,20 @@ evidence:
 
 # Workflow Canvas — Implementation Plan
 
+> **CURRENCY, 2026-09-03 — the work has landed. This is a record of what was built, not a
+> board of what is still to do.**
+>
+> Verified today rather than assumed: crm7#2334 MERGED 2026-09-02T10:17:05Z · bsuite#2936
+> MERGED 11:18:25Z · bsuite#2937 MERGED 11:18:13Z · the bsuite gitlink for crm7 is an
+> ancestor of `crm7/main` · all five evidence artifacts in the frontmatter resolve on disk ·
+> crm7#2339, the canvas work this plan describes, MERGED 2026-09-02T14:37:12Z. Those were
+> the four items this plan's own §5 "Open" list still carried.
+>
+> The one remaining item is not implementation: FutureBuild activation is recorded in §5 as
+> *"rehearsed and proven, and deliberately NOT yet applied"* — an operator decision, with its
+> blast radius stated there. **Do not plan further work from this document**; read §5 for what
+> shipped and §6 for the Phase 4 verdict.
+
 Owner: Braden Lang · Started 2026-09-01 · Status: ACTIVE, all phases to completion
 
 **This finishes work approved in MAY.** `docs/plans/20260510-universal-canvas-capability-implementation-v1.00F.md`

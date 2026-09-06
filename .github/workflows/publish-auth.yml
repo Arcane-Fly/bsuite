@@ -4,18 +4,11 @@
 # Skips publish if the current version is already on npm (idempotent).
 #
 # Authentication:
-#   PREFERRED: npm Trusted Publishers (OIDC) — configure at npmjs.com →
-#     package → Settings → Trusted Publisher → GitHub Actions, with
-#     organization GaryOcean428, repository bsuite, workflow filename
-#     matching this file's basename. Requires `id-token: write` (set below).
-#   FALLBACK: NPM_TOKEN secret used by setup-node's auto-generated .npmrc
-#     until the package is migrated. Remove NPM_TOKEN reference here
-#     after the first successful OIDC publish.
-#
-# Required GitHub Secret:
-#   NPM_TOKEN  - npm access token with publish rights to the @bsuite org
-#                Create at: https://www.npmjs.com/settings/<user>/tokens
-#                Token type: "Automation" (bypasses 2FA for CI)
+#   npm Trusted Publishers (OIDC) — configured at npmjs.com → package →
+#     Settings → Trusted Publisher → GitHub Actions, with organization
+#     GaryOcean428, repository bsuite, workflow filename matching this
+#     file's basename. Requires `id-token: write` (set below); no other
+#     secret is needed.
 #
 # To trigger manually (e.g. after a version bump merged to main):
 #   gh workflow run publish-auth.yml
@@ -55,7 +48,59 @@ jobs:
           # "Unable to locate executable file: pnpm" at the setup-node step.
           package-manager-cache: false
       - name: Setup pnpm
-        run: corepack enable && corepack prepare pnpm@10.33.3 --activate
+        # corepack fetches the pnpm tarball from registry.npmjs.org on every
+        # job. A registry-side TLS drop mid-fetch is not a build failure —
+        # confirmed live on crm7#2422 (2026-09-04, FOLLOW 113): corepack's
+        # own fetch died with ECONNRESET before the TLS handshake completed.
+        #
+        # `corepack prepare --activate` (no version arg) — NOT a hardcoded
+        # `pnpm@10.33.3` — so it resolves the packageManager field of THIS
+        # job's own working-directory (this file's `defaults.run.working-directory`,
+        # same cwd the "Install dependencies" step below runs in), whatever
+        # version that package actually pins. A hardcoded version here was a
+        # DECOY FETCH for any package pinning something else: it pre-warmed a
+        # version nothing downstream needed, while the real fetch stayed
+        # unguarded at "Install dependencies" (caught in review against a real
+        # job log: audit (crm7) printed "Preparing pnpm@11.24.0" here while the
+        # unguarded step separately fetched pnpm-10.33.3.tgz).
+        #
+        # Retry is bounded (4 attempts) and backs off; anything that is NOT one
+        # of the known transient network signatures fails immediately — a bad
+        # version pin or checksum mismatch must never be retried away.
+        #
+        # set +e / set -e brackets the guarded pipeline specifically: this step
+        # runs under the runner's own `bash -e`/`-eo pipefail`, and a failing
+        # pipeline as the LAST element of an && list still trips errexit under
+        # that inherited state — `set -uo pipefail` alone does not clear it.
+        # Without this bracket the step dies here on the first failure, before
+        # rc= is ever read, and the retry below never runs (caught in review by
+        # replaying this exact block under `bash -e`).
+        run: |
+          set -uo pipefail
+          attempt=1
+          max_attempts=4
+          delay=5
+          network_pattern='ECONNRESET|ETIMEDOUT|ENOTFOUND|EAI_AGAIN|getaddrinfo|ERR_SOCKET_TIMEOUT|socket disconnected|fetch failed|ERR_PNPM_META_FETCH_FAIL|ERR_PNPM_FETCH_FAIL|Error when performing the request to https://registry'
+          log="$(mktemp)"
+          while true; do
+            echo "::group::corepack setup attempt ${attempt}/${max_attempts}"
+            set +e
+            { corepack enable && corepack prepare --activate; } 2>&1 | tee "$log"
+            rc=${PIPESTATUS[0]}
+            set -e
+            echo "::endgroup::"
+            [ "$rc" -eq 0 ] && break
+            if [ "$attempt" -ge "$max_attempts" ] || ! grep -qE "$network_pattern" "$log"; then
+              echo "::error::corepack setup failed (attempt ${attempt}/${max_attempts}, exit ${rc}) — not a recognised transient network error, or attempts exhausted; failing fast"
+              rm -f "$log"
+              exit "$rc"
+            fi
+            echo "::warning::corepack setup hit a transient network error (attempt ${attempt}/${max_attempts}) — retrying in ${delay}s"
+            sleep "$delay"
+            delay=$((delay * 3))
+            attempt=$((attempt + 1))
+          done
+          rm -f "$log"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

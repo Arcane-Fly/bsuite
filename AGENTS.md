@@ -41,6 +41,73 @@ are Vite.
 5. **Clean up behind you.** Remove superseded code when you supersede it. No dead or duplicate paths.
 6. **Red-team before merge** on anything complex, and update docs in the same PR as the code.
 
+## The one that costs the most: a claim nobody checked against the code
+
+Almost everything that has to be fixed twice starts as **a claim made about the code that nobody
+checked against the code**. The claim is cheap to check and the check is always the same — run it
+and look — which is why skipping it feels free and is not.
+
+It arrives in three disguises. Naming them is the point, because each one *looks* like a different
+kind of mistake and they all fail for the same reason:
+
+| The claim | What it asserts | How it goes wrong |
+|---|---|---|
+| A **predicate** | coverage — "these are all of them" | narrower than the code, so it returns a confident answer over an incomplete set |
+| A **comment** | behaviour — "this handles X" | describes what the code should do, next to code that does not do it |
+| A **fix** | the failure path — "this is now safe" | correct about the branch you changed, silent about the branch that runs when it fails |
+
+All three below happened in a **single session** on crm7, three, three and four times
+respectively, and every one was self-inflicted — introduced by the same person fixing the previous
+one. They are recorded with counts because a rule with a real incident behind it survives and one
+written as general advice gets skimmed.
+
+### 1. A predicate is a claim about coverage
+
+`grep useForm\(` against pages that write `useForm<CreateFoo>(` found **zero** and was reported as
+a finding. So did `useState<` against `useState(`. So did `export function` against a repo full of
+`export const foo = async () => {}`. Each returned a confident number over a set that excluded most
+of its subject.
+
+**Before quoting a sweep's number, name which syntactic forms it cannot see — then widen it and
+re-run.** A widened predicate that finds nothing deserves the same suspicion as a narrow one: a
+control that reads zero indicts the probe before the subject.
+
+*Where the evidence lives, since this entry's whole thesis is that claims must be checkable.* The
+`export function` instance is in crm7 `726e0ccd` — the fix widened the predicate and its own commit
+message names the fault. The `useForm(` and `useState<` instances are **not** reconstructable from
+a diff: they were scratch investigation greps, reported in-session and recorded in the run log,
+never committed. That is a weaker footing than the comment and failure-path examples below, each of
+which is in a named commit, and it is said here rather than left for a reader to discover by
+failing to find them.
+
+### 2. A comment is a claim about behaviour
+
+An untested assertion sitting next to the code it describes. `Promise.all` shared one catch, so a
+failure in the harmless half clamped an authority level — two lines from a comment saying that half
+was harmless. A `toContain` assertion sat under a comment claiming an ordering it never checked,
+and would have passed with the two operations reversed.
+
+The audience for a wrong comment includes its author: one of these misled the person who wrote it
+when they returned to the file an hour later.
+
+**Where the property matters, assert it in a test. Where it does not, do not assert it in prose
+either.**
+
+### 3. A fix is a claim about the failure path
+
+Reordering two writes never removes a failure mode; it moves it onto the branch nobody was
+reasoning about. An RPC moved ahead of an insert and left a live security scope when the insert
+failed. A cache clear moved ahead of a confirmation, so declining left the app half-switched. A
+reload that fixed a stale scope reloaded into the same stale scope, forever, because nothing
+deleted the row it was reacting to.
+
+**Reason about the branch that runs when it fails, and bite in both directions** — reverting the
+fix proves it is load-bearing, and over-applying it proves it is not merely disabling the thing it
+guards. The second direction *is* the failing branch, which is why one-directional bites kept
+passing over defects.
+
+---
+
 ## Tripwires — expensive or irreversible if wrong
 
 1. **Never push to `main`.** Work on `development`; production lands by PR. Commits must be
@@ -98,6 +165,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 | Trying a migration **before** you ship it (`pnpm supabase:rehearse`) | [`docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md`](docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md) |
 | AI SDK standards, multi-file refactor tooling, reusable code patterns | [`docs/20260731-agent-engineering-patterns-v1.00W.md`](docs/20260731-agent-engineering-patterns-v1.00W.md) |
 | Layout, z-index scale, DOM autopsy | [`docs/20260731-frontend-layout-zindex-standards-v1.00W.md`](docs/20260731-frontend-layout-zindex-standards-v1.00W.md) |
+| Design judgment — priorities, the known answers, why a rule exists | [`DESIGN.md`](./DESIGN.md) — layer 1; values live in `packages/theme`, enforcement in `scripts/theme-gates.sh` |
 | Theme tokens, both brands | `packages/theme/README.md` + the `bsuite-brand-system` skill |
 | Status: what is open, shipped, applied | Ask the live source — `gh issue list`, `gh pr list`, `schema_migrations`. The plan dashboard was **retired 2026-08-10**: [`docs/20260810-plan-dashboard-retirement-v1.00F.md`](docs/20260810-plan-dashboard-retirement-v1.00F.md) |
 | E2E testing status | [`docs/testing/README.md`](docs/testing/README.md) |

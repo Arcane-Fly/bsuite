@@ -1225,7 +1225,7 @@ export function PageGridLayout({
             <div className="flex items-center gap-2 shrink-0">
               <button
                 type="button"
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-2 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
                 aria-expanded={!controlsCollapsed}
                 aria-controls="page-grid-editor-controls-body"
                 /*
@@ -1293,7 +1293,7 @@ export function PageGridLayout({
                   aria-pressed={layoutCols === columnCount}
                   className={cn(
                     'px-2 py-0.5 rounded text-xs font-medium transition-colors border',
-                    'bg-muted text-muted-foreground border-border',
+                    'bg-muted text-muted-foreground border-border-interactive',
                     'hover:bg-muted/80 hover:text-foreground',
                     'data-[active]:bg-primary data-[active]:text-primary-foreground data-[active]:border-primary',
                     'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
@@ -1358,7 +1358,7 @@ export function PageGridLayout({
                 <select
                   value={cardStyle.borderTone}
                   onChange={(event) => updateCardStyle({ borderTone: event.target.value as BorderTone })}
-                  className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-md border border-border-interactive bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Card border colour"
                 >
                   {BORDER_TONES.map((tone) => (
@@ -1374,7 +1374,7 @@ export function PageGridLayout({
                 <select
                   value={cardStyle.borderStyle}
                   onChange={(event) => updateCardStyle({ borderStyle: event.target.value as BorderStyle })}
-                  className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-md border border-border-interactive bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Card border style"
                 >
                   {BORDER_STYLES.map((style) => (
@@ -1395,7 +1395,7 @@ export function PageGridLayout({
                         event.target.value === 'default' ? null : (Number(event.target.value) as Elevation),
                     })
                   }
-                  className="rounded-md border border-border bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="rounded-md border border-border-interactive bg-background px-2 py-1 text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   aria-label="Card shadow depth"
                 >
                   <option value="default">default shadow</option>
@@ -1427,7 +1427,7 @@ export function PageGridLayout({
                 type="button"
                 onClick={() => setStoredCardStyle({ ...DEFAULT_CARD_STYLE })}
                 disabled={isDefaultCardStyle(cardStyle)}
-                className="inline-flex items-center gap-1 rounded-md border border-border px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
                 <RotateCcw className="h-3.5 w-3.5" />
                 Reset cards
@@ -1454,7 +1454,7 @@ export function PageGridLayout({
                         onClick={() => showLayer(key, meta?.defaultSize)}
                         className={cn(
                           'flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium border transition-colors',
-                          'bg-muted text-muted-foreground border-border',
+                          'bg-muted text-muted-foreground border-border-interactive',
                           'hover:bg-muted/80 hover:text-foreground hover:border-primary/60',
                           'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                         )}
@@ -1532,7 +1532,7 @@ export function PageGridLayout({
               type="button"
               onClick={handleCompact}
               className={cn(
-                'ml-auto inline-flex items-center rounded-md border border-border px-2 py-1 text-sm transition-colors',
+                'ml-auto inline-flex items-center rounded-md border border-border-interactive px-2 py-1 text-sm transition-colors',
                 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
               )}
@@ -1545,7 +1545,7 @@ export function PageGridLayout({
               type="button"
               onClick={() => setResetConfirmOpen(true)}
               className={cn(
-                'inline-flex items-center rounded-md border border-border px-2 py-1 text-sm transition-colors',
+                'inline-flex items-center rounded-md border border-border-interactive px-2 py-1 text-sm transition-colors',
                 'text-muted-foreground hover:bg-muted hover:text-foreground',
                 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
               )}
@@ -1576,7 +1576,7 @@ export function PageGridLayout({
                 ref={resetCancelButtonRef}
                 onClick={() => setResetConfirmOpen(false)}
                 className={cn(
-                  'inline-flex items-center rounded-md border border-border px-3 py-2 text-sm transition-colors',
+                  'inline-flex items-center rounded-md border border-border-interactive px-3 py-2 text-sm transition-colors',
                   'bg-card text-foreground hover:bg-muted hover:text-foreground',
                   'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1',
                 )}

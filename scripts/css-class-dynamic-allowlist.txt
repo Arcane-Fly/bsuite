@@ -1,0 +1,31 @@
+# scripts/css-class-dynamic-allowlist.txt
+#
+# Companion to scripts/check-css-classes-emitted.mjs (gate C10).
+#
+# A candidate token that is genuinely assembled at RUNTIME — built from a
+# variable rather than typed as a literal Tailwind class the scanner can see
+# whole — cannot be verified by a static build comparison. The gate already
+# excludes any token containing `${` outright; this file is for the narrower
+# case of a token that reads as a plain literal to the scanner (no `${`) but
+# is still not really a static class name — e.g. a value re-exported from a
+# shared constants module under a name the scanner has no way to resolve.
+#
+# FORMAT — ENFORCED, NOT ADVISORY. One entry per line, exactly:
+#
+#   <class-token> # <reason of at least 12 characters>
+#
+# The reason sits on the SAME line, after ` # `. No prefix stripping, no
+# wildcards. Any other non-comment line (a bare token, a token with no reason,
+# a reason shorter than 12 characters, two tokens on one line) makes the gate
+# exit 1 with "ALLOWLIST LINE WITHOUT REASON: <line>" BEFORE any app is
+# scanned — an unexplained entry is a hole the gate cannot see through, and
+# this file holding one is exactly as bad as the class name never having been
+# checked, so it is refused rather than honoured. The self-test drives both
+# outcomes through the real entry point.
+#
+# Empty today. No entry has been justified yet — do not add one to make a red
+# run go green; fix the missing @theme registration instead, or add the
+# inline `theme-audit-ok: <reason of at least 12 characters>` marker on the hit
+# line or the line above if the class truly is a deliberate exception in that
+# one place. A bare `theme-audit-ok` without a reason is reported by the gate
+# as MARKER WITHOUT REASON and does not exempt.

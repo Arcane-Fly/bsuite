@@ -10,15 +10,18 @@
 name: Estate alignment
 
 on:
+  # NO `paths:` FILTER — PI ruling 2026-09-03 (audit §7, A5). A path-filtered
+  # required check never reports on a PR that misses the filter, and that PR
+  # waits forever (the same reasoning doc-classification.yml and
+  # airtable-grid-adoption.yml already carry). This check's invariants —
+  # anchors resolving, dod_status validity, register<->index mapping, the
+  # verdict ratchet — are estate-WIDE, not scoped to docs/00-roadmap, so a
+  # path filter was always the wrong shape here: a PR that deletes a file an
+  # anchor points to, or edits the register from inside a docs subfolder the
+  # filter missed, could merge dirty. The trade is a submodule checkout on
+  # every PR rather than only path-matched ones; the checks themselves still
+  # finish in seconds once checked out.
   pull_request:
-    paths:
-      - 'docs/00-roadmap/**'
-      - 'docs/*operator-notes-register*'
-      - 'scripts/estate-align.mjs'
-      - 'scripts/generate-feature-index.mjs'
-      - 'scripts/generate-component-registry.mjs'
-      - 'packages/*/src/**'
-      - '.github/workflows/estate-alignment.yml'
   push:
     branches: [development, main]
     paths:
@@ -113,5 +116,108 @@ jobs:
       - name: Component registry matches the code
         run: node scripts/generate-component-registry.mjs --check
       - name: Report (always, so the numbers are visible even on failure)
+        if: always()
+        run: node scripts/estate-align.mjs >> "$GITHUB_STEP_SUMMARY"
+
+  # NIGHTLY, NON-REQUIRED — PI ruling 2026-09-03 (audit §7, C2). Time-decaying
+  # floors never live in a required PR check: the PR-path ratchets above (rise
+  # fails, unbanked fall fails) are unchanged and stay required; this job is
+  # the ONLY place `--check-floor` runs. GitHub always runs `schedule` against
+  # the repo's DEFAULT branch (main here), never whatever `development` holds,
+  # so this checks out `development` explicitly rather than trusting the
+  # scheduled ref. dod_status's floor is NOT time-decaying (Phase 1 bans it —
+  # see estate-align.mjs's F-dod-floor) and already runs inside the ordinary
+  # `--strict` step above on every trigger including this one; this job's
+  # `Report` step below still surfaces its number nightly, per that ruling.
+  nightly-floor-check:
+    name: Nightly ratchet floor check
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          ref: development
+          submodules: recursive
+          fetch-depth: 1
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Assert the submodules actually checked out
+        shell: bash
+        run: |
+          set -uo pipefail
+          missing=""
+          for a in crm7 conduit business-suite-unified R80.4 throughput braden; do
+            [ -d "$a/src" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            exit 1
+          fi
+          echo "all six submodules present"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .node-version
+          package-manager-cache: false
+
+      - name: Self-test the floor checkers before trusting them
+        run: |
+          node scripts/check-doc-classification.mjs --self-test
+          node scripts/check-airtable-grid-adoption.mjs --self-test
+
+      # `shell: bash` IS THE GATE, not decoration. GitHub's default shell for a step
+      # that names none is `bash -e {0}` — NO pipefail — so `node … | tee` exits
+      # with tee's status (0) and a breached floor reads as `outcome: success`,
+      # the `if:` on the issue step below never fires, and the nightly lane goes
+      # green on exactly the breach it exists to file. `shell: bash` runs
+      # `bash --noprofile --norc -eo pipefail {0}`, so the exit is node's.
+      # Caught by review 2026-09-03 (bsuite#2970): same breached baseline,
+      # `bash -e` → 0, `bash -eo pipefail` → 1. Same idiom as the two
+      # "Assert the submodules" steps above.
+      - name: Floor — doc classification
+        id: classification
+        continue-on-error: true
+        shell: bash
+        run: node scripts/check-doc-classification.mjs --check-floor 2>&1 | tee /tmp/floor-classification.txt
+
+      - name: Floor — Airtable-style grid adoption
+        id: grid
+        continue-on-error: true
+        shell: bash
+        run: node scripts/check-airtable-grid-adoption.mjs --check-floor 2>&1 | tee /tmp/floor-grid.txt
+
+      # ONE tracking issue per breached ratchet, idempotent by title — a second
+      # nightly breach on the same ratchet comments on the existing issue
+      # rather than opening a duplicate.
+      - name: File or update a tracking issue per breach
+        if: steps.classification.outcome == 'failure' || steps.grid.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLASSIFICATION_OUTCOME: ${{ steps.classification.outcome }}
+          GRID_OUTCOME: ${{ steps.grid.outcome }}
+        run: |
+          set -euo pipefail
+          file_or_update() {
+            name="$1"; bodyfile="$2"
+            title="Ratchet floor breached: $name"
+            existing=$(gh issue list --state open --search "in:title \"$title\"" --json number,title \
+              --jq ".[] | select(.title == \"$title\") | .number" | head -1)
+            if [ -n "$existing" ]; then
+              gh issue comment "$existing" --body-file "$bodyfile"
+            else
+              gh issue create --title "$title" --body-file "$bodyfile"
+            fi
+          }
+          if [ "$CLASSIFICATION_OUTCOME" = "failure" ]; then
+            file_or_update "doc classification" /tmp/floor-classification.txt
+          fi
+          if [ "$GRID_OUTCOME" = "failure" ]; then
+            file_or_update "airtable grid adoption" /tmp/floor-grid.txt
+          fi
+
+      - name: Report (always, so dod_status's banked-not-floored number is visible nightly too)
         if: always()
         run: node scripts/estate-align.mjs >> "$GITHUB_STEP_SUMMARY"

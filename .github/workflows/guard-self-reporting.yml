@@ -112,3 +112,39 @@ jobs:
 
       - name: No workflow runs an unmitigated apt-get update
         run: node scripts/check-apt-repo-hygiene.mjs
+
+      # Cookie SSO is the estate's most emphatic security doctrine ("DO NOT REVERT TO
+      # COOKIE SSO", AUTH_CANONICAL.md, effective 2025-02-27) and until 2026-09-03 it
+      # had NO full-tree gate. The PR drift scanner's COOKIE-SSO signal is AST-based
+      # and diff-scoped, so it stops a newly ADDED cookieStorage line and is
+      # structurally unable to see a violation that arrives any other way — a gitlink
+      # advance, a file move, a revert, or anything predating the scanner. The
+      # full-tree sweep existed as scripts/check-no-cookie-sso.mjs and as the npm
+      # script `lint:no-cookie-sso`, and was invoked by no workflow at all.
+      #
+      # It runs HERE rather than in security-audit.yml because that workflow is a
+      # path-filtered per-app matrix: a submodule appears in the parent diff as the
+      # bare path, so its inside-submodule filters cannot match a pointer bump, and a
+      # path-filtered required check that never runs reports SKIPPED forever. This
+      # workflow has no path filter, checks out submodules recursively with the
+      # cross-repo token, and already refuses an empty tree above — which is exactly
+      # what a full-tree scan needs to mean anything.
+      - name: No cookie SSO in code, and no doc claiming it is shipped
+        run: node scripts/check-no-cookie-sso.mjs
+
+      # A REQUIRED CONTEXT NOBODY CAN PRODUCE BLOCKS EVERY MERGE, SILENTLY.
+      #
+      # This lands here rather than in a workflow of its own for the reason
+      # stated two steps above: this file has no `paths:` filter and its own
+      # context is already required on both protected branches, so a gate wired
+      # in here is a gate that reports on every PR. Adding a new required
+      # context to check the required contexts would be its own joke.
+      #
+      # It reads the COMMITTED dumps under docs/security/branch-protection/,
+      # never the live API — no token, no network, and the rollback for every
+      # protection write is in git history where a future lane can find it.
+      - name: Self-test the guard (proves it can fail)
+        run: node scripts/check-required-contexts-producible.mjs --self-test
+
+      - name: Every required status check is one some PR can actually report
+        run: node scripts/check-required-contexts-producible.mjs

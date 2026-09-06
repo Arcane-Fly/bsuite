@@ -57,9 +57,14 @@ jobs:
           package-manager-cache: false
 
       - name: Install typescript (the guard parses TSX, it does not grep it)
+        # FOLLOW 113 correction: this job never invokes pnpm, so a preceding
+        # `corepack enable` (with or without a retry around it) guards a fetch
+        # nothing here uses — corepack's pnpm-binary fetch is triggered by the
+        # first `pnpm` shim invocation, and this step calls plain `npm i`,
+        # which needs no corepack setup at all. Dropped the dead corepack call
+        # rather than adding a retry around it (caught in review).
         run: |
           set -euo pipefail
-          corepack enable
           # The guard hard-refuses to run without a real parser rather than
           # degrading to a regex — same rule as check-own-package-freshness.mjs
           # and for the same reason. A grep counts a COMMENT mentioning
@@ -96,3 +101,18 @@ jobs:
 
       - name: Check every app with toast() callers mounts a toast surface
         run: node scripts/check-component-mounts.mjs
+
+      # D-160 step 2 / R8: per-app floor on <UpdateAvailableBanner/> from
+      # @bsuite/nav-core. Same job, same typescript install, same submodule
+      # checkout. Prints the per-app table. Self-test proves it can fail.
+      - name: Self-test the guard (proves it can fail)
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-update-banner-mounted.mjs --self-test
+
+      - name: Check UpdateAvailableBanner mount floors per app
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/check-update-banner-mounted.mjs

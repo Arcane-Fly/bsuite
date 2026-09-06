@@ -177,7 +177,7 @@ export function RelationshipConfigDialog({
                 setRelationType(e.target.value as RelationType)
               }
               aria-describedby="relation-type-description"
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {RELATION_TYPE_OPTIONS.map((opt) => (
                 <option key={opt.value} value={opt.value}>
@@ -222,7 +222,7 @@ export function RelationshipConfigDialog({
               value={sourceLabel}
               onChange={(e) => setSourceLabel(e.target.value)}
               maxLength={100}
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -241,7 +241,7 @@ export function RelationshipConfigDialog({
               value={targetLabel}
               onChange={(e) => setTargetLabel(e.target.value)}
               maxLength={100}
-              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-border-interactive bg-card px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
             />
           </div>
 
@@ -274,7 +274,7 @@ export function RelationshipConfigDialog({
           <button
             type="button"
             onClick={handleCancel}
-            className="inline-flex h-9 items-center rounded-md border border-border bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
+            className="inline-flex h-9 items-center rounded-md border border-border-interactive bg-card px-4 text-sm font-medium hover:bg-card focus:outline-none focus:ring-2 focus:ring-ring dark:hover:bg-muted"
           >
             Cancel
           </button>

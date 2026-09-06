@@ -1,15 +1,15 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 189,
-  "unusedSharedComponents": 163,
+  "sharedComponents": 195,
+  "unusedSharedComponents": 168,
   "localComponentFiles": {
-    "crm7": 433,
-    "business-suite-unified": 117,
-    "conduit": 98,
-    "braden": 207,
-    "throughput": 89,
-    "R80.4": 5
+    "crm7": 449,
+    "business-suite-unified": 119,
+    "conduit": 100,
+    "braden": 208,
+    "throughput": 91,
+    "R80.4": 6
   },
   "components": [
     {
@@ -124,11 +124,11 @@
       "name": "DataUnavailable",
       "package": "@bsuite/ui",
       "consumers": {
-        "crm7": 2,
+        "crm7": 1,
         "business-suite-unified": 1,
         "throughput": 2
       },
-      "consumerFiles": 5,
+      "consumerFiles": 4,
       "consumingApps": 3
     },
     {
@@ -491,6 +491,13 @@
       "consumingApps": 0
     },
     {
+      "name": "CustomPageView",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "DEFAULT_CANVAS_CARD_WIDTH",
       "package": "@bsuite/page-builder",
       "consumers": {},
@@ -728,6 +735,13 @@
       "consumingApps": 1
     },
     {
+      "name": "DEFAULT_UPDATE_POLL_MS",
+      "package": "@bsuite/nav-core",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "MobileSidebarDrawer",
       "package": "@bsuite/nav-core",
       "consumers": {
@@ -736,6 +750,41 @@
       },
       "consumerFiles": 2,
       "consumingApps": 2
+    },
+    {
+      "name": "UNSAVED_CONFIRM_MESSAGE",
+      "package": "@bsuite/nav-core",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "UPDATE_BANNER_SLOT",
+      "package": "@bsuite/nav-core",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "UpdateAvailableBanner",
+      "package": "@bsuite/nav-core",
+      "consumers": {
+        "crm7": 1,
+        "business-suite-unified": 1,
+        "conduit": 1,
+        "braden": 1,
+        "throughput": 1,
+        "R80.4": 1
+      },
+      "consumerFiles": 6,
+      "consumingApps": 6
+    },
+    {
+      "name": "VERSION_JSON_PATH",
+      "package": "@bsuite/nav-core",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "AutoStatusBadge",

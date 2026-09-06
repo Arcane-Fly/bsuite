@@ -437,6 +437,14 @@ jobs:
           while IFS= read -r -d '' f; do
             BASE=$(basename "$f" .sql)
             VERSION=${BASE%%_*}
+            NAME=${BASE#*_}
+            # A migration is exactly <14 digits>_<name>.sql. A numeric prefix alone is not
+            # enough: "20261118000000.sql" has no underscore, so ${BASE#*_} returns the whole
+            # basename and the ledger would record name == version (Copilot on bsuite#3022).
+            case "$BASE" in
+              [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_?*) ;;
+              *) echo "→ Skipping non-versioned file (needs <14 digits>_<name>.sql): $f"; continue ;;
+            esac
             # Only versioned migrations (<timestamp>_name.sql) — helper files
             # like verify_migrations.sql are not migrations (same rule the
             # Supabase CLI applies).
@@ -453,8 +461,15 @@ jobs:
             fi
             echo "→ Applying transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 --single-transaction -f "$f"
-            psql "$DB_URL" -v ON_ERROR_STOP=1 \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES ('${VERSION}', '${BASE#*_}') ON CONFLICT DO NOTHING;"
+            # psql does NOT interpolate :'var' inside a -c string (the string is sent to the
+            # server as-is; proven on psql 18.6 and on the runner: run 33778653772 failed here
+            # with "syntax error at or near :" after APPLYING 20261115000000, leaving the
+            # migration in effect but unrecorded). Interpolation happens only on stdin, so
+            # the INSERT is fed on stdin with the variables bound; the values never touch
+            # the SQL text.
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" <<'SQL'
+            INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;
+          SQL
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
           done < <(find supabase/migrations -maxdepth 1 -name "*.sql" ! -name "*.nontx.sql" -print0 | sort -z)
@@ -516,7 +531,7 @@ jobs:
 
           command -v psql &>/dev/null || sudo apt-get install -y postgresql-client
 
-          NONTX_COUNT=$(find supabase/migrations -name "*.nontx.sql" 2>/dev/null | wc -l)
+          NONTX_COUNT=$(find supabase/migrations -maxdepth 1 -name "*.nontx.sql" 2>/dev/null | wc -l)
           if [ "$NONTX_COUNT" -eq 0 ]; then
             echo "No .nontx.sql files found — skipping"
             exit 0
@@ -530,8 +545,22 @@ jobs:
 
           APPLIED_COUNT=0
           while IFS= read -r -d '' f; do
-            VERSION=$(basename "$f" .nontx.sql)
-            VERSION=${VERSION%%_*}
+            BASE=$(basename "$f" .nontx.sql)
+            VERSION=${BASE%%_*}
+            NAME=${BASE#*_}
+            # A migration is exactly <14 digits>_<name>.sql. A numeric prefix alone is not
+            # enough: "20261118000000.sql" has no underscore, so ${BASE#*_} returns the whole
+            # basename and the ledger would record name == version (Copilot on bsuite#3022).
+            case "$BASE" in
+              [0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9][0-9]_?*) ;;
+              *) echo "→ Skipping non-versioned file (needs <14 digits>_<name>.sql): $f"; continue ;;
+            esac
+            # Same guard the transactional loop applies: only <timestamp>_name.sql is
+            # a migration. Without it a helper file's whole basename becomes the
+            # "version", and a nameless non-numeric row lands in the ledger.
+            case "$VERSION" in
+              ''|*[!0-9]*) echo "→ Skipping non-versioned file: $f"; continue ;;
+            esac
             if [ "$VERSION" \< "$MIGRATION_FLOOR" ]; then
               echo "→ Pre-floor ($MIGRATION_FLOOR): $f — owned by history-reconciliation lane, skipping"
               continue
@@ -542,11 +571,18 @@ jobs:
             fi
             echo "→ Applying non-transactional migration: $f"
             psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$f"
-            psql "$DB_URL" \
-              -c "INSERT INTO supabase_migrations.schema_migrations(version) VALUES ('${VERSION}') ON CONFLICT DO NOTHING;"
+            # psql does NOT interpolate :'var' inside a -c string (the string is sent to the
+            # server as-is; proven on psql 18.6 and on the runner: run 33778653772 failed here
+            # with "syntax error at or near :" after APPLYING 20261115000000, leaving the
+            # migration in effect but unrecorded). Interpolation happens only on stdin, so
+            # the INSERT is fed on stdin with the variables bound; the values never touch
+            # the SQL text.
+            psql "$DB_URL" -v ON_ERROR_STOP=1 -v version="$VERSION" -v name="$NAME" <<'SQL'
+            INSERT INTO supabase_migrations.schema_migrations(version, name) VALUES (:'version', :'name') ON CONFLICT DO NOTHING;
+          SQL
             echo "✓ Applied and recorded: $VERSION"
             APPLIED_COUNT=$((APPLIED_COUNT + 1))
-          done < <(find supabase/migrations -name "*.nontx.sql" -print0 | sort -z)
+          done < <(find supabase/migrations -maxdepth 1 -name "*.nontx.sql" -print0 | sort -z)
 
           echo "Done: ${APPLIED_COUNT} non-transactional migration(s) applied."
 

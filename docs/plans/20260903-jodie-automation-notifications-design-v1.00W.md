@@ -1,8 +1,27 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - .github/workflows/app-quality-checks.yml
+  - scripts/check-exported-not-mounted.mjs
+  - crm7/api/ai/chat.ts
+  - crm7/src/lib/ai/automation-level.ts
+  - crm7/src/lib/ai/query-quota.ts
+  - crm7/supabase/migrations/20261118000000_ai_quotas_and_query_usage.sql
+---
+
 # Jodie automation levels, query overages, and email notices
 
 **Date:** 2026-09-03 | **Version:** 1.00W | **Status:** Working (operator-approved)
 
 **Approved:** 2026-09-03 — “sounds good. go.”
+
+> **Still the plan as of 2026-09-04.** The dial, the query meter and the notices are built to
+> this design; the automation levels it defines are the contract crm7#2396 implements and
+> crm7#2399 fails closed against. Task 4b of the 2026-09-04 scoping plan will change the
+> no-row DEFAULT from the licence ceiling to `suggest`, which is a change to this document's
+> defaults rather than to its shape.
 
 Companion: [`20260903-jodie-automation-notifications-implementation-v1.00W.md`](./20260903-jodie-automation-notifications-implementation-v1.00W.md).
 

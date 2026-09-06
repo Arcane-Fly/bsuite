@@ -1,0 +1,196 @@
+name: Work at risk sweep
+
+# H2 of docs/audits/20260903-week-in-review-estate-audit-and-remediation-v1.00W.md:
+# "Work-at-risk sweep as a scheduled gate: any remote branch ahead of
+# development with no PR after 24 h is listed in an issue; merged short-lived
+# branches with 0 commits ahead are deleted the same turn (never main or
+# development)". The operator has said "capture the work at risk, no
+# exceptions" 14+ times — a single sweep on 2026-08-30 found 2,216 unreachable
+# commits, 4 stashes and 1 destroyed edit sitting on refs nothing pointed at.
+#
+# This is a NON-REQUIRED scheduled gate — it opens/updates an issue and, only
+# when explicitly asked, deletes branches that are provably empty relative to
+# development. It never blocks a merge and is deliberately absent from
+# .github/required-contexts-baseline.json.
+#
+# SAFETY POSTURE, READ THIS BEFORE FLIPPING `delete`:
+#   - `dry_run` defaults to true and `delete` defaults to false. Deletion only
+#     runs when BOTH `dry_run=false` AND `delete=true` are passed explicitly
+#     via workflow_dispatch — a scheduled run can never delete anything.
+#   - The classifier and the deletion refusal are proven, for real, against a
+#     disposable local git repo by `--self-test`, which runs FIRST every time
+#     this workflow executes. A broken classifier fails the run before it
+#     touches a single real branch.
+#   - main/master/development are refused at the deletion call site itself
+#     (scripts/work-at-risk-sweep.mjs `deleteBranch()`), independent of
+#     whatever the classifier said — the self-test proves this refusal holds
+#     even when asked directly.
+#   - Only STALE-MERGED branches are ever deleted: ahead_by 0 (fully
+#     contained in development) or a merged PR was found for that head, no
+#     open PR, and GitHub branch protection is not set on it. WORK-AT-RISK
+#     branches are only ever listed, never touched.
+
+on:
+  schedule:
+    # Daily, off the hour and off every other repo-wide sweep's minute.
+    - cron: '11 4 * * *'
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Report only — never delete STALE-MERGED branches (default: true)'
+        type: boolean
+        default: true
+      delete:
+        description: 'Actually delete STALE-MERGED branches — requires dry_run=false as well (default: false)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: work-at-risk-sweep
+  cancel-in-progress: false
+
+jobs:
+  sweep:
+    name: Work at risk sweep
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
+        # Same shape as .github/workflows/advance-submodule-pointers.yml —
+        # copy that file's comment for the full rationale. Non-fatal: a
+        # half-configured App must not take the job down.
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: write
+          permission-pull-requests: read
+          permission-issues: write
+          permission-metadata: read
+
+      - name: Say so if the App token could not be minted (falling through to the PAT)
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && steps.app-token.outcome != 'success' }}
+        run: |
+          echo "::warning title=GitHub App token not minted::BSUITE_GITHUB_APP_CLIENT_ID is set but the token step did not succeed (outcome: ${{ steps.app-token.outcome }}). Check secrets.BSUITE_GITHUB_APP_PRIVATE_KEY and the App installation; this run falls through to the PAT (D-169)."
+
+      # No submodule checkout needed — this sweep talks to every repo purely
+      # through `gh api`, never a git clone of the app itself.
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+          # package-manager-cache defaults true and resolves the packageManager
+          # field's pnpm BEFORE corepack has run — the setup-node/pnpm trap
+          # PR #2048 guarded 21 workflows against. This script needs no pnpm at
+          # all (plain node, no deps), so the guard is belt-and-braces here.
+          package-manager-cache: false
+
+      - name: Prove the sweep can fail before trusting what it says
+        run: node scripts/work-at-risk-sweep.mjs --self-test
+
+      - name: Run the sweep (always read-only at this step)
+        id: sweep
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          node scripts/work-at-risk-sweep.mjs --out /tmp/work-at-risk.json --issue-body /tmp/issue-body.md | tee /tmp/work-at-risk-report.txt
+
+      - name: Write the step summary
+        run: |
+          {
+            echo '## Work at risk sweep'
+            echo
+            echo '```'
+            cat /tmp/work-at-risk-report.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Open, update or close the standing issue
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          ISSUE_TITLE: 'Work at risk: branches ahead of development with no PR'
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+
+          AT_RISK=$(node -p "require('/tmp/work-at-risk.json').atRisk.length")
+
+          # Found by EXACT-TITLE SEARCH across ALL states, the same idiom
+          # cron-watchdog-observer.yml uses — a listing form works until the
+          # issue list grows past its page and then fails silently with a
+          # duplicate. `--state all` so a recurrence REOPENS the closed
+          # thread rather than starting a new one.
+          FOUND=$(gh issue list --repo "${{ github.repository }}" --state all --search "in:title \"${ISSUE_TITLE}\"" \
+                    --json number,title,state --limit 50 \
+                    --jq "map(select(.title == \"${ISSUE_TITLE}\")) | .[0] // empty")
+          NUM=$(printf '%s' "${FOUND}" | jq -r '.number // empty')
+          STATE=$(printf '%s' "${FOUND}" | jq -r '.state // empty')
+
+          if [ "${AT_RISK}" != "0" ]; then
+            {
+              echo "Observed at $(date -u '+%Y-%m-%d %H:%M UTC') by [this run](${RUN_URL})."
+              echo
+              cat /tmp/issue-body.md
+            } > /tmp/issue-body-final.md
+
+            if [ -z "${NUM}" ]; then
+              gh issue create --repo "${{ github.repository }}" --title "${ISSUE_TITLE}" --body-file /tmp/issue-body-final.md
+              echo "::warning::opened the work-at-risk issue — ${AT_RISK} branch(es) at risk"
+            else
+              if [ "${STATE}" = "CLOSED" ]; then
+                gh issue reopen "${NUM}" --repo "${{ github.repository }}"
+                echo "::warning::reopened issue #${NUM} — work at risk recurred"
+              fi
+              gh issue comment "${NUM}" --repo "${{ github.repository }}" --body-file /tmp/issue-body-final.md
+              echo "::warning::updated issue #${NUM} — ${AT_RISK} branch(es) at risk"
+            fi
+          else
+            echo "no branches at risk this run"
+            if [ -n "${NUM}" ] && [ "${STATE}" = "OPEN" ]; then
+              {
+                echo "Cleared. This run found 0 branches ahead of development with no PR older than 24h."
+                echo
+                echo "Closed automatically by [this run](${RUN_URL}). It will reopen on the next recurrence rather than a new thread being started."
+              } > /tmp/close-body.md
+              gh issue comment "${NUM}" --repo "${{ github.repository }}" --body-file /tmp/close-body.md
+              gh issue close "${NUM}" --repo "${{ github.repository }}"
+              echo "closed issue #${NUM} — no work at risk"
+            fi
+          fi
+
+      # ONLY when BOTH inputs say so, explicitly, on a workflow_dispatch run.
+      # A scheduled run's inputs are always the declared defaults
+      # (dry_run=true, delete=false), so a cron tick can never reach this
+      # step — deletion requires a human to dispatch it.
+      - name: Delete STALE-MERGED branches (recomputed fresh — never reuses the report above)
+        if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delete == 'true' && github.event.inputs.dry_run == 'false' }}
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          echo "delete=true and dry_run=false — recomputing the sweep immediately before deleting, so nothing is deleted on a stale read."
+          node scripts/work-at-risk-sweep.mjs --delete --out /tmp/work-at-risk-deleted.json | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Say so when this was a dry run
+        if: ${{ !(github.event_name == 'workflow_dispatch' && github.event.inputs.delete == 'true' && github.event.inputs.dry_run == 'false') }}
+        run: echo "dry run — no branch was deleted (pass delete=true and dry_run=false via workflow_dispatch to actually delete STALE-MERGED branches)"

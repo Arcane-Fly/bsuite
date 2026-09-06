@@ -80,6 +80,41 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
+        # The App path runs once the operator has registered the App and set
+        # vars.BSUITE_GITHUB_APP_CLIENT_ID + secrets.BSUITE_GITHUB_APP_PRIVATE_KEY on
+        # this repository (docs/security/20260903-github-app-for-estate-automation-v1.00W.md). Until then the
+        # step is skipped and the token expressions below fall through to the PAT;
+        # the fallback is deleted once the first App-authored commit reads
+        # verification.verified=true (the guard further down proves it).
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
+        # A half-configured App (client id set, private key missing or wrong)
+        # must not take the job down: the step is non-fatal and the next step
+        # says so loudly; the token expressions then fall through to the PAT.
+        continue-on-error: true
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: write
+          permission-pull-requests: write
+          permission-metadata: read
+
+      - name: Say so if the App token could not be minted (falling through to the PAT)
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && steps.app-token.outcome != 'success' }}
+        run: |
+          echo "::warning title=GitHub App token not minted::BSUITE_GITHUB_APP_CLIENT_ID is set but the token step did not succeed (outcome: ${{ steps.app-token.outcome }}). Check secrets.BSUITE_GITHUB_APP_PRIVATE_KEY and the App installation; this run falls through to the PAT (D-169)."
+
       - name: Checkout parent + submodules
         uses: actions/checkout@v5
         with:
@@ -88,7 +123,7 @@ jobs:
           # `token:` is what makes checkout install a credential inside EVERY
           # submodule, which is what lets the push below work at all. Same
           # mechanism advance-submodule-pointers.yml relies on.
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -108,6 +143,15 @@ jobs:
         # If the script's own parsing is broken, every "already current" below is
         # meaningless. Fail here rather than open zero PRs and call it clean.
         run: node scripts/regen-consumer-lockfile.mjs --self-test
+
+      # bsuite#3089 (Copilot, thread 3940077853): positive control for the
+      # per-app rc-accumulation line further down this file, in the "Regenerate
+      # every consumer lockfile" step (manual-dispatch path). Greps the real
+      # line out of this workflow and evals it against synthetic exit-code
+      # sequences, so it fails loudly rather than passing on a stale copy if
+      # that line is ever edited without updating this test.
+      - name: Self-test the per-app rc-precedence line
+        run: scripts/test-reach-rc-precedence.sh
 
       - name: Put every submodule on its own development branch
         # THE CHECKOUT LANDS EACH SUBMODULE AT THE PARENT'S RECORDED GITLINK,
@@ -130,15 +174,26 @@ jobs:
           APPS: ${{ github.event.inputs.apps || 'all' }}
         run: |
           set -uo pipefail
+          rc=0
           if [ "$APPS" = "all" ]; then
-            node scripts/regen-consumer-lockfile.mjs --all --write --json > /tmp/reach.json
+            node scripts/regen-consumer-lockfile.mjs --all --write --json > /tmp/reach.json || rc=$?
           else
             : > /tmp/reach.json
             for a in ${APPS//,/ }; do
-              node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json
+              iter_rc=0
+              node scripts/regen-consumer-lockfile.mjs --app="$a" --write --json >> /tmp/reach.json || iter_rc=$?
+              # bsuite#3089 (Copilot, thread 3940077853): the old condition
+              # ("$rc" = "0" && iter_rc != "0") latches onto the FIRST non-zero
+              # code and never revisits it, so an app killed by a signal (e.g.
+              # 137) ahead of a later genuine verification failure (rc=1)
+              # leaves rc=137 forever and the real 1 is lost. A 1 always wins;
+              # otherwise the first non-zero code standing wins, same as
+              # before. Covered by scripts/test-reach-rc-precedence.sh, wired
+              # in above as its own "Self-test the per-app rc-precedence
+              # line" step.
+              if [ "$iter_rc" = "1" ] || [ "$rc" = "0" ]; then rc=$iter_rc; fi
             done
           fi
-          rc=$?
           cat /tmp/reach.json
           # rc 1 is a genuine verification failure and must fail the job. rc 2 is
           # "would change", which cannot occur with --write.
@@ -149,7 +204,7 @@ jobs:
 
       - name: Open one PR per app whose lockfile moved
         env:
-          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
         run: |
           set -uo pipefail
           owner=$(git remote get-url origin | sed -n 's|.*github.com[:/]\([^/]*\)/.*|\1|p')
@@ -165,9 +220,17 @@ jobs:
               exit 1
             fi
             br="chore/lockfile-reach"
+            # 2026-09-05: grep returned 1 on a transitive-only diff; pipefail plus
+            # the runner's bash -e killed the step before any output.
             moved=$(git -C "$app" diff -U0 -- pnpm-lock.yaml \
-                    | grep -E "^\+ +'@bsuite/" \
+                    | { grep -E "^\+ +'@bsuite/" || true; } \
                     | sed "s/.*'\(@bsuite[^']*\)'.*/\1/" | sort -u | tr '\n' ' ')
+            if [ -z "$moved" ]; then
+              git -C "$app" checkout -- pnpm-lock.yaml
+              echo "$app: lockfile drift is transitive only, no @bsuite/* moved - skipped"
+              skipped=$((skipped+1))
+              continue
+            fi
             # Built with printf so every line stays inside this YAML block scalar.
             # A bare multi-line string here dedents to column 0 and breaks the file.
             printf '%s\n' \
@@ -182,7 +245,7 @@ jobs:
               "- \`overrides:\` count unchanged (a silent drop is usually a missing \`pnpm-workspace.yaml\`, and those entries are usually security pins)" \
               "- \`pnpm install --frozen-lockfile\` **succeeds**, not merely parses" \
               "" \
-              "Not auto-merged. A lockfile bump changes what this app installs and goes through review and CI like anything else." \
+              "Auto-merge is armed (merge commit): this PR merges itself once every required check on this repo is green, and never before. Operator decision 2026-09-05." \
               > /tmp/reach-body.md
             printf '%s\n' \
               "chore(deps): reach the published @bsuite/* versions" \
@@ -280,6 +343,15 @@ jobs:
               echo "::error title=$app: branch pushed but PR not created::The change is on '$br' and is correct; only 'gh pr create' failed. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', BSUITE_CROSS_REPO_PAT is missing or expired."
               exit 1
             fi
+            # `--auto` weakens no required checks and is idempotent; it only removes
+            # the human merge click once green. Use `--merge`, not `--squash`, to
+            # preserve the reach PR as a merge commit.
+            gh pr merge -R "$owner/$app" "$br" --auto --merge 2>/tmp/automerge.log \
+              && echo "$app: auto-merge armed" \
+              || {
+                echo "::warning title=$app: could not arm auto-merge::PR is open and correct; merge by hand or next run retries"
+                cat /tmp/automerge.log
+              }
           done
           echo "### Consumer lockfile reach" >> "$GITHUB_STEP_SUMMARY"
           echo "PRs opened/updated: $opened - already current: $skipped" >> "$GITHUB_STEP_SUMMARY"
