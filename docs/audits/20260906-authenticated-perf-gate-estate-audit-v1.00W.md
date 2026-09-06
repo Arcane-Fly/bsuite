@@ -198,7 +198,7 @@ Fail-closed working against a real misconfiguration, not a drill.
 |---|---|---|
 | 1 | **R80.4's `lighthouserc.json` is wired to nothing.** Add a workflow or delete the file — a config with no consumer reads as coverage that does not exist. | R80.4 |
 | 2 | Add page-level `data-testid`s to `/deals`, `/reports`, `/clients`, `/people`, `/apprentices` so the crm7 gate can widen past `/contacts`. | crm7 |
-| 3 | Ratchet the provisional `/contacts` thresholds (`minScore 0.5`, `LCP ≤ 4000 ms`) once CI has several runs. Loose was deliberate for a first baseline. | crm7 |
+| 3 | **Lower the `/contacts` LCP ratchet from its committed 4500 ms toward the 4000 ms target.** 4500 is what `crm7/lighthouserc.json` carries — deliberately just above today's 4104.59 ms so the gate is green on arrival and cannot be waved off as noise. 4000 ms is the target, and it is the value today's measurement FAILS, which is how the bite was demonstrated. **Trigger, so this is a ratchet and not a permanent exemption wearing a gate's name:** once 10 consecutive `development` runs have recorded a `/contacts` LCP, take the P75 of those runs, set the budget to it, and repeat. Whoever lands an LCP improvement lowers it in the same PR. If 10 runs show a spread wider than 500 ms, fix the variance before tightening — a ratchet on a noisy signal only teaches people to re-raise it. | crm7 |
 | 4 | Consider a CLS assertion on the authenticated route — 0.099 vs 0.000 is the largest gap the new gate exposed, but one measurement is not a threshold. | crm7 |
 | 5 | Port the recipe to BSU, conduit, braden and throughput. Each needs its own content markers first. | per app |
 | 6 | **Fix the authenticated LCP itself.** crm7#2507 builds the instrument and pins a ceiling; it does not make `/contacts` faster. ~4.1 s in CI is the number to bring down, and the ratchet comes down with it. | crm7 |
@@ -206,16 +206,51 @@ Fail-closed working against a real misconfiguration, not a drill.
 
 ## Related, and deliberately not fixed here
 
-**crm7#1628 is closed as measured, not implemented.** Its premise — that
-`EnhancedDataTable` renders every row across 95 importers — does not hold. Fed 1000
-rows it puts **25** in the DOM (`rowPaginationFeature` + `createPaginatedRowModel()`;
-in TanStack Table v9 `getRowModel()` *is* the page slice). All **33** non-test
-importers use the 25-row default, and `createEntityStore` bounds the fetch at 25 as
-well. The routes the issue named do not even use it: `/deals` and `/reports` render
-`@bsuite/data-grid`'s `DataGrid`, which **already virtualises both axes**, and
-`/workflows` is card-based.
+**crm7#1628 is closed as measured, not implemented.** Fed 1000 rows,
+`EnhancedDataTable` puts **25** in the DOM (`rowPaginationFeature` +
+`createPaginatedRowModel()`; in TanStack Table v9 `getRowModel()` *is* the terminal page
+slice, verbatim in the installed `table-core@9.2.4`). There are **33** non-test
+importers, not 95.
 
-The "imported in exactly one file" count that motivated the issue was taken over
-`crm7/src` alone and missed the shared package in `node_modules` — the same
-indirection hazard that makes a `.from()`-style grep miss ~100 `createEntityStore`
-tables. Detail and the guard test are in crm7#2507.
+**Where the 95 came from**, because a refuted number that is only *contradicted* gets
+re-derived next month:
+
+```
+grep -rlE "<Table\b|<table\b" src/ --include=*.tsx \
+  | grep -vE '(__tests__|\.test\.|\.spec\.)' | wc -l     ->  95
+```
+
+It is the count of non-test `.tsx` files containing table **markup**, and exactly
+**three** of those also import `EnhancedDataTable` — because a page using the component
+does not hand-write `<Table>`. The number was real and honestly obtained, then attached
+to the wrong subject.
+
+**Two corrections to this record's own first draft**, both found in review:
+
+- "All 33 call sites use the 25-row default" was **false**. `crm7/src/pages/people/index.tsx:616`
+  sets `manualPagination`, where v9 deliberately returns the *pre*-paginated model. That
+  route is bounded by `createEntityStore`'s `.range(from, to)`
+  (`crm7/src/stores/peopleStore.ts:15`, `defaultPageSize: 25`) — **a different mechanism
+  from the one the new guard asserts, and one nothing guards.** Delete that `.range()`
+  and `/people` renders everything it fetched while the guard stays green.
+- The issue's named routes were right about the **top-level** routes and wrong about the
+  families: `/reports/deliveries` and `/reports/schedules` *are* `EnhancedDataTable`
+  routes. `/deals` and `/reports` themselves render `@bsuite/data-grid`'s `DataGrid`,
+  which already virtualises both axes, and `/workflows` renders no table.
+
+The "react-virtual imported in exactly one file" count that motivated the issue was
+taken over `crm7/src` alone and missed the shared package in `node_modules` — the same
+indirection hazard that makes a `.from()`-style grep miss the **96** files carrying a
+`createEntityStore<` call (100 occurrences; `grep -rl 'createEntityStore<' crm7/src/`
+minus tests). An earlier draft of this record said "97 stores", which was
+`grep -rl createEntityStore crm7/src/stores/` *including tests* — a mention count in one
+directory, not a store count.
+
+**Still UNKNOWN, and to stay that way until measured:** which element is the LCP element
+on an authenticated list page. Nobody has driven a browser against a deployed signed-in
+instance and read it. The argument that the table is not that element rests on
+architecture, not observation — and `/contacts` *is* an `EnhancedDataTable` page, so it
+earned the argument rather than a dismissal. The gate this record is about is what will
+settle it.
+
+Detail and the guard test are in crm7#2507.
