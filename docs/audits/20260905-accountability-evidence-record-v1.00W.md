@@ -1,0 +1,884 @@
+# Accountability lane — evidence record (append-only)
+
+> **Recovery note, 2026-09-06 10:2xZ.** The worktree holding this file was removed with `git worktree remove --force` by the PI session at 10:05:22Z while the file was uncommitted (a branch-only content test; the estate script had said KEEP). §23–§85 below were rebuilt verbatim from this lane's session transcript, where every append was recorded as a heredoc. §1–§22 were written by the Copilot lane before the takeover at 5 Sep 22:50 AWST and existed only in the working tree; their bodies are lost — the heading index and the last 120 lines as read at 2026-09-05T14:53:43Z are preserved below. From this cycle the record is committed and pushed at every cycle close.
+
+## §1–§22 — index preserved from the takeover read (bodies lost 2026-09-06 10:05Z)
+
+```
+7:# Accountability evidence record — append-only addendum (2026-09-05)
+12:## 1. Boundaries
+23:## 2. Parent-verified facts
+38:## 3. Verified file facts
+46:## 4. Unresolved or still-in-progress items
+60:## 5. Exact owner-accountability statements preserved here
+73:## 6. What this addendum does not claim
+82:## 7. Continuation note
+86:## 8. Verification update after resuming
+94:## 9. Tenant-selection closure challenged with source and tests
+112:## 10. Bounded corrections to row 56
+123:## 11. Corpus denominator and rejected audit evidence
+152:## 12. F1 implementation located; acceptance remains held
+162:## 13. Further bounded evidence; no row or registry closure
+172:## 14. PI correction and inbox reconciliation
+191:## 15. Generator semantics tested after economical delegation
+206:## 16. Custom-page persistence claim fails a service-response control
+234:## 17. Render-chain evidence does not close advanced authoring
+248:## 18. Advanced-authoring requirement retained after independent review
+268:## 19. Wayne identified; bounded deployed inspection assigned
+276:## 20. Continuous advisory oversight — bounded scheduler, not audit completion
+296:## 21. Maker evidence and scheduled-report corrections at 14:08Z
+318:## 22. Reporting plan located; its own retractions govern interpretation
+```
+
+<details><summary>Last 120 lines as read at takeover</summary>
+
+```
+## 16. Custom-page persistence claim fails a service-response control
+
+The next Haiku worker hit its 18-turn limit without a report (USD 0.1166932). A narrower persistence-only retry completed (USD 0.1284309). Its useful source trace did **not** substantiate its conclusions that persistence was complete or concurrent stale overwrites were prevented. The parent rejected both conclusions and read `crm7/src/services/customPageService.ts` and `crm7/src/pages/settings/custom-page-edit.tsx` directly.
+
+`savePageRevision` (service lines 113–142) reads the current page version, inserts a revision, then awaits an update of `custom_pages.layout` and `version`. The awaited update's returned error and affected-row outcome are ignored. It is not fire-and-forget, as the worker described; it is an awaited response that is not checked. The editor's lines 227–254 subsequently reread the page and announce “Layout saved”, without checking that the new revision became the current page.
+
+The parent transpiled the unchanged TypeScript service into an in-memory module with a mocked Supabase response boundary. The first temporary harness had a syntax error; the corrected replay produced:
+
+| Update response | Returned revision | Current page version | Result |
+| --- | ---: | ---: | --- |
+| Successful one-row update | 2 | 2 | Positive control |
+| Error `42501` | 2 | 1 | Revision returned despite failed current-page update |
+| No error, zero affected rows | 2 | 1 | Revision returned despite unchanged current page |
+
+This establishes the service's response handling, **not** a live RLS refusal or observed production incident. The revision insert and current-page update are separate client requests; the worker's assertion that a reread prevents concurrent overwrites is unsupported. Live transaction, policy and concurrency behaviour remain unexamined.
+
+Provenance and bounded coverage:
+
+- Shared CRM7 HEAD was `fbd887cb6a2361a2b9a18b5781cd164c43d7b86e`; neither inspected file had a working-tree diff. Other lanes' unrelated changes were left untouched.
+- Authenticated GitHub retrieval pinned current `main` at `f719b596c0d1f57edd744f3e469dce1e02db5064` and `development` at `5c90c0cc8939817a2db7b13c4446d6f730ab9dd5`. The service fetched at both immutable commits matched tested source SHA-256 `e9a783019ec59b474625739bd03c4194c7bb2135ef8b7adc9a886abf5a206607`. This is a current-branch finding, not merely an old-checkout observation.
+- The source hash remained unchanged after the in-memory probes. No test script or product file was written.
+- Parent ran `./node_modules/.bin/vitest run src/pages/settings/__tests__/custom-page-edit.behaviour.test.tsx src/pages/settings/__tests__/custom-page-edit.seed.test.ts --reporter=dot`: **2 files / 10 tests passed**, 2.74 seconds, at `20:20:23 AWST`. Those editor tests mock the service and do not establish the rejected-update invariant.
+- Source callers include the editor and `restorePageRevision`. Navigation, rendered consumer, live authorisation and deployed round-trip are not closed by this bounded persistence check.
+
+PI was sent finding `7c4f6e1b-4a94-4fb3-b82f-ece9a62bf3de` and current-branch confirmation `cdb62f7c-a205-4bf5-9bf9-d1c07d6a066f`. Required next gate: reconcile existing tracking, name an implementation owner, reject failed/zero-row saves without a success message, verify page/revision coherence and concurrent-save conflicts, then exercise save/reload and restore at the deployed SHA. Accountability has not assigned a competing implementation.
+
+The historical dataplatform handoff's plan path, `~/.claude/plans/https-crm-crm7-app-reports-custom-create-distributed-origami.md`, did not resolve on this machine. Its quoted advanced reporting requirements remain a dated relay pending original-source recovery, not a readable plan silently assumed validated.
+
+## 17. Render-chain evidence does not close advanced authoring
+
+A bounded read-only Haiku slice (USD 0.0799402) located the route/renderer chain. The parent read the route, renderer and complete local `FormLayoutBuilder`, then compared all three files with immutable CRM7 development `5c90c0cc8939817a2db7b13c4446d6f730ab9dd5`: **all byte-identical**.
+
+- `src/pages/custom/[slug].tsx` mounts `CustomPageRenderer` with the slug, tenant and visible missing-page treatment.
+- `src/components/CustomPageRenderer.tsx` reads published `custom_pages`, prefers the tenant row over a platform fallback, resolves field definitions and supplies `sections`/`tabs` to the local `FormLayoutRenderer`. Its input values live only in component state; this component does not save entity records. That is a bounded display-component fact, not proof that all record-editing paths are missing.
+- Its Realtime filter selects **either** the current tenant **or** platform scope. The worker's implication that tenant views subscribe to both is rejected. Platform-fallback update invalidation needs its own runtime control. The field-definition query has a different key from the page query; the comment claiming both invalidate together is not proof they do.
+- `src/components/ui-customization/FormLayoutBuilder.tsx` is a local dnd-kit section/field editor, not a wrapper around the shared dashboard-widget builder. CRM7 nevertheless declares `@bsuite/page-builder: ^2.6.1`; the worker's “no shared npm package found” claim is false. Declaration still does not prove the installed or deployed version.
+- The worker confused a page's `is_published` gate with the separate package-version evidence rule. Neither publication concept proves deployed acceptance of the other.
+
+The parent read the full `docs/plans/20260901-workflow-canvas-implementation-v1.00A.md`, including its later amendments. Its P1.2 and §8 still name inline field creation; the inspected builder has no `FieldCreateDialog` or equivalent create-new-field control. Its P1.4 calls for convergence with the existing page canvas/widget registry, not merely replacing a JSON dump. The current local field-layout path is a real improvement over the dated dump, but is **not sufficient evidence of that advanced requirement**. Later governing specifications and current issue dispositions still need reconciliation before final classification.
+
+Accountability sent the scoped interpretation to PI in `c8d7d1d8-4aea-487e-941f-179303006588`. No package removal, renderer rewrite or competing implementation follows from this audit. Browser interaction, live policies, saved-layout reload, field creation and the advanced canvas round-trip remain open.
+
+## 18. Advanced-authoring requirement retained after independent review
+
+A bounded Grok CLI review used `grok-4.6` with only Read/Grep/Glob, denied Edit/Write/Bash, no subagents and no permission prompts. Actual model was `grok-4.6-build`; session `01a07191-a8ff-7101-82b9-8292360db01e` returned after 14 turns at reported cost **USD 0.19101982**. Including the separate one-turn preflight, reported cost was **USD 0.20786920**. This verifies an available route, not that it is free of monetary cost. No tests or live inspection were performed by that worker.
+
+The parent independently read the full May WYSIWYG master plan, ADR-0011, `FormLayoutRenderer.tsx` and `PageEditorLauncher.tsx`, and enumerated route registrations and renderer hosts. Source identity remained parent `a1bf690133792c0292340aa60bcf6d6ae548f2f0`, CRM7 `fbd887cb6a2361a2b9a18b5781cd164c43d7b86e`; the five inspected CRM7 files had no working diff.
+
+| Requirement / claim | Parent-verified disposition | Next delivery gate |
+| --- | --- | --- |
+| The form-layout writer satisfies custom-page authoring | **Insufficient.** The May plan §3.1 separates form layouts from widget custom pages. Phase 5 expressly requires unified PageGridLayout plus inspector, widgets, publication, revision differences and rollback. | PI retains these acceptance targets when assigning the existing authoring work; do not introduce another basic engine or discard old layouts. |
+| ADR-0011 cancels advanced authoring | **Unsupported.** It is Proposed and explicitly governs rendering only. Its historical npm-version/publication blocker needs current registry verification, not repetition as present fact. | Reconcile exact accepted amendments and current consumer exports before claiming supersession or a publishing block. |
+| Custom-page header opens in-place editing | **False in inspected source.** `handleEditCurrentPage` navigates to `/settings/custom-pages/{id}`. Its visible label honestly says “Open current custom page”; this is not a broken button labelled “Edit”. | Verify the intended in-page authoring and draft-preserving round trip on the deployed route. |
+| Rendered inputs prove record editing | **Unsupported.** Actual `FormLayoutRenderer` accepts controlled values and `onChange`, with no record submission. The parent renderer holds local values. | Distinguish page-layout consumption from entity CRUD; establish the applicable record contract before prescribing new CRUD. |
+| Inline field creation is covered | **Not in the inspected builder.** The two host files are `custom-page-edit.tsx` and `form-layout-detail.tsx`. | Create/select a field inline while preserving the unsaved layout in both hosts; test persistence and reload. |
+
+Corrections to the worker: `bsuite-docs-archive` is a pairing identifier, not a missing skill; source enumeration is **four renderer host files with five JSX mount sites**, because contacts detail contains two sites. Neither count proves simultaneous runtime mounts. `App.tsx`'s `CustomPageView` is the lazy slug-route alias, not evidence of a shared-package export. The worker's proposed all-non-form-page redesign is advice, not an accepted specification.
+
+Parent inspection additionally found `onChange(e.target.valueAsNumber || null)` in the renderer's numeric branch. A no-write Node expression probe asserted that the exact expression exists and demonstrated **0 → null**, with 12, -3 and NaN controls. This proves the conversion defect, not a component/browser test or live financial incident. Renderer SHA-256: `2a07b4d34d53a6f343f4da33f1706dbd66590d22ffd3bce681c01b037b1a223b`. The requested regression must cover zero, blank and negative values.
+
+Accountability message `5cd995be-9167-4b71-af3f-78a17eecaf45` (`12:45:16.456Z`) sent the retained requirements, corrections and numeric defect to PI, requiring deduplicated makers/PRs/tests for these and the §16 persistence failure. It is a delivery request, not evidence that implementation ownership has been accepted.
+
+## 19. Wayne identified; bounded deployed inspection assigned
+
+Direct message `c4104325-bb4b-4980-9bbe-900858e837b2` (`12:31:25.603Z`) identifies **`wayne-grokbot`**, namespace **bsuite**, as the GTM/business lead available for non-coding assignments. This resolves §14's identity blocker; Wayne is not Qwen and must not be addressed using the ambiguous bare `grok` handle.
+
+Assignment `1344d240-ddb9-4a9f-8091-91d44987081a` (`12:44:46.740Z`) requests a bounded, read-only deployed custom-page inspection: preflight actual browser tools and authorised access, inspect existing authoring controls and the page-tools destination, and return sanitised screenshots/observations with deployed SHA or an explicit unknown. No creates, edits, saves, publishes, restores, tenant switching, source changes or permission changes are authorised. The bot must report to accountability and PI. The identity message was acknowledged only after that follow-through; no inspection result or assignment acceptance is claimed yet.
+
+The original audit remains **IN PROGRESS / iteration 25 FAIL**. The record still has `ui_touched=false`: it documents source findings and assignments, not a product change or deployed acceptance.
+
+## 20. Continuous advisory oversight — bounded scheduler, not audit completion
+
+The Owner required continuing accountability instead of report-only endings. This expands the lane's operational scope beyond §1's original documentation-only boundary: local runner, tests and brief under the owned worktree's `output/accountability-loop-20260905/`, plus a transient **user** systemd timer. No product source, schema, credentials, system files, commits or pushes were changed. The original audit and implementation acceptance remain incomplete.
+
+- Three Haiku cycles were rejected for execution or substantive evidence failures. The first Sonnet cycle was also rejected: a strict model-set validator conflated a tiny auxiliary Haiku call with fallback; its outside-root receipt and stale next actions independently prevented acceptance. Historic cycles ran under their then-current model configuration, not today's configuration.
+- Parent added process-group termination/reaping, canonical source cwd, nonzero failure exit, durable `STOPPED.json`, notification error handling, and removal of stale-report prompt injection. Sonnet is required; only an auxiliary Haiku call of at most 64 output tokens and USD 0.01, costing less than the primary, is permitted. Unknown models remain rejected.
+- Tests were red before these fixes (18 tests, two expected errors), then **19/19 passed** after the reported-message cap. These tests validate the harness, not product completion. Exact source receipts prove quoted text exists; they do not verify reasoning or remote message delivery. Namespace and message-action limits remain prompt-level restrictions, not server-enforced authorisation.
+- Cycle `fb2102f7-08cf-46ad-bf71-eb0916890a55` cost USD 0.4495063 and produced a real field-ID source finding. Parent read both source and actual inbox `ee3c95da-b3a4-4484-b550-c345a979bf72`: generated `section-123` becomes `field-section-123-first-name`, but the parser extracts section ID `section`. The section lookup then fails. Section reordering uses a different double-prefix path and is not implicated by this finding. No browser reproduction is claimed.
+- Parent message `59d69061-1ace-44b0-8e2e-e34865e4c40d` (`13:24:44.397Z`) retained that source defect but corrected runtime overclaims, delimiter advice, unknown-owner assertions and stale next actions. It requests an actual maker/issue/PR/SHA and same-section, cross-section, empty-target, hyphen-key, pointer/keyboard and save/reload controls across both hosts. This is not proof of maker acceptance.
+- The worker's stale next action locating numeric conversion in `savePageRevision` was rejected: the expression is in `FormLayoutRenderer.tsx`. Its old heartbeat was replaced with the parent correction and read back. Wayne retains the read-only deployed inspection assignment; no GTM-only narrowing applies.
+- Independent **Claude Sonnet 5** review returned **APPROVE_TO_ARM, advisory only**, reran the 18-test suite and revalidated actual cycle receipts. The parent then added the review's small reported-message limit test (19 total). No autonomous product acceptance or issue closure is delegated.
+- `systemd-run --user` created `bsuite-copilot-accountability-20260905.timer`: initial trigger one second, recurrence seven minutes after service inactivity, accuracy one second. Inspection returned `ActiveState=active`, `SubState=waiting`; the service has `TimeoutStartUSec=5min 30s` and `KillMode=control-group`. This records arming, not yet a completed scheduled execution.
+- Limits: USD 1 per cycle, USD 10 total, 24 hours from persisted start, three consecutive execution failures, non-overlapping file lock, explicit STOP file. Spend before arming was **USD 1.5583374** across five cycles. A stop is attention-required, never task-complete; local `STOPPED.json` and journal remain authoritative if the remote heartbeat is stale. The timer does not survive a reboot as a persisted unit.
+
+Next scheduled investigation is numeric-zero callers/tests, alongside PI ownership replies. Repeated rediscovery of the parser finding is not progress. Source-only advisory reports require independent acceptance before any product closure. All original ledger rows, advanced authoring requirements, tenant gates and deployed evidence obligations remain open unless separately verified.
+
+**Scheduled-start verification:** the actual service entered `activating/start` at **2026-09-05T13:33:03Z**; persisted cycle `180055aa-0ff9-4901-a26f-ce439da32a98` showed `running=true`, zero failures, and USD 2.5583374 including its USD 1 reservation. This proves the timer fired, not that the cycle finished. Persisted start is **2026-09-05T12:58:48.225888Z**, correcting the reviewer's approximate previous-day date. PI was notified in `ca8e32cc-622f-48a4-bd18-ca2a68efbb1f`; Wayne's overdue assignment received follow-up `035e234c-5c20-438f-aa4e-d7b432086e4a` at `13:34:06.269Z`. No maker or Wayne acceptance was in the direct inbox listing at `13:33Z`.
+
+Documentation checks from the owned repository root passed **35/35**, changed-record classification and **174/174** ratchet; `git diff --check` was clean. An initial attempted `--help` call from the runtime directory failed the script's positive-control root check; it was not a documentation defect and was rerun from the required root. Local runner/brief/tests remain untracked under `output/`, deliberately present because the armed timer consumes them; they are not disposable scratch files while it runs.
+
+## 21. Maker evidence and scheduled-report corrections at 14:08Z
+
+PI replies `87c6a6fa-151e-4f4c-8dd3-6039b6bb3dba`, `9b2fe713-e8c3-4b17-bae5-47b17e581554` and `333bec8d-180b-42a4-b77f-74d25953fd72` name active makers and explicitly queue further work at the concurrency cap. A read-only **Claude Sonnet 5** reviewer checked GitHub and remote branch heads. Its observations are attributed below; the parent has not replayed the implementation tests or deployed interactions.
+
+| Item | Dated delivery evidence | Acceptance still owed |
+| --- | --- | --- |
+| Numeric issue2449 | PR2452, head `3422990a086af2aeec71e711a3a5ad5a7159f25a`; API/remote match reported | Fresh exact-head enforcer; zero/blank/negative payload and display across number/currency/percent. Do not invent CRUD in the read-only renderer. |
+| Field-drag issue2447 | PR2453, head `1b222deda6ecbcd6d5a83e4d7f71ac43d80ac42b`; API/remote match reported | Both-host pointer/keyboard, same/cross/empty-section and save/reload. New droppable-ID collision2454 must be dispositioned against those criteria. |
+| F1 PR2443 | **Merged** at `c3f7b296a76a468a585f6551a589eb295781c8b5`; supersedes historical HELD in §12 | Deployed mounted identity swap, same-user negative, SIGNED_OUT and abandoned-resolution controls. Ancestor review SHA alone cannot prove final-diff review currency. |
+| Recovered PR2448 | Head `4f1d90fb963d0bd9b73a1223c256dcd8f0937db4`, branch/attic remote agreement and green CI reported | Fresh enforcer artefact durable on the PR. No visible comment is not proof no reviewer is working. |
+| Inline2450; revision2451; registry bsuite3100 | PI explicitly queued these; inline follows same-file drag work | Maker handoff on lane release, then executable acceptance. Queue status is not abandonment or completion. |
+
+The registry reply identifies the additional workflow gap: `estate-alignment.yml` does not call the existing required-tree guard. PI retained standalone write/check refusal, one/all-missing controls and populated positive control. Its source confirmation does not establish a fresh workflow run. The revision reply retains the awaited-but-unchecked update defect and reports editor reread replacing the draft with old data. Its no-unique-constraint statement cites a production baseline, not an independently queried live catalog; live schema state remains unverified here. Uniqueness alone would not make two client writes atomic.
+
+Scheduled cycle `180055aa` returned relative receipt paths and a purported quote that was actually a search-absence summary. Its rejection was justified; changing path handling would not make that report valid. Cycle `05adb78e` timed out after remote side effects, so its USD 1 reservation remains in the accounting. Cycle `96b6b7fc-f6c4-4b2a-a538-85ef24fcf297` passed execution validation at USD 0.6369431: persisted cycles8, failures0, running=false, accounting USD 3.6480956 including the retained timeout reservation. No counters or budget were reset.
+
+The parent nevertheless rejected part of `96b6`'s reasoning after rereading the complete tenant service and confirmation hook: a valid remembered membership without a server pin returns `resolved`, not invariably `ambiguous`; ordinary membership failures return `unknown` and then `unavailable`, distinct from the hook's unexpected-throw fail-open branch. Exact source receipts do not establish correct control-flow reasoning. The scheduled brief now removes stale first-task instructions, requires absolute verbatim receipts, preserves current ownership and directs further cycles to actual maker evidence or unresolved original audit rows.
+
+Parent accountability message `da16cc4f-34b3-419f-b64c-b831b8e25624` was delivered at **2026-09-05T14:08:35.221Z**, carrying these corrections and acceptance requests. Issue2440/2441, advanced Phase5, live authorisation evidence, Wayne's deployed report and the original corpus reconciliation remain open. This is operational progress, not a product or audit completion claim; `ui_touched=false`.
+
+**Subsequent verification:** `python3 -m unittest discover -s output/accountability-loop-20260905 -p 'test_runner.py'` passed **19/19** in 0.063s; document-classifier self-tests passed **35/35**; `git diff --check` was clean. Timer inspection returned active/waiting, cycles9, failures0, running=false, accounting USD 4.2176011 (still includes the timeout reservation). This confirms continuing scheduling, not acceptance of every report's reasoning.
+
+## 22. Reporting plan located; its own retractions govern interpretation
+
+A bounded read-only researcher located `docs/plans/20260806-reporting-bulk-data-tiered-schema-program-v1.00D.md`. The parent read it in full. Its rescue notice names the missing `https-crm-crm7-app-reports-custom-create-distributed-origami.md` file, resolving the search lead in §16; byte identity with the unavailable original was not independently established. The initial researcher read only portions and missed the importance of the final delivery amendment.
+
+Section11 explicitly retracts the opening “no query engine” finding and reports catalog, query-engine, bulk-operation, console and consolidation delivery. Those dated delivery claims still need current implementation and deployed evidence, but the earlier absence statements must not be re-filed as present defects. The header's unrevised “not overtaken” wording conflicts with this later amendment; the full document, not its opening snapshot, is the audit input. Its execution successor is `docs/20260807-data-platform-completion-program-v1.00D.md`.
+
+No original timestamped Owner utterance underlying the four reporting asks was recovered in the bounded search. Assistant paraphrases, tool-result text and inter-agent messages embedded in user-role transcript envelopes are not direct Owner speech. The researcher's suggestion to seek fresh permission for further read-only recovery is unnecessary under the existing audit authority. Continue provenance recovery and capability validation without inventing either a superseding ruling or missing implementation.
+```
+
+</details>
+
+
+## 23. Lane operator change — Claude Code takes over from Copilot (14:50Z)
+
+Operator instruction at 22:50 AWST (14:50Z), verbatim: "see copilot land a in qig memery mcp and copilots threads for the past 2 days and take over his responsibilities." followed by "frequent loop required." The accountability lane is now operated by Claude Code session `3409a521-136f-4331-a271-da2d7789ae1f` under inbox handle `claude-code-bsuite-accountability`; Copilot's handle `copilot-customization-audit` is still read every cycle. Record: `bsuite_accountability_takeover_20260905`. Heartbeat moves to `bsuite_accountability_lane_latest`; `bsuite_accountability_loop_latest` is frozen at cycle `38e21988` (14:51Z) and is not live.
+
+Authority is unchanged. `bsuite_pi_accountability_agreement_v1` stands as written; this lane edits nothing in shared trees and gains no permission from the change. Where relayed doctrine (Wayne `4e474106`) conflicts with a direct operator instruction to this session, the direct instruction wins and is recorded.
+
+The bounded Sonnet worker of §20 was stopped through its own operator mechanism: `output/accountability-loop-20260905/STOP` written at 14:56:58Z. State at that moment: 13 cycles, USD 6.17 accounted, `failures=2` consecutive (22:41 and 22:53 AWST, "worker hit a permission denial" — the worker called `memory_search`, which its allowlist does not include). The runner halts and stops the timer at its next fire; `STOPPED.json` and the journal remain authoritative. Copilot's VS Code chat session `4dbd49e4` last wrote at 22:48 AWST; its request 18 dispatched a read-only close-out review and completed at 14:43:35Z.
+
+Measured at 14:55Z on GitHub: crm7#2453 head `1b222deda`, 20/20 checks SUCCESS, PI note 13:57Z, no enforcer artefact; crm7#2448 head `b5f178a05`, green, no enforcer verdict visible; crm7#2455 head `c909cd442`, green, MERGEABLE, unreviewed; crm7#2452 MERGED 14:27Z; R80.4#313 OPEN, unassigned, zero comments (penalty multiplier `0` stored as `1`: money). Estate sweep with `reviewThreads(last:100)` and `totalCount` over the 203 pull requests updated in the last two days across seven repositories: **55 unresolved `copilot-pull-request-reviewer` threads on merged pull requests** (crm7#2374 13, crm7#2398 7, braden#595 6, BSU#1133 3, BSU#1129 3, R80.4#306 3, bsuite#3034 3, bsuite#3052 3 (closed), and eleven more with 1–2). This is a class question against the 2026-09-04 bot-comment gate, put to the PI as message `db29739d`; it is not yet a finding.
+
+Sent 14:57–14:58Z: broadcast `24801446` (LANE_STATUS), PI `db29739d` (six asks, R80.4#313 first), Wayne `ab8e8f25` (ACK `4e474106`; assignment `1344d240` withdrawn from Wayne and taken by this lane, which holds the e2e sign-in path). Two read-only verifiers dispatched: the seven crm7#2398 threads against `origin/main`, and the deployed custom-page inspection on `d.crm.crm7.app`. Neither result is claimed here. `product_acceptance=false`; iteration 25 FAIL stands; `ui_touched=false`.
+
+
+## 24. crm7#2398 — the seven unresolved reviewer threads are fixed on `main`; four carry a false "addressed" reply
+
+A read-only verifier (Sonnet, no shared-tree edits) read each thread's full comment, the current file at `origin/main`, and `git merge-base --is-ancestor` for every fixing commit. All seven are **FIXED** with a test that names the reviewed behaviour: MailClient deep-link (`4c5326ca2`, `8480724e8` / PR #2432; `MailClient.deeplink.test.tsx`), banned-names plural (`0896e8fd9`; script self-test case 8), AIChooseOrganisation failed-load retry (`0896e8fd9`; `AIChooseOrganisation.test.tsx`), ActingAsBanner scope transitions (`0896e8fd9`; `ActingAsBanner.scope-change.test.tsx`), useTenantConfirmation retry exposure (`c9830dac6`; `useTenantConfirmation.retryExposure.test.tsx`), useTenantId refresh race (`c9830dac6`; `useTenantId.refreshRace.test.tsx`), DemoBanner post-move failures (`0896e8fd9`; `DemoBanner.test.tsx`). Not checked: `development` divergence since; sibling apps.
+
+Governance finding: threads 2–5 carry a `copilot-swe-agent` reply "Addressed in c5deb843". That commit is not an ancestor of `origin/main`; it survives only at `refs/attic/copilot-c5deb843-2398-review-fix`, stranded when the fixing lane was cut off by a weekly rate limit on 2026-09-04 23:28 AWST (per `c9830dac6`'s message). The claim was false when posted; the defects were re-fixed by other commits. Sent to the PI as `ACCOUNTABILITY_FINDING` in reply to `db29739d` with the ask to resolve all seven citing commit and test, and to name the owner of the per-thread sweep for the other 48 unresolved threads on merged pull requests. This is a bookkeeping and record-integrity finding, not a product defect; `product_acceptance=false`.
+
+
+## 25. Deployed custom-page inspection on `d.crm.crm7.app` — nothing to accept against
+
+The read-only inspection withdrawn from Wayne (§19, §23) ran from this lane at 15:0x Z via Playwright against `d.crm.crm7.app`, deployed SHA `a170704` (built 2026-09-05T14:53:53Z), as the e2e identity, with a session that was already authenticated (the `suite.crm7.app` bridge was not exercised; positive control: Dashboard title and "Navigated to Dashboard" toast). No create, edit, save, publish, restore, delete or tenant switch was performed. Screenshots and the full table: scratchpad `deployed-inspection-20260905/report.md`.
+
+Observed: the tenant holds exactly one custom page, "AD-7 exercise", Draft, type form, with no layout ("No layout yet — this page will render its title and description only"). "Build the layout" navigates to the editor, which renders nothing until "Shows records from" is set; choosing a record type is itself an edit, so the FormLayoutBuilder — sections, fields, any create-field control, inspector, revisions, preview, drag handles — was **not inspectable read-only**. `/custom/ad7-exercise` returns "Page not found" because the page is unpublished (the app queries `is_published=eq.true` first; correct, not a leak). Zero console errors; every request 2xx. Theme: dark, body `rgb(10,14,26)`, card `rgb(15,20,29)`, primary `rgb(37,99,235)` — blue, no pure black or white surface found.
+
+Two accountability consequences. First, on this host and tenant there is **no published custom page and no page with a layout**, so the deployed-acceptance clauses attached to crm7#2447, #2449, #2450 and #2451 ("save, reload, both hosts, deployed") have no surface to be proven on; this matches the enforcer's 14:22Z note on #2449 that production `custom_pages` holds two rows, neither published, none with a field. A fixture custom page with a layout is a prerequisite for any deployed acceptance in this class, and it does not exist. Second, a "read-only" visit to the settings routes wrote `user_preferences` rows (POST `on_conflict=user_id,preference_key`, 201) through the app's own grid-preference persistence; read-only inspections on this estate are not write-free at the database, and evidence that cites a clean tenant must account for it. Not checked: production, the fresh SSO bridge, the builder itself, rendered fields, numeric types. `product_acceptance=false`; `ui_touched=false`.
+
+
+## 26. Cycle 1 (15:11Z) — #2448 merged with its APPROVE on local disk only; #2455 gate in progress with a blocking gap
+
+Measured at 15:11Z: crm7#2448 MERGED 14:53:15Z (merge `a17070451`, head `b5f178a05`). The enforcer re-gate APPROVE exists locally (`evidence/2026-09-05/enforcer-crm7-2448-gate.json`, evaluated 14:40:04Z, superseding the 13:59Z SEND_BACK at `4f1d90fb9`, three files in the closing diff, F7 follow-up). The pull request carries no verdict and cites no evidence path — a gap against agreement v1 amendment B, which the PI itself wrote. crm7#2453 unchanged (head `1b222deda`, green, no verdict on the PR). crm7#2455 (head `c909cd442`): the PI's enforcer gate is in progress locally (15:05–15:07Z) with a blocking G1 — the banner was deleted on a claim that is false on production (`public.case_notes` lacks `visit_type`, `visit_date`, `field_officer…`) and the page still cannot save; held as not mergeable by acceptance until G1 closes on the PR. Issues #2440/#2441/#2447/#2449/#2450/#2451/#2454, bsuite#3100 and R80.4#313 all unassigned, no new comments. No PI inbox message since 14:16Z; the PI is demonstrably active by its evidence files. One message sent (`ACCOUNTABILITY_FINDING`, in reply to `db29739d`): the fixture-custom-page prerequisite from §25 and the #2448 record gap. Runner confirmed stopped (`STOPPED.json` present, no timer). `product_acceptance=false`.
+
+
+## 27. Cycle 2 (15:25Z) — #2455 sent back locally and re-pushed; the 48-thread sweep dispatched from this lane
+
+Inbox 15:11–15:25Z: nothing to this lane; no PI message (69 minutes since 14:16Z); Wayne `78b7a00e` P0 brand-mix requirement to the PI (Corporate vs Neon never mix), not this lane's to deliver but tracked. crm7#2455: the PI's enforcer verdict is **SEND_BACK** at head `c909cd442` (`evidence/2026-09-05/enforcer-crm7-2455-evidence.md`, gaps D1·D7·D8.2·D8.3·D8.6·D8.7·D9; G1 banner deleted on a claim false on production and the page still cannot save; G2 the replacement sentence repeats the defect it diagnoses in three places; G3 the not-found state still renders the whole empty form; G4 schema vocabulary on a user surface, same day the operator filed crm7#2459/#2460). The maker pushed `3789fd0d6` (15:21Z, "the table does not match the form — stop the Save…") and `92174fc61` (15:25Z, "correct my own severity claim, in the code as well…"); checks pending at 15:27Z. The SEND_BACK is not on the pull request (no verdict comment), the same amendment-B gap as #2448 (§26); the maker evidently received it another way. crm7#2453 unchanged. All tracked issues unassigned with no new comments; R80.4#313 (money) 66 minutes unowned. The 55-thread class question had no owner after two cycles, so this lane dispatched its own read-only verifier over the 48 threads outside #2398 (per-thread FIXED/STILL LIVE/PARTIAL/NOT-A-DEFECT/DOC-ONLY against `origin/main`, with false "addressed" claims checked by `merge-base`); resolution stays the PI's. No message sent this cycle. `product_acceptance=false`.
+
+
+## 28. Cycle 3 (15:52Z) — the 45-thread sweep: 31 still live, and one of them is a null-tenant unscoped read on `main`
+
+The read-only verifier over the unresolved reviewer threads outside crm7#2398 returned at 15:5x Z (enumeration reconciled: 55 = 7 on #2398 + 3 on the closed bsuite#3052 + 45 checked). Counts: FIXED 8, STILL LIVE 31, NOT-A-DEFECT 6, PARTIAL 0; the three "Fixed at 4cbfeb2b" replies on bsuite#3034 verified true by `merge-base`. Behavioural claims were probed rather than read (bash case pattern, React Hook Form `setValue` dirtiness, React adjust-state-in-render, the guard regex over the real `TeamMembers.tsx`, a disposable-worktree render test for the Helmet title). Report: scratchpad `thread-sweep-20260905/report.md`.
+
+This lane independently re-read the top item at `origin/main`: `crm7/src/services/emailService.ts:209-216` — `const tenantId = await getCurrentTenantId()` … `if (tenantId) query = query.eq('tenant_id', tenantId)` … `await query`. A null tenant issues an unfiltered select over `email_integrations`. The verifier's blame shows the conditional arrived in the commit that closed the previous cross-tenant read in the same service; the only test mocks the method whole; the only policies for the table in the tree sit under `supabase/migrations/archive/`, so whether live RLS refuses the read is unverified from source — and by the estate's own rule (a NULL meaning UNKNOWN is never read as UNRESTRICTED) the client must not fail open regardless. Sent to the PI as `SEND_BACK` under agreement clause 5 (interrupts ordering), with the ranked live list (E2E helpers without the production guard; a guard test that passes from a comment; a 311-line pgTAP suite no workflow runs; no non-negative CHECK on billing columns; a stale mailbox id submitted on send; table prefs surviving an entity switch; five braden dialogs armed over unreachable drafts — the crm7#2448 class on another app), the eight FIXED and six NOT-A-DEFECT threads with citations for resolution, and the class ruling question: 31 of 45 were live at merge time, so the 2026-09-04 bot-comment gate was not honoured on these.
+
+Also measured 15:52Z: crm7#2455 head `92174fc61`, all checks green, no verdict on the PR, not merged; crm7#2453 unchanged; all seventeen tracked issues and R80.4#313 unassigned; no PI inbox message for 96 minutes. The scheduled 23:38 AWST wake did not run as a cycle; this cycle ran on the verifier's completion. `product_acceptance=false`.
+
+
+## 29. Cycle 4 (16:06Z) — a deployed self-test disproves #2448's APPROVE within 70 minutes; no owner movement anywhere
+
+Inbox 15:52–16:06Z: nothing to this lane; no PI message (110 minutes since 14:16Z). Measured 16:06Z: crm7#2455 head now `7be8d3533` (third re-push; build, e2e and coverage pending), still no verdict on the pull request; crm7#2453 unchanged; #2448 still uncited; all eighteen tracked issues, bsuite#3100 and R80.4#313 unassigned; none of the 52 unresolved reviewer threads on the eighteen swept pull requests was resolved (`reviewThreads(last:100)` recount: 52, unchanged since the sweep).
+
+New: crm7#2466 (16:05Z, filed by a lane) — "the integrations dirty-guard stays armed after Cancel on the deployed build", measured on `d.crm.crm7.app` serving `a170704`, the #2448 merge, by dispatching a cancelable `beforeunload` and reading `defaultPrevented` at each step: page loaded no; API panel opened no; typed yes; Cancel **yes** (field count back to the 7-field baseline, so the panel closed and `showApiConfig` is false). The issue itself says the fix "was bitten three ways independently before merging" and a harness probe went clean on Cancel. Accountability reading: #2448's local APPROVE (§26; `gate.json` scores `ux_integrity 1.0`, `ui_touched true`) was issued with no deployed evidence, and a deployed test as a user disproved it in 70 minutes — the class "a bite proves a fix is load-bearing, not that the feature works" (memory 2026-09-04), and the same shape as the braden `AddTaskDialog` Cancel path in §28's sweep. The correct D8 evidence for a dirty-guard change is the `beforeunload`/`defaultPrevented` table on the deployed host, not a harness probe; the issue's own method is that instrument. No message sent this cycle (the PI has five unanswered; this is recorded for the next reply or the six-cycle escalation). `product_acceptance=false`.
+
+
+## 30. Ledger row 3 — operator decision register (2026-08-08): bounded consumer check
+
+`docs/00-roadmap/20260808-operator-decision-register-v1.00W.md` (40,423 bytes, last written 2026-08-25) is a prose register that references 18 distinct decision ids (D-1, D-3–D-7, D-23, D-27, D-29, D-31, D-51, D-56, D-57, D-59, D-62, D-64, D-97, D-103) and defers the full run to `docs/20260825-operator-notes-register-d1-d103-v1.00W.md`. It records its own supersessions in-line (eleven markers: "Partly superseded 2026-08-09", "Precedent rule applied: newer binds", "Supersedes B-1", CORRECTION 25.C withdrawn findings), so "no superseding ruling" is checkable from the document itself for the items it carries.
+
+Consumers of the five highest ids, grep across the estate excluding worktrees, `node_modules`, `.git`, `.claude`, `dist`, the register itself excluded:
+
+| id | files | code consumers (first three) |
+|---|---:|---|
+| D-59 | 12 | NONE — a process rule ("a filed issue is never an addressed defect"); its consumers are docs and gates by design |
+| D-62 | 26 | `braden/vite.config.ts`, `braden/src/__tests__/card-unglue-contract.test.ts`, `throughput/src/__tests__/card-unglue-contract.test.ts` |
+| D-64 | 11 | `R80.4/charge-calculator-v9-2.tsx`, `R80.4/api/fwc-content-type.test.mjs`, `R80.4/api/fwc.js` |
+| D-97 | 15 | `business-suite-unified/src/lib/admin/loadTenantRoles.ts` + test, `RoleCapabilityDefaults.test.ts` |
+| D-103 | 13 | same `loadTenantRoles.ts` / tests |
+
+Disposition for row 3: the sampled five all have current consumers (four in code with contract tests, one in process docs) and superseding rulings are recorded in-line rather than silently. Thirteen of eighteen ids not sampled; the 2026-08-25 full register not walked. Row 3 moves from UNVERIFIABLE to PARTIAL on this evidence; the ledger file in the shared tree is not edited by this lane. `product_acceptance=false`.
+
+
+## 31. Cycle 5 (16:20Z) — nothing moved except a diagnosis on #2466; ledger row 42 sampled
+
+Inbox 16:06–16:20Z: zero messages in the namespace. The PI has now been silent on the inbox for 124 minutes with five accountability messages unanswered. Measured 16:20Z: crm7#2455 head `d2d2a3774` (fourth re-push since the 15:05Z SEND_BACK), build/e2e/lighthouse/coverage/Vercel pending, still no verdict on the pull request, not merged; crm7#2453 unchanged; #2448 uncited; all nineteen tracked issues, bsuite#3100 and R80.4#313 unassigned; 52 unresolved reviewer threads on the eighteen swept pull requests, unchanged. The only substantive movement is a lane comment on crm7#2466 (16:12Z) that eliminates two candidates by measurement — the nav-core hook clears on a false transition, nothing arms spontaneously over twelve seconds, `/dashboard` reads clear as a control — and states an untested hypothesis (React Hook Form's `formState` Proxy may not subscribe `isDirty` when read inside a hook argument). That is the right shape of work and it has no owner on the issue.
+
+Ledger row 42 (`docs/20260817-estate-completion-ledger-v1.00W.md`, 220,738 bytes, 131 table rows, 46 naming a repo#number): five sampled against live GitHub state — P0-3 DONE / bsuite#2004 CLOSED 2026-08-17 (CURRENT); P0-4 PARTIAL "only the migration apply remains" / crm7#1834 MERGED 2026-08-18 (CURRENT as to the pull request; the apply clause is a database fact not checkable here — UNVERIFIABLE on that limb); P0-8 DONE / bsuite#1955 CLOSED 2026-08-24 (CURRENT); M-1 PARTIAL / crm7#1857 MERGED 2026-08-19 (CURRENT as to the pull request); M-2 DONE / crm7#1800 MERGED 2026-08-18 (CURRENT). Row 42 moves from UNVERIFIABLE to PARTIAL: 5 of 46 referenced items sampled, none stale, one limb unverifiable. Shared-tree ledger not edited. No message sent. No-progress count 5 (no assignee gained, no ask answered). `product_acceptance=false`.
+
+
+## 32. Cycle 6 (16:32Z) — #2466 retracted by its filer on sound evidence; §29's "deployed disproof" is withdrawn; two scheduled controls failing; escalation threshold reached
+
+crm7#2466 was closed NOT_PLANNED at 16:20Z by the lane that filed it, with the mechanism stated and measured: the probe's `input[name]:visible` selector matched `displayName` at `integrations.tsx:1256`, which belongs to `payrollCredentialForm` — the one deliberately ungated page-level registration — not to the API panel; so "typed, Cancel, still armed" was correct behaviour throughout (closing one panel must not discard another form's draft). The lane confirmed the gate is in the served bundle (`integrations-DzgD-gvl.js`, `"integration-api",c&&es.formState.isDirty`) and drew the instrument lesson ("when a probe types into a form, assert which form it typed into"). Accountability accepts the retraction as evidenced. **Correction to §29 and the cycle-4 heartbeat:** the statement that a deployed test disproved #2448 is withdrawn; what remains is the narrower process observation that #2448's APPROVE was issued without deployed evidence, which is an observation about the gate, not a finding against the fix. crm7 PR #2467 (head `997d06235`, comment-only on `integrations.tsx`) records why the fourth registration is ungated by reason rather than by omission; checks pending.
+
+Also measured 16:32Z: crm7#2455 head `d2d2a3774`, build and coverage pending, no verdict on the pull request; #2453 unchanged; #2448 uncited; nineteen tracked issues (now eighteen open), bsuite#3100 and R80.4#313 unassigned; 52 unresolved reviewer threads unchanged; zero inbox messages in the namespace since 15:56Z (PI silent 136 minutes; five accountability messages unanswered). bsuite#3015 (cron watchdog, self-updating) reported the estate **unhealthy** at 16:21Z: `document-retention-sweep-daily` and `sync-award-rates-weekly` last run failed, plus one http-layer failure — no owner visible on the issue; award-rate sync is money-adjacent.
+
+Ledger row 43 (`docs/20260817-estate-remaining-work-register-v3.00W.md`, 150 rows, 11 with repo#N): five sampled — P0-3 bsuite#2004 CLOSED (CURRENT); P0-7 crm7#1740 MERGED (CURRENT); P0-9 shown open in the register, bsuite#1955 CLOSED 2026-08-24 (STALE as open); P0-10 BSU#726 MERGED "not deployed" (deploy limb UNVERIFIABLE here); W-9 crm7#1800 MERGED (CURRENT). Row 43 → PARTIAL. Shared tree not edited.
+
+No-progress count reaches 6 by the strict definition (no assignee gained, no ask answered in six cycles); the makers are demonstrably working (#2455 re-pushes, #2466 retraction, #2467). One escalation goes in the operator report, not the inbox. `product_acceptance=false`.
+
+
+## 33. Cycle 7 (16:45Z) — #2455 fully green with no verdict on the pull request; watchdog still unhealthy; ledger row 46 sampled
+
+Inbox 16:32–16:45Z: zero messages in the namespace (newest remains this lane's 15:56Z SEND_BACK); PI silent 149 minutes. Measured 16:45Z: crm7#2455 head `d2d2a3774` now passes every check and carries **no verdict on the pull request** (the 15:05Z SEND_BACK at `c909cd442` with G1–G4 exists only on local disk; four re-pushes since) — this is the merge-without-verdict risk the lane holds; crm7#2467 (`997d06235`, comment-only) build and coverage pending; #2453 unchanged; #2448 uncited; sixteen open tracked crm7 issues, bsuite#3100 and R80.4#313 unassigned; 52 unresolved reviewer threads unchanged; bsuite#3015 re-reported **unhealthy** at 16:43Z (same two failed jobs), no owner. No assignee gained, no ask answered: the counter continues past the 16:34Z escalation and is not repeated.
+
+Ledger row 46 (`docs/20260817-recovered-verdict-backlog-v1.00W.md`, 17,708 bytes, 45 rows, 10 issue/PR refs, 8 file refs): five sampled — crm7#687 CLOSED 2026-05-15 (CURRENT); bsuite#1955 CLOSED 2026-08-24 (CURRENT); bsuite#635 OPEN, named as the superseding design-language rollout (CURRENT); crm7#1665 MERGED 2026-08-12 (CURRENT); crm7#1476 written as "(open)", live CLOSED 2026-08-31 with a RULING 5.3/5.4 title (STALE — the ruling landed after the backlog was written). Row 46 → PARTIAL. Shared tree not edited. No message sent. `product_acceptance=false`.
+
+
+## 34. Cycle 8 (16:58Z) — three merges with verdicts only on local disk; #2455 merged as a disabled surface with D9 moved to #2464; row 58 finds a contested closure
+
+Inbox 16:45–16:58Z: zero messages (PI silent 162 minutes). Measured 16:58Z: crm7#2467 MERGED 16:50:08Z (`a6d009190`, comment-only); crm7#2455 MERGED 16:52:50Z (`b5f6a2b37`, head `d2d2a3774`); crm7#2453 MERGED 16:54:18Z (`20347d0e8`, head `1b222deda`). Local evidence for #2455: SEND_BACK 15:05Z (G1–G4), SEND_BACK 16:10Z (two one-line strings, D7·D9), then `gate-report.json` APPROVE at 16:51:53Z with zero gaps — fifty-seven seconds before the merge. Local evidence for #2453: APPROVE 14:28:58Z at the merged head. None of the three pull requests carries a verdict comment or an evidence path; #2448 remains uncited. The lane's 16:52Z comment on crm7#2464 records that #2455 merged as a deliberately disabled surface (save path deleted, controls disabled, load path knowingly wrong, registration withdrawn) and transfers the live-surface obligation (D9, reclassified not-applicable on the pull request) to #2464 — which has no owner and is now the only path to a saved case note; `case_notes` has never held a row. Sent to the PI as a record SEND_BACK under amendment B (one message this cycle), with the #2447 deployed acceptance (both hosts, pointer and keyboard, save and reload) noted as still owed and unrunnable without a fixture page.
+
+Ledger row 58 (`docs/20260824-estate-execution-backlog-v1.00W.md`, 46,662 bytes, 156 rows, 35 refs): five sampled, all closed COMPLETED in a batch at 2026-08-24 03:19Z with per-issue code evidence in the closing comment ("Verified against current code, not against a claim") — crm7#1387, #1405, #1569, #1572 CURRENT on that basis; crm7#1688 (client→host toggle half-linked; operator note.028) is CLOSED yet carries a 2026-08-26 comment recommending reopening as the third report of the identical defect (#1267 → #1688 → re-observed). That row is STALE as closed, and the issue is contested. Row 58 → PARTIAL. Watchdog still unhealthy (16:43Z check-in). 52 reviewer threads unchanged; no assignee gained; counter continues (8). Shared tree not edited. `product_acceptance=false`.
+
+
+## 35. Cycle 9 (17:14Z) — R80.4 PR #314 answers the money ask; sibling sweep bounds the class to one site; ledger row 56 sampled
+
+Inbox 16:58–17:14Z: nothing new (the newest message is this lane's 17:00Z record SEND_BACK). Measured 17:14Z: no citations posted on crm7#2448/#2453/#2455; #1688 still CLOSED; #2464 unowned; watchdog last check-in 16:43Z (unhealthy); 52 reviewer threads unchanged. New: **R80.4 PR #314** (head `3019139c1`, base `development`, checks pending, "Closes #313") — the penalty-multiplier fix. Its shape is the one this lane asked for: a live before/after on a preview build (typed `0` displayed `1` and priced as a 1× row; after the fix `0` stays `0`, $0.00/hr pay with a red `role="alert"` on the row), the cause at `charge-calculator-v9-2.tsx:10150` (`parseFloat(raw) || 1`), a helper `numberFromInput` with tests that plant `0` and `0.0`, a file-level class gate over every `parseFloat|parseInt|Number(...) || <literal>` failing on any non-zero substitute, a wiring assertion that the stepper parses through the helper, and an engine round-trip asserting `effectiveMultiplier` 0. The design answer (sub-1 multipliers are unlawful; visible refusal, never substitution) is stated.
+
+This lane's sibling sweep across the seven trees (source only, positive control = the R80.4 line itself): three hits — the defect; crm7 `reports/schedules.tsx:692` (day-of-month clamped to 1, no valid zero — not the class); conduit `interviews/_view.tsx:882` (`duration_minutes || 60`, blank-to-default, not money — not the class, though a typed 0 becomes 60 silently). The money class is one site, as the pull request claims. Sent to the PI (one message this cycle) with three gate conditions: verdict on the PR with the class gate shown red on the reverted line; the deployed row on the r8 host serving `main` with the served commit from `version.json` (the PR's evidence is a preview build); promotion through `development` then `main` by merge. The no-progress counter resets to 0: an ask was answered by a maker.
+
+Ledger row 56 (`docs/20260822-session-findings-register-v1.00W.md`, 28,086 bytes, 95 rows, 3 issue refs, 1 file ref — all sampled): W-4 written "PR OPEN R80.4#169", live MERGED 2026-08-22 (STALE as open); X-1 R80.4#170 MERGED 2026-08-22 (CURRENT, closed); `R80.4/scripts/dod.mjs` present on `origin/main` (CURRENT). Row 56 → PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 36. Cycle 10 (17:28Z) — #2447 closed by automation at source-fix time; #314 green with no verdict; ledger row 79 is history by its own banner
+
+Inbox 17:14–17:28Z: nothing new (the newest is this lane's 17:15Z response, which needed one retry after an endpoint error). Measured 17:28Z: R80.4 PR #314 all checks green, no verdict on the pull request, not merged; R80.4#313 open; `r8.crm7.app` serves `708e0f6` (built 2026-09-04), `d.r8.crm7.app` `4777ad3` — neither carries the fix, as expected before merge. crm7#2447 CLOSED 17:20:52Z, reason COMPLETED, by `bsuite/.github/workflows/development-merge-issue-closer.yml` on the merge of #2453 into `development` — the closer's own comment says it honours the "closes #2447" keyword that GitHub would not act on for a non-default branch. The PI's acceptance on #2447 was deployed evidence on both hosts with pointer, keyboard, save and reload, which cannot run without a fixture custom page; the register now says done before anyone has seen it work. Sent to the PI as a class finding (one message this cycle): the closer closes at source-fix time for every "closes #" body; three shapes offered, the choice left to the PI. Also: no citations on #2448/#2453/#2455; watchdog unhealthy again at 17:18Z; #2464 and #1688 unchanged; 52 reviewer threads unchanged.
+
+Ledger row 79 (`docs/20260826-morning-ledger-v1.00A.md`, 6,878 bytes, 12 table rows, no repo#number or file references): the document declares itself a point-in-time record for a 09:30 demo, "not maintained… read it as history", and states that everything it names was addressed the same day. The two pull requests it turns on check out: crm7#2008 (the held promotion) MERGED 2026-08-26T00:51Z, BSU#871 (card frames) MERGED 2026-08-25T23:45Z. Row 79 → VALIDATED as a self-superseded historical record; its prose claims about the 26 August production state are not re-verifiable now and are not asserted. Shared tree not edited. No assignee gained, no ask answered this cycle: idle count 1 since the 17:16Z reset. `product_acceptance=false`.
+
+
+## 37. Cycle 11 (17:41Z) — no movement; ledger row 42 second sample consistent
+
+Inbox 17:28–17:41Z: nothing (newest remains this lane's 17:27Z finding); PI silent 205 minutes. Measured 17:41Z: R80.4 PR #314 green, no verdict, not merged; R80.4#313 open; r8 hosts unchanged (`708e0f6` / `4777ad3`); no citation on crm7#2448/#2453/#2455; #2447 still closed and unannotated; #2464, #1688, #2440, #2441 unchanged; watchdog last check-in 17:18Z unhealthy; 52 reviewer threads unchanged; nothing created or updated in crm7, R80.4, BSU or bsuite since 17:28Z. No assignee gained, no ask answered: idle count 2 since the 17:16Z reset. No message sent.
+
+Ledger row 42, second disjoint sample of five (`docs/20260817-estate-completion-ledger-v1.00W.md`): M-2 crm7#1848 MERGED 2026-08-18 (the promotion) and crm7#1849 MERGED 2026-08-18 — CURRENT; M-3 R80.4#85 MERGED 2026-08-17 — CURRENT (row PARTIAL, consistent); M-5 R80.4#95 MERGED 2026-08-18 — CURRENT as to the pull request, the row's "610 engine functions, 80 reached" measurement not re-run (UNVERIFIABLE limb); M-9 R80.4#13 CLOSED 2026-08-31 — CURRENT (row DONE 2026-08-19; issue closed later). Ten of forty-six references now sampled, none stale; row 42 remains PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 38. Cycle 12 (17:52Z) — #314 merged to development and serving on the dev host, verdict again local-only; ledger denominator reconciles
+
+Inbox 17:41–17:52Z: nothing. Measured 17:52Z: R80.4 PR #314 MERGED 17:51:12Z into `development` (merge `bb8862f01`; final head `99f0ae147`, a 17:42Z comment-only commit to `src/lib/number-input.ts` correcting the legal reasoning under the floor, 47+/12−, on top of the reviewed `3019139c1`); no verdict on the pull request — the fourth local-only verdict tonight, added to the record-gap list. `d.r8.crm7.app` serves `bb8862f` (built 17:51:25Z); `r8.crm7.app` still `708e0f6` — not promoted. R80.4#313 still OPEN: the development-merge closer fires on `pull_request` only for the bsuite repository and sweeps the other six hourly at :17, so #313 is expected to auto-close at about 18:17Z, before any deployed evidence on production — the class named in §36. A read-only Playwright verifier was dispatched to measure the fix on the dev host (served commit from `version.json`, type 0 into a penalty multiplier, read the display, pay, charge and any `role="alert"`, restore the field, positive control with 2). No citations on crm7#2448/#2453/#2455; issues, owners and the 52 reviewer threads unchanged; watchdog unhealthy again at 17:42Z. Idle count 3 since the reset (no assignee gained, no ask answered). No message sent.
+
+Ledger denominator (idle work): the dated-doc ledger's own command from the bsuite root returns **128** paths, matching its stated denominator. The ledger carries 148 numbered rows: 128 primary rows with verdicts VALIDATED-CURRENT 5, VALIDATED-DRIFTED 7, DUPLICATE-CLUSTER 3, SUPERSEDED 2, UNVERIFIABLE 111 (sum 128), plus 20 supplemental rows whose verdict cells are prose. The primary rows sum exactly to the denominator; 111 of 128 (87%) remain UNVERIFIABLE, of which this lane has sampled seven. Shared tree not edited. `product_acceptance=false`.
+
+
+## 39. Cycle 13 (18:19Z) — the money fix observed on the deployed dev host; production still owed; third row-42 sample consistent
+
+The read-only verifier returned at 18:19Z (the 02:05 AWST wake did not run as a cycle; this cycle ran on the verifier's completion). Both local browser profiles were locked by other sessions, so it used an isolated BrowserBase session and read DOM state over that session's own CDP socket rather than forcing a lock. Served commit on `d.r8.crm7.app`: `bb8862f`, built 2026-09-05T17:51:25Z — the #314 merge. On the MA000036 penalty table, row "Saturday — first 2 hours" switched to Overtime: baseline 1.5× / $33.36 pay / $52.89 charge, no alert; typed `0` → the field **displays 0** (not 1), pay **$0.00**, charge $2.10 (the flat on-cost component), and a `role="alert"` reads "0× pays nothing for the hours worked. A rate for worked hours cannot sit below the ordinary rate (1.00×) — delete the row instead if the penalty does not apply."; restored to 1.5 → baseline values return, no alert; positive control `2` → displays 2, pay $44.48, no alert. Body background `oklch(0.166 0.026 269.4)`, no pure white or black surface in the table. Console log not checked (no console tool on the fallback path). Screenshots under scratchpad `r8-314-probe/`. **Verdict: fix observed on deployed dev** — gate condition 2 of §35 is met for `development`; the same row on `r8.crm7.app` (still `708e0f6`) remains owed after promotion, and gate condition 1 (verdict on the pull request) is still unmet.
+
+Side finding, unverified: setting the award `<select>` to MA000020 by a programmatic value-set plus a dispatched `change` event emptied `#root` on the deployed build. The instrument was synthetic (not a user click) and the probe did not reproduce it by interaction, so it is recorded as UNTESTED, not filed; a user-style reproduction (click the select, choose MA000020, observe) is the next executable test before anyone calls it a defect.
+
+Also measured 18:19Z: R80.4#313 still OPEN (the hourly closer had not acted by 18:19Z); no promotion pull request for R80.4; no citations on crm7#2448/#2453/#2455 or #314; no new pull requests or issues since 17:52Z; watchdog last check-in 17:42Z unhealthy; 52 reviewer threads unchanged; inbox empty (dump byte-identical to 17:41Z and 17:52Z, parsed). Idle count 4. No message sent.
+
+Ledger row 42, third disjoint sample: M-10 R80.4#46 OPEN (row PARTIAL, "ABN contractor is the last unselectable engagement" — CURRENT); A-1 bsuite#2053 MERGED 2026-08-17 (CURRENT); A-3 cites crm7#866 CLOSED 2026-07-23, an issue about fair-work-inspector access — the closure is real but its bearing on ADR-0006's organisation half is not evident from the title (citation UNVERIFIABLE as support); AD-1 bsuite#1588 CLOSED 2026-07-16 (CURRENT); AD-4 crm7#1801 MERGED 2026-08-17 (CURRENT). Fifteen of forty-six references sampled, none stale; row 42 stays PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 40. Cycle 14 (18:33Z) — #313 closed by the hourly closer before production evidence; fourth row-42 sample consistent
+
+Inbox 18:19–18:33Z: nothing (dump byte-identical, parsed). Measured 18:33Z: R80.4#313 CLOSED 18:27:05Z, reason COMPLETED, by `bsuite-development-merge-closer` on #314's merge into `development` — while `r8.crm7.app` still serves `708e0f6` and no promotion pull request exists; the second instance tonight of the closer class named in §36 (crm7#2447 at 17:20Z). The fix is observed on `development` (§39), so the closure is less wrong than #2447's, but the register still says done for a money defect that production has not received. #314 remains without a verdict on the pull request. No citations on crm7#2448/#2453/#2455; issues, owners and the 52 reviewer threads unchanged; watchdog unhealthy again at 18:23Z (same two jobs). Idle count 5 since the 17:16Z reset. No message sent: the closure joins the closer-class list and the record-gap list for the next reply.
+
+Ledger row 42, fourth disjoint sample: AD-5 crm7#1284 CLOSED 2026-08-24 (batch, evidenced), throughput#310 MERGED 2026-08-17, crm7#1812 MERGED 2026-08-19 — CURRENT; AD-6 bsuite#2103 MERGED 2026-08-18, crm7#1833 MERGED 2026-08-18 — CURRENT. Twenty of forty-six references sampled, none stale; row 42 stays PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 41. Cycle 15 (18:55Z) — six idle cycles; the second escalation goes to the operator; fifth row-42 sample consistent
+
+Inbox 18:33–18:55Z: nothing (dump byte-identical, parsed); the PI has been silent on the inbox since 14:16Z, 279 minutes, with eight accountability messages unanswered. Measured 18:55Z: R80.4#314 no verdict on the pull request, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`, no promotion pull request); crm7#2448/#2453/#2455 no citation; #2447 closed and unannotated; #2464 unowned; #1688 closed and contested; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 18:44Z (same two jobs, failing since at least 16:21Z); 52 reviewer threads unchanged; nothing created or updated in crm7, BSU or bsuite since 18:33Z. No assignee gained and no ask answered for six cycles since the 17:16Z reset: the second escalation is written in the operator report (not the inbox), naming the unowned security read, #2440, #2441, #2464, #1688, the watchdog jobs, the four local-only verdicts, the two closer-class closures and the eight unanswered messages, and stating that the makers are active while the accountability channel is not answered. No message sent.
+
+Ledger row 42, fifth disjoint sample (V-9, the signed-in theme sweep): braden#430, throughput#328, business-suite-unified#782, conduit#509 all MERGED 2026-08-19; bsuite#2167 MERGED 2026-08-20 — CURRENT. Twenty-five distinct references sampled across five batches (the "46" was a count with duplicates; ten distinct references remain), none stale; row 42 stays PARTIAL until the ledger owner reconciles it. Shared tree not edited. `product_acceptance=false`.
+
+
+## 42. Cycle 16 (19:18Z) — no movement; ledger row 42's reference layer fully sampled, none stale; the closer's own origin
+
+Inbox 18:55–19:18Z: nothing (dump byte-identical, parsed); PI silent 302 minutes. Measured 19:18Z: R80.4#314 no verdict on the pull request, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer and unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 19:17Z (same two jobs); 52 reviewer threads unchanged; nothing created or updated since 18:55Z. Idle count 7; escalation #2 (§41) not repeated. No message sent.
+
+Ledger row 42, final batch — the ten remaining distinct references: conduit#508 CLOSED 2026-08-24; bsuite#2065 MERGED 2026-08-18; crm7#1595 CLOSED 2026-08-19; crm7#1622 MERGED 2026-08-11; crm7#1299 CLOSED 2026-08-19; crm7#1307 MERGED 2026-07-30; crm7#1888 MERGED 2026-08-20; bsuite#2140 and #2141 MERGED 2026-08-18; crm7#1789 MERGED 2026-08-18 — all CURRENT. All thirty-five distinct issue and pull-request references in the estate completion ledger have now been checked against live GitHub state across six batches: none stale. The row's prose claims (measured counts, deployment state on given dates) remain unverified from here, so row 42 stays PARTIAL rather than VALIDATED; the reference layer is clean.
+
+One of those references matters to a live finding. Row V-10, "'Closes #N' on a development merge closes nothing — 14 issues fixed-and-open", was closed by bsuite#2065 (2026-08-18), which built the very closer that this lane reported in §36 for closing crm7#2447 and R80.4#313 before deployed evidence. The closer was the cure for fixed-and-open; it now produces closed-before-proven. Both are true and the design answer is the state between them — closed at source with the deployed obligation labelled and owned — which is option (a) in the 17:27Z finding. Recorded here so the PI's ruling can weigh the original defect the closer was built against. Shared tree not edited. `product_acceptance=false`.
+
+
+## 43a. Correction to §43 — the whole-word grep ran in the wrong directory; corrected counts
+
+The table in §43 shows zero files for every decision because the grep ran after a `cd` into a tool-results directory earlier in the same shell call, so it searched nothing. The prose above that table ("all ten have current consumers") was written before the numbers were read and is not what the table showed; both are recorded here rather than rewritten. The corrected run from the bsuite root, whole-word match, same exclusions, with a positive control (`D-62` finds its known consumer `braden/vite.config.ts`):
+
+| id | files | code | code consumers | verdict |
+|---|---:|---:|---|---|
+| D-1 | 18 | 5 | `packages/charge-calc/src/__tests__/calculate.test.ts`, `crm7/src/components/communications/EntityCorrespondence.tsx` | CONSUMED-IN-CODE |
+| D-3 | 8 | 1 | `packages/charge-calc/src/awards/freshness.ts` | CONSUMED-IN-CODE |
+| D-4 | 13 | 6 | `crm7/src/lib/data/dashboardQueries.ts`, `crm7/src/lib/data/__tests__/queries.test.ts` | CONSUMED-IN-CODE |
+| D-5 | 9 | 4 | `crm7/src/lib/placementIdentity.ts`, `crm7/src/lib/placementIdentity.test.ts` | CONSUMED-IN-CODE |
+| D-6 | 14 | 6 | `packages/schema-builder/src/utils/gridLayout.ts`, `packages/schema-builder/src/__tests__/gridLayout.test.ts` | CONSUMED-IN-CODE |
+
+No supersession marker in the register for any of the five. Ten of eighteen ids checked with consumers; row 3 stays PARTIAL. Instrument lesson, recorded against this lane: a zero without a positive control is a claim about the instrument, and a verdict written before the number is read is not a verdict.
+
+
+## 44. Cycle 18 (20:03Z) — no movement; ledger row 3 third batch (D-7, D-23, D-27, D-29, D-31)
+
+Inbox 19:41–20:03Z: nothing (dump byte-identical, parsed); PI silent 347 minutes. Measured 20:03Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 19:43Z (same two jobs); 52 reviewer threads unchanged; nothing created or updated since 19:41Z. Idle count 9; escalation #2 not repeated. No message sent.
+
+Ledger row 3, third batch — whole-word grep from the bsuite root, positive control `D-62 → braden/vite.config.ts` passed, register excluded, same exclusions as §43a:
+
+| id | files | code | code consumers | register note | verdict |
+|---|---:|---:|---|---|---|
+| D-7 | 7 | 1 | `crm7/src/services/index.ts` | listed among six regressions the operator says previously worked | CONSUMED-IN-CODE |
+| D-23 | 2 | 1 | `crm7/supabase/migrations/archive/20260807140000_hotfix_profiles_privilege_escalation.sql` | "under your ruling D-23 I pulled the privilege-escalation…" | CONSUMED-IN-CODE (archived migration) |
+| D-27 | 2 | 0 | NONE | same regression list as D-7 | DOCS-ONLY |
+| D-29 | 7 | 3 | archived migrations `20260808140000_rename_collaborative_documents_legacy.sql`, `20260807140000_hotfix_profiles_privilege_escalation.sql` | "your D-29 ruling is what surfaced all three" | CONSUMED-IN-CODE (archived migrations) |
+| D-31 | 9 | 2 | archived migration `20260809170000_repair_timesheets_approved_without_evidence.sql`, `scripts/verify-class-a-preservation.mjs` | "your D-31 is **not met**, and I am not going to write that it is" | CONSUMED-IN-CODE; ruling recorded as unmet in the register |
+
+No supersession marker for any of the five. Fifteen of eighteen ids checked: thirteen consumed in code (four only through archived migrations), one docs-only (D-27), one consumed but recorded by the register itself as not met (D-31). Row 3 stays PARTIAL (three ids remain: D-51, D-56, D-57). Shared tree not edited. `product_acceptance=false`.
+
+
+## 45. Cycle 19 (20:25Z) — no movement; ledger row 3 completed over all eighteen decision ids
+
+Inbox 20:03–20:25Z: nothing (dump byte-identical, parsed); PI silent 369 minutes. Measured 20:25Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 20:21Z (same two jobs); 52 reviewer threads unchanged; nothing created or updated since 20:03Z. Idle count 10; escalation #2 not repeated. No message sent.
+
+Ledger row 3, final batch — absolute paths, whole-word grep, positive control `D-62 → braden/vite.config.ts` passed first: D-51 9 files / 6 code (`business-suite-unified/src/lib/admin/loadTenantRoles.ts` and its test) CONSUMED-IN-CODE; D-56 1 file / 0 code DOCS-ONLY; D-57 1 file / 0 code DOCS-ONLY — both listed by the register among "six items … regressions he says previously worked"; a regression fix need not name its decision id, so docs-only here means the naming trail stops at the register, not that the regression is unfixed. No supersession marker for any of the three.
+
+Row 3 disposition over all eighteen ids in `docs/00-roadmap/20260808-operator-decision-register-v1.00W.md`: CONSUMED-IN-CODE 14 (D-1, D-3, D-4, D-5, D-6, D-7, D-23, D-29, D-31, D-51, D-62, D-64, D-97, D-103 — four of them only through archived migrations), DOCS-ONLY 4 (D-27, D-56, D-57, D-59), SUPERSEDED 0 by the register's own markers, NONE 0; the register records D-31 as not met in its own words. The row's stated verification target ("each decision has a current consumer and no superseding ruling") is met at the consumer layer for all eighteen and at the supersession layer as far as the register itself records; the later `docs/20260825-operator-notes-register-d1-d103-v1.00W.md` was not walked, so a superseding ruling recorded only there would not be seen. Recommendation to the ledger owner: promote row 3 from UNVERIFIABLE to VALIDATED-CURRENT with that one caveat. This lane does not edit the ledger. Shared tree not edited. `product_acceptance=false`.
+
+
+## 46. Cycle 20 (20:48Z) — no movement; ledger row 43 fully sampled; the memory server's token expired mid-cycle
+
+Measured 20:48Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 20:42Z (same two jobs, failing since at least 16:21Z); 52 reviewer threads unchanged; nothing created or updated since 20:25Z. Idle count 11; the third escalation falls due at the next cycle by the six-cycle rule. No message sent. The qig-memory MCP token expired during this cycle: the inbox read failed ("requires re-authorization") and the heartbeat write is attempted through the alternate connector; if that also fails, this section and the tracker are the record until the operator re-authorises the server. The last successful inbox read (20:25Z) showed nothing new.
+
+Ledger row 43 (`docs/20260817-estate-remaining-work-register-v3.00W.md`), the six remaining references: W-12 R80.4#45 CLOSED 2026-08-24 (with #46 still open, checked in §39 — CURRENT as a pair); K-2 business-suite-unified#772 MERGED 2026-08-18 (CURRENT); the document-generation row cites crm7#1476, CLOSED 2026-08-31 as a ruling (CURRENT); the crm7 `react-core` chunk row cites crm7#1742 CLOSED 2026-08-24 (CURRENT); the D-1 row "Closed 2026-09-03" cites conduit#676 and bsuite#2957, both MERGED 2026-09-03 (CURRENT). All eleven references in the register are now checked: nine CURRENT, one STALE as open (P0-9, bsuite#1955 closed 2026-08-24, §32), one limb UNVERIFIABLE (P0-10 deploy state). Recommendation to the ledger owner: row 43 to VALIDATED-DRIFTED, naming the P0-9 drift. Shared tree not edited. `product_acceptance=false`.
+
+
+## 47. Cycle 21 (21:11Z) — twelve idle cycles; the third escalation goes to the operator; ledger row 46 fully sampled
+
+Inbox via the claude.ai connector (primary token still expired): newest message remains this lane's 17:27Z finding; nothing from any lane since 15:23Z. Measured 21:11Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog last check-in 20:42Z unhealthy, issue still open; 52 reviewer threads unchanged; nothing created or updated since 20:48Z. No assignee gained and no ask answered for twelve cycles since the 17:16Z reset: the third escalation is written in the operator report, not the inbox. No message sent. Makers were last active at 17:51Z (#314 merged); everything since has been automation.
+
+Ledger row 46 (`docs/20260817-recovered-verdict-backlog-v1.00W.md`), the remaining references and all eight file references: crm7#1595 written "(open)", live CLOSED 2026-08-19 (STALE); crm7#1705 OPEN (CURRENT); crm7#1610 written "(open)", live CLOSED 2026-08-24 (STALE); crm7#480 written "(open)", live CLOSED 2026-08-31 (STALE). Files on `origin/main`: `crm7/scripts/prerender.mjs`, `braden/scripts/prerender.mjs`, `conduit/src/lib/ai/tools/candidate-tools.ts`, `crm7/src/lib/ai/plugins/plugin-registry.ts`, `crm7/src/components/ai/AIAssistant.tsx`, `crm7/supabase/functions/crm7-generate-document/index.ts`, `crm7/src/__tests__/oauth-contract.test.ts` PRESENT; `crm7/supabase/migrations/20260228000001_gto_foundation_tables.sql` ABSENT (row 11 cites it for "live tables apprentices, placements…" — the path has moved or been archived; the live-table claim is not disproven, the citation is). With §33's batch, all nine issue references and eight file references are checked: four issue states stale as open (#1476, #1595, #1610, #480 — all closed after the backlog was written), one cited path absent, the rest current. Recommendation to the ledger owner: row 46 to VALIDATED-DRIFTED naming those five drifts. Shared tree not edited. `product_acceptance=false`.
+
+
+## 48. Cycle 22 (21:34Z) — no movement; ledger row 58 second sample
+
+Inbox via the claude.ai connector: newest message remains this lane's 17:27Z finding; nothing from any lane since 15:23Z. Measured 21:34Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 21:18Z (same two jobs); 52 reviewer threads unchanged; nothing created or updated since 21:11Z. Idle count 13; escalation #3 (§47) not repeated. No message sent.
+
+Ledger row 58 (`docs/20260824-estate-execution-backlog-v1.00W.md`), second sample of five: crm7#1742 (112 modulepreloads against an acceptance of under 50) CLOSED 2026-08-24; bsuite#1688 (migrate workflow reported success while applying zero steps; "2 of 3 follow-ups not done") CLOSED 2026-08-24; bsuite#2238 (`use-on-click-outside` published, imported by nobody) CLOSED 2026-08-24; business-suite-unified#622 ("9 non-responsive grids remain, not the 4 I stated") CLOSED 2026-08-24; business-suite-unified#709 ("a second Jodie surface still uses a generic icon") CLOSED 2026-08-24. All five closed in the same 03:20–03:21Z batch as §34's sample, each with a per-issue evidence comment; the states are CURRENT. The residuals the backlog itself records beside four of them (follow-ups not done, nine grids, a second icon surface, the modulepreload count) are not re-measured here and remain UNVERIFIABLE limbs. Ten of thirty-five distinct references sampled; eighteen remain after de-duplication. Row 58 stays PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 49. Cycle 23 (21:56Z) — no movement; ledger row 58 third sample, one register/issue mismatch
+
+Inbox via the claude.ai connector: newest remains this lane's 17:27Z finding; nothing from any lane since 15:23Z. Measured 21:56Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 21:42Z (same two jobs); 52 reviewer threads unchanged; nothing created or updated since 21:34Z. Idle count 14; escalation #3 (§47) not repeated. No message sent.
+
+Ledger row 58 (`docs/20260824-estate-execution-backlog-v1.00W.md`), third sample of five: conduit#508 CLOSED 2026-08-24 (backlog residual "no path guarantees data" not re-measured — CURRENT as state); R80.4#45 CLOSED 2026-08-24 (residual "labour-hire worker has no award-derived wage source" not re-measured — CURRENT as state); crm7#1570 — the backlog marked it CLOSE-DONE while noting "the paste box is still on screen"; live CLOSED 2026-08-31 as RULED (CURRENT, the later ruling governs); bsuite#1958 — the backlog marked it CLOSE-DONE ("token fixed, token …"), live **OPEN** (STALE: the register says done and the issue is open — the interactive-border WCAG item); business-suite-unified#723 CLOSED 2026-08-31 (backlog note "merged ≠ deployed", cross-referenced to P0-10 whose deploy limb is unverifiable here — CURRENT as state). Fifteen of thirty-five distinct references sampled, thirteen remain; one state mismatch so far (bsuite#1958) plus the contested #1688 from §34. Row 58 stays PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 50. Cycle 24 (22:18Z) — no movement; ledger row 58 fourth sample, all consistent
+
+Inbox via the claude.ai connector: newest remains this lane's 17:27Z finding; nothing from any lane since 15:23Z. Measured 22:18Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog last check-in 21:42Z unhealthy, issue open; 52 reviewer threads unchanged; nothing created or updated since 21:56Z. Idle count 15; escalation #3 (§47) not repeated. No message sent.
+
+Ledger row 58, fourth sample of five: crm7#1705 OPEN (row 1.4, IMAP/SMTP passwords in plaintext columns while the read path expects the vault — CURRENT as open, and still unowned four weeks on); throughput#291 OPEN (row 3.3, edit page navigates to settings — CURRENT as open); crm7#1476 CLOSED 2026-08-31 as a ruling (row 3.10 — CURRENT); R80.4#191 CLOSED 2026-08-31 (row 3.14, Fair Work "offline" and the repository secret — CURRENT); throughput#332 CLOSED 2026-08-31 (row 4.3, nine surfaces erroring on an unapplied migration — CURRENT). Twenty of thirty-five distinct references sampled, eight remain; mismatches so far: bsuite#1958 (§49) and the contested #1688 (§34). Row 58 stays PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 51. Cycle 25 (22:40Z) — no movement; ledger row 58 fifth sample, all consistent
+
+Inbox via the claude.ai connector: newest remains this lane's 17:27Z finding; nothing from any lane since 15:23Z. Measured 22:40Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 22:19Z (same two jobs); 52 reviewer threads unchanged; nothing created or updated since 22:18Z. Idle count 16; escalation #3 (§47) not repeated. No message sent.
+
+Ledger row 58, fifth sample of five: crm7#1613 OPEN (row 4.6, the school-based apprentice stage ignores the competency limb of MA000020 cl.19.7(b), an underpayment-direction path the backlog marks reachable — CURRENT as open, and a money item with no owner); business-suite-unified#727 OPEN (B-9, super-admin tenant-tree cascade — CURRENT); crm7#1477 OPEN (a data surface that opens showing data, not a form — CURRENT); crm7#466 OPEN (RAMS funding matrix, ratified ADR-0005 — CURRENT); crm7#1267 CLOSED 2026-08-02 (row 6 says both #1267 and #1268 closed — CURRENT; #1267 is the first report in the chain that ends at the contested #1688). Twenty-five of thirty-five distinct references sampled, three remain; mismatches so far bsuite#1958 (§49) and the contested #1688 (§34). Row 58 stays PARTIAL. Shared tree not edited. `product_acceptance=false`.
+
+
+## 52. Cycle 26 (23:03Z) — no movement; ledger row 58 fully sampled
+
+Inbox via the claude.ai connector: newest remains this lane's 17:27Z finding; nothing from any lane since 15:23Z. Measured 23:03Z: R80.4#314 no verdict, not promoted (`r8.crm7.app` `708e0f6`, `d.r8` `bb8862f`); no citations on crm7#2448/#2453/#2455; #2447 and R80.4#313 closed by the closer, unannotated; #2464, #1688, #2440, #2441 unchanged; fifteen open tracked crm7 issues and bsuite#3100 unassigned; watchdog unhealthy again at 22:42Z (same two jobs); 52 reviewer threads unchanged; nothing created or updated since 22:40Z. Idle count 17; escalation #3 (§47) not repeated; the fourth falls due at the next cycle by the six-cycle rule. No message sent.
+
+Ledger row 58 (`docs/20260824-estate-execution-backlog-v1.00W.md`), the last three references: crm7#1268 CLOSED 2026-07-28 (row 6, "both closed" — CURRENT); crm7#1687 OPEN, "[POSSIBLE REGRESSION] /pipeline/kanban still isolated" (row 6 — CURRENT as open; the sibling report to the contested #1688); crm7#1263 CLOSED 2026-08-31 (row 7 — CURRENT). All thirty-five distinct references now checked across six batches: thirty-three CURRENT as states (the 24 August batch closures each carry a per-issue evidence comment), one STALE (bsuite#1958: the register says CLOSE-DONE, the issue is open), one CONTESTED (crm7#1688: closed, with a later comment recommending reopening as the third report of the identical defect). The residual notes the backlog itself records beside several closed items are not re-measured here. Recommendation to the ledger owner: row 58 to VALIDATED-DRIFTED naming those two. Shared tree not edited. `product_acceptance=false`.
+
+Original audit rows after this lane's sampling: 3 recommend VALIDATED-CURRENT (18/18 decision ids); 42 PARTIAL (35/35 references current, prose claims unverified); 43 recommend VALIDATED-DRIFTED (P0-9); 46 recommend VALIDATED-DRIFTED (four stale states, one absent path); 56 PARTIAL (one stale); 58 recommend VALIDATED-DRIFTED (bsuite#1958, crm7#1688); 79 VALIDATED-as-history. None edited in the shared tree; iteration 25 remains FAIL until the ledger owner reconciles.
+
+
+## 53. Operator concern 07:14 AWST — crm7 production Real Experience Score 85, driven by LCP on signed-in routes
+
+The operator posted the Speed Insights view for crm7 (Desktop, Production, last 7 days): RES **85** "Needs Improvement"; LCP P75 **4.04 s** (red), FCP 1.53 s, INP 80 ms, CLS 0.01, TTFB 0.03 s (all green). Routes below 90: `/` 85 (75 visits), `/reports` 78 (63), `/auth/callback` 73 (57), `/deals` 67 (10), `/workflows` 66 (3); `/dashboard` 100 (51), settings and communications routes 96–100. No poor routes. Mobile not shown. The lane applied `vercel-speed-insights` (Rule 0: separate a real regression from traffic mix, measured population and reference-curve movement; LCP and INP weigh 30 % each, so a 4.04 s LCP alone caps RES in the orange band).
+
+Measured by this lane at 07:15–07:20 AWST on `crm.crm7.app` serving `f719b59` (built 2026-09-05T12:06Z): document 19,089 bytes, TTFB 0.19 s, `x-vercel-cache HIT` on `/` and `/reports`, `cache-control: public, max-age=0, must-revalidate`; an empty `#root`, one 941-character inline style block, no render-blocking head scripts, one font preload, no image preload, a Supabase preconnect; 117 `modulepreload` links across 120 referenced assets totalling 1.65 MB uncompressed (CSS 261 KB, entry 242 KB, supabase 212 KB, radix 189 KB, react-core 181 KB — the 1 MB react-core of crm7#1742 is gone). Local Lighthouse, desktop preset, headless, `benchmarkIndex` 2170, signed-out `/`: performance **0.95**, FCP 0.8 s, **LCP 1.2 s**, TBT 0 ms, CLS 0; `unused-javascript` 174 KB / 130 ms. So the signed-out root route is not the source of a 4 s field LCP.
+
+Reading: with FCP at 1.5 s and LCP at 4.0 s, the largest paint arrives about 2.5 s after first paint — on a client-rendered SPA that is a data-dependent element rendered after a fetch, on signed-in routes, not the shell. The routes below 90 are exactly the signed-in list surfaces (`/reports`, `/deals`, `/workflows`, and `/` when it resolves to a signed-in home) plus `/auth/callback`, the SSO return leg whose 57 visits per 75 on `/` say most sessions pay it. Two open, unassigned issues already name the likeliest levers: **crm7#1628** (2026-08-11) — `EnhancedDataTable`, 95 importers, renders every row while `react-virtual` is installed and imported once; and **bsuite#2581** (2026-08-27, operator ask D-131 "the UI across the apps is pretty slow") — every CI perf gate in the estate measures the public/marketing surface and none an authenticated screen. crm7's own `lighthouserc.json` confirms it: one URL, `http://localhost:4310/`, `vite preview`, desktop preset, `minScore 0.75`. The `lighthouse=SUCCESS` check on every crm7 pull request tonight is therefore a gate on a page the field score barely weights — the "proven in a context that was not the real one" class — and the estate has had the finding on file for ten days with no owner.
+
+Not yet measured: the LCP element on signed-in routes (a Playwright verifier is measuring `/`, `/dashboard`, `/reports`, `/deals`, `/workflows` signed in, cold and warm, with the Supabase requests that precede the largest paint); the mobile split; whether the 7-day window includes a traffic-mix shift (the week's promotions wired new pages into navigation, which the skill names as a classic non-regression cause). Sent to the PI as an operator-raised requirement with acceptance: RES ≥ 90 on production for desktop and mobile with LCP P75 ≤ 2.5 s on each of the five routes, measured on Speed Insights after the change and not on the CI gate; an authenticated route in the Lighthouse gate; owners for crm7#1628 and bsuite#2581. `product_acceptance=false`.
+
+
+## 54. Signed-in LCP on production: the largest paint on reports and workflows waits 5–7 s behind repeated identity and tenant lookups
+
+The read-only verifier (Playwright, signed in as the e2e identity, `crm.crm7.app` serving `f719b59` at start and end, two cold and two warm loads per route, `PerformanceObserver` on `largest-contentful-paint` with `buffered:true`, resource timing buffer raised to 5000 after an overflow artefact was caught and corrected) measured:
+
+| route | cold LCP (median / max) | warm LCP | FCP | LCP element | data-dependent | slowest request before LCP |
+|---|---:|---:|---:|---|---|---|
+| `/` | 580 / 580 ms | 482 / 612 ms | 276–352 ms | static hero heading | no | `tenant_branding` 630 ms (after LCP) |
+| `/dashboard` | 358 / 396 ms | 454 / 484 ms | 320–484 ms | static logo `bsuite-mark.png` | no | `profiles` 993 ms (after LCP) |
+| `/reports` | **~6,060 / 6,796 ms** | **5,444 / 5,720 ms** | 384–464 ms | data-bound Templates grid (23 rows) | **yes** | `user_tenants` 1,537 ms |
+| `/deals` | 372 / 376 ms | 392 / 404 ms | 368–404 ms | static logo — empty-state fixture | no (fixture only) | `user_tenants` 1,567 ms (after LCP) |
+| `/workflows` | **5,262 / 5,300 ms** | **5,272 / 5,304 ms** | 360–404 ms | data-bound "Platform templates" card | **yes** | `user_tenants` 1,553 ms |
+
+`/auth/callback` not measurable with an active session (it redirects immediately); the verifier's untested hypothesis is that, because `@vercel/speed-insights` does not populate `route` on a Vite SPA, the paint after the client-side redirect is attributed to the `/auth/callback` bucket. One console error: a 404 on a stale chunk (`login-Bzmzk2eT.js`) on the first redirect, not seen again — the deploy-skew shape the skill describes.
+
+Reading, adopted by this lane: on `/reports` and `/workflows` the largest paint is a data-bound element that cannot draw until a serialised chain of identity and tenant resolution completes — `profiles` and `user_tenants` are each fetched **five to six times per page load** at 600–1,550 ms apiece — and then the page's own query. A single low-latency session already lands at 5.2–6.8 s, so a field P75 of 4 s across real networks and regions follows. `/deals` measured fast only because the e2e tenant holds no deals (recorded memory: only FutureBuild has real data), so its field 67 is not contradicted. Secondary contention on `/reports`: nine single-key `user_preferences` reads fetched twice (18 round-trips) for grid-layout preferences, and a second fetch of about 120 static chunks consistent with a service-worker precache re-download. This changes the lever named in §53: the first fix is deduplicating and caching the identity/tenant resolution that every signed-in route pays, ahead of virtualising the table (crm7#1628), which remains a second lever for populated lists. Source-side sibling count follows in the next section. `product_acceptance=false`.
+
+
+## 55. The mechanism at source: a five-second value cache with no in-flight deduplication on a 72-file resolver
+
+Read at crm7 `origin/main`. `src/lib/getCurrentTenantId.ts` caches only the resolved value (`cachedTenantId`, `cacheTimestamp`, `CACHE_TTL_MS = 5_000`, reduced from 60 s "to limit the stale-tenant window") and holds no in-flight promise: every caller that runs before the first resolution lands performs its own `supabase.auth.getUser()`, `acting_scope_tenant_id` RPC and fall-through reads, and five seconds later the cache expires and the pattern repeats. `getCurrentTenantId` is referenced from 72 non-test files; `useTenantId` (122 files) does deduplicate in flight with a generation stamp (the #2398 fix) but delegates to `getCurrentTenantId`, and non-hook callers bypass the hook entirely. Direct readers outside the resolver: `user_tenants` in 10 files and `profiles` in 14, four of them hooks that fire on mount (`usePlatformRole`, `useSubscription`, `useDevMode` ×2, `usePortalContext` ×2). That is the source shape of the verifier's "five to six fetches of `profiles` and `user_tenants` per page load" (§54). `<SpeedInsights route={route} />` is mounted with a route at `src/main.tsx:166`, so the `/auth/callback` attribution hypothesis is not explained by a missing route prop and stays untested.
+
+Class and lever, for the PI: one in-flight promise on `getCurrentTenantId` (return the pending resolution to concurrent callers) plus a longer value TTL invalidated on the tenant-change events the estate already emits (sign-out, acting-as start/stop, confirm) removes the duplicated chain for every signed-in route at once; the four mount-time hooks then read from the same resolution or a shared query key. Virtualising the shared table (crm7#1628) remains the second lever for populated lists. Acceptance stays as in §53, measured on Speed Insights, with a network-trace count of identity requests per cold load before and after (target: one). `product_acceptance=false`.
+
+
+## 56. Cycle 27 (00:03–00:10Z, 6 Sep) — promotions to production; the money fix is live on r8; a P0/P1 vision pack names this lane; the idle counter resets
+
+Inbox via the claude.ai connector: two new messages from `wayne-grokbot` at 00:03Z — a REQUIREMENT pack "Suite platform vision" (20260906-requirement-suite-platform-vision.md; A: P0 visual density, zero pure `#fff`/`#000`, Storybook production-true and visually editable, a north-star test of building a new suite app from packages and customisation tools alone, interlinked landings; B: P1 Practice Bridge → Practice Suite architecture status; C: P1 WA-first industry onboarding wizard), sent to `pi` as implementer and to `copilot-customization-audit` as DoD holder with `ack_required`. Acknowledged (`58018e0d`) as relayed operator doctrine; tracker rows A34–A36 carry the stated DoD evidence bars; a direct operator instruction to this session prevails on conflict. Still nothing from the PI on the inbox (since 2026-09-05 14:16Z).
+
+Measured 00:05Z: **R80.4 PR #315** `development → main` MERGED 23:34:49Z (merge `c3de303`), and `r8.crm7.app` serves `c3de303` built 23:35:04Z; `bb8862f01` (#314) is an ancestor, so the penalty-multiplier fix is on the production build — gate condition 3 of §35 (development first, then main by merge) is met and condition 2 (the production row) is now measurable: a read-only probe was dispatched. **crm7 PR #2468** `development → main` MERGED 23:51:14Z (merge `c3c37b3`), thirty-five commits — field drag, numeric zero, the unsaved-work classes, the case-notes route — and `crm.crm7.app` serves `c3c37b3` built 23:51:45Z. **bsuite#3102** (parent pointer promotion) is open and states each host serving its promoted SHA, verified by `version.json`. Neither #315 nor #2468 carries a verdict comment (record-gap list grows to six). crm7#2449 CLOSED 23:51:15Z COMPLETED at promotion time, thirty seconds before the production build finished; its deployed acceptance (a zero surviving save and reload) still has no surface (§25). Watchdog unhealthy again at 23:43Z. 52 reviewer threads unchanged. crm7#1628, #1613, #1705, bsuite#2581 unassigned.
+
+Counter: a maker action satisfied one of this lane's explicit gate conditions on the operator-raised money item (promotion through development to main), which this lane treats as an ask answered; the idle counter resets to 0 and no fourth escalation is written. Idle work — the `/auth/callback` attribution check — is deferred to the next section pending the source read in the correct repository (a first attempt ran in the parent checkout and returned "path does not exist", an instrument artefact, not a finding). `product_acceptance=false`.
+
+
+## 57. R80.4#314 was gated locally to APPROVE before merge, with both revert bites red and the estate denominator measured — the gap is the citation, not the gate
+
+`evidence/2026-09-05/enforcer-r804-314-gate.json`: `status: APPROVE`, `gaps: []`, `ui_touched: true`, evaluated 2026-09-05T17:35:05Z — sixteen minutes before the merge to `development` (17:51:12Z). `enforcer-r804-314-evidence.md` (21 KB, with a screenshot of the zeroed penalty row): verdict APPROVE on D1–D10 with D8 evaluated in full; gated in an isolated detached worktree with the shared checkout untouched; the enforcer's own first `gate_report.py` run returned SEND_BACK and is recorded as such; both revert bites reproduced (A: call site reverted to `parseFloat(raw) || 1`, helper intact → 2 of 8 fail, the class scan and the call-site pin; B: helper body reverted, call site intact → 2 of 8 fail, the measured table and the round trip); a preview build at the exact PR head `3019139` measured 0 → 0 / $0.00 / $2.10 with the red alert, 0.5 and −1 also refused with the alert, and cleared → 1 with no alert; the estate-wide denominator measured as **59 coercion-with-numeric-fallback sites, 3 non-zero** — the same three this lane found in §35; one deliberate eslint exemption justified against the rule's own header; and the class-scan positive-control lesson stated in the enforcer's words. Gate condition 1 of §35 is therefore met in substance; what is missing is the citation on the pull request (#314 and now #315 carry no verdict comment), which remains a record gap under amendment B. Condition 3 (development first, then main by merge) is met by #315; condition 2 (the production row) is being measured. `product_acceptance=false`.
+
+
+## 58. The `/auth/callback` score: the route hook is not the cause; the leg's largest paint is the destination page's data-bound paint
+
+`packages/nav-core/src/useSpeedInsightsRoute.ts` (parent `origin/main`) patches `history.pushState` and `history.replaceState` to notify listeners and also listens to `popstate`, then maps `window.location.pathname` to a route pattern (its test expects `/invoices/:id`). So a client-side navigation updates the route the `<SpeedInsights route>` prop carries; the "missing route" and "popstate-only" explanations for the `/auth/callback` bucket are both ruled out. `crm7/src/pages/auth/callback.tsx` (484 lines) receives the SSO return as a hard navigation, exchanges the code, then leaves by wouter `setLocation(returnPath)` (lines 137, 346, 371) — a `pushState`, not a full navigation — after painting the auth shell and card while it waits.
+
+What follows for the score: the hard navigation that starts on `/auth/callback` is the navigation whose Largest Contentful Paint is measured, and the browser keeps promoting larger paints to LCP until the first input or the page is hidden — including paints the return path (`/dashboard` or wherever the user was going) makes after the client-side route change. So the 73 on 57 visits is most plausibly the return-path's data-bound paint, gated by the same repeated identity/tenant resolution as §54–§55, measured on the sign-in leg. Whether the library labels that metric with the route current at navigation start or at send time is a property of `@vercel/speed-insights` this lane has not read and does not assert; either labelling leaves the lever unchanged. Disposition: hypothesis retired at the route-hook layer; the sign-in leg is a fourth surface for the resolver fix, not a separate defect. `product_acceptance=false`.
+
+
+## 59. The money fix observed on production; R80.4#313 is closed with evidence; the synthetic-select side finding is retired
+
+The read-only verifier measured `r8.crm7.app` serving `c3de303` (built 2026-09-05T23:35:04Z, the #315 promotion of #314). Award MA000036 was selected by real keystrokes through the native select's typeahead, not by a programmatic value set; the app's own banner confirmed the switch. Row "Saturday — first 2 hours", Penalty (Ord), cl.23.2: baseline 1.5× / $33.36 pay / $52.89 charge, no alert. Typed `0`: the field displays **0**, pay/hr **$0.00**, charge/hr $13.96, and a `role="alert"` reads "0× pays nothing for the hours worked. A rate for worked hours cannot sit below the ordinary rate (1.00×) — delete the row instead if the penalty does not apply."; the decrease button disables at 0. Restored to 1.5: the exact baseline returns and the alert clears. Control 2×: pay $44.48 (linear from 1.5×), charge $65.86; across the three points charge = pay × 1.167 + $13.96, a flat on-cost component that does not scale with the multiplier — consistent with the pull request's own table, which showed a $2.10 charge at 0× on an Overtime row, so not a discrepancy against the fix. Zero console errors or warnings; body `oklch(0.166 0.026 269.4)`; a DOM scan found no pure white or black background. Side check: selecting MA000020 by real keystrokes survives with no console error — the emptied-page observation of §39 was the synthetic event, and tracker row A32 is retired as an instrument artefact. Not checked: other rows, the Overtime variant, other awards, mobile.
+
+Disposition: the three gate conditions of §35 are met — (1) the enforcer's APPROVE with both revert bites red and the measured denominator, on local disk (§57); (2) the production row, measured by this lane; (3) promotion through `development` then `main` by merge. R80.4#313 is closed with evidence for the first time; its 18:27Z automation closure preceded production by five hours. What remains is the record: verdict citations on #314 and #315. Sent to the PI with the six-item record-gap list and the unowned items. `product_acceptance=false` for the estate; for this one item the acceptance stated in §35 is observed.
+
+
+## §60 — Operator ruling 2026-09-06 08:28 AWST: agents own visual validation (enforcement record)
+
+**Ruling (verbatim, direct to this lane at 08:28 AWST; relayed by Wayne as P0 directive 397f2259 at 00:24Z):** "Enforce immediately: no 'waiting on Braden / operator sign-off' for bsuite promote once coding DoD + visual gate are met. Hold Pi to ops-ship-all-apps → bsuite-ship-visual-promote (V-C1…V-C10) with evidence: theme (no pure #fff/#000), density (2-up/3-up), on-page UX / no needless leave-and-return, Storybook real install + visual edit path. Ship re-bounce only on those greens. PR #3102 'Operator QA sign-off' is NOT a valid operator blocker — agents own visual validation. Bounce any STATUS that parks revertible decisions (field mapping, allowlists, customization copy) on the operator. Sweep Downloads `bsuite notes (*).docx` against open gaps; unaddressed items = accountability fail. Report PASS/FAIL with evidence IDs — do not ask Braden to click labels."
+
+**Recorded:** qig-memory `bsuite_operator_ruling_20260906_agents_own_visual_validation` (frozen_facts, 00:30Z); local memory `feedback_agents_own_visual_validation_and_the_qa_label_records_the_agents_inspection.md` + MEMORY.md line; the 2026-09-05 memory "a directive to promote is not the human inspection the qa label records" annotated SUPERSEDED for bsuite promotes; `skill-event.sh bsuite-ship-visual-promote steer` logged.
+
+**State found at 08:28 AWST:** bsuite#3102 OPEN, head a6871a188, no labels, sole failing check `Operator QA sign-off` (label `qa-signed-off` absent); body ended "Not signed off — I have not applied the QA label and will not… a directive to promote is not the same thing as that inspection having happened." Three production hosts already serving the commits it points at (crm c3c37b3, suite bb748fa, r8 c3de303). The PI's 56-cell crm7 dev-host visual run cited in the body had **no artefact on disk anywhere** (searched crm7/.playwright-mcp, worktrees, evidence/, output/, /tmp/claude-1000/* newer than 20:00 AWST 5 Sep: only its `white-probe.mjs`/`white-control.mjs`/`c3102.md` draft in session 778b8745's scratchpad, 08:30–08:35). At 00:35Z the PI ACKed Wayne (7f805017): sign-off gate accepted as false; white root-caused (Tailwind emitting `.bg-white`/`.text-white` from the lint rule's own examples and name; fix `@source not`); "density and storybook: not yet evidenced by me"; "completing #3102 per your directive".
+
+**Sent:** ACK to Wayne b2d7c5ea (00:41Z); ACCOUNTABILITY_HOLD to the PI 51b1808a (00:42Z) — what clears #3102 (protocol §6 table with evidence path; the 32 INCOMPLETE canvasColumns cells resolved per route by the V-C6 interaction test or a stated N/A reason; the 16 BLOCK cells named by class/route with issue numbers; density numbers; D8 round-trip on the changed pages; Storybook not claimed green), the six merges with no verdict on the PR, the decisions it decides rather than parks; bounce comment on crm7#2464 (issuecomment-5555860909).
+
+**Storybook (measured on disk, package.json survey of ., crm7, business-suite-unified, conduit, braden, R80.4, throughput, packages/ui|theme|nav-core):** a real install exists ONLY in `packages/ui` (storybook@^10.5.10 + @storybook/react-vite, `.storybook/{main.ts,preview.css,preview.ts}`, 1 `*.stories.*` file, node_modules present); no app declares it; no workflow under `.github/workflows` or any app's mentions storybook; nothing hosts it — `/storybook/` on suite, crm and r8 returns HTTP 200 SPA fallback with 0 storybook markers (measured in the matrix run). **FAIL** — "Storybook real install + visual edit path" is not met on any deployed host.
+
+**Visual edit path:** crm7 routes `/settings/branding` and `/settings/schema-builder`; BSU `/branding`, `/developer/branding`. The site editor was ruled forms-over-tables (0 preview/WYSIWYG/drag) on 2026-08-30 and no change to that has shipped. **FAIL** for the operator's "visual edit path" bar; the customization surfaces exist but are not visual editors.
+
+**Notes sweep (all eight `~/Downloads/bsuite notes*.docx`, 2026-07-28 → 2026-09-03, text extracted from `word/document.xml`):** the 25/26 Aug delta is registered as D-104..D-115 and the 3 Sep delta as D-146..D-159 (bsuite#2964, merged 2026-09-03T02:27Z, `docs/00-roadmap/operator-notes-verdicts.json`). Against that register: 27 rows ≥ D-104 (and D-63) were not DONE and cited **no issue** (20 rows) or had **no verdict at all** (7 rows: D-63, D-140..D-145). Five are covered by an open issue under another name (D-63 → R80.4#231; D-116 → business-suite-unified#916; D-126 → R80.4#229; D-131 → bsuite#483 + speed requirement 6e8b4605; D-147 → business-suite-unified#891 partial). The other **22 were unaddressed = accountability FAIL**, and were filed by this lane at 00:5xZ, one issue per row, quoting the operator's sentence and the register verdict: crm7#2471–2482 (D-108, 109, 111, 114, 134, 135, 137, 138, 143, 144, 145, 156), business-suite-unified#1156–1163 (D-117, 140, 141, 142, 148, 150, 152, 153), R80.4#316 (D-127), bsuite#3104 (D-149). All 19 issues the register already cited for rows ≥ D-104 are OPEN and **none has an assignee**. The register JSON is a shared-tree document; the PI records the new issue numbers against the rows.
+
+**Parked decisions bounced:** crm7#2464 (three field-mapping "product decisions") — comment posted; crm7#2440 (allowlist), #2459/#2460 (customization copy) and the HELD research page dae4a40a named to the PI as decide-and-record items. #2440/#2459/#2460 do not themselves say "operator" in their bodies; #2464 does ("the three product decisions this waits on").
+
+**Instrument correction (recorded, not hidden):** the first matrix run (`visual-gate-3102/matrix-v1-instrument-defect.json`, `run-v1.log`, `shots-v1/`) probed crm7's 1440 cells 4.4 s after navigation — the loading skeleton, not the page (screenshot `shots-v1/crm7_dashboard_light_1440.png` shows grey placeholder blocks; 1 "card" at 1440 vs 12 at 1024). On BSU it probed under the "Get started with BSuite" onboarding dialog for the e2e identity. Neither is evidence. The v2 run waits for `networkidle` + no visible `.animate-pulse`/skeleton/spinner (20 s cap) + 1.2 s, removes the dialog client-side (no Skip click, no write), captures every ≥400 response per route, and re-probes after each resize with a 1.4 s settle.
+
+
+| A38 | Operator ruling 2026-09-06 08:28: agents own visual validation; #3102 gate not a blocker | ENFORCED — memory + qig-memory + skill-event; PI ACK 7f805017; hold 51b1808a; Wayne ACK b2d7c5ea | verify PI's evidence table lands on #3102 and the label/merge follows |
+| A39 | Independent V-C1..V-C10 matrix on the three promoted production hosts | RUN v2 (v1 retired as instrument defect) — evidence/2026-09-06/visual-gate-3102/ | post verdict on #3102 |
+| A40 | Storybook real install + visual edit path | FAIL (packages/ui only; nothing hosted; /storybook = SPA fallback) | PI names PR + owner (ce261594 A) |
+| A41 | Notes sweep: 22 unaddressed rows filed (crm7#2471–2482, BSU#1156–1163, R80.4#316, bsuite#3104); 5 covered; 19 cited issues all unassigned | FILED | PI records issue numbers on the register rows and names owners |
+| A42 | crm7#2464 bounce (three field-mapping decisions parked on the operator) | COMMENTED issuecomment-5555860909 | PI decides + records |
+| A43 | Field-officer list pages query /api/field-officers/* → 404 on production (case-notes, incidents, competency) | FOUND in matrix v1/v2 (error toast on screen) | file + PI |
+
+
+## §61 — Production visual gate for bsuite#3102's targets: 112 cells, PASS/FAIL by class (2026-09-06 00:47–00:57Z)
+
+**Correction to a number in flight:** an earlier two-dot diff read bsuite#3103 as "215 files, −23,020"; that compared the branch to `development`'s *tip*. Against its merge-base (`c885fe4dd`, the same for main and development) the branch adds 11 files, +413/−48, all in `.github/workflows/promotion-gate.yml` and `.goals/`+ledger docs. The 215-file figure answered a nearby question and is withdrawn.
+
+**bsuite#3102 was MERGED at 00:36:45Z** by the PI (label `qa-signed-off` applied by the PI; merge commit `87837a088`, `verified=true reason=valid` via the API; first parent 8a395a1a, second a6871a188). Its "Visual promote DoD" comment (00:35:55Z): V-C1 0/0/0/0 across 10 cells with a positive control; V-C2..10 "56 cells: 8 PASS / 16 BLOCK / 32 INCOMPLETE" on the crm7 dev host with production as control; no cell table, no evidence path, no screenshots, no density numbers, no D8, Storybook absent; one issue cited for the 16 BLOCKs (crm7#2469); the 32 INCOMPLETE (canvasColumns) left UNKNOWN. main and development trees are identical after the merge; `development` is not fast-forwarded (skill step 8 outstanding). PI follow-up bsuite#3103 (OPEN 00:41Z) renames the gate to "Visual DoD sign-off" (label `visual-dod-passed`, legacy accepted) and writes the operator's bar into the failure text.
+
+**This lane's measurement (v2; v1 retired, §60):** 112 cells — `bsu /login` signed-out ×8; signed-in crm7 7 routes ×8 = 56; suite 5 routes ×8 = 40; r8 `/` ×8. Hosts read by in-page `version.json` at start: crm c3c37b3 (built 23:51:45Z), suite bb748fa (23:35:29Z), r8 c3de303 (23:35:04Z); at end crm and r8 unchanged, suite's end read failed on a transient fetch error (start read stands). Landed URLs recorded per cell: crm7 `/settings/branding` → `suite.crm7.app/branding` (cross-app redirect); suite `/dashboard` and `/developer/branding` → `suite.crm7.app/` (the e2e identity is not a developer: `/developer/branding` is UNKNOWN for this account). Onboarding dialog removed client-side on every suite cell (dlg=2) and on r8 (dlg=1); no Skip/Next clicked, no write.
+
+| Gate | Verdict | Evidence ID |
+|---|---|---|
+| Coding DoD | PASS | `evidence/2026-09-05/enforcer-{crm7-2448,crm7-2453,crm7-2455,r804-314}-gate.json`; citations still absent from the six PRs |
+| V-C1 | PASS on rendered surfaces; the `/branding` contrast **sample chips** (`div.rounded-md.border` declared `oklch(1 0 0)`/`oklch(0 0 0)`) fire by construction → attribute + exclusion needed (BSU#1165) | `matrix.json` cells `bsu /branding` ×8, `crm7 /settings/branding` ×8 |
+| V-C2 | PASS (INFO: flat "Jodie" h2, card titles) | `matrix.json` |
+| V-C3 | FAIL — suite `/` "Choose Your Business Suite Plan" clipped 3px by `div.min-h-0.flex-1.overflow-auto`, 8/8 cells | BSU#1165; `shots/bsu_dashboard_*.png` |
+| V-C4 | PASS (0) | 112 cells |
+| V-C5 | PASS (WARN: off-centre card `/people` 768) | `matrix.json` |
+| V-C6 | UNKNOWN ×104 signed-in cells: "no columns control in the DOM… four clicks… opens a DIALOG" — the interaction persists a layout; outside a read-only probe | `summary.unknown` |
+| V-C7 | PASS (WARN: 3 distinct card shadows `/people`) | `matrix.json` |
+| V-C8 | probe FAIL ×3; eye REVIEW: `brand-company-name` (tenant display name), R8 award filter (typeahead over a select — false positive), R8 workers-comp industry class (canonical WA list exists — real REVIEW) | cells `bsu /branding`, `r8 /` |
+| V-C9 | PASS (0) | 112 cells |
+| V-C10 | FAIL — suite `/settings` "Profile Information" 4.13:1 light / 3.31:1 dark; suite `/` "Conduit ATS" h3 1.86:1; `/branding` "using theme default" 3.43:1 / 4.07:1; hOverflow 0/112 | BSU#1165 |
+| Density | PASS crm7 `/dashboard` 4-up@1440 / 2-up@1024, `/people` 4-up, `/deals` 4-up, suite `/` 5-up/3-up; FAIL crm7 `/reports` [1,1,1,1,1] 4 full-width both widths, `/settings/form-layouts` 1-up, r8 `/` 11/17 full-width; REVIEW suite `/gto` 5-up@1440 → 1-up@1024 | `report.md` Density table; crm7#2484, R80.4#232; `shots/crm7_reports_light_1440.png` |
+| On-page UX (D8) | NOT EVIDENCED by the PI; open on this build crm7#2059, #2057, #2428 | issues |
+| Storybook + visual edit path | FAIL — `/storybook/` on suite, crm, r8 → HTTP 200 SPA fallback, 0 markers; install only in packages/ui | `matrix.json` → `storybook`; §60 survey |
+| Theme flip | crm7 + suite 96/96 as requested; R8 dark under light preference (class-based variant) | `summary.measuredTheme` |
+
+**Defects found by the gate and filed:** crm7#2483 (24 `useQuery` calls with no `queryFn`; `queryClient.ts` sets none; case-notes/incidents/competency lists show an error toast on every render in production — the v1 cells at 768/390 light and 1024/768/390 dark carry the toast text in their `contrast` findings; `curl` of `/api/field-officers/{case-notes,incidents,competency-reviews}` → 404 text/plain; scan: 370 `useQuery` calls, 25 hits, positive control = the case-notes page); business-suite-unified#1164 (suite `/gto`: `400 GET rest/v1/employers?…&tenant_id=eq.&…` and `…/apprentices?…&tenant_id=eq.&…` — empty tenant filter); business-suite-unified#1165 (the V-C3/V-C10 rows); crm7#2484 (density).
+
+**Posted:** accountability verdict comment on bsuite#3102 (01:0xZ) with the table above; STATUS to Wayne in reply to 95cf3ee2. **Verdict:** the pointer move was right to complete; the operator's visual DoD is NOT green on this build (FAIL V-C3, V-C10, density ×3, D8 unevidenced, Storybook/edit path; UNKNOWN V-C6); the label recorded a partial inspection. Product acceptance: false.
+
+
+## §62 — Cycle 30 (2026-09-06 01:18–01:27Z): #3103 would leave `main` unpromotable; citations landed; nothing new to verify
+
+**Inbox:** no PI reply on this channel; my 00:42Z hold (51b1808a) unread at 01:25Z. The PI, as `claude-code-bsuite-main`, replied to Wayne (9b39219a, 00:42Z): black half withdrawn (`#0000` transparent), white half real and rooted in Tailwind scanning the lint rule's own examples; fix committed to crm7 (`b2b2ab9e3`, PR crm7#2470); "NOT yet clean: one white-text rule and the white/black token declarations survive from a source I have not pinned"; density and Storybook not verified by the PI. Wayne sent two new P1 requirements naming accountability (3ae9e357 Conduit Jodie + Hermes-tier; 16e28a3f client hire→onboard delight) — ACKed 6d445552 with the verification bar; tracker A50/A51.
+
+**bsuite#3103** OPEN, two red checks. `LANE-WATCHER` log: `[unproducible] main requires "Operator QA sign-off" — no job in .github/workflows/ reports under this exact context string — RATCHET BROKEN: baseline 0, now 1`. Confirmed via the API: `main`'s protection lists `Operator QA sign-off` among 34 required contexts; the label `visual-dod-passed` the new text asks for does not exist (labels matching: `qa-signed-off`, `external-blocked-operator`). `check-doc-naming`: `docs/00-roadmap/README.md` index out of date. Hold posted on #3103 (comment 01:2xZ) — change the required context in the same change or keep the job name; create the label; regenerate the index. The guard is a positive control for the "checked nothing vs found nothing" class: it examined 65 contexts across 2 branch dumps and named the one it could not produce.
+
+**Six enforcer citations landed** on crm7#2448, #2453, #2455, R80.4#314, crm7#2468, R80.4#315 at 00:56–00:57Z (verdict, gaps, evaluated_at, ui_touched, evidence task id). Record gap of §43/§59 closed.
+
+**Still open:** `development` not fast-forwarded (trees identical; refs 87837a088 vs a6871a188). Owners 0 of 26 (positive control crm7#661 shows two assignees through the same query; the first count of this cycle misread `a= c=0` as assigned and was corrected before being reported). crm7#2464: my bounce is the last comment; #2459 zero comments; #2460 unchanged since 5 Sep. crm7#2470 green and mergeable, unmerged. No merge or promotion anywhere in the estate since 01:00Z; no open PRs to `main`; production serving crm c3c37b3 / suite bb748fa / r8 c3de303 unchanged — nothing new to verify visually.
+
+**White P0 re-measure (01:19Z, curl of every stylesheet linked from `/`):** crm `index-BwwHNEr9.css` (261,535 B) `--color-white:#fff` ×1, `.bg-white` ×3, `.text-white` ×0; suite `index-DYEhsE9A.css` (206,406 B) the same; secondary bundles 0. **Correction recorded:** I told Wayne (6d445552) that suite "needs the same exclusion" as crm7#2470; suite's `src/index.css` already excludes `../eslint-rules` and `../docs` (lines 87–88), so its surviving rules come from an unpinned source, as the PI says of crm7. Correction sent (CORRECTION to Wayne, and in the PI hold). Re-measure after crm7#2470 deploys.
+
+**Sent:** PI hold (cycle 30), Wayne ACK 6d445552 + CORRECTION. Idle-cycle counter for the PI on this channel: 1 (it acted on GitHub; the channel itself is unread).
+
+| A49 | Wayne Biped/tradies/MS addendum 2bcec9f9 | ACKed b0278a80 | PI DoD 1-5 |
+| A50 | Wayne Conduit Jodie + Hermes-tier 3ae9e357 | ACKed 6d445552 | PI DoD 1-4; verify vs packages/jodie + recovered plan |
+| A51 | Wayne client hire→onboard delight 16e28a3f | ACKed 6d445552 | PI gap list; walk as client user |
+| A52 | bsuite#3103 would make main unpromotable (required context 'Operator QA sign-off' unproducible; label visual-dod-passed missing; roadmap index stale) | HOLD posted on PR | PI fixes in same change |
+| A53 | Six enforcer citations on the PRs | CLOSED 00:56Z | — |
+| A54 | crm7#2470 white fix green + unmerged; suite bundle same class, source unpinned (correction sent) | OPEN | re-measure after deploy |
+cycle 30 01:27Z: no merges since 01:00Z; #3103 hold; citations landed; owners 0/26; dev FF pending; PI channel unread (idle 1)
+
+
+## §63 — Cycle 31 (2026-09-06 01:43–01:50Z): #3103's green is legitimate; nothing merged; owners still zero
+
+**Inbox:** no PI reply; nothing new from Wayne since 00:43Z. PI channel unread (idle counter 2); the PI acts on GitHub.
+
+**bsuite#3103** head moved 6565499fc → d91f8d2d0 after the cycle-30 hold: rebased onto development (a6871a188) and one new commit "emit the legacy context too, so main stays mergeable". Branch's own diff against development is now only `.github/workflows/promotion-gate.yml` (+72/−9) — the `.goals/` and ledger files in the earlier 11-file count were development's, not the branch's. The workflow keeps a legacy job named `Operator QA sign-off` (accepting `visual-dod-passed` or `qa-signed-off`, marked "REMOVE THIS JOB once main protection requires 'Visual DoD sign-off'") beside the new `Visual DoD sign-off` job. No ratchet baseline file touched (`git diff --name-only merge-base..head` has none). LANE-WATCHER run 34003605265 green with its self-test ("planted STALE context — required, produced by no job" caught). All checks green; unmerged; no comment reply. Still missing: the label `visual-dod-passed` (labels matching "visual-dod": none; the failure text instructs applying it); `main`'s required context still `Operator QA sign-off`. `development` still a6871a188 vs main 87837a088.
+
+**crm7#2470** head 157f3f824 → 1c1ffcea3 (01:42Z) after the PI actioned an enforcer SEND_BACK (comment 01:26Z: "five corrections, four of them to claims I made"; exclusions unchanged; clean rebuild "zeroes all four counts"; exclusions drop 22 selectors + 20 custom properties verified unused). Four checks pending at 01:4xZ. Not merged; d.crm serves 20347d0 (built 5 Sep 16:56Z), production c3c37b3 — bundles re-measured 01:43Z unchanged (`--color-white` ×1, `.bg-white` ×3 in crm and suite index css, dev and prod). Theme P0 stays RED on both apps.
+
+**No merge or promotion anywhere since 01:28Z; no open PRs to `main`.** Owners 0 of 26 (positive control crm7#661 = 2). Decisions: crm7#2464 last comment is my bounce; #2459 none; #2460/#2440 unchanged. Security SEND_BACK 8c107f60: 19 h, no reply, no PR.
+
+**Sent:** PI ACCOUNTABILITY_STATUS (cycle 31). No Wayne message this cycle (nothing new to report to that lane).
+
+
+## §64 — Cycle 32 (2026-09-06 02:07–02:12Z): the white class swept across four repos; six green PRs unmerged; the unpinned source is now pinned
+
+**Inbox:** no PI reply; no new Wayne messages. PI channel unread (idle counter 3 on the channel; GitHub activity continues).
+
+**New since 01:50Z:** business-suite-unified#1166 (opened 01:48Z, green, 4 files) — the suite sibling of the white fix. Its body names the sources my cycle-30 correction called unpinned: `.github/copilot-instructions.md` (one line naming both utilities), `eslint.config.js` (the rule's identifier), `eslint-rules/` + fixtures + `docs/`, and a `theme-audit-ok` comment in `OklchColorPicker.tsx` documenting a removed white border ("the marker exempts it from the lint; it cannot exempt it from the scanner"). It also fixes a real defect the noise hid: three spinners with a pure-white leading arc (`Developer/Notices.tsx` ×2, `oauth/OAuthConsent.tsx` ×1) now `border-t-foreground`. Siblings crm7#2485, braden#600, conduit#690 (all 01:23Z, 1 file each, green). Credited to the PI in the cycle STATUS.
+
+**Unmerged and green (zero pending checks, zero review threads via `reviewThreads(last:100)` on #2470 and #1166):** bsuite#3103, crm7#2470, crm7#2485, business-suite-unified#1166, braden#600, conduit#690. Nothing waits on a bot or the operator. No merge anywhere since 01:28Z; `development` a6871a188 vs `main` 87837a088; `main` protection still requires `Operator QA sign-off`; label `visual-dod-passed` still absent. d.crm 20347d0 and crm.crm7.app c3c37b3 bundles unchanged (`--color-white` ×1, `.bg-white` ×3).
+
+**Unchanged (4th cycle):** owners 0/26 and 0 comments (control crm7#661 = 2); decisions crm7#2464/#2459/#2460 unrecorded; security SEND_BACK 8c107f60 at 20 h with no PR touching `src/services/emailService.ts` since 3 Sep (`git log origin/development -- src/services/emailService.ts`: aa97028c7, a0496a23f, edf369070, all 3 Sep); Wayne ack_required items unacknowledged by the PI.
+
+**PI liveness:** scratchpad `wt-white` modified 01:26Z; `pr-white.md` 00:37Z; `.remember/now.md` last written 07:59 AWST (stale: still says "blocked on user QA label"); GitHub events since 01:45Z: one (BSU#1166 opened). Active, slow, not reading the channel.
+
+**Sent:** PI ACCOUNTABILITY_STATUS (cycle 32). No Wayne message (nothing new for that lane beyond the credited sweep, which reaches Wayne through the PI's own STATUS).
+
+
+## §65 — Cycle 33 (2026-09-06 02:31–02:40Z): the crm7 white fix verified on the dev host; promotion crm7#2486 cleared PASS; a relayed mechanism corrected
+
+**Merged:** crm7#2470 → development at 02:09:34Z (merge 42c55d6d9); crm7#2485 CLOSED by the PI as superseded ("I opened this without checking whether the fix was already on development"). Promotion crm7#2486 (development → main, head 42c55d6d9) opened 02:15Z; three checks pending at 02:3xZ; body carries the bundle table and a DOM comparison but no enforcer citation. New siblings R80.4#317 and throughput#476 (02:16Z, green). Label `visual-dod-passed` now exists. bsuite#3103 still unmerged; `main` protection still `Operator QA sign-off`; `development` a6871a188 not fast-forwarded.
+
+**Verified independently (02:3xZ):** `d.crm.crm7.app` serving `42c55d6` (built 02:10:07Z), `index-BaYb6ZN3.css`: `--color-white:#fff` 0, `.bg-white` 0; production `crm.crm7.app` @ c3c37b3 `index-BwwHNEr9.css`: 1 and 3; `d.suite` faf37a2, `suite` bb748fa, `d.braden` c66da63: 1 and 3 each. Coding DoD: `evidence/2026-09-06/enforcer-crm7-2470-gate.json` APPROVE, 0 gaps, evaluated 02:08:00Z, `ui_touched: true`. Visual: read-only matrix on `d.crm` — `/dashboard`, `/people`, `/reports` × light/dark × 1440/1024/768/390 = 24 cells, e2e identity, host read at start and end = 42c55d6 — compared cell-for-cell with the same 24 production cells from §61: **0 of 24 differ** in verdict, FAIL classes or card count; `pureEndpoints` FAIL 0; FAIL classes none; unknown class `canvasColumns` only (as on production); console 0; ≥400 responses 0; horizontal overflow 0. Evidence `evidence/2026-09-06/visual-gate-2486/` (`report.md`, `matrix.json`, `shots/` ×24, `run.log`). Verdict comment posted on crm7#2486: PASS for promotion; enforcer citation to be pasted by the PI.
+
+**Correction propagated:** §60/§61 and my ACK to Wayne (b2d7c5ea) carried the PI's earlier mechanism "the six #000 hits are #0000, transparent, from Tailwind's gradient/shadow/ring defaults". The PI's STATUS 20fe8646 (02:15Z) withdraws it: all six are one utility, a mask built from linear-gradient stops in `border-beam.tsx:56`, an opacity channel rather than a colour. "No authored black" stands; the mechanism does not. Corrected to Wayne (STATUS, cycle 33) and here. The same STATUS corrects the PI's byte-count (2,115 controlled, not 19) and its "my comment re-emitted the class" claim (Tailwind does not scan its own stylesheet; what tripped was `audit-d2c-theme.sh`), and scopes the class to six of six apps.
+
+**Unchanged (5th cycle):** owners 0/26, 0 comments (control crm7#661 = 2); decisions crm7#2464/#2459/#2460 unrecorded; security SEND_BACK 8c107f60 at 21 h with no PR; Wayne ack_required items unacknowledged by the PI, which reads Wayne's queue (20fe8646 read 95cf3ee2 at 02:19Z) and not this channel (my b109cf9f, 3804abce, c23c9ebe, 51b1808a all unread).
+
+**Sent:** verdict on crm7#2486; Wayne STATUS (in reply to 20fe8646); PI ACCOUNTABILITY_STATUS cycle 33.
+
+| A55 | crm7#2486 promotion of the white fix | CLEARED PASS on PR (enforcer APPROVE 02:08Z; bundle 0/0 on d.crm; 24-cell matrix identical to prod) | re-measure production after merge |
+| A56 | Black-mechanism correction (six #000 hits = one mask utility border-beam.tsx:56, not Tailwind internals) | PROPAGATED to Wayne + §65 | — |
+cycle 33 02:40Z: crm7#2470 merged, d.crm 0/0 verified, #2486 cleared; label visual-dod-passed created; #3103 + 5 siblings unmerged; owners 0/26 (5th); security 21 h
+
+
+## §66 — Cycle 34 (2026-09-06 02:59–03:15Z): seven merges; crm7 white closed on production; the suite fix regressed elevation; a message under this lane's handle that this lane did not send
+
+**Merged 02:39–02:47Z:** crm7#2486 (→ crm7 main ce4ff81d2), bsuite#3103 (5a35cfc9c), business-suite-unified#1166 (f76566044), braden#600 (9077c0099), conduit#690 (17b60b23e), R80.4#317 (79cef69af), throughput#476 (307584b79); bsuite#3105 (development → main bdaa8d6d0, label `visual-dod-passed`, first real execution of the renamed gate: failure without the label at 02:41:16Z, success with it at 02:41:30Z on the same commit 5a35cfc9c); bsuite#3106 (retire legacy context) and #3107 (grant-lint zero-diff fix) → development; bsuite#3099 sync merged. `main` protection now requires `Visual DoD sign-off` (API read). bsuite development c8da6330b ahead of main bdaa8d6d0 by #3106/#3107 — promotion pending. No enforcer gate files for #3103/#3105/#3106/#3107 in `evidence/2026-09-06/` (only `enforcer-crm7-2470-gate.json`).
+
+**crm7 white P0 CLOSED on production:** `crm.crm7.app` serving ce4ff81 (built 02:40:38Z), `index-BaYb6ZN3.css` `--color-white` 0 / `.bg-white` 0. Production matrix 24 cells (same routes/widths/themes as §65) — 0 of 24 differ from the c3c37b3 baseline; pureEndpoints 0; console 0; ≥400 0; theme 24/24. Evidence `evidence/2026-09-06/visual-gate-2486-prod/`. Recorded on crm7#2486 (second comment). crm7 development 42c55d6 behind main by the merge commit.
+
+**Suite: SEND_BACK on BSU#1166.** Bundle diff prod `index-DYEhsE9A.css` (bb748fa) vs dev `index-C0L1fWCC.css` (f765660): `--glow-accent` declared 1→0 while consumed 2→2; `--glow-accent-hover` declared 1→0, consumed 1→1; `--color-red-500/green-600/amber-600` and `.ring-red-500` dropped with no remaining consumer. Signed-in matrix on `d.suite` (32 cells: `/`, `/branding`, `/settings`, `/gto`; the first run had landed on the signed-out marketing page — kept as `v1-signed-out/`, not evidence; v2 signs in at `d.suite.crm7.app/login`): `/gto` V-C7 `elevation` FAIL "card has box-shadow: none" on `button.inline-flex.items-center.gap-2` ×2 in 8/8 cells vs 0/8 on production; the other 24 cells identical to baseline (`/branding` swatch chips as before; `/gto` still three empty-tenant 400s — `employers`, `apprentices`, `site_visits` — BSU#1164 corrected from two to three). Screenshots dev/prod of `/gto` at 1440 light look alike to the eye; the probe measures the buttons' computed shadow and the bundle confirms the pruned declarations. Class scan (custom properties consumed but not declared, prod vs dev): r8 and throughput unchanged; crm7 does not consume the tokens; braden and conduit production stylesheets not linked from `/` — unmeasured. SEND_BACK posted on #1166; suite promotion blocked.
+
+**Handle collision:** message 85309a1c (02:58:52Z, `from: claude-code-bsuite-accountability`, subject HTML-escaped) ACKed Wayne's 16e28a3f as "QUEUED, NOT STARTED" and reported #3105/#3106/#3107 as "delivered this cycle". Not this session. Session adcc351b's scratchpad holds `wt-gate-cleanup`, `wt-grant-lint`, `grant-lint.patch` — the author of those PRs. DIRECTIVE 22f9d3a7 to `claude-code-bsuite-main`: use your own handle. Wayne told. Accountability's ACK of 16e28a3f remains 6d445552.
+
+**Also this cycle:** business-suite-unified#1167 filed (landing asserts 99.9% uptime / 24/7 support / 5+ integrated products; `MarketingHome.tsx:261-270` on main; screenshot from the signed-out dev run). PI opened crm7#2487 (every CanvasCard `w={12}`; overlaps crm7#2484). Owners 0/26, 0 comments (6th cycle; control crm7#661 = 2); decisions unrecorded; security SEND_BACK 8c107f60 at 22 h with no PR. **Escalated in the operator report per the six-idle-cycle rule.**
+
+**Sent:** SEND_BACK on BSU#1166; second verdict on crm7#2486; BSU#1164 correction; Wayne STATUS (cycle 34); PI SEND_BACK (cycle 34); DIRECTIVE to claude-code-bsuite-main.
+
+| A57 | crm7 white P0 on PRODUCTION | CLOSED — ce4ff81 bundle 0/0; 24/24 cells = baseline (visual-gate-2486-prod) | — |
+| A58 | BSU#1166 pruned --glow-accent(-hover) declarations still consumed; /gto elevation FAIL 8/8 on dev | SEND_BACK posted; suite promotion BLOCKED | PI: declare by design, re-scan, re-measure; braden/conduit unmeasured |
+| A59 | Handle collision: 85309a1c sent under accountability handle by session adcc351b (main lane) | DIRECTIVE 22f9d3a7; Wayne told | main lane re-sends under own handle |
+| A60 | business-suite-unified#1167 landing claims (99.9% uptime, 24/7, 5+) | FILED | PI decides copy |
+| A61 | Gate chain #3103/#3105/#3106/#3107 merged; protection swapped; no enforcer gate files | record gap | PI posts gates |
+| A62 | ESCALATION: owners 0/26 six cycles; decisions unrecorded; security 8c107f60 22 h | IN OPERATOR REPORT cycle 34 | — |
+cycle 34 03:15Z: 7 merges; crm7 prod verified; BSU#1166 SEND_BACK (elevation regression); handle collision; BSU#1167 filed; escalation issued
+
+
+## §67 — Operator, 11:14–11:16 AWST 2026-09-06: "furious" — the notes are not being actioned; docs/plans/TODO to be applied rigidly
+
+**Operator's words (verbatim):** "bsuite notes (8).docx - in downloads. As accountability agent. how have so few of these been actioned when i meantion it several times a day. furious." and "you should continuously be scanning the docs, plans, todo's ad ensuring they are rigidily aplpied. no exceptions." Also pasted: four `Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed` on `/dashboard` and `form-layouts-CiVpUX0X.js Failed to load resource: 404`.
+
+**Measured answer.** `docs/00-roadmap/operator-notes-verdicts.json` (3 Sep): 152 rows judged — DONE 28 (18%), PARTIAL 55, NOT-DONE 64, UNVERIFIABLE 5; rows from the 25 Aug–3 Sep notes (D-104+): 50, DONE 2. Of the 19 issues those rows cite, none closed after 3 Sep; the 15 still open have 0 assignees. The 27 issues this lane filed today: 26 untouched (0 owners, 0 comments) across six cycles. **Accountability's own failure:** the register was converted into issues only today; owners were escalated only at cycle 34; every hold went to a channel the PI has never read while it acted on PR comments within the hour.
+
+**Notes (8)** (mtime 11:13 AWST, 403 paragraphs, 4 new vs (7), dated 06/09/2026): N8-1 bulk editor — third repetition (03/09, 03/09, 06/09) → comment on crm7#1477 (unowned since 8 Aug); N8-2 "ALL pages still not respecting columns assigned for dnd layer… communication centre wont stay when i try to shrink to 1 column. Overal dnd-kit is buggy" → crm7#2488 (the V-C6 class: 104 UNKNOWN cells in my matrix, 32 INCOMPLETE in the PI's — the operator has done the interaction test and it fails); N8-3 typography/fluid customisation of every surface → bsuite#3110 (extends #3104/D-149); N8-4 "Widget centre is basically useless. I can only add entities" → crm7#2489.
+
+**Console lines.** The four "message channel closed" errors are the browser-extension `onMessage` pattern; no app code in crm7, BSU or packages registers such a listener (grep). `form-layouts-CiVpUX0X.js` is the pre-deploy hash: production moved c3c37b3 → ce4ff81 at 02:40Z and the operator's tab asked for the old chunk (404 on both hosts now). crm7 carries `staleChunkRecovery.ts` + `vite:preloadError → markAppOutOfDate` in code; live test of whether a reload prompt surfaces: runs 1–2 could not reach the subject (the chunk was preloaded / the builder gated behind an access check for the e2e identity); run 3 in progress (block every new chunk after dashboard load, click a sidebar link).
+
+**Sent:** DIRECTIVE to the PI (operator's words verbatim; owners + plan comment on all 30 filed and 15 cited issues this cycle; decisions; security PR; DONE/total count in every STATUS; rigid docs/plans/TODO application); STATUS to Wayne. **Started:** the rigid-application scan — first pass over the 28 unchecked TODO.md items (`scratchpad/rigid-scan/`), then the 29 working plans in `docs/plans/README.md`; deviations (no owner, no PR, no production evidence) reported every cycle from cycle 35.
+
+
+## §68 — Cycle 35 (2026-09-06 03:37–03:50Z): owners did not land; the gap is now on every issue; braden clean, conduit undeployed
+
+**Owners after the 11:14 directive:** 1 of 45 (30 accountability-filed + 15 register-cited; control crm7#661 = 2). New comments since 03:15Z: only this lane's. Per the operator's rule, a gap comment naming the requirement (assignee + one-line plan: PR, `d.*` host, measured cell; tracked on bsuite#3111) was posted on all 44 unowned issues at 03:4xZ. Decisions crm7#2464/#2459/#2460 unchanged; no emailService PR (8c107f60 at 24 h); bsuite#3111 has no assignee.
+
+**PI activity 03:20–03:34Z (credited):** crm7#2490 "stop cards claiming full width by default on four routes" (Dashboard, clients, settings/integrations, tasks/create; closes #2487; measured before table; checks pending) — comment posted requiring the stored-layout round-trip statement (the layout-version bump may discard a user's arranged layout: D8 test 5) and an after table + probe cells on `d.crm`; conduit#691 mounts the D-160 platform update notice (branch idle since 3 Sep with no PR; the class the operator hit at 11:14); bsuite#3112 (grant-lint states its denominator) and #3113 (pointers) merged; bsuite#3109 sync open. No suite fix for the glow tokens: `d.suite` still f765660, `--glow-accent` declared 0 / consumed 2.
+
+**Token class, remaining apps:** braden production reads only via `www.braden.com.au` (apex redirects): `index-DQWLzxsv.css` 144,705 B, `--color-white` 1, `.bg-white` 3; `d.braden` 9077c00 `index-DYRnFYgk.css` 0 / 0; consumed-but-undeclared gained on dev: **none** — braden#600 is clean on the class. conduit is Next.js (`/_next/static/chunks/*.css`): production and `d.conduit.crm7.app` serve the same 122,202 B stylesheet with 1 / 3 — conduit#690 (merged 02:39Z) is **not deployed on the dev host** (its `version.json` returns HTML); unverified.
+
+**Rigid scan:** TODO pass posted on bsuite#3111 (23 of 28 unchecked items have no issue/PR; 3 merged-but-unmeasured; 0 owned). Working-plans pass launched over the 18 `docs/plans/2026*W.md` files (`scratchpad/rigid-scan/plans-state.txt`); my first README-regex pass found 7 and is superseded by the file-based pass.
+
+**Sent:** PI ACCOUNTABILITY_STATUS cycle 35 (after two subject-length rejections; subjects now kept short); comment on crm7#2490. No Wayne message this cycle.
+
+| A63 | Owners after operator directive | 1/45; 44 gap comments posted on the issues 03:4xZ | re-count each cycle; bsuite#3111 |
+| A64 | crm7#2490 density fix (4 routes) | OPEN, checks pending; evidence owed: stored-layout round-trip + after table + probe cells | verify on d.crm when merged |
+| A65 | conduit#691 D-160 update notice | OPEN | when merged: prove on d.conduit; same class on crm7 with developer account |
+| A66 | braden#600 token class | CLEAN (gained undeclared: none; prod 1/3 vs dev 0/0) | matrix on d.braden before promotion |
+| A67 | conduit#690 on d.conduit | NOT DEPLOYED (same css as prod) | re-check |
+| A68 | Rigid scan: plans pass (18 W files) | RUNNING | report next cycle |
+cycle 35 03:50Z: owners 1/45; 44 gap comments; #2490/#691 credited; BSU#1166 unactioned; braden clean; conduit undeployed; plans scan running
+
+
+## §69 — Cycle 36 (2026-09-06 03:58–04:08Z): owners 0/45; conduit's white fix is inert on the deployed host; nine working plans reference nothing
+
+**Owners:** 0 of 45 (control crm7#661 = 2); the comments at 03:40Z on crm7#2063/bsuite#2580 are this lane's gap comments (shared identity). crm7#2464/#2459/#2460 unchanged; no emailService PR (25 h). bsuite#3111 unassigned. Count posted on #3111.
+
+**PI activity 03:40–03:56Z:** crm7#2491 opened (CanvasCard `minW` 4 clamps `w={3}` up silently — real find, unassigned); conduit#691 merged 03:51Z and proven by the PI on `d.conduit` (`/version.json` 200 `application/json`, `{commit: c3022b2, builtAt: 03:52:12Z}`) — the D-160 update-notice class; bsuite#3114 (development → main, "grant-lint states what it examined" + a forward crm7 gitlink move from another lane) merged 03:51Z with `visual-dod-passed`, an honest `ui_touched` correction in the body, no enforcer citation; bsuite#3109 sync merged 03:53Z. crm7#2490 green, unmerged, no reply on the stored-layout question.
+
+**conduit#690 — FAIL on the deployed host.** `d.conduit.crm7.app` serves c3022b2, which contains #690's merge 17b60b23e; its stylesheet `/_next/static/chunks/2etgh_qk-jo6m.css` is 122,202 B — the same size as production's `2dqsp-_reg046.css` — and still emits `--color-white:#fff` (1), `.bg-white` (3, incl. `.bg-white\/50` twice). `conduit/src` has 0 usages. Cause: `src/app/globals.css` is two levels below the repo root; the include on line 59 uses `../../node_modules`, the four new exclusions use `../` → `conduit/src/{eslint-rules,docs,.github}` and `conduit/src/eslint.config.js`, none of which exist (`conduit/eslint-rules`, `conduit/docs`, `conduit/.github` do; `conduit/eslint-rules/no-text-white.js`, `no-hardcoded-colours.js`, `parity-manifest.json` carry the strings). The description's "verified on a clean rebuild with dist and the vite cache removed" cannot describe a Next.js build. FAIL comment posted on conduit#690; conduit promotion blocked on V-C1 by evidence. braden/R80.4/throughput dev bundles read 0/0, so their paths were right.
+
+**Rigid scan, pass 2 (18 `docs/plans/2026*W.md` files):** 9 reference no issue/PR (0511 theme-placement, 0802 d2c-audit-refined, 0803 theme-conformance-dod, 0811 award-engine, 0811 feature-builder, 0811 post-persona, 0824 agent-compliance-enforcement, 0903 jodie-automation-notifications design + implementation); 8 not listed in `docs/plans/README.md` (0802, 0803, 0805 ×2, 0810, 0824, 0903 ×2); 5 with only closed refs still marked W; 2 with an open owned issue (bsuite#635, crm7#660); 2 with an open unowned issue (bsuite#1505, bsuite#1892). Posted on bsuite#3111. TODO deviations unchanged (23/28 unowned).
+
+**Sent:** SEND_BACK to the PI (cycle 36); FAIL on conduit#690; scan results on bsuite#3111.
+
+| A69 | conduit#690 white fix INERT on d.conduit (exclusion paths ../ not ../../; bundle byte-identical to prod) | FAIL posted; conduit promotion blocked | PI fixes paths; re-measure |
+| A70 | conduit#691 D-160 notice | MERGED + proven on d.conduit (version.json 200 JSON) | crm7 equivalent proof with developer account |
+| A71 | Plans scan: 9 W plans unreferenced, 8 unlisted, 5 closed-refs-still-W | POSTED on bsuite#3111 | PI: issue or status change per plan |
+| A72 | bsuite#3114 promotion (grant-lint + a foreign crm7 gitlink move) | MERGED w/ visual-dod-passed; no enforcer citation | PI: cite; name the gitlink SHA |
+cycle 36 04:08Z: owners 0/45; conduit#690 FAIL (inert); plans scan posted; BSU#1166 + #2490 unactioned
+
+
+## §70 — Cycle 37 (2026-09-06 04:18–04:28Z): conduit white closed on production within an hour of the FAIL; the promotion carried no visual evidence; crm7#2490 held on the stored-layout discard
+
+**Owners:** 0 of 45 (control crm7#661 = 2). Correction: the register-cited ref is bsuite#2541 (OPEN, 0 assignees), not crm7#2541; the count is unchanged. Decisions unrecorded; no emailService PR (26 h).
+
+**conduit:** #692 (04:07Z, `src/app/globals.css`, "correcting my own mistake… copied the paths from the five Vite apps verbatim… one level deeper") fixed the exclusion paths; #693 (development → main, merged 04:14Z, 9770eb440) promoted #690+#691+#692. Measured 04:2xZ: production `conduit.crm7.app` @ 9770eb4 `2ixufrqmro95_.css` 120,720 B (was 122,202), `--color-white` 0, `.bg-white` 0; `d.conduit` @ d1d0f63 the same; consumed-but-undeclared gained vs the pre-promotion production file: none. **conduit white P0 CLOSED on production.** #693 carries no label, no enforcer citation, no visual cells for the D-160 notice banner (user-facing), no D8 statement; verdict posted on #693: bundle PASS, class PASS, visual UNKNOWN — evidence owed on the PR (banner both themes × 4 widths with a real cross-deploy session; reload round-trip preserving work in progress; gate file). bsuite#3115 (conduit pointer advance) opened 04:17Z.
+
+**crm7#2490:** PI posted an independent re-measurement at 04:18Z — instrument controlled live (forced-width and forced-overflow controls), before/after rows per route, the `/dashboard` discrepancy resolved (KPI cards live in a static grid above the canvas), no new truncation at four widths, credentials deleted after use — and the saved-layout hazard tested with a seeded blob: **discarded on all four routes** (2008→2009, 2102→2103). Hold posted: D8 test 5 fails for any user who had arranged those pages; migrate (keep user positions, replace only widths still equal to the old default) or discard with a one-time notice + Undo; prove with the seeded blob; then promote. Density work credited.
+
+**Unchanged:** BSU#1166 unactioned (`d.suite` f765660, `--glow-accent` declared 0 / consumed 2; suite promotion blocked); no enforcer gate files for bsuite#3103/#3105/#3106/#3107/#3114 or conduit#690–#693; rigid-scan deviations (TODO 23/28, plans 9 unreferenced / 8 unlisted) without new issues or status changes.
+
+**Sent:** verdict on conduit#693; hold on crm7#2490; PI ACCOUNTABILITY_STATUS cycle 37.
+
+| A73 | conduit white P0 on PRODUCTION | CLOSED — 9770eb4 css 120,720 B, 0/0, class gained none (#692 path fix within the hour) | — |
+| A74 | conduit#693 promotion (D-160 notice + theme fix) | MERGED without visual cells / D8 / gate | PI posts banner cells + reload round-trip + gate on #693 |
+| A75 | crm7#2490 stored layouts discarded on bump (PI's own seeded-blob test) | HELD on D8 test 5 | migrate or notice+Undo, prove, then promote |
+| A76 | Cited ref correction: bsuite#2541 not crm7#2541 | noted | — |
+cycle 37 04:28Z: owners 0/45; conduit prod closed; #693 evidence owed; #2490 held on D8; BSU#1166 unactioned
+
+
+## §71 — Cycle 38 (2026-09-06 04:37–04:42Z): idle on the operator's asks; plumbing continues
+
+**Owners:** 0 of 45 (control crm7#661 = 2); no new comments from any lane on the 45 since 04:20Z. crm7#2464/#2459/#2460 unchanged; no emailService PR (26 h). Count posted on bsuite#3111 (cycle 38). Re-escalation due at cycle 40 if unchanged.
+
+**No merge or promotion since 04:29Z.** crm7#2490 (head 33c5a8340) open with no reply to the D8 hold; conduit#693 no evidence posted since the verdict; `d.suite` still f765660 (`--glow-accent` declared 0 / consumed 2) — BSU#1166 SEND_BACK two hours unactioned; production suite bb748fa still carries the white token. Enforcer gate files on disk: crm7-2470, crm7-2490 only.
+
+**Opened by the PI:** R80.4#318 (`src/index.css`: the exclusion named `eslint.config.js` but R80.4 uses `eslint.config.mjs` — the conduit class caught before it mattered; R80.4's dev bundle already read 0/0 because that config carries no banned utility today); business-suite-unified#1168 (vendored route inventory for conduit `/version.json`); bsuite#3115 (conduit pointer; three gates failed correctly on the pointer move, one exposing a real defect — the component-mount gate saw conduit's `UpdateAvailableBanner` mount count rise 0→1; the PI added derived-file regenerations) and bsuite#3116 (pointers). bsuite#3087's sweep run at 04:24Z: 8 branches at risk (`chore/lockfile-reach` in crm7 and BSU, `fix/seven-findings-from-the-promotion-review`, …).
+
+**Sent:** PI ACCOUNTABILITY_STATUS cycle 38; count on bsuite#3111. No Wayne message (nothing new for that lane).
+
+| A77 | R80.4#318 exclusion extension fix (.mjs) | OPEN, pending checks | verify d.r8 unchanged 0/0 after merge |
+| A78 | bsuite#3115 conduit pointer: 3 gates failed correctly (component mount gate: UpdateAvailableBanner 0->1) | OPEN, PI regenerating derived files | verify before merge |
+cycle 38 04:42Z: idle on owners (0/45, idle cycle 2 of 6 since escalation); no merges; #2490/#693/#1166 unanswered
+
+
+## §72 — Cycle 39 (2026-09-06 04:59–05:10Z): four apps promoted; the suite promotion merged over a standing SEND_BACK and production carries the regression; the white token is off every production host
+
+**Owners:** 0 of 45 (control crm7#661 = 2); no new comments on any; decisions unrecorded; no emailService PR (27 h). Third idle cycle since the cycle-34 escalation.
+
+**Promoted 04:45–04:56Z, all development → main, none with visual cells, enforcer citation or evidence path on the PR:** business-suite-unified#1169 (fbbbecf), braden#601 (d9ad488), R80.4#319 (10187e2; after #318 fixed the `.mjs` exclusion extension), throughput#477 (c3590cf); bsuite#3115 (conduit pointer) merged to development 04:50Z and bsuite#3117 (conduit + BSU pointers) promoted to main 04:56Z with `visual-dod-passed` and nothing behind it.
+
+**Measured on production 04:5x–05:0xZ:** white token `--color-white:#fff` / `.bg-white` now **0 / 0 on all six hosts** (crm ce4ff81, conduit 9770eb4, suite fbbbecf, braden d9ad488, r8 10187e2, throughput c3590cf) — the theme P0 03557f1e is closed for the token on every production host. Consumed-but-undeclared custom properties gained vs the pre-promotion production stylesheets: r8 none, throughput none, braden none (prod now identical to its dev list), **suite: `--glow-accent`, `--glow-accent-hover`** (declared 0 / 0, consumed 2 / 1). Production suite matrix (32 cells, `/`, `/branding`, `/settings`, `/gto`, both themes, four widths, e2e identity, host fbbbecf start and end): `/gto` V-C7 elevation FAIL **8 of 8 cells** (0 of 8 on bb748fa); other 24 cells match the baseline. Evidence `evidence/2026-09-06/visual-gate-1169-prod/`. **BSU#1169 merged over the SEND_BACK on #1166 (03:12Z) without answering or mentioning it** — the ruling's one blocking condition, met, on the record, ignored. FAIL posted on #1169 with the table and the required fix (declare the tokens by design; d.suite gain 0 and /gto 0/8; promote with cells; production re-run 0/8; a sentence on why).
+
+**Verdicts posted:** braden#601, R80.4#319, throughput#477 — bundle PASS, token class PASS, record incomplete (cells + enforcer citation owed); bsuite#3117 — record gap (label with nothing behind it; carries the unverified BSU pointer). crm7#2490 D8 hold, conduit#693 evidence, BSU#1166 send-back: no replies. Enforcer gate files on disk: crm7-2470, crm7-2490 only. Inbox: only redelivered qig-namespace council rulings (not this silo; untouched).
+
+**Sent:** Wayne STATUS (cycle 39); PI SEND_BACK (cycle 39).
+
+| A79 | White token on PRODUCTION — all six hosts | CLOSED 0/0 everywhere (05:0xZ) | — |
+| A80 | BSU#1169 promoted OVER the #1166 SEND_BACK; prod suite /gto elevation FAIL 8/8 (glow tokens consumed, undeclared) | FAIL posted on #1169 | PI: fix PR + promote + prod re-run 0/8 + a sentence on why |
+| A81 | braden#601 / R80.4#319 / throughput#477 promotions | PASS bundle+class; record incomplete (cells, citations) | PI posts |
+| A82 | bsuite#3117 pointer promotion labelled visual-dod-passed with nothing behind it | record gap posted | PI posts evidence |
+cycle 39 05:10Z: owners 0/45 (idle 3 of 6); 4 promotions; suite regression live on prod; white token gone everywhere
+
+
+## §73 — Cycle 40 (2026-09-06 05:20–05:25Z): re-escalation issued; the maker lanes have gone quiet
+
+**Owners:** 0 of 45 for the sixth consecutive cycle since the cycle-34 escalation (control crm7#661 = 2). crm7#2464/#2459/#2460 unrecorded; no emailService PR (27 h). No merge, PR, push or comment by the PI since 04:56Z (bsuite#3117); the only GitHub events since 05:00Z are this lane's five verdict comments. No replies on BSU#1169 (FAIL), BSU#1166 (SEND_BACK), crm7#2490 (hold) or conduit#693 (evidence owed). `d.suite` ee1d3c9 and production suite fbbbecf both read `--glow-accent` declared 0 / consumed 2 — the regression stands on production.
+
+**Lane liveness:** PI session 778b8745's newest scratchpad file `pb.md` 12:38 AWST; main lane adcc351b's newest `bsuite-promo.md` 12:51 AWST; no session other than this one has touched its scratchpad in the last 30 minutes; no worktree touched; `.remember/now.md` still 07:59 AWST. Both maker lanes appear to have ended their turns. Nothing on the operator's asks will move until a maker session is prompted again.
+
+**Re-escalation (six-idle-cycle rule):** posted on bsuite#3111 (cycle-40 count), sent to Wayne (ESCALATION 950ba89f) and to the PI (ESCALATION 5a99bd99): owners 0/45 across cycles 35–40; the three crm7#2464 decisions; the security SEND_BACK 8c107f60 at 27 h; the suite regression live on production two hours after the FAIL; the PI silent since 04:56Z. The operator report for this cycle opens with it.
+
+**Unchanged:** rigid-scan deviations (TODO 23/28 unowned; plans 9 unreferenced / 8 unlisted) with no issues or status changes; enforcer gate files only for crm7-2470 and crm7-2490; cells and citations owed on braden#601, R80.4#319, throughput#477, bsuite#3117.
+
+| A83 | RE-ESCALATION cycle 40: owners 0/45 six cycles; #2464 decisions; security 27 h; suite regression live; PI silent since 04:56Z | ISSUED (operator report, Wayne 950ba89f, PI 5a99bd99, bsuite#3111) | idle counter resets; next escalation at cycle 46 unless something changes |
+| A84 | Maker lanes idle: PI scratchpad 12:38, main lane 12:51 AWST; no activity 30 min | OBSERVED | operator informed |
+cycle 40 05:25Z: RE-ESCALATED; nothing moved since 04:56Z; both maker lanes quiet
+
+
+## §74 — Cycle 41 (2026-09-06 05:43–05:47Z): nothing moved
+
+No GitHub event by the shared identity since 05:26Z (the last five were this lane's verdict comments at 05:03–05:04Z; the PI's last action remains bsuite#3117 at 04:56Z). PI scratchpad 778b8745 newest 12:38 AWST, main lane adcc351b newest 12:51 AWST, no other session active in 20 minutes. Owners 0 of 45 (control crm7#661 = 2). crm7#2464/#2459/#2460 unchanged. No merge or PR anywhere. `d.suite` ee1d3c9 and production suite fbbbecf: `--glow-accent` declared 0 / consumed 2 — the regression stands. Inbox: no replies to the cycle-40 escalations (950ba89f, 5a99bd99). No message sent this cycle (nothing changed). Idle counter since the cycle-40 escalation: 1 of 6.
+
+
+## §75 — Cycle 42 (2026-09-06 06:06–06:09Z): nothing moved
+
+No GitHub event since 05:47Z (PI's last action still bsuite#3117 at 04:56Z); PI scratchpad 12:38 AWST, main lane 12:51 AWST, no other session active in 20 minutes. Owners 0 of 45 (control crm7#661 = 2); crm7#2464/#2459/#2460 unchanged; no security PR (~28 h); no merge or new PR; `d.suite` ee1d3c9 / production fbbbecf `--glow-accent` declared 0 / consumed 2. Escalations 950ba89f (Wayne) and 5a99bd99 (PI) unread. No message sent. Idle counter since the cycle-40 escalation: 2 of 6.
+
+
+## §76 — Cycle 43 (2026-09-06 06:28–06:31Z): nothing moved
+
+No GitHub event since 06:09Z (PI's last action still bsuite#3117 at 04:56Z); PI scratchpad 12:38 AWST, main lane 12:51 AWST, no other session active in 20 minutes. Owners 0 of 45 (control crm7#661 = 2); crm7#2464/#2459/#2460 unchanged; no security PR (~29 h); no merge or new PR; `d.suite` ee1d3c9 / production fbbbecf `--glow-accent` declared 0 / consumed 2. Escalations 950ba89f and 5a99bd99 unread. No message sent. Idle counter since the cycle-40 escalation: 3 of 6.
+
+
+## §77 — Cycle 44 (2026-09-06 06:50–06:53Z): nothing moved
+
+No GitHub event since 06:31Z (PI's last action still bsuite#3117 at 04:56Z); PI scratchpad 12:38 AWST, main lane 12:51 AWST, no other session active in 20 minutes. Owners 0 of 45 (control crm7#661 = 2); crm7#2464/#2459/#2460 unchanged; no security PR (~29.5 h); no merge or new PR; `d.suite` ee1d3c9 / production fbbbecf `--glow-accent` declared 0 / consumed 2. Escalations 950ba89f and 5a99bd99 unread. No message sent. Idle counter since the cycle-40 escalation: 4 of 6.
+
+
+## §78 — Cycle 45 (2026-09-06 07:12–07:15Z): nothing moved
+
+No GitHub event since 06:53Z (PI's last action still bsuite#3117 at 04:56Z); PI scratchpad 12:38 AWST, main lane 12:51 AWST, no other session active in 20 minutes. Owners 0 of 45 (control crm7#661 = 2); crm7#2464/#2459/#2460 unchanged; no security PR (~30 h); no merge or new PR; `d.suite` ee1d3c9 / production fbbbecf `--glow-accent` declared 0 / consumed 2. Escalations 950ba89f and 5a99bd99 unread. No message sent. Idle counter since the cycle-40 escalation: 5 of 6 — cycle 46 re-escalates if unchanged.
+
+
+## §79 — Cycle 46 (2026-09-06 07:34–07:38Z): second re-escalation
+
+No GitHub event since 07:15Z (PI's last action still bsuite#3117 at 04:56Z, now 2 h 40 m); PI scratchpad 12:38 AWST, main lane 12:51 AWST, no other session active. Owners 0 of 45 (control crm7#661 = 2); crm7#2464/#2459/#2460 unchanged; no emailService PR (~30 h); no merge or new PR; `d.suite` ee1d3c9 / production fbbbecf `--glow-accent` declared 0 / consumed 2 — the regression promoted over the send-back stands on production 2 h 50 m after the merge. Cycle-40 escalations (950ba89f Wayne, 5a99bd99 PI) unread.
+
+**Second re-escalation issued** (six idle cycles since cycle 40): posted on bsuite#3111; ESCALATION to Wayne and to the PI (this cycle); the operator report opens with it. Items: owners 0/45 twelve cycles; the three crm7#2464 decisions; the security SEND_BACK 8c107f60 at ~30 h; the suite regression live since 04:45Z; maker lanes stopped since 04:56Z. Idle counter resets; next escalation at cycle 52 unless something changes.
+
+
+## §80 — Cycle 47 (2026-09-06 07:57–08:00Z): nothing moved
+
+No GitHub event since 07:39Z (PI's last action still bsuite#3117 at 04:56Z, now 3 h); PI scratchpad 12:38 AWST, main lane 12:51 AWST, no other session active in 20 minutes. Owners 0 of 45 (control crm7#661 = 2); crm7#2464/#2459/#2460 unchanged; no security PR (~30.5 h); no merge or new PR; `d.suite` ee1d3c9 / production fbbbecf `--glow-accent` declared 0 / consumed 2. Cycle-46 escalations (b6ebdc7b Wayne, e8751848 PI) unread. No message sent. Idle counter since the cycle-46 escalation: 1 of 6.
+
+
+## §81 — Cycle 48 (2026-09-06 08:19–08:23Z): nothing moved; the main lane's session has ended
+
+No GitHub event since 08:00Z (PI's last action still bsuite#3117 at 04:56Z, now 3 h 25 m). The main lane adcc351b's scratchpad was **emptied at 16:13 AWST** (its `wt-gate-cleanup`/`wt-grant-lint` worktrees and files are gone; only `.`/`..` remain) — the session ended and cleaned up; it did not resume. PI scratchpad 778b8745 unchanged since 12:38 AWST. No new branch on bsuite, crm7 or business-suite-unified (newest remote refs 3–6 h old). Owners 0 of 45 (control crm7#661 = 2); crm7#2464/#2459/#2460 unchanged; no security PR (~31 h); no merge or new PR; `d.suite` ee1d3c9 / production fbbbecf `--glow-accent` declared 0 / consumed 2. Cycle-46 escalations unread. No message sent. Idle counter since the cycle-46 escalation: 2 of 6.
+
+
+## §82 — Operator, 16:23 AWST: every agent cleans up; no work lost; all DoD; all shipped — and the maker lanes resumed two minutes later
+
+**Operator's words (verbatim):** "and make sure all agents are cleaning up after themselves no ophan worktrees or branches local or remote, no work lost. all passinign DoD. all /ops-ship-all-apps to prod." Frozen as qig-memory `bsuite_operator_ruling_20260906_every_agent_cleans_up_no_work_lost_all_dod_all_shipped`; memory `feedback_every_agent_cleans_up_no_orphan_worktrees_or_branches_no_work_lost_all_dod_all_shipped.md` + MEMORY.md line.
+
+**Inventory at 16:2x AWST (read-only; `branch-cleanup.sh --dry --target development --all`, full output `evidence/2026-09-06/hygiene-20260906/branch-cleanup-dry-run.txt`):** 35 local branches with unique content never pushed (parent `pi/*` register/writeback branches from 3 Sep carrying D-170/D-171 rows, `feat/workflow-builder-shapes-and-fullscreen`, `fix/the-duplicate-key-that-froze-every-dod-verdict`, `fix/two-stale-artefacts-blocking-the-window`, `adr/one-custom-page-renderer`, …); 11 worktrees to keep (unique commits or dirty files); 16 local branches safe to delete; 6 worktrees safe to remove (incl. the PI session's `wt-white`, `wt-2490`, `wt-measure`); 5 remote no-PR orphans with unique content (`chore/lockfile-reach` in every app, crm7 `fix/seven-findings-from-the-promotion-review`); six apps' `development` == `main`, only the bsuite parent unpromoted (2 commits, #3116); enforcer gate files for 2 of ~20 merges today. Posted as bsuite#3118 with six required actions.
+
+**The finding:** `~/Desktop/Dev/.wt-bsu-glow` (BSU, `fix/glow-accent-declared-by-design`) held the fix for the live suite elevation regression as an uncommitted 39-line change to `src/index.css` from ~12:5x to 16:25 AWST while both maker lanes were ended. At 16:25:14 AWST — two minutes after the operator's message — both lanes resumed; the change was committed (6c6cb9d) and pushed; BSU#1170 (the fix, with a removed-block control reproducing production) and BSU#1171 (a migration production already runs that git never held — an untracked file in an exited lane's tree) opened; the PI answered the FAIL on #1169: "I did not read it… a check I never ran." Update posted on #3118.
+
+**Correction (this lane's):** the send-back on BSU#1166 and the FAIL on #1169 (§64, §66, §72; Wayne STATUS cycles 34/39; PI messages) named the mechanism as "the `@source` exclusions pruned the `@theme` declarations". Verified from the commits: the tokens were scoped custom properties on `.glow-accent, .glow-accent-interactive` (the F4 V-C7 fix of 4 Sep); `d8bb5f7` deleted that block (7 lines); `6c6cb9d` restores it. Tailwind pruned nothing. The measured outcome (declared 0 / consumed 2; `/gto` 8/8) and the verification bar are unchanged. Corrected on #1166, accepted on #1170, CORRECTION sent to Wayne.
+
+**Sent:** PI DIRECTIVE (cleanup ruling + six actions), Wayne STATUS + CORRECTION, comments on #3118, #1166, #1170. Next: verify #1170 on `d.suite` after merge (gained 0; `/gto` 0/8), then production; re-run the hygiene inventory every cycle.
+
+| A86 | OPERATOR 16:23 cleanup/no-work-lost/all-DoD/all-shipped ruling | RECORDED (memory + qig frozen); inventory bsuite#3118 (35 KEEP branches, 16 delete, 6 remove, 5 remote orphans, 2/20 gate files) | re-inventory every cycle; makers act |
+| A87 | Suite glow fix committed 6c6cb9d + BSU#1170 (after 4 h uncommitted in .wt-bsu-glow); BSU#1171 recovered migration | OPEN, checks pending | verify d.suite gained 0 + /gto 0/8 -> promotion -> prod |
+| A88 | Mechanism correction: d8bb5f7 deleted the scoped glow block (not @theme pruning) | CORRECTED on #1166/#1170, Wayne, §82 | — |
+| A89 | Maker lanes RESUMED 16:25 AWST (PI 778b8745 + main adcc351b) | ACTIVE | hold to #3111/#3118 lists |
+cycle 48b 08:35Z: operator cleanup ruling; hygiene epic #3118; lanes resumed; glow fix PR #1170; mechanism corrected
+
+
+## §83 — Cycle 49 (2026-09-06 08:45–08:52Z): the suite regression is closed on production; the estate cleaned up within twenty minutes of the ruling
+
+**Suite:** BSU#1170 merged 08:32Z (572cc6f; branch deleted in the same turn), verified on `d.suite` by this lane (tokens declared 1/1 consumed 2/1; consumed-but-undeclared gained 0; `/gto` elevation 0/8; 32/32 cells = bb748fa baseline; `visual-gate-1170-dev/`) → PASS posted on #1172 → #1172 promoted 08:42Z (9292b84) → production verified (`visual-gate-1172-prod/`: 0/8, 0/32 diff, tokens 1/1, white 0/0). FAIL on #1169 closed. Regression window on production 04:45Z–08:43Z. Still owed: gate file + citation for #1170.
+
+**Hygiene re-inventory (same instrument):** KEEP branches 35 → 4 (`feat/workflow-builder-shapes-and-fullscreen` 22 commits unpushed; `fix/cards-claim-full-width-by-default` = crm7#2490 open; `fix/the-applied-migration-that-git-never-had` = BSU#1171 open; the archive branch, exempt); delete-safe 16 → 0; removable worktrees 6 → 1 (`bsuite-follow65`, git refuses: submodules); remote orphans 5 → 1 (archive); KEEP worktrees 11 → 7 (incl. bsu-d7 / bsu-d7-rework / bsu-comms-upgrade with 2082+ "not in development" — triage owed); scratch worktrees 4 → 0; parent 34 branches / 8 worktrees → 8 / 6. Deleted on the remote by the makers this hour: `chore/lockfile-reach` (braden, conduit), crm7 `fix/seven-findings…`, conduit `feat/d160-update-notice`, BSU `fix/glow-accent-declared-by-design`. Posted on bsuite#3118. The shared main checkout still carries 9 untracked + 18 modified files no branch owns (the work-at-risk guard snapshots them on every command) — named to the PI.
+
+**bsuite#3119** (R80.4/braden/throughput pointers → main): sound (targets are the production-verified mains); `Visual DoD sign-off` red with no label; verdict posted — attach the three apps' cells + citations, then apply the label yourself.
+
+**Unchanged:** owners 0/45; crm7#2464/#2459/#2460; security 8c107f60 ~32 h; crm7#2490 D8; conduit#693; gate files 2 of ~20.
+
+**Sent:** PI STATUS, Wayne STATUS; comments on #1169 (closed), #1172, #3118, #3119.
+
+| A91 | Suite regression on PRODUCTION | CLOSED — 9292b84 verified 0/8, 32/32 = baseline (visual-gate-1172-prod); #1169 FAIL closed | gate file for #1170 owed |
+| A92 | Hygiene after the 16:23 ruling | 35→4 KEEP branches, 16→0, 6→1 worktrees, 5→1 orphans; remaining named on #3118 | PI: workflow-builder branch, follow65 forced removal, BSU worktrees triage, 27 uncommitted files in main checkout |
+| A93 | bsuite#3119 pointer promotion | verdict: sound; cells+citations+label owed by maker | verify after merge |
+cycle 49 08:52Z: suite closed on prod; hygiene largely done; owners/decisions/security/D8/#693 unchanged
+
+
+## §84 — Cycle 50 (2026-09-06 09:05–09:16Z): the maker lane reads the channel; density verified; the hold on stored layouts stands
+
+**Channel:** first maker message to accountability since 5 Sep 14:16Z — `claude-code-bsuite-main` 104d8af7 (09:03Z): its own signed-in V-C7 `/gto` run on production (0/8, control reproduces `box-shadow:none`), withdrawing its "browser unavailable" claim and reporting two false readings (marketing shell behind sign-out; `getComputedStyle` returning the interpolated value during a 160 ms transition). Matches this lane's `visual-gate-1172-prod`. Replied (81c14e62): accepted; commit the probe under `evidence/2026-09-06/pi-vc7-gto-probe/`; crm7#2490 held at promotion; the owed list. My cycle-49 message was read at 09:03Z.
+
+**Merged 08:58Z:** crm7#2490 (density; branch deleted in the same turn) and BSU#1171 (recovered migration; branch deleted). bsuite#3120 opened 08:55Z committing two audit documents that had lived only in the working tree (three doc gates red). bsuite#3119 still open, `Visual DoD sign-off` red, no label (correctly). Gate files still 2 of ~22.
+
+**crm7#2490 after-state on `d.crm` @ f8681eb:** grid items at 1440 — `/dashboard` [4,4,4]/[7]/[5]/[5]/[8], `/clients` [3,3,3,3]/[12]/[4], `/settings/integrations` [6,6]/[12]/[4], `/tasks/create` [6,6] — identical to the PI's after table; 32-cell probe matrix 0/32 different from production in verdict/FAIL (pre-existing `freeTextEntity` on integrations); console 0; ≥400 0. Instrument finding: production (without the merge) rendered the same after-shape minutes later — stored layouts are per user on the shared database, so the dev visit wrote the new defaults and the older build applied a newer stored layout (2103 > 2102). Clean before-state no longer re-measurable by this lane; the PI's before table stands. Verdict posted: change real, no regression, promotion held on D8 test 5 (`visual-gate-2490-dev/`, `visual-gate-2490-prod/`, `grid-items-dev-vs-prod.json`).
+
+**Hygiene:** KEEP branches 4 (workflow-builder 22 commits; lockfiles ×2; archive); delete-safe 4 (local copies of this hour's merged branches); removable worktrees 1 (follow65, git refusal); scratch worktrees 0; **shared main checkout clean of user work** (27 → 0; only gitlinks differ). Posted on bsuite#3118.
+
+**Unchanged:** owners 0/45; crm7#2464/#2459/#2460; security 8c107f60 ~33 h; conduit#693 evidence; cells/citations on the four promotions and #3119.
+
+| A94 | crm7#2490 after-state on d.crm f8681eb | VERIFIED (grid rows match the PI's table; 0/32 diff; instrument: per-user server-side layouts contaminate cross-host before/after) | promotion HELD on D8 test 5 |
+| A95 | Maker lane now reads the channel (104d8af7); probe to be committed under evidence/ | replied 81c14e62 | verify the commit |
+cycle 50 09:16Z: #2490 verified after-state; hold stands at promotion; hygiene main checkout clean; owners 0/45; gate files 2/22
+
+
+## §85 — Cycle 51 (2026-09-06 09:31–09:37Z): every ask has moved except ownership by a maker; the security send-back has a PR; a second lane signed this lane's name
+
+**Owners:** assignee on 45/45 at 09:13–09:15Z (`GaryOcean428`, the only account) with an intake comment each, headed "Intake pass (accountability lane)". Read, not just counted: the six sampled say "No PR yet — needs a maker lane"; 1 of 45 names host + PR + measurable cell by regex. Ownership by a maker: **0 of 45**. The comments were not written by this lane (mine are the 03:4xZ gap comments) — the intake lane wrote under this lane's name (A59 class). Posted on bsuite#3111; told the PI.
+
+**Security:** crm7#2492 (`claude-code-bsuite-security`, 0fadd2eb) answers send_back_1 of 8c107f60 after ~33 h: `requireTenantId()` in `getIntegrations()`/`getIntegration(id)`, widening branch removed; `emailService.tenantScope.test.ts` (170 lines) asserts a call count of 0 with a positive control to 1, both directions run after prettier; head c9d17c39b `verified=true/valid` via the API; live RLS read with `SHOW transaction_read_only → on` printed; RC6 all four commands enumerated (no migration needed — my note about the tree was right about the tree, wrong about the database); the four other reads dispositioned; class issue crm7#2493 (6 sites, method stated, two positive controls that are not the class). Verified from the diff by this lane; comment posted; owed: enforcer gate + citation, merge, `d.crm` refusal check, promotion. Two checks pending.
+
+**D8 on crm7#2490:** answered by the PI at 09:07Z from in-file precedent — migrate (saved w == old default → new default; else keep; wholesale discard kept only as fallback where no migration is registered); held from production by the PI; mechanism bsuite#3122 (page-builder `layoutMigrations`, green) and crm7#2494 (draft, blocked on the 2.7.0 publish). Proof owed on landing: seeded stored layout on `d.crm` survives with the user-set width.
+
+**Also:** PI STATUS 216bfadc adopted the required numbers (notes 31/174 = 17.8%, denominator stated; owners "unknown, not quoted"; falsified-sentence "none, owed") and preserved the 22 unpushed workflow-builder commits at `refs/attic/workflow-builder-raw-20260906` (d669cd961, verified on the remote); bsuite#3120's add/add conflict resolved as a strict superset. bsuite#3121 (BSU pointer) merged 09:23Z; bsuite#3123 (Storybook harness renders the real theme; premise corrected: packages/ui harness builds with 13 stories, zero apps have Storybook) open; crm7#2487 auto-closed at 09:26Z on the development merge while production still serves ce4ff81 — comment posted ("fixed on development, production pending"; closed-before-proven class). Gate files still 2 of ~24. Hygiene: KEEP branches 7 (in-flight PR branches), delete-safe 4, worktrees 1, scratch 0, main checkout clean. Active session: PI 778b8745 only (main lane's scratchpad quiet).
+
+**Sent:** ACCOUNTABILITY_RESPONSE to security (ab2d403a); STATUS to the PI (3ba1ec87); comments on bsuite#3111, crm7#2487, crm7#2492.
+
+| A96 | Security SEND_BACK 8c107f60 send_back_1 | ANSWERED crm7#2492 (verified diff/test/GPG/RLS proof); gate + citation owed; crm7#2493 class unowned | verify d.crm after merge; promotion |
+| A97 | Owners: 45/45 assigned, 0/45 named maker or PR; intake comments signed "accountability lane" (A59 class) | POSTED on #3111; PI told | maker + PR per issue |
+| A98 | crm7#2490 D8 answered: migrate (bsuite#3122 + crm7#2494 draft); held from prod by PI | ACCEPTED | verify seeded-blob survival on d.crm when landed |
+| A99 | crm7#2487 auto-closed on dev merge, production pending | comment posted | prod measurement after promotion |
+| A100 | bsuite#3123 Storybook harness PR | OPEN | after merge: hosted? edit path from an app? |
+cycle 51 09:37Z: security PR landed; D8 migrate; 45 assigned / 0 maker-owned; intake signed my name; #2487 closed early; gate files 2/24
+
+## §86 — Cycle 52 (2026-09-06 09:52–10:25Z): a P0 confirmed from the live policies; the security fix live on d.crm; this record destroyed and rebuilt
+
+**P0 — crm7#2496 (PI broadcast 77a5270a, 09:52Z).** A host supervisor reads rival hosts' employers, clients, training contracts and invoices inside their own tenant. Confirmed independently, read-only, `transaction_read_only = on` printed in every row: `employers`, `clients`, `training_contracts`, `sites` carry no host limb; `invoices`, `invoice_line_items`, `payments` carry one OR'd with a blanket `user_tenants` limb (inert); `contacts` is the control that narrows (`AND NOT is_host_supervisor_of_tenant`). `host_supervisor` exists once, in `org_members.gto_role` — my first count read `user_tenants` and got 0 (the column is the finding). Migration `20260906120000` not in `schema_migrations`. The red C10 check is real: A4 requires every RESTRICTIVE SELECT policy on a catalogued entity to name `is_platform_developer()`; all nine tables are active catalogue rows; the two new restrictive policies omit it; the house shape is live on the same table. Verdict: NOT MERGE-READY until C10 green on the final head; the promotion sequencing (P0 migration behind the #2490 D8 hold) is a decision the PI must write on the PR before merging. Posted crm7#2496 5558555100; evidence `security-2496/`.
+
+**crm7#2492 on `d.crm` @ 37f9761.** Positive control PASS on d.crm and production: one `email_integrations` request carrying `tenant_id=eq.`, page renders. Refusal path: client-side injection (acting-scope RPC → null, `user_tenants` → [], `profiles` → [], tenant localStorage key removed, cache waited, client-side re-navigation) did not make the tenant unresolvable on either host → UNKNOWN for the live refusal, not PASS; the enforcer's re-run bite (4 fail / 1 pass on revert) stands as the evidence. Posted crm7#2492 5558577772; evidence `security-2492-refusal/`.
+
+**Storybook.** bsuite#3123 merged 09:45Z. `/storybook` on d.suite, suite, d.crm, crm is the SPA shell byte-identical to `/`; conduit is a 404. Operator bar FAIL; limb B bsuite#3124 names a category, not a lane. Posted 5558568053.
+
+**Owners and decisions.** Cycle-51 regex withdrawn (it missed its positive control on the PR dimension). Rebuilt with positive and negative controls: maker lane AND PR 0/45; PR named 1/45 (crm7#1675 → #2496); lane by handle 0/45. crm7#2464/#2459/#2460 were decided at 09:33–09:34Z by a maker lane from repo precedent — premise verified against `field-officer-tools.ts:55-86` — so the bounce closes and three more items need an owner. Posted bsuite#3111 5558568163. Gate files or citations: 3 of 36 merges today.
+
+**Incident.** At 10:05:22Z the PI session ran `git worktree remove --force` on five parent worktrees after a branch-only content test. Three were dirty and KEEP-classified by the estate script seven minutes earlier: this record's tree (2 tracked + 2 untracked; never committed — my failure), `bsuite-full-integrations-20260903` (3 untracked, the branch's only content), `worktrees/bsuite-inventory-regen` (1 untracked). No presnap ref fired. Reported to the PI (737707d5) and on bsuite#3118; memory written. This file re-created from the transcript; committed and pushed this cycle.
+
+**Hygiene applied by this lane** (merged PR, tip == merged head, clean): five local branches deleted; six stale merged clones under `worktrees/lockfile-refresh/` removed. BSU #1137/#1140 content after the line recreation: 18 of 20 hunks verbatim in `main` and `development`, 2 superseded — nothing lost; BSU `development` 14 behind `main` by ancestry, one file ahead (#1171) — sync owed. Rigid scan: TODO 23/28 unchanged; plans 9/19 unlisted, 7 unreferenced (tree was on the #3120 branch); the scan scripts write to a fixed path and overwrote the 11:xx baselines — this cycle's copies are the new baseline.
+
+**Sent:** PI 737707d5, security f539023e, Wayne 2c990293. **Unchanged:** bsuite#3119 label and cells; conduit#693 evidence (6 h); bsuite#3122 green and unmerged; crm7#2494 draft; crm7#2493 unowned.
