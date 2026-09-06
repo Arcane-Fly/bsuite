@@ -124,11 +124,11 @@
       "name": "DataUnavailable",
       "package": "@bsuite/ui",
       "consumers": {
-        "crm7": 2,
+        "crm7": 1,
         "business-suite-unified": 1,
         "throughput": 2
       },
-      "consumerFiles": 5,
+      "consumerFiles": 4,
       "consumingApps": 3
     },
     {
