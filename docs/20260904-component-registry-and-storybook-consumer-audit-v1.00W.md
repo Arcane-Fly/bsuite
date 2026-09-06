@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # Component registry and Storybook consumer audit
 
 > **Status:** W (Working) · **Date:** 2026-09-04 · **Owner:** Platform lead
