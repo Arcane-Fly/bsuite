@@ -128,7 +128,8 @@ export interface UsePageGridLayoutOptions {
    * Use a module-level constant, not an object literal in the render body:
    * this is an effect dependency.
    *
-   * @see adoptDefaultWidths for the width-only case.
+   * @see adoptUnchangedDefaults for the common case — a bump that only moved
+   *   default widths and/or default positions.
    */
   layoutMigrations?: Readonly<Record<number, LayoutMigration>>;
 }

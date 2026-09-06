@@ -28,7 +28,9 @@ import {
   PACKAGE_LAYOUT_EPOCH,
   usePageGridLayout,
 } from '../usePageGridLayout.js';
-import { adoptDefaultWidths } from '../layoutMigrations.js';
+import { adoptUnchangedDefaults } from '../layoutMigrations.js';
+import { buildCanvasCardLayout } from '../canvasCardLayout.js';
+import { CanvasCard } from '../CanvasCard.js';
 import type {
   GridLayoutItem,
   GridLayouts,
@@ -96,13 +98,13 @@ const CLIENTS_NEW_DEFAULTS: GridLayouts = {
 };
 
 const CLIENTS_PREVIOUS_DEFAULTS = {
-  'stat-total': { w: 4, minW: 4 },
-  'stat-active': { w: 4, minW: 4 },
-  dialog: { w: 12, minW: 4 },
+  'stat-total': { w: 4, minW: 4, position: { x: 0, y: 0 } },
+  'stat-active': { w: 4, minW: 4, position: { x: 4, y: 0 } },
+  dialog: { w: 12, minW: 4, position: { x: 0, y: 12 } },
 } as const;
 
 const CLIENTS_MIGRATIONS: Readonly<Record<number, LayoutMigration>> = {
-  2: adoptDefaultWidths(CLIENTS_PREVIOUS_DEFAULTS),
+  2: adoptUnchangedDefaults(CLIENTS_PREVIOUS_DEFAULTS),
 };
 
 /** What the old defaults stored, verbatim — a user who never dragged anything. */
@@ -195,15 +197,18 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
     // entry, so it is left exactly alone.
     expect(itemOf(saved, 'lg', 'table')?.w).toBe(12);
 
-    // POSITION IS NOT TOUCHED, and this is the residual worth measuring rather
-    // than describing: a user who never arranged this page gets the new WIDTHS
-    // at the OLD x/y, so the stat row is 3 narrower cards at 0/4/8 — not the
-    // 0/3 the new defaults author. Migrating is still strictly better than the
-    // discard it replaces (nothing is lost), but it is not the same thing as
-    // the page being re-laid-out.
+    // POSITION IS ADOPTED TOO, on exactly the same rule as width.
+    //
+    // This assertion is INVERTED from what it first pinned. It used to assert
+    // the OLD x/y survived — stat-active still at x 4 — and called the result a
+    // residual worth measuring. It was: an item narrowed from 4 to 3 but left
+    // at x 4 is a layout nobody authored and nobody chose. A saved x/y still
+    // equal to the old default was never a decision either; it is inherited
+    // furniture, and treating width as inherited while treating position as
+    // sacred splits one rule into two.
     expect((saved?.lg ?? []).map((item) => [item.i, item.x, item.y])).toEqual([
       ['stat-total', 0, 0],
-      ['stat-active', 4, 0],
+      ['stat-active', 3, 0],
       ['table', 0, 6],
       ['dialog', 0, 12],
     ]);
@@ -213,8 +218,14 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
   // 2b. The real crm7 shape: ONE card dragged, every width still at its
   //     default. Adopting and preserving have to happen in the same pass, and
   //     no discard can produce this result.
+  //
+  //     NOTE THE CHANGED PREMISE. This case first asserted that the dragged
+  //     card adopted the new WIDTH while keeping its position. Under one rule —
+  //     adopt what the user never chose, keep what they did — a card the user
+  //     placed is immune to both: resizing a hand-placed card underneath
+  //     someone is the same category of loss as moving it.
   // -------------------------------------------------------------------------
-  it('adopts the new widths AND keeps the one card the user actually moved', async () => {
+  it('leaves the one card the user moved entirely alone, while its siblings adopt', async () => {
     const pageKey = '/clients';
     seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, {
       lg: [
@@ -239,13 +250,14 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
 
     const saved = savedLayoutsFor(pageKey);
     const total = itemOf(saved, 'lg', 'stat-total');
-    // The width was never chosen, so it adopts...
-    expect(total?.w).toBe(3);
-    // ...and the position WAS, so it survives. A discard produces (0, 0) here,
-    // and leaving the saved layout untouched produces w: 4 — this pair of
-    // assertions cannot both hold under either failure mode.
+    // Placed by hand: immune. Width and position both survive.
+    expect(total?.w).toBe(4);
     expect(total?.x).toBe(8);
     expect(total?.y).toBe(30);
+    // Its untouched siblings still adopt, so the veto is per item, not per
+    // page — and a discard could produce neither half of this.
+    expect(itemOf(saved, 'lg', 'stat-active')?.w).toBe(3);
+    expect(itemOf(saved, 'lg', 'stat-active')?.x).toBe(3);
     expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
   });
 
@@ -386,6 +398,171 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
   });
 });
 
+describe('the /clients wrap — the acceptance test for adopting position', () => {
+  beforeEach(() => store.clear());
+
+  /*
+   * The layouts here are NOT hand-typed. Both sides are produced by
+   * `buildCanvasCardLayout` — the same function the page itself goes through —
+   * from the CanvasCard props the route authored before and after crm7#2490.
+   * Only those props are transcribed, and they were read off the two commits.
+   * Hand-typing x/y would be typing the answer into the fixture.
+   */
+  const clientsCards = (post2490: boolean) => (
+    <>
+      <CanvasCard cardKey="stat-total" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+      <CanvasCard cardKey="stat-active" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+      <CanvasCard cardKey="stat-host-employers" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+      <CanvasCard cardKey="stat-inactive" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+      <CanvasCard cardKey="card2" w={12} h={6}><div /></CanvasCard>
+      <CanvasCard cardKey="card3" w={post2490 ? 4 : 12} h={6}><div /></CanvasCard>
+    </>
+  );
+
+  const OLD_CLIENTS = buildCanvasCardLayout(clientsCards(false)).layouts;
+  const NEW_CLIENTS = buildCanvasCardLayout(clientsCards(true)).layouts;
+
+  const row = (layouts: GridLayouts | undefined, i: string) => {
+    const item = itemOf(layouts, 'lg', i);
+    return item ? [item.x, item.y, item.w] : undefined;
+  };
+
+  it('the fixture really does reproduce the wrap, and really does author 0/3/6/9', () => {
+    // Positive control on the fixture itself. If `buildCanvasCardLayout` did
+    // not wrap the fourth stat card before #2490, this whole describe block
+    // would be testing a defect that never existed.
+    expect(row(OLD_CLIENTS, 'stat-total')).toEqual([0, 0, 4]);
+    expect(row(OLD_CLIENTS, 'stat-active')).toEqual([4, 0, 4]);
+    expect(row(OLD_CLIENTS, 'stat-host-employers')).toEqual([8, 0, 4]);
+    // THE WRAP: w={3} clamped up to the default minW of 4, so three cards fill
+    // the row and the fourth falls to y 6 on its own.
+    expect(row(OLD_CLIENTS, 'stat-inactive')).toEqual([0, 6, 4]);
+    // ...and after #2490, all four sit on one row.
+    expect(row(NEW_CLIENTS, 'stat-total')).toEqual([0, 0, 3]);
+    expect(row(NEW_CLIENTS, 'stat-active')).toEqual([3, 0, 3]);
+    expect(row(NEW_CLIENTS, 'stat-host-employers')).toEqual([6, 0, 3]);
+    expect(row(NEW_CLIENTS, 'stat-inactive')).toEqual([9, 0, 3]);
+  });
+
+  const CLIENTS_PREVIOUS = {
+    'stat-total': { w: 4, minW: 4, position: { x: 0, y: 0 } },
+    'stat-active': { w: 4, minW: 4, position: { x: 4, y: 0 } },
+    'stat-host-employers': { w: 4, minW: 4, position: { x: 8, y: 0 } },
+    'stat-inactive': { w: 4, minW: 4, position: { x: 0, y: 6 } },
+    card3: { w: 12, position: { x: 0, y: 18 } },
+  } as const;
+  const CLIENTS_FULL_MIGRATIONS: Readonly<Record<number, LayoutMigration>> = {
+    2: adoptUnchangedDefaults(CLIENTS_PREVIOUS),
+  };
+
+  it('un-wraps the stat row: a never-arranged page reaches the authored 0/3/6/9', async () => {
+    const pageKey = '/clients-wrap';
+    // A user who has loaded the page and never touched it: the old discard
+    // stored the old defaults verbatim.
+    seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, OLD_CLIENTS);
+
+    renderHook(() =>
+      usePageGridLayout({
+        pageKey,
+        defaultLayouts: NEW_CLIENTS,
+        layoutVersion: 2,
+        layoutMigrations: CLIENTS_FULL_MIGRATIONS,
+        preferenceAdapter: durableAdapter,
+      }),
+    );
+    await act(async () => {});
+
+    const saved = savedLayoutsFor(pageKey);
+    expect(row(saved, 'stat-total')).toEqual([0, 0, 3]);
+    expect(row(saved, 'stat-active')).toEqual([3, 0, 3]);
+    expect(row(saved, 'stat-host-employers')).toEqual([6, 0, 3]);
+    // The one that used to wrap. All four on one row, y 0.
+    expect(row(saved, 'stat-inactive')).toEqual([9, 0, 3]);
+    expect(
+      ['stat-total', 'stat-active', 'stat-host-employers', 'stat-inactive'].map(
+        (i) => itemOf(saved, 'lg', i)?.y,
+      ),
+    ).toEqual([0, 0, 0, 0]);
+  });
+
+  it('leaves a card the user MOVED completely alone — position and width', async () => {
+    const pageKey = '/clients-moved';
+    // Everything at its old default except stat-active, dragged to (7, 24).
+    // Its WIDTH is still the old default 4, so the width rule alone would
+    // narrow it; the position rule must veto the whole item, not half of it.
+    const arranged: GridLayouts = {
+      lg: (OLD_CLIENTS.lg ?? []).map((item) =>
+        item.i === 'stat-active' ? { ...item, x: 7, y: 24 } : item,
+      ),
+    };
+    seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, arranged);
+
+    renderHook(() =>
+      usePageGridLayout({
+        pageKey,
+        defaultLayouts: NEW_CLIENTS,
+        layoutVersion: 2,
+        layoutMigrations: CLIENTS_FULL_MIGRATIONS,
+        preferenceAdapter: durableAdapter,
+      }),
+    );
+    await act(async () => {});
+
+    const saved = savedLayoutsFor(pageKey);
+    // Moved: immune. Position kept AND width kept — a card someone placed by
+    // hand must not silently change size underneath them either.
+    expect(row(saved, 'stat-active')).toEqual([7, 24, 4]);
+    // Its untouched neighbours still adopt, so the veto is per item and not
+    // per page.
+    expect(row(saved, 'stat-total')).toEqual([0, 0, 3]);
+    expect(row(saved, 'stat-host-employers')).toEqual([6, 0, 3]);
+  });
+
+  it('adopts x and y atomically — never one without the other', () => {
+    // Half a match is not a match. An item whose x still equals the old default
+    // but whose y does not was moved, and adopting only x would invent a third
+    // position that neither the user nor the page ever chose.
+    const saved: GridLayouts = {
+      lg: [{ i: 'stat-active', x: 4, y: 30, w: 4, h: 6, minW: 4 }],
+    };
+    const out = adoptUnchangedDefaults(CLIENTS_PREVIOUS)(saved, NEW_CLIENTS);
+    expect(row(out, 'stat-active')).toEqual([4, 30, 4]);
+  });
+
+  it('an item whose position did NOT move in the bump is unaffected by the position rule', () => {
+    // The /dashboard shape: trainingManagement went w 12 -> 8 at the SAME
+    // x 0, y 21. It passes through both rules — position matches the old
+    // default so the new position is adopted, and the new position is the old
+    // one — so only the width moves. Stated rather than assumed.
+    const previous = { trainingManagement: { w: 12, minW: 3, position: { x: 0, y: 21 } } };
+    const defaults: GridLayouts = {
+      lg: [{ i: 'trainingManagement', x: 0, y: 21, w: 8, h: 8, minW: 3, minH: 3 }],
+    };
+    const saved: GridLayouts = {
+      lg: [{ i: 'trainingManagement', x: 0, y: 21, w: 12, h: 8, minW: 3, minH: 3 }],
+    };
+    const after = adoptUnchangedDefaults(previous)(saved, defaults).lg[0];
+    expect([after?.x, after?.y, after?.w]).toEqual([0, 21, 8]);
+    // ...and a user who dragged it keeps everything, width included.
+    const dragged: GridLayouts = {
+      lg: [{ i: 'trainingManagement', x: 4, y: 2, w: 12, h: 8, minW: 3, minH: 3 }],
+    };
+    const afterDrag = adoptUnchangedDefaults(previous)(dragged, defaults).lg[0];
+    expect([afterDrag?.x, afterDrag?.y, afterDrag?.w]).toEqual([4, 2, 12]);
+  });
+
+  it('leaves position alone when the migration records none', () => {
+    // `position` is optional. An entry that omits it is a width-only migration
+    // and must not move anything — the pre-existing behaviour, kept so a
+    // migration written before this rule cannot start moving cards.
+    const saved: GridLayouts = {
+      lg: [{ i: 'stat-active', x: 4, y: 0, w: 4, h: 6, minW: 4 }],
+    };
+    const out = adoptUnchangedDefaults({ 'stat-active': { w: 4, minW: 4 } })(saved, NEW_CLIENTS);
+    expect(row(out, 'stat-active')).toEqual([4, 0, 3]);
+  });
+});
+
 describe('the real crm7#2490 arithmetic, end to end', () => {
   beforeEach(() => store.clear());
 
@@ -422,7 +599,7 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
         defaultLayouts: CLIENTS_NEW_DEFAULTS,
         // What DraggableCardPage hands down after applying LAYOUT_EPOCH.
         layoutVersion: 2 + CRM7_LAYOUT_EPOCH,
-        layoutMigrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptDefaultWidths(CLIENTS_PREVIOUS_DEFAULTS) },
+        layoutMigrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptUnchangedDefaults(CLIENTS_PREVIOUS_DEFAULTS) },
         preferenceAdapter: durableAdapter,
       }),
     );
@@ -430,9 +607,11 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
 
     expect(savedVersionFor(pageKey)).toBe(2103);
     const saved = savedLayoutsFor(pageKey);
-    expect(itemOf(saved, 'lg', 'stat-total')?.w).toBe(3);
+    // stat-total was dragged to (8, 30): immune, width included.
+    expect(itemOf(saved, 'lg', 'stat-total')?.w).toBe(4);
     expect(itemOf(saved, 'lg', 'stat-total')?.x).toBe(8);
     expect(itemOf(saved, 'lg', 'stat-total')?.y).toBe(30);
+    // dialog is still at its old default position, so it adopts: 12 -> 4.
     expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
   });
 
@@ -445,7 +624,7 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
         pageKey,
         defaultLayouts: CLIENTS_NEW_DEFAULTS,
         layoutVersion: 2 + CRM7_LAYOUT_EPOCH,
-        layoutMigrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptDefaultWidths(CLIENTS_PREVIOUS_DEFAULTS) },
+        layoutMigrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptUnchangedDefaults(CLIENTS_PREVIOUS_DEFAULTS) },
         preferenceAdapter: durableAdapter,
       }),
     );
@@ -464,7 +643,7 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
         pageKey,
         defaultLayouts: CLIENTS_NEW_DEFAULTS,
         layoutVersion: 2 + CRM7_LAYOUT_EPOCH,
-        layoutMigrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptDefaultWidths(CLIENTS_PREVIOUS_DEFAULTS) },
+        layoutMigrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptUnchangedDefaults(CLIENTS_PREVIOUS_DEFAULTS) },
         preferenceAdapter: durableAdapter,
       }),
     );
@@ -475,7 +654,7 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
   });
 });
 
-describe('adoptDefaultWidths', () => {
+describe('adoptUnchangedDefaults', () => {
   const previous = { a: { w: 12, minW: 4 }, b: { w: 12 } } as const;
   const defaults: GridLayouts = {
     lg: [
@@ -497,7 +676,7 @@ describe('adoptDefaultWidths', () => {
         { i: 'c', x: 0, y: 12, w: 12, h: 6, minW: 4 },
       ],
     };
-    const out = adoptDefaultWidths(previous)(saved, defaults);
+    const out = adoptUnchangedDefaults(previous)(saved, defaults);
     expect(out.lg).toEqual([
       { i: 'a', x: 0, y: 0, w: 6, h: 6, minW: 3 },
       { i: 'b', x: 0, y: 6, w: 7, h: 6, minW: 4 },
@@ -509,7 +688,7 @@ describe('adoptDefaultWidths', () => {
     const saved: GridLayouts = {
       lg: [{ i: 'orphan', x: 0, y: 0, w: 12, h: 6, minW: 4 }],
     };
-    const out = adoptDefaultWidths({ orphan: { w: 12 } })(saved, defaults);
+    const out = adoptUnchangedDefaults({ orphan: { w: 12 } })(saved, defaults);
     expect(out.lg[0]?.w).toBe(12);
   });
 
@@ -518,7 +697,7 @@ describe('adoptDefaultWidths', () => {
       lg: [{ i: 'a', x: 0, y: 0, w: 12, h: 6, minW: 4 }],
       md: [{ i: 'a', x: 0, y: 0, w: 12, h: 6, minW: 4 }],
     };
-    const out = adoptDefaultWidths(previous)(saved, defaults);
+    const out = adoptUnchangedDefaults(previous)(saved, defaults);
     expect(out.lg[0]?.w).toBe(6);
     // md has no authored default of its own, so it falls back to lg's.
     expect((out.md ?? [])[0]?.w).toBe(6);
@@ -527,7 +706,7 @@ describe('adoptDefaultWidths', () => {
   it('does not mutate the layout it was handed', () => {
     const item: GridLayoutItem = { i: 'a', x: 0, y: 0, w: 12, h: 6, minW: 4 };
     const saved: GridLayouts = { lg: [item] };
-    adoptDefaultWidths(previous)(saved, defaults);
+    adoptUnchangedDefaults(previous)(saved, defaults);
     expect(item.w).toBe(12);
     expect(item.minW).toBe(4);
   });

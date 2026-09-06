@@ -46,7 +46,7 @@ export {
   PAGE_GRID_EDITING_EVENT,
 } from './usePageGridLayout.js';
 export type { PageGridEditingEventDetail } from './usePageGridLayout.js';
-export { adoptDefaultWidths } from './layoutMigrations.js';
+export { adoptUnchangedDefaults } from './layoutMigrations.js';
 export type { PreviousItemDefault } from './layoutMigrations.js';
 export { rescaleLayout } from './rescaleLayout.js';
 export { computeAutoHeightRows } from './autoHeight.js';

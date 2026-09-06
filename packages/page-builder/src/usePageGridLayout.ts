@@ -237,7 +237,7 @@ export function usePageGridLayout({
    * and worse, would re-run it in the window between the gate writing the
    * migrated layout and the new version landing: an adapter that surfaces those
    * two writes in separate renders would then apply the same migration twice.
-   * `adoptDefaultWidths` happens to be idempotent; a migration in general is
+   * `adoptUnchangedDefaults` happens to be idempotent; a migration in general is
    * not, and a contract that only holds for the migrations that exist today is
    * not a contract.
    *

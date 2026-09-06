@@ -18,42 +18,66 @@
 import type { GridLayoutItem, GridLayouts, LayoutMigration } from './types.js';
 
 /**
- * The subset of an item's OLD default that a width-only migration needs.
+ * The subset of an item's OLD default a migration compares against.
  *
- * `w` is required because the whole test is "does the stored value still equal
- * what the page used to author?". `minW` is optional: only state it when the
- * bump moved it, because stating it is what makes it a candidate for
- * replacement.
+ * `w` is required, because the whole test is "does the stored value still equal
+ * what the page used to author?". `minW` and `position` are optional: state
+ * them only where the bump actually moved them, because stating a value is what
+ * makes it a candidate for replacement.
+ *
+ * `position` is `{x, y}` and not two loose fields ON PURPOSE. Half a match is
+ * not a match: an item whose `x` still equals the old default but whose `y` does
+ * not was moved, and adopting only `x` would invent a third position that
+ * neither the user nor the page ever chose. Making the pair a single object
+ * means a caller cannot record half of it by accident.
  */
 export interface PreviousItemDefault {
   w: number;
   minW?: number;
+  position?: { x: number; y: number };
 }
 
 /**
- * A migration for a bump whose only change was DEFAULT WIDTHS.
+ * A migration for a bump that changed DEFAULTS — widths, positions, or both.
  *
- * The rule, per item:
+ * One rule, applied per item: **adopt what the user never chose, keep what they
+ * did.** A stored value still equal to the old default was never a decision; it
+ * is inherited furniture.
  *
- *   saved.w === previousDefault.w  ->  the user never chose it; adopt the new
- *                                      default
- *   saved.w !== previousDefault.w  ->  the user chose it; keep it
+ *   saved position === the OLD default position
+ *       -> the user never placed this card. Adopt the new default `x` and `y`
+ *          (atomically — never one without the other), and go on to consider
+ *          its width.
+ *   saved position !== the OLD default position
+ *       -> the user placed this card. It is IMMUNE: position and width are both
+ *          left alone. A card someone put somewhere by hand must not silently
+ *          change size underneath them either, and reflowing around a
+ *          hand-placed card is how a deliberate arrangement stops making sense.
  *
- * and the same for `minW`. Position (`x`/`y`), height, `autoHeight`, `chrome`,
- * `hUserSet` and every other field are left exactly as the user left them.
+ *   saved w === the OLD default w  ->  adopt the new default width
+ *   saved w !== the OLD default w  ->  the user sized it; keep it
  *
- * NOTE THE RESIDUAL, because it is a real one and a comment is not a substitute
- * for measuring it (`layoutVersionMigration.test.tsx` pins it): a user who
- * never arranged the page gets the new WIDTHS at the OLD `x`/`y`, so the page
- * is not re-laid-out the way a fresh visitor's is. That is the price of not
- * touching positions, and it is still strictly better than the discard it
- * replaces — nothing is lost either way round.
+ * and the same comparison for `minW`. Height, `autoHeight`, `chrome`,
+ * `hUserSet` and everything else are never touched.
+ *
+ * An entry that records no `position` is a WIDTH-ONLY migration: nothing moves.
+ * That is the pre-existing behaviour and is kept so a migration written before
+ * the position rule existed cannot start relocating cards.
+ *
+ * Why position is in scope at all, since it did not start that way: treating
+ * width as inherited while treating position as sacred splits one rule into two,
+ * and produces a layout nobody authored. Measured on `/clients` — the four stat
+ * cards asked for `w={3}` and stored 4 (the default `minW` clamps `w` up), so
+ * three filled the row and the fourth wrapped. Adopting only widths narrowed
+ * them to 3 but left them at x 0/4/8 with the fourth still wrapped: neither the
+ * arrangement the user had nor the 0/3/6/9 the page now authors. Pinned in
+ * `layoutVersionMigration.test.tsx`.
  *
  * @param previousDefaults keyed by layout item id (`i` / `cardKey`). An item
  *   with no entry is passed through untouched, so a bump only has to name the
  *   items whose defaults actually moved.
  */
-export function adoptDefaultWidths(
+export function adoptUnchangedDefaults(
   previousDefaults: Readonly<Record<string, PreviousItemDefault>>,
 ): LayoutMigration {
   return (saved, defaults) => {
@@ -70,10 +94,23 @@ export function adoptDefaultWidths(
         // No recorded old default, or the item is gone from the new defaults:
         // there is nothing to compare against, so nothing is a candidate.
         if (!previous || !current) return item;
+
+        // Position is decided FIRST, because a moved item is immune to the
+        // width rule as well — returning the item itself, not a copy, so the
+        // immunity is visible in the object identity too.
+        const placed =
+          previous.position !== undefined &&
+          (item.x !== previous.position.x || item.y !== previous.position.y);
+        if (placed) return item;
+
         // A fresh object every time — the caller's array is state that other
         // renders still hold, and mutating it in place would edit the "before"
         // out from under anyone comparing the two.
         const next: GridLayoutItem = { ...item };
+        if (previous.position !== undefined) {
+          next.x = current.x;
+          next.y = current.y;
+        }
         if (item.w === previous.w) next.w = current.w;
         if (previous.minW !== undefined && item.minW === previous.minW) {
           if (current.minW === undefined) delete next.minW;
