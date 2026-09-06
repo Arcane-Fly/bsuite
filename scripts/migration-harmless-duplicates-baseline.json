@@ -9,6 +9,6 @@
     "human has checked the new group."
   ],
   "generated_by": "node scripts/audit-prod-migration-history.mjs --write-baseline",
-  "findings": 12,
-  "scanned": 294
+  "findings": 13,
+  "scanned": 296
 }
