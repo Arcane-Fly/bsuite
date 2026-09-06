@@ -50,7 +50,7 @@ permissions:
   pull-requests: read
 
 jobs:
-  operator-signoff:
+  visual-dod-signoff:
     name: Visual DoD sign-off
     runs-on: ubuntu-latest
     steps:
@@ -96,40 +96,4 @@ jobs:
           Applying the label without having run it is a false-complete, and the label event
           is timestamped in the PR timeline, so it is attributable afterwards.
           MSG
-          exit 1
-
-  # ── TRANSITIONAL: the context `main` branch protection still requires ────────
-  #
-  # Renaming the job above orphans the required status check "Operator QA
-  # sign-off" that `main` protection names, and a required context no job can
-  # produce blocks EVERY merge into that branch. check-required-contexts-
-  # producible.mjs caught exactly that on bsuite#3103, which is the guard doing
-  # its job.
-  #
-  # So both contexts are emitted during the transition, enforcing the SAME
-  # condition. The gate is not weakened: this job passes only when the visual
-  # DoD label (or the legacy one) is present, identically to the job above.
-  #
-  # REMOVE THIS JOB once `main` protection requires "Visual DoD sign-off"
-  # instead — update the protection, refresh
-  # docs/security/branch-protection/main-*.json, re-bank the ratchet with
-  # `--update-baseline`, then delete this block. Leaving it forever means the
-  # old name never dies.
-  operator-signoff-legacy-context:
-    name: Operator QA sign-off
-    runs-on: ubuntu-latest
-    steps:
-      - name: Require the visual-dod-passed label (legacy context name)
-        env:
-          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
-        run: |
-          set -euo pipefail
-          echo "labels on this PR: ${LABELS:-<none>}"
-          case ",${LABELS}," in
-            *,visual-dod-passed,*|*,qa-signed-off,*)
-              echo "::notice::sign-off label present — promotion permitted."
-              exit 0
-              ;;
-          esac
-          echo "::error::BLOCKED — see the 'Visual DoD sign-off' check for what has to happen."
           exit 1
