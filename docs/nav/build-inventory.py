@@ -989,12 +989,64 @@ def extract_conduit_routes(nav_map):
     app_dir = os.path.join(REPO_ROOT, "conduit", "src", "app")
     routes = []
 
-    # Middleware to determine public paths
+    # Middleware to determine public paths.
+    #
+    # This USED to read the middleware into `middleware_text` and then ignore it,
+    # hardcoding a copy of `publicPaths` underneath. The read made the list look
+    # derived from the source of truth while it was actually a duplicate that
+    # could drift silently — and had already drifted: it never carried
+    # `publicMetadataPaths` at all, so `/version.json` (D-160's update probe,
+    # which MUST answer unauthenticated) was inventoried as "authenticated",
+    # the exact opposite of what the middleware does.
+    #
+    # Both lists are parsed from the middleware now. They have DIFFERENT
+    # semantics and are kept apart deliberately: `publicPaths` is matched by
+    # PREFIX (`pathname.startsWith(p)`), `publicMetadataPaths` is a Set matched
+    # EXACTLY (`.has(pathname)`). Collapsing them would make "/favicon.ico"
+    # public for every path beginning with it.
     middleware_text = read_file("conduit/src/lib/supabase/middleware.ts")
-    public_path_patterns = [
-        "/auth", "/portal/careers", "/portal/candidate",
-        "/portal/talent-community", "/pricing", "/api/public",
-    ]
+
+    def _string_list_after(text, marker):
+        """Quoted strings between `marker` and the next `]`. No regex: the estate
+        bans regex-by-default for scanners, and a quantifier here would happily
+        run past the closing bracket into the rest of the file."""
+        start = text.find(marker)
+        if start == -1:
+            return []
+        end = text.find("]", start)
+        if end == -1:
+            return []
+        body, out, i = text[start + len(marker):end], [], 0
+        while i < len(body):
+            ch = body[i]
+            if ch in ("'", '"', "`"):
+                close = body.find(ch, i + 1)
+                if close == -1:
+                    break
+                out.append(body[i + 1:close])
+                i = close + 1
+            else:
+                i += 1
+        return [p for p in out if p.startswith("/")]
+
+    public_path_patterns = _string_list_after(middleware_text, "const publicPaths = [")
+    public_exact_paths = set(
+        _string_list_after(middleware_text, "const publicMetadataPaths = new Set([")
+    )
+
+    # A parse that finds nothing is not a finding of nothing. Both lists are
+    # non-empty in the middleware today; if either comes back empty the parser
+    # has been outrun by an edit, and inventorying every public route as
+    # authenticated silently is worse than stopping.
+    if not public_path_patterns or not public_exact_paths:
+        raise SystemExit(
+            "build-inventory: parsed {} publicPaths and {} publicMetadataPaths from "
+            "conduit/src/lib/supabase/middleware.ts — both must be non-empty. The "
+            "declaration shape probably changed; fix the parser rather than "
+            "restoring a hardcoded copy.".format(
+                len(public_path_patterns), len(public_exact_paths)
+            )
+        )
 
     def fs_path_to_url(rel_path):
         """Convert conduit app dir relative path to URL path."""
@@ -1020,6 +1072,10 @@ def extract_conduit_routes(nav_map):
         return path
 
     def is_public_path(url_path):
+        # Exact-match set first — mirrors `publicMetadataPaths.has(pathname)`.
+        if url_path in public_exact_paths:
+            return True
+        # Then prefix match — mirrors `publicPaths.some(p => pathname.startsWith(p))`.
         for p in public_path_patterns:
             if url_path.startswith(p):
                 return True
