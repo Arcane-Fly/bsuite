@@ -185,7 +185,15 @@ const withPlaced = (base: GridLayouts, i: string, x: number, y: number): GridLay
  * not — and the four stats still un-wrap. The literal case (a hand-placed stat
  * card, three siblings still un-wrapping) is covered separately below.
  */
-const OLD_CLIENTS_DIALOG_PLACED = withPlaced(OLD_CLIENTS, 'card3', 8, 40);
+/*
+ * `card3`, not `dialog`. The two fixture families key the same confirm dialog
+ * differently — the hand-typed `CLIENTS_*` layouts call it `dialog`, while the
+ * CanvasCard-derived `OLD_CLIENTS`/`NEW_CLIENTS` use `card3`, which is what the
+ * real /clients page authors. Naming this constant for the wrong family's key
+ * describes no missing control, but it is exactly the sort of thing a later
+ * reader trusts instead of checking.
+ */
+const OLD_CLIENTS_CARD3_PLACED = withPlaced(OLD_CLIENTS, 'card3', 8, 40);
 const OLD_CLIENTS_STAT_PLACED = withPlaced(OLD_CLIENTS, 'stat-inactive', 2, 33);
 
 const CLIENTS_PREVIOUS = {
@@ -338,7 +346,7 @@ const MIGRATION_SCENARIOS: readonly MigrationScenario[] = [
     seedVersion: 2 - 1 + PACKAGE_LAYOUT_EPOCH,
     // card3 is hand-placed so the case can tell migrate from discard; the four
     // stats are all still untouched, so the acceptance property is intact.
-    seedLayout: OLD_CLIENTS_DIALOG_PLACED,
+    seedLayout: OLD_CLIENTS_CARD3_PLACED,
     defaults: NEW_CLIENTS,
     layoutVersion: 2,
     migrations: CLIENTS_FULL_MIGRATIONS,
@@ -353,8 +361,9 @@ const MIGRATION_SCENARIOS: readonly MigrationScenario[] = [
           (i) => itemOf(saved, 'lg', i)?.y,
         ),
       ).toEqual([0, 0, 0, 0]);
-      // THE DISCRIMINATOR: the hand-placed dialog is untouched. A discard sends
-      // it to the authored (0, 12, w 4).
+      // THE DISCRIMINATOR: the hand-placed `card3` is untouched. A discard
+      // sends it to the authored (0, 12, w 4) — verified against
+      // `buildCanvasCardLayout`, not assumed.
       expect(row(saved, 'card3')).toEqual([8, 40, 12]);
     },
   },
@@ -755,9 +764,17 @@ describe('the two discard guards, each on its own', () => {
    *     no registered migration discards" true, and it is the epoch-8 escape
    *     hatch.
    *   - the O(1) `to - from > size` refusal is a COST guard. It never changes
-   *     the answer — the loop would reach the same `null` — it stops a first
-   *     visit (`from` 0, `to` 2103) walking two thousand versions on every
-   *     mount. So it is tested by what it does not do, not by what it returns.
+   *     the answer — the loop would reach the same `null`, because it bails at
+   *     the first version with no migration. What it saves is AT MOST
+   *     `migrations.size + 1` registry lookups, reached only when the registry
+   *     is contiguous from `from + 1`. So it is tested by what it does not do,
+   *     not by what it returns.
+   *
+   *     The bound is stated HERE, and not only at the assertion 90 lines below,
+   *     because this header is what anyone reads to learn what the guard is
+   *     for. An earlier version said it stopped a first visit "walking two
+   *     thousand versions", which was false — and the correction landed at the
+   *     assertion while this header went on asserting the fabricated size.
    */
   const saved: GridLayouts = { lg: [{ i: 'a', x: 0, y: 0, w: 4, h: 4 }] };
   const defaults: GridLayouts = { lg: [{ i: 'a', x: 0, y: 0, w: 6, h: 4 }] };
