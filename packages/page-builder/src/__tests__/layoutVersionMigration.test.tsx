@@ -26,6 +26,7 @@ import { useCallback, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   PACKAGE_LAYOUT_EPOCH,
+  migrateSavedLayout,
   usePageGridLayout,
 } from '../usePageGridLayout.js';
 import { adoptUnchangedDefaults } from '../layoutMigrations.js';
@@ -115,6 +116,25 @@ const CLIENTS_UNTOUCHED_SAVE: GridLayouts = {
     { i: 'table', x: 0, y: 6, w: 12, h: 6, minW: 4, minH: 2 },
     { i: 'dialog', x: 0, y: 12, w: 12, h: 6, minW: 4, minH: 2 },
   ],
+};
+
+/**
+ * The same layout with ONE card placed by hand.
+ *
+ * `CLIENTS_UNTOUCHED_SAVE` cannot tell a discard from a migration: it holds the
+ * old defaults, so "reset to the new defaults" and "adopt the new defaults on
+ * every item" produce byte-identical output. Every discard assertion written
+ * against it therefore passes with the discard deleted — which is how the
+ * headline requirement (a PACKAGE_LAYOUT_EPOCH bump resets everyone) came to be
+ * asserted by a test that could not see the reset.
+ *
+ * `stat-total` at (6, 3) with w 6 is immune under the migration rule and gone
+ * under the discard, so `toEqual(CLIENTS_NEW_DEFAULTS)` finally discriminates.
+ */
+const CLIENTS_ARRANGED_SAVE: GridLayouts = {
+  lg: CLIENTS_UNTOUCHED_SAVE.lg.map((item) =>
+    item.i === 'stat-total' ? { ...item, x: 6, y: 3, w: 6 } : item,
+  ),
 };
 
 describe('layoutVersion bump migrates a saved layout instead of discarding it', () => {
@@ -297,7 +317,9 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
 
   it('discards when NO migrations are registered at all — the pre-existing behaviour', async () => {
     const pageKey = '/legacy';
-    seed(pageKey, 1 + PACKAGE_LAYOUT_EPOCH, CLIENTS_UNTOUCHED_SAVE);
+    // ARRANGED, not untouched: on an untouched layout a discard and a migration
+    // produce the same bytes, so the assertion below would hold either way.
+    seed(pageKey, 1 + PACKAGE_LAYOUT_EPOCH, CLIENTS_ARRANGED_SAVE);
 
     renderHook(() =>
       usePageGridLayout({
@@ -617,7 +639,9 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
 
   it('discards a layout stored below 2102 — earlier epochs were genuine resets', async () => {
     const pageKey = '/clients';
-    seed(pageKey, 2101, CLIENTS_UNTOUCHED_SAVE);
+    // ARRANGED — see CLIENTS_ARRANGED_SAVE. With the untouched fixture this
+    // assertion passed with the discard removed entirely.
+    seed(pageKey, 2101, CLIENTS_ARRANGED_SAVE);
 
     renderHook(() =>
       usePageGridLayout({
@@ -635,8 +659,11 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
 
   it('discards on a PACKAGE_LAYOUT_EPOCH bump, which is what that lever is for', async () => {
     const pageKey = '/clients';
-    // A layout stored under the PREVIOUS package epoch: 2 + 101 + 1000.
-    seed(pageKey, 1103, CLIENTS_UNTOUCHED_SAVE);
+    // A layout stored under the PREVIOUS package epoch: 2 + 101 + 1000, with
+    // one card placed by hand so that "was reset" and "was migrated" are
+    // distinguishable outputs. This is the headline requirement for the whole
+    // fallback — it must fail when the reset breaks.
+    seed(pageKey, 1103, CLIENTS_ARRANGED_SAVE);
 
     renderHook(() =>
       usePageGridLayout({
@@ -651,6 +678,131 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
 
     expect(savedLayoutsFor(pageKey)).toEqual(CLIENTS_NEW_DEFAULTS);
     expect(savedVersionFor(pageKey)).toBe(2103);
+  });
+});
+
+describe('the two discard guards, each on its own', () => {
+  /*
+   * `migrateSavedLayout` refuses an uncoverable span twice over, and until now
+   * the suite could only see that AT LEAST ONE refusal existed: breaking either
+   * one alone left 285 tests green, because the other silently covered for it.
+   * A guard that cannot fail on its own is a guard that can rot unnoticed.
+   *
+   * They are not the same guard, and the tests differ accordingly:
+   *
+   *   - the IN-LOOP bail is the CORRECTNESS one. It is what makes "a step with
+   *     no registered migration discards" true, and it is the epoch-8 escape
+   *     hatch.
+   *   - the O(1) `to - from > size` refusal is a COST guard. It never changes
+   *     the answer — the loop would reach the same `null` — it stops a first
+   *     visit (`from` 0, `to` 2103) walking two thousand versions on every
+   *     mount. So it is tested by what it does not do, not by what it returns.
+   */
+  const saved: GridLayouts = { lg: [{ i: 'a', x: 0, y: 0, w: 4, h: 4 }] };
+  const defaults: GridLayouts = { lg: [{ i: 'a', x: 0, y: 0, w: 6, h: 4 }] };
+  const passthrough: LayoutMigration = (layout) => layout;
+
+  it('refuses a SPARSE registry whose span the O(1) check cannot catch', () => {
+    // {2002, 2004} over the span 2002 -> 2004 is TWO registered migrations
+    // across a span of two, so `to - from > size` is false and the O(1) refusal
+    // lets it through. 2003 has no migration and the layout must still be
+    // discarded — a production-reachable hole that only the in-loop bail
+    // closes, and that nothing in the suite could previously see.
+    const stepTwo = vi.fn<LayoutMigration>(passthrough);
+    const stepFour = vi.fn<LayoutMigration>(passthrough);
+    const sparse = new Map<number, LayoutMigration>([
+      [2002, stepTwo],
+      [2004, stepFour],
+    ]);
+    expect(2004 - 2002).toBeLessThanOrEqual(sparse.size); // the O(1) check passes
+
+    const out = migrateSavedLayout({ saved, defaults, from: 2002, to: 2004, migrations: sparse });
+
+    expect(out).toBeNull();
+    // Counts, not booleans: the gap is hit at 2003, so nothing runs at all. A
+    // negative case asserted as `not.toHaveBeenCalled()` passes just as happily
+    // when the subject was never reached.
+    expect(stepTwo).toHaveBeenCalledTimes(0);
+    expect(stepFour).toHaveBeenCalledTimes(0);
+  });
+
+  it('...and migrates the CONTIGUOUS registry of the same size and span', () => {
+    // The positive control. Without it the case above passes trivially for any
+    // implementation that refuses every span of two.
+    const stepThree = vi.fn<LayoutMigration>(passthrough);
+    const stepFour = vi.fn<LayoutMigration>(passthrough);
+    const contiguous = new Map<number, LayoutMigration>([
+      [2003, stepThree],
+      [2004, stepFour],
+    ]);
+
+    const out = migrateSavedLayout({
+      saved,
+      defaults,
+      from: 2002,
+      to: 2004,
+      migrations: contiguous,
+    });
+
+    expect(out).not.toBeNull();
+    expect(stepThree).toHaveBeenCalledTimes(1);
+    expect(stepFour).toHaveBeenCalledTimes(1);
+  });
+
+  it('refuses an uncoverable span WITHOUT walking it', () => {
+    // A first visit: nothing stored, `to` is 2103. The answer is null either
+    // way — the loop would miss at version 1 — so the only observable
+    // difference is the WORK, and the work is what this guard exists to avoid.
+    // Counting registry lookups is how that becomes an assertion.
+    let lookups = 0;
+    const counting = new Map<number, LayoutMigration>(
+      [1, 2, 3, 4, 5].map((v) => [v, passthrough] as const),
+    );
+    const instrumented = {
+      size: counting.size,
+      get(version: number) {
+        lookups += 1;
+        return counting.get(version);
+      },
+    } as unknown as ReadonlyMap<number, LayoutMigration>;
+
+    const out = migrateSavedLayout({
+      saved,
+      defaults,
+      from: 0,
+      to: 2103,
+      migrations: instrumented,
+    });
+
+    expect(out).toBeNull();
+    // Zero, and the number that matters is that it is not proportional to the
+    // span: without this guard the walk consults the registry until it misses.
+    expect(lookups).toBe(0);
+  });
+
+  it('still consults the registry when the span IS coverable', () => {
+    // Control for the case above: the O(1) refusal must not swallow work it has
+    // no business refusing.
+    let lookups = 0;
+    const counting = new Map<number, LayoutMigration>([[2003, passthrough]]);
+    const instrumented = {
+      size: counting.size,
+      get(version: number) {
+        lookups += 1;
+        return counting.get(version);
+      },
+    } as unknown as ReadonlyMap<number, LayoutMigration>;
+
+    const out = migrateSavedLayout({
+      saved,
+      defaults,
+      from: 2002,
+      to: 2003,
+      migrations: instrumented,
+    });
+
+    expect(out).not.toBeNull();
+    expect(lookups).toBe(1);
   });
 });
 
