@@ -102,7 +102,15 @@ if [ "$SELF_TEST" -eq 0 ]; then
         fi
 
         if [ -n "$base_tree" ] && [ "$base_tree" = "$head_tree" ]; then
-            echo "[grant-lint] nothing to scan, and here is why that is provable:"
+            # STATE A NON-ZERO DENOMINATOR. `check-guard-self-reporting.mjs`
+            # requires every guard that exits 0 to say what it examined, with a
+            # count, and it caught this exact line the first time it ran: the
+            # original wording explained itself at length and named no number,
+            # so the meta-check classified grant-lint as "exited 0 but never
+            # stated a non-zero count of anything examined". The honest count is
+            # not the file count — that IS zero — it is the two tree digests
+            # this branch actually compared to prove the range empty.
+            echo "[grant-lint] compared 2 tree digests and examined 0 changed file(s) — nothing to scan, provably:"
             echo "  the merge base with $BASE_REF is $merge_base and its tree ($base_tree)"
             echo "  is identical to HEAD's tree, so the range is verifiably empty of content"
             echo "  rather than unresolved. This is the shape of a sync / back-merge PR."
@@ -372,15 +380,29 @@ SQL
     git -C "$repos/unrelated" commit -qm "a file this gate does not own"
 
     assert_range_case 0 "empty range, trees provably identical — a sync PR passes" sync base
+
+    # The clean-pass line above must STATE A COUNT, not just exit 0.
+    # `check-guard-self-reporting.mjs` fails any guard that exits 0 without
+    # naming a non-zero denominator, and it caught this line the first time the
+    # empty-range path ever ran in CI (bsuite#3109). Asserting the exit code
+    # alone would let the same regression back in silently, which is the whole
+    # failure mode that meta-check exists to prevent.
+    if printf '%s' "$(cat "$repos/out.txt")" | grep -q "compared 2 tree digests"; then
+        echo "  ok   the sync-PR pass states a non-zero denominator (2 tree digests)"
+    else
+        failed=$((failed + 1))
+        echo "  FAIL the sync-PR pass does not state a non-zero denominator" >&2
+        sed 's/^/       /' "$repos/out.txt" >&2
+    fi
     assert_range_case 2 "empty range, base ref unresolvable — still fails LOUD" unresolved origin/nope
     assert_range_case 1 "non-empty range still catches a migration with no GRANT" violation base
     assert_range_case 0 "non-empty range owning no migration is clean" unrelated base
 
     if [ "$failed" -gt 0 ]; then
-        echo "[grant-lint --self-test] $failed of 9 case(s) FAILED — the detector is broken, so its verdicts mean nothing." >&2
+        echo "[grant-lint --self-test] $failed of 10 case(s) FAILED — the detector is broken, so its verdicts mean nothing." >&2
         exit 1
     fi
-    echo "[grant-lint --self-test] 9 of 9 case(s) passed (2 planted violations caught, 1 unresolvable base refused, 6 clean)."
+    echo "[grant-lint --self-test] 10 of 10 case(s) passed (2 planted violations caught, 1 unresolvable base refused, 6 clean, 1 denominator assertion)."
     exit 0
 fi
 
