@@ -6,7 +6,7 @@
   "localComponentFiles": {
     "crm7": 449,
     "business-suite-unified": 119,
-    "conduit": 99,
+    "conduit": 100,
     "braden": 208,
     "throughput": 91,
     "R80.4": 6
@@ -771,12 +771,13 @@
       "consumers": {
         "crm7": 1,
         "business-suite-unified": 1,
+        "conduit": 1,
         "braden": 1,
         "throughput": 1,
         "R80.4": 1
       },
-      "consumerFiles": 5,
-      "consumingApps": 5
+      "consumerFiles": 6,
+      "consumingApps": 6
     },
     {
       "name": "VERSION_JSON_PATH",

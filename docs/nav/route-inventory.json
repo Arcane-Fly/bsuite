@@ -3732,6 +3732,33 @@
       "note": null
     },
     {
+      "app": "conduit",
+      "path": "/version.json",
+      "route_file": "conduit/src/app/version.json/route.ts",
+      "component": "ApiRoute",
+      "component_file": "conduit/src/app/version.json/route.ts",
+      "layout": "none",
+      "auth": {
+        "type": "public",
+        "permissions": [],
+        "feature_flags": []
+      },
+      "nav": {
+        "surface": "none",
+        "group": null,
+        "label": null,
+        "icon": null,
+        "order": null
+      },
+      "reachable_via": "top_level",
+      "portal": null,
+      "owned_entities": [],
+      "data_tables": [],
+      "status": "live",
+      "evidence": "conduit/src/app/version.json/route.ts:1",
+      "note": null
+    },
+    {
       "app": "crm7",
       "path": "/",
       "route_file": "crm7/src/App.tsx",

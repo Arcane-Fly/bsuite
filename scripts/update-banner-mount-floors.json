@@ -3,7 +3,7 @@
   "floors": {
     "business-suite-unified": 1,
     "crm7": 1,
-    "conduit": 0,
+    "conduit": 1,
     "braden": 1,
     "R80.4": 1,
     "throughput": 1
@@ -16,6 +16,6 @@
     "R80.4": 2,
     "throughput": 1
   },
-  "banked_at": "2026-09-04",
+  "banked_at": "2026-09-06",
   "owner": "R10 adoption PRs"
 }
