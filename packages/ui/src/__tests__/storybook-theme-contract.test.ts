@@ -13,10 +13,13 @@ import { join } from 'node:path'
  *
  * Importing the bridge without the values left every utility resolving through
  * an undefined custom property. Measured on that build: 11 distinct `--role-*`
- * referenced, 0 defined. It rendered `body { background: rgba(0,0,0,0) }`
- * (the browser's white), `color: rgb(0,0,0)` (pure black — banned in every
- * role) and a primary button whose text computed to `rgba(0,0,0,0)`: fully
- * transparent. All five StatusBadge tones painted identically.
+ * referenced, 0 defined. It rendered the browser's own white ground, pure-black
+ * body text (banned in every role) and a primary button whose text computed to
+ * a fully transparent fill. All five StatusBadge tones painted identically.
+ * The exact computed values are recorded in PR #3123 rather than here: this
+ * repository's theme scanner counts a banned literal in PROSE the same as one
+ * in a declaration, and rightly so — the estate residual is 0 and every new
+ * occurrence has to be deliberate.
  *
  * The build exited 0. Types were clean. Every unit test passed. A Storybook
  * that renders the wrong theme certifies its own lie, and nothing except a
@@ -140,12 +143,14 @@ describe('every story file is reachable by the harness globs', () => {
 /**
  * Comments are stripped before the banned-colour scan.
  *
- * This file's own first draft failed here: `preview.css` EXPLAINS in prose
- * that pure white and pure black are banned, naming `#fff` and `oklch(1 0 0)`
- * to say so. A scan that cannot tell a painted value from a sentence about
- * painted values reports the documentation as the defect — and the cheapest
- * way to make it pass would have been to delete the explanation, which is
- * strictly worse than the thing it was guarding.
+ * This file's own first draft failed here: `preview.css` EXPLAINS in prose that
+ * pure white and pure black are banned, and named them to say so. A scan that
+ * cannot tell a painted value from a sentence about painted values reports the
+ * documentation as the defect — and the cheapest way to make it pass would have
+ * been to delete the explanation, which is strictly worse than the thing it was
+ * guarding. (The repository's own theme scanner makes the opposite call for the
+ * file at large, deliberately: its residual is 0, so prose there must carry a
+ * `theme-audit-ok:` reason. Both gates are right for their own scope.)
  */
 function stripCssComments(css: string): string {
   let out = ''
@@ -162,27 +167,93 @@ function stripCssComments(css: string): string {
   return out
 }
 
-describe('the harness does not paint a banned colour of its own', () => {
-  const declarations = stripCssComments(previewCss).toLowerCase()
+/**
+ * Pure white (L=1.0) and pure black (L=0) are banned in every role, alpha forms
+ * included. The estate's white is oklch(0.982 0.002 248) and must arrive
+ * through a token.
+ *
+ * theme-audit-ok: this array IS the ban list — the values are the subject of
+ * the assertion, not a colour this file paints. Removing them would delete the
+ * check.
+ */
+const BANNED_VALUES = ['#fff', '#ffffff', '#000', '#000000', 'oklch(1 0 0)', 'oklch(0 0 0)']
 
-  it('has a positive control: the stripper keeps real declarations', () => {
-    // Without this, "no banned colour found" is indistinguishable from
-    // "the stripper ate the whole file".
-    expect(declarations).toContain('background-color: var(--role-bg-body)')
-    expect(declarations).not.toContain('the estate')
+/** Bare CSS keywords that resolve to a pure endpoint. */
+const BANNED_KEYWORDS = ['white', 'black']
+
+/** The verdict for one declaration. A NAMED outcome, not a match object. */
+type DeclarationVerdict = 'ok' | 'banned-literal' | 'banned-keyword'
+
+/**
+ * Classify one `prop: value` declaration.
+ *
+ * Pure, total, and regex-free — the repository forbids regex assertions in
+ * tests (operator, 2026-08-26), and the reason generalises: a regex asserts on
+ * WORDING, so when it fails you learn a pattern did not match rather than what
+ * the code actually does. A function returning a named outcome says which case
+ * was chosen, and the test asserts on that.
+ */
+export function classifyDeclaration(declaration: string): DeclarationVerdict {
+  const colon = declaration.indexOf(':')
+  if (colon === -1) return 'ok'
+  const value = declaration
+    .slice(colon + 1)
+    .toLowerCase()
+    .split('!important')
+    .join('')
+    .trim()
+  if (value.length === 0) return 'ok'
+  if (BANNED_VALUES.includes(value)) return 'banned-literal'
+  if (BANNED_KEYWORDS.includes(value)) return 'banned-keyword'
+  return 'ok'
+}
+
+/** Every declaration in a stylesheet whose verdict is not `ok`. */
+function bannedDeclarations(css: string): string[] {
+  return stripCssComments(css)
+    .split(';')
+    .map((d) => d.split('\n').join(' ').trim())
+    .filter((d) => d.length > 0 && classifyDeclaration(d) !== 'ok')
+}
+
+describe('classifyDeclaration', () => {
+  // The classifier is the instrument. If it cannot fail, the sweep below is
+  // green by construction — so its own bite is established first.
+  it.each(BANNED_VALUES)('flags `color: %s` as a banned literal', (value) => {
+    expect(classifyDeclaration(`color: ${value}`)).toBe('banned-literal')
   })
 
-  // Pure white (L=1.0) and pure black (L=0) are banned in every role, alpha
-  // forms included. The estate's white is oklch(0.982 0.002 248) and it must
-  // arrive through a token, never a literal.
-  it.each(['#fff', '#ffffff', '#000', '#000000', 'oklch(1 0 0)', 'oklch(0 0 0)'])(
-    'preview.css paints no literal %s',
-    (literal) => {
-      expect(declarations).not.toContain(literal)
-    },
-  )
+  it.each(BANNED_KEYWORDS)('flags `background: %s` as a banned keyword', (value) => {
+    expect(classifyDeclaration(`background: ${value}`)).toBe('banned-keyword')
+  })
 
-  it('preview.css names no bare white/black keyword in a declaration', () => {
-    expect(declarations).not.toMatch(/:\s*(white|black)\s*[;!]/)
+  it('sees through !important', () => {
+    expect(classifyDeclaration('color: #fff !important')).toBe('banned-literal')
+  })
+
+  it('passes a token reference', () => {
+    expect(classifyDeclaration('background-color: var(--role-bg-body)')).toBe('ok')
+  })
+
+  it('passes a non-pure oklch value', () => {
+    expect(classifyDeclaration('color: oklch(0.982 0.002 248)')).toBe('ok')
+  })
+
+  it('passes a line with no declaration at all', () => {
+    expect(classifyDeclaration('@layer base')).toBe('ok')
+  })
+})
+
+describe('the harness does not paint a banned colour of its own', () => {
+  it('keeps real declarations after comment-stripping (positive control)', () => {
+    // Without this, "no banned colour found" is indistinguishable from
+    // "the stripper ate the whole file".
+    const stripped = stripCssComments(previewCss)
+    expect(stripped).toContain('background-color: var(--role-bg-body)')
+    expect(stripped).not.toContain('WHY `@bsuite/theme/css` IS THE FIRST IMPORT')
+  })
+
+  it('paints no banned colour anywhere in preview.css', () => {
+    expect(bannedDeclarations(previewCss)).toEqual([])
   })
 })

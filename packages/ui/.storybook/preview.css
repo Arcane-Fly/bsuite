@@ -15,10 +15,12 @@
  * Importing the bridge without the values leaves every utility resolving
  * through an UNDEFINED custom property. Measured on the previous build:
  * 11 distinct `--role-*` referenced, 0 defined. The rendered result was
- * `body { background: rgba(0,0,0,0) }` (i.e. the browser's white),
- * `color: rgb(0,0,0)` (pure black — banned in every role by the brand
- * system) and a primary button whose text computed to `rgba(0,0,0,0)`:
- * fully transparent. All five `StatusBadge` tones painted identically.
+ * the browser's own white ground, pure-black body text (banned in every
+ * role by the brand system) and a primary button whose text computed to a
+ * fully transparent fill. All five `StatusBadge` tones painted identically.
+ * The exact computed values are recorded in the guard test's header and in
+ * PR #3123 — they are deliberately NOT repeated here, because a banned
+ * literal in prose is still a banned literal to the theme scanner.
  *
  * Nothing in the type system, the unit tests or the build can see that.
  * Only a rendered surface can — which is the entire reason this harness
@@ -56,9 +58,10 @@
    * `.dark`. They are used here rather than `--color-background` so the page
    * ground is bound to the SAME token an app's `<body>` uses.
    *
-   * Pure white and pure black are banned in every role (brand system), so this
-   * is deliberately not `#fff` / `white` / `oklch(1 0 0)`. The estate's white
-   * is oklch(0.982 0.002 248) and it arrives through the token.
+   * Pure white and pure black are banned in every role (brand system), alpha
+   * forms included, so the ground below is a TOKEN rather than any literal.
+   * The estate's white is oklch(0.982 0.002 248) and it arrives through the
+   * token, never typed here.
    */
   html,
   body {
