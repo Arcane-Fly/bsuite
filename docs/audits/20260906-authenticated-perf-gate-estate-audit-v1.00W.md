@@ -1,0 +1,166 @@
+# Every Lighthouse gate in the estate measures a page the field score barely weights
+
+**Date:** 2026-09-06 · **Status:** W (Working) · **Issue:** bsuite#2581 · **Reference implementation:** crm7#2507
+
+## The finding
+
+Seven repositories, **166 workflow files** enumerated, six Lighthouse configurations.
+**Not one of them measured an authenticated screen.** Before crm7#2507, no config in
+the estate carried an auth hook of any kind — no `puppeteerScript`, no
+`extraHeaders`, no `disableStorageReset`.
+
+That is not a small blind spot. crm7's Speed Insights for the last 7 days (Desktop,
+Production) read **RES 85, LCP P75 4.04 s** against **FCP P75 1.53 s**. The largest
+paint lands roughly **2.5 s after first paint** — a data-dependent element that only
+exists once a session does. A local desktop Lighthouse on the signed-out root scores
+**0.95**. Both numbers are correct. They describe different pages.
+
+So `lighthouse = SUCCESS` on every crm7 PR was true and uninformative: the gate was
+green by construction, on a surface the field score barely weights.
+
+## The sweep
+
+**Method.** `find <repo>/.github/workflows -maxdepth 1 -type f \( -name '*.yml' -o
+-name '*.yaml' \)` per repo for the denominator; `grep -rlE "lighthouse|lhci"` over the
+same directories for the gate count; each `lighthouserc.json` parsed and its
+`collect.url` / `collect.staticDistDir` printed rather than summarised.
+
+| Repo | Workflow files | LH workflows | `lighthouserc.json` | What it measures |
+|---|---:|---:|---|---|
+| bsuite (parent) | 109 | 1 | — | no app surface of its own |
+| business-suite-unified | 12 | 1 | yes | 7 prerendered public routes, incl. `/login` (the public form) |
+| crm7 | 16 | 1 | yes | `http://localhost:4310/` — **signed-out root only** |
+| conduit | 9 | 1 | generated at CI time | public job/marketing routes; `/auth/{login,register}` dropped as "pure redirectors" |
+| braden | 8 | 1 | yes | 5 public marketing routes |
+| R80.4 | 4 | **0** | yes | `http://localhost:4320/` — **config exists, nothing runs it** |
+| throughput | 8 | 1 | yes | `/pricing` |
+| **Total** | **166** | **6** | **5 committed + 1 generated** | **0 authenticated** |
+
+Two separate defects fall out of this table:
+
+1. **Six gates measure public surfaces.** Every one is a real gate that really runs
+   and really passes — and none can see the metric that is actually red.
+2. **R80.4's gate does not run at all.** `R80.4/lighthouserc.json` is referenced by no
+   workflow and no `package.json` script. It is a configuration file with no consumer:
+   the appearance of a gate, with none of the function. Filed separately below.
+
+## Why nobody had fixed it — and why the reason was half right
+
+Signing in during CI is genuinely hard here, and the estate had already concluded it
+was impossible. crm7's own `CLAUDE.md` says so:
+
+> `/auth/login` cannot be audited by a live-navigation tool (Lighthouse, prerender,
+> etc.) … Any tool that does a real browser navigation to `/auth/login` and expects a
+> scorable page (Lighthouse CI included) will hit `ERRORED_DOCUMENT_REQUEST`; audit
+> `/` instead.
+
+That is **correct about navigation and wrong about the conclusion**. `/auth/login` is a
+redirect shim to BSU's OAuth hub on another origin, which hands back to
+`{origin}/auth/callback`; Supabase matches `redirect_uri` byte-exactly, and an
+ephemeral CI origin cannot join that list. No flag or query parameter avoids it —
+`--blocked-url-patterns` does not stop a main-frame navigation.
+
+But *driving the login form* was never the only way in. `crm7/tests/e2e/auth.setup.ts`
+had already solved this for the E2E suite: a **direct Supabase password grant seeded
+into `localStorage`**, no third-party hop and no redirect-URI registration. The
+mechanism was sitting in the same repository, proven in CI, for months. The reasoning
+that produced "audit `/` instead" stopped one step early, and the note explaining the
+absence is what stopped anyone measuring it again.
+
+## The recipe
+
+crm7#2507 is the reference implementation. Four parts, in order of how easily each is
+got wrong:
+
+1. **Seed, do not drive.** A password grant into the app's own storage key. Reuse the
+   E2E helper rather than re-deriving it.
+2. **`settings.disableStorageReset: true`.** Lighthouse clears storage between runs by
+   default. Without this the seeded session is wiped and the gate quietly audits the
+   login redirect — looking authenticated while measuring nothing.
+3. **Resolve a non-production database, before the build.** Vite bakes
+   `VITE_SUPABASE_URL` in at build time, so the bundle and the auth hook must agree on
+   the project. Call the same `resolve-supabase-branch.sh` the E2E job uses, and the
+   same `project-guard.ts`, so the two cannot drift.
+4. **Assert a content marker, never a title.** This is the part that decides whether
+   the gate is real.
+
+### The fourth part is the whole game
+
+A fast signed-out page **scores well**. So does an Access-Denied card. So does a
+spinner. Any failure to establish the session produces a *better* score, not a worse
+one — which means a gate that skips silently goes green precisely when it stops
+measuring the thing it exists to watch.
+
+This is not hypothetical, and it is not new. crm7#1157 and the 2026-08-17
+reproduction in `wcag-aa.spec.ts` both recorded audits **passing with zero violations
+against PermissionGate's "Access Denied" card**, because `useDocumentTitle` runs in
+`ProtectedRoute` before every branch — the real page, the spinner and the error card
+all report an identical `document.title`.
+
+**It fired twice more while crm7#2507 was being built.** With Supabase misconfigured,
+`/contacts` reported `document.title === "Contacts | CRM7"` while rendering a
+Configuration Error card. And an invented `crm7-impersonation` payload shape parsed
+cleanly while yielding no tenant override at all. Both times the marker check refused;
+a title check would have scored both and reported green.
+
+So: every authenticated route in a perf gate needs a `data-testid` that **only the real
+page renders**, and the hook must **throw** when it is absent. `/contacts` and
+`/leads` already carry one. `/deals`, `/reports`, `/clients`, `/people` and
+`/apprentices` carry none — adding them is the prerequisite for widening this gate.
+
+## What the new gate can already see
+
+First authenticated lab run of a crm7 signed-in route (3 runs, desktop preset, local
+database, build asset `index-BDVmcETz.js`). **Lab numbers, not field P75:**
+
+| URL | perf | LCP | FCP | CLS |
+|---|---:|---:|---:|---:|
+| `/` (public) | 0.73 | 2479 ms | 2383 ms | 0.000 |
+| `/contacts` (authenticated) | 0.72 | **2858 ms** | 2057 ms | **0.099** |
+
+- The **LCP-after-FCP gap reproduces in the lab** — ~800 ms, the same signature as the
+  field's 1.53 → 4.04 s.
+- **CLS 0.099 against 0.000.** The signed-in list shifts layout as data arrives.
+  Nothing in CI had ever measured this, on any app.
+
+## Bite evidence
+
+A perf gate added but never seen to fail is the same defect one level up. Both
+directions, run rather than described:
+
+| Direction | Condition | Result |
+|---|---|---|
+| RED | `/contacts` LCP budget 1500 ms | exit **1** — `expected: <=1500` · `found: 2690.33` |
+| GREEN | `/contacts` LCP budget 4000 ms | exit **0** — `All results processed!` |
+| RED | credentials absent | REFUSED, named |
+| RED | pointed at production | REFUSED, named |
+| RED | unparseable Supabase URL | REFUSED, named |
+| RED | route without its content marker | REFUSED — fired twice, live |
+| **CONTROL** | a public URL | **proceeded** — the refusals are not "refuse everything" |
+
+## Open items
+
+| # | Item | Owner |
+|---|---|---|
+| 1 | **R80.4's `lighthouserc.json` is wired to nothing.** Add a workflow or delete the file — a config with no consumer reads as coverage that does not exist. | R80.4 |
+| 2 | Add page-level `data-testid`s to `/deals`, `/reports`, `/clients`, `/people`, `/apprentices` so the crm7 gate can widen past `/contacts`. | crm7 |
+| 3 | Ratchet the provisional `/contacts` thresholds (`minScore 0.5`, `LCP ≤ 4000 ms`) once CI has several runs. Loose was deliberate for a first baseline. | crm7 |
+| 4 | Consider a CLS assertion on the authenticated route — 0.099 vs 0.000 is the largest gap the new gate exposed, but one measurement is not a threshold. | crm7 |
+| 5 | Port the recipe to BSU, conduit, braden and throughput. Each needs its own content markers first. | per app |
+| 6 | **Production authenticated LCP remains UNMEASURED.** The numbers above are a local database. `assertNonProductionProject` correctly refuses to sign a harness into production, and the only Supabase branch that exists points at the production ref. The first real number arrives on crm7#2507's own CI run. | crm7 |
+
+## Related, and deliberately not fixed here
+
+**crm7#1628 is closed as measured, not implemented.** Its premise — that
+`EnhancedDataTable` renders every row across 95 importers — does not hold. Fed 1000
+rows it puts **25** in the DOM (`rowPaginationFeature` + `createPaginatedRowModel()`;
+in TanStack Table v9 `getRowModel()` *is* the page slice). All **33** non-test
+importers use the 25-row default, and `createEntityStore` bounds the fetch at 25 as
+well. The routes the issue named do not even use it: `/deals` and `/reports` render
+`@bsuite/data-grid`'s `DataGrid`, which **already virtualises both axes**, and
+`/workflows` is card-based.
+
+The "imported in exactly one file" count that motivated the issue was taken over
+`crm7/src` alone and missed the shared package in `node_modules` — the same
+indirection hazard that makes a `.from()`-style grep miss ~100 `createEntityStore`
+tables. Detail and the guard test are in crm7#2507.
