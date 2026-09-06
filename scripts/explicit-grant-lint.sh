@@ -68,16 +68,56 @@ if [ "$SELF_TEST" -eq 0 ]; then
     # grant, and re-reading it would fail on a path that no longer exists.
     added_or_modified="$(git diff --name-only --diff-filter=AM "$BASE_REF"...HEAD || true)"
 
-    # A PR always changes at least one file. Zero means the diff range never
-    # resolved — the scan examined NOTHING, which is not the same as having
-    # found nothing, and is the failure this estate repeats most often.
+    # An empty range has TWO causes and conflating them is a defect in both
+    # directions.
+    #
+    #   (a) The base ref never resolved — shallow clone, or a fetch that failed
+    #       quietly. The scan examined NOTHING, which is not the same as having
+    #       found nothing, and is the failure this estate repeats most often.
+    #
+    #   (b) The range resolved perfectly and genuinely carries no files. A sync
+    #       / back-merge PR (`main` -> `development`, opened after a promotion
+    #       so the two refs stop drifting) changes ZERO files by construction,
+    #       and GitHub itself reports changedFiles=0 for it.
+    #
+    # This gate used to assert "a PR always changes at least one file" and fail
+    # (b) as if it were (a). That premise is false, and because `grant-lint` is
+    # REQUIRED on `development`, it blocked the one PR the promotion workflow
+    # depends on: bsuite#3099 sat BLOCKED from 2026-09-05 with every other one
+    # of the 33 required contexts green. Measured, not inferred — GitHub
+    # reported changedFiles=0 and this was the only failing required context.
+    #
+    # The discriminator below is a PROOF, not a heuristic. If a merge base
+    # resolves AND its tree is byte-identical to HEAD's tree, then there is
+    # verifiably no content in the range and no scan could have found anything.
+    # If git cannot resolve the endpoints or a merge base between them — the
+    # shallow-clone and failed-fetch cases — we are in (a) and still fail loud.
     if [ "$total_changed" -eq 0 ]; then
+        merge_base="$(git merge-base "$BASE_REF" HEAD 2>/dev/null || true)"
+        base_tree=""
+        head_tree=""
+        if [ -n "$merge_base" ]; then
+            base_tree="$(git rev-parse --verify --quiet "$merge_base^{tree}" || true)"
+            head_tree="$(git rev-parse --verify --quiet 'HEAD^{tree}' || true)"
+        fi
+
+        if [ -n "$base_tree" ] && [ "$base_tree" = "$head_tree" ]; then
+            echo "[grant-lint] nothing to scan, and here is why that is provable:"
+            echo "  the merge base with $BASE_REF is $merge_base and its tree ($base_tree)"
+            echo "  is identical to HEAD's tree, so the range is verifiably empty of content"
+            echo "  rather than unresolved. This is the shape of a sync / back-merge PR."
+            exit 0
+        fi
+
         echo "[grant-lint] REFUSING TO PASS: the diff vs $BASE_REF is empty." >&2
-        echo "  A pull request always changes at least one file, so an empty range means" >&2
-        echo "  the base ref never resolved (a shallow clone, or a fetch that failed" >&2
-        echo "  quietly). Scanning nothing and reporting clean is how a gate goes green" >&2
-        echo "  on exactly the change it exists to catch. Fix the checkout depth or the" >&2
-        echo "  base-ref fetch; do not treat this as a pass." >&2
+        echo "  The range is empty AND git could not prove it is legitimately empty:" >&2
+        echo "    merge base : ${merge_base:-<unresolvable>}" >&2
+        echo "    base tree  : ${base_tree:-<unresolvable>}" >&2
+        echo "    HEAD tree  : ${head_tree:-<unresolvable>}" >&2
+        echo "  That means the base ref never resolved (a shallow clone, or a fetch that" >&2
+        echo "  failed quietly). Scanning nothing and reporting clean is how a gate goes" >&2
+        echo "  green on exactly the change it exists to catch. Fix the checkout depth or" >&2
+        echo "  the base-ref fetch; do not treat this as a pass." >&2
         exit 2
     fi
 
@@ -268,11 +308,79 @@ SQL
     assert_case 0 "out of scope — a table in a non-public schema" "$tmp/other_schema.sql"
     assert_case 0 "out of scope — a migration that creates no table" "$tmp/no_tables.sql"
 
+    # ── The RANGE logic, exercised through the whole script on real repos ─────
+    #
+    # The five cases above test `scan_file`, the awk detector. They cannot see
+    # the diff-range logic at all — which is where the bsuite#3099 defect lived,
+    # and is exactly why it survived a green self-test. These four drive the
+    # script end to end against throwaway repositories.
+    SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
+    repos="$(mktemp -d)"
+    trap 'rm -rf "$tmp" "$repos"' EXIT
+
+    mk_repo() {
+        r="$repos/$1"
+        mkdir -p "$r"
+        git init -q -b base "$r"
+        git -C "$r" config user.email selftest@example.invalid
+        git -C "$r" config user.name  selftest
+        git -C "$r" config commit.gpgsign false
+        mkdir -p "$r/supabase/migrations"
+        echo seed >"$r/README.md"
+        git -C "$r" add -A
+        git -C "$r" commit -qm seed
+    }
+
+    assert_range_case() {
+        want="$1"; label="$2"; repo="$repos/$3"; base="$4"
+        set +e
+        ( cd "$repo" && bash "$SELF" "$base" ) >"$repos/out.txt" 2>&1
+        got=$?
+        set -e
+        if [ "$got" -eq "$want" ]; then
+            echo "  ok   $label (exit $got)"
+        else
+            failed=$((failed + 1))
+            echo "  FAIL $label — expected exit $want, got $got" >&2
+            sed 's/^/       /' "$repos/out.txt" >&2
+        fi
+    }
+
+    # (b) the sync / back-merge shape: an empty commit leaves HEAD's tree
+    # identical to the merge base's, so the range is provably empty.
+    mk_repo sync
+    git -C "$repos/sync" checkout -q -b headref
+    git -C "$repos/sync" commit -q --allow-empty -m "sync: no new work"
+
+    # (a) the failure this gate exists for: a base ref that does not resolve.
+    mk_repo unresolved
+
+    # a real violation reached through the range, proving the new early exit
+    # does not swallow the work the gate is for.
+    mk_repo violation
+    git -C "$repos/violation" checkout -q -b headref
+    printf 'create table public.range_violation (\n  id uuid primary key\n);\n' \
+        >"$repos/violation/supabase/migrations/001_x.sql"
+    git -C "$repos/violation" add -A
+    git -C "$repos/violation" commit -qm "add a migration with no grant"
+
+    # a non-empty range that owns nothing — the ordinary clean path.
+    mk_repo unrelated
+    git -C "$repos/unrelated" checkout -q -b headref
+    echo hello >"$repos/unrelated/notes.txt"
+    git -C "$repos/unrelated" add -A
+    git -C "$repos/unrelated" commit -qm "a file this gate does not own"
+
+    assert_range_case 0 "empty range, trees provably identical — a sync PR passes" sync base
+    assert_range_case 2 "empty range, base ref unresolvable — still fails LOUD" unresolved origin/nope
+    assert_range_case 1 "non-empty range still catches a migration with no GRANT" violation base
+    assert_range_case 0 "non-empty range owning no migration is clean" unrelated base
+
     if [ "$failed" -gt 0 ]; then
-        echo "[grant-lint --self-test] $failed of 5 case(s) FAILED — the detector is broken, so its verdicts mean nothing." >&2
+        echo "[grant-lint --self-test] $failed of 9 case(s) FAILED — the detector is broken, so its verdicts mean nothing." >&2
         exit 1
     fi
-    echo "[grant-lint --self-test] 5 of 5 case(s) passed (1 planted violation caught, 4 clean)."
+    echo "[grant-lint --self-test] 9 of 9 case(s) passed (2 planted violations caught, 1 unresolvable base refused, 6 clean)."
     exit 0
 fi
 
