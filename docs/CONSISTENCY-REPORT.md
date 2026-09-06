@@ -1,7 +1,13 @@
 # BSuite Consistency Report
 
 **Generated:** 2026-05-04 (Plan-tracking convention added 2026-05-06)
-**Last updated:** 2026-07-07 (TypeScript 6.0, React 19, Zod 4 migrations complete; admin parity schema + contact propagation trigger shipped)
+**Last updated:** 2026-09-06 — theme/colour consistency row added; dialog-title row re-measured.
+
+> **READ THIS BEFORE TRUSTING A ROW BELOW.** Between the 2026-07-07 revision and
+> 2026-09-06 the parent gained **2,245 commits** and nothing in this file was
+> re-verified. A tick mark here is an assertion from the date beside it, not a
+> current measurement. Two rows were spot-checked on 2026-09-06 and the results
+> are recorded in place; every other row remains unverified since July.
 **Scope:** Cross-app WCAG / a11y / dependency / auth consistency status,
 
 > **Predates the R80.3 → R80.4 restructure (2026-08-06).** R80.3 left the submodule set
@@ -16,6 +22,59 @@ plus the canonical plan-tracking convention.
 This report tracks parent-level consistency items that span all six
 submodules. It is updated whenever a parent EPIC moves, a per-submodule fix
 lands, or a new cross-cutting concern is opened.
+
+## Theme and colour consistency — added 2026-09-06
+
+This report existed for four months without a colour row, and a cross-app colour
+defect then hit **all six apps at once**. That absence is itself the finding: a
+cross-app consistency report that has no row for a class cannot show the class
+drifting.
+
+### Pure white and black in production bundles
+
+| app | state 2026-09-06 | evidence |
+|---|---|---|
+| crm7 | ✅ 0 | served bundle, `crm.crm7.app` |
+| business-suite-unified | ✅ 0 | served bundle, `suite.crm7.app` |
+| conduit | ✅ 0 | served chunk, `conduit.crm7.app` |
+| braden | ✅ 0 | served bundle, `www.braden.com.au` |
+| throughput | ✅ 0 | served bundle, `ideas.crm7.app` |
+| R80.4 | ✅ 0 | served bundle, `r8.crm7.app` |
+
+Measured on what each host **serves**, not on what merged. Two of the six were
+initially reported as "no data" because the search was wrong, not the app —
+conduit's stylesheet is a Next.js chunk under a path the pattern did not match,
+and `braden.com.au` returns a 307 to `www`. A zero from a search that found no
+file is not a zero from a file that contained none.
+
+**Root cause, and it is worth keeping.** Tailwind v4 scans the whole project for
+class-looking strings and cannot tell a forbidden example from an intention. The
+files that exist to *ban* pure white — the colour lint rule, its fixtures, and
+the docs describing the pattern — are what caused the banned utilities to be
+emitted, pulling Tailwind's own white token in with them. The fix is a scan
+exclusion per app, not a theme change.
+
+**One app shipped a fix that excluded nothing.** R80.4's exclusion named
+`eslint.config.js`; its file is `eslint.config.mjs`. A dangling path looks
+identical to a working one in a diff and in a green CI run. Caught only by
+building both spellings and comparing the emitted CSS.
+
+## Dialog titles — re-measured 2026-09-06, and the row below is now misleading
+
+`crm7/scripts/phase7-5-dialog-title-sweep.mjs` no longer returns 0. It scans
+1,054 files and reports **1**: `src/components/funding/SubmitClaimDialog.tsx`.
+
+**It is a false positive, and the reason matters more than the count.** That
+component renders `<DialogContent>` whose only child is `{open && <SubmitClaimBody/>}`,
+and the title lives inside `SubmitClaimBody`. The sweep reads one file's JSX and
+cannot follow a title across a component boundary, so a refactor that *improved*
+the code broke the check. Runtime accessible-name status is **UNKNOWN** — it has
+not been measured, and static analysis is the wrong instrument for the question.
+
+Two things follow. The sweep **exits 0 regardless of findings**, so nothing in CI
+would have caught a real regression here. And a naive grep is worse: counting
+`DialogTitle` occurrences per file reads this as clean, because it cannot tell an
+import from a render.
 
 ## Plan-tracking convention
 

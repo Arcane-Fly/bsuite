@@ -19,13 +19,13 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 > repository, including the one labelled "Active phase-ordered queue". An agent opening this index
 > to find the queue found nothing.
 
-- [`../20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md) — **Canonical remaining-work register.** Start here; it supersedes the finish-line roadmap and the merged execution backlog.
+- [`../20260817-estate-remaining-work-register-v3.00W.md`](../20260817-estate-remaining-work-register-v3.00W.md) — **Canonical remaining-work register.** Start here; it supersedes the archived v2 register, finish-line roadmap and merged execution backlog.
 - [`../20260504-bsuite-documentation-hub-v1.00W.md`](../20260504-bsuite-documentation-hub-v1.00W.md) — Cross-submodule documentation hub (top-level index)
 - [`../../AGENTS.md`](../../AGENTS.md) — Stack floor and the ten tripwires (replaces the archived tech-stack-alignment doc)
 - [`../20260731-platform-operations-reference-v1.00W.md`](../20260731-platform-operations-reference-v1.00W.md) — Shared `@bsuite/*` package matrix, env vars, lockfile rules
-- `../00-roadmap/20260112-master-roadmap-v1.00F.md` — Master roadmap — **SUPERSEDED**, see its banner
+- `../20260817-estate-completion-ledger-v1.00W.md` — Current completion status ledger for the register
 - `../20260425-bsuite-finish-line-roadmap-v1.00W.md` — **archived out of the repo** (`~/Desktop/Dev/archived-repos-docs/20260725-bsuite-cleanup/docs/archive/2026-07/`)
-- `../20260501-merged-execution-backlog-v1.00W.md` — **archived out of the repo**, same path
+- `../20260817-estate-completion-ledger-v1.00W.md` — current status ledger; the former merged-execution backlog is archived out of the repo
 
 ## One-shot prompts — NOT plans
 
