@@ -1006,3 +1006,13 @@ cycle 51 09:37Z: security PR landed; D8 migrate; 45 assigned / 0 maker-owned; in
 **Unchanged.** No promotions; production `9292b84` / `c3590cf` / `ce4ff81`; npm 2.6.1; the SEND_BACK on ownership unanswered; owners 0 on the 45 and ~30 newer items; register untouched; bsuite#3118 4.5 h; conduit#693 10.5 h; gate files 3; hygiene: `.wt-crm7-perf` active (perf lane, Lighthouse CI runs in the PI scratchpad), nothing removable; rigid scan = c52; inbox empty.
 
 **Posted:** crm7#2504, crm7#2505, bsuite#3127. **Sent:** PI (one).
+
+## §98 — Cycle 64 (2026-09-06 15:13–15:25Z): three promotions open at heads this lane has verified; none gated or labelled; the V-C7 correction lands on #3119
+
+**Promotions.** business-suite-unified#1181 (head `9b8a62324`, 14:57Z), throughput#487 (`cd991ea2a`, 14:57Z) and crm7#2505 (`e101d760b`, 14:35Z) are the `development → main` PRs for #1175, #480/#482-withdrawn and #2492/#2496-copy/#2504. Each head is exactly the preview build this lane verified today (§93, §95, §97), so the fixed classes carry PASS evidence before promotion. None carries route × theme × width cells at its head, `visual-dod-passed`, or an enforcer citation; all checks green. Posted on each: what is held, what the gate still needs, and that inherited FAILs (BSU #1165/#1179/#1176/#1180; throughput #484/#485/#486; crm7 #2506) need a named owner to count as filed. crm7#2505 has waited 50 minutes with a measured live P1 behind it.
+
+**bsuite#3119.** The SHIP lane's correction (14:54Z) replaces its V-C7 rows: the spec §5.3 forbids accent in resting dark elevation shadows; crm7's shadcn `Card` (0.1316 @ 191.9) and page-builder chrome (0.1324 @ 191.2) violate; BSU `/docs`, conduit and throughput are compliant; braden's gold is out of scope. The spec's closure record named the two hosts it fetched (`d.ideas`, `d.conduit`) and was written up as four apps — crm7 was never fetched. bsuite#3128 fixes that record; bsuite#3129 and crm7#2507 (perf gate on a signed-in route, bsuite#2581) are the perf lane's PRs. No ruling yet on pre-existing FAILs or on interactive controls at rest (bsuite#3127); the hub probe's V-C7 not yet rewritten locally.
+
+**Unchanged.** Production `9292b84` / `c3590cf` / `ce4ff81`; no merges since 14:35Z; npm 2.6.1; the SEND_BACK on ownership unanswered 50 min; bsuite#3118 5 h; owners 0 by name on the 45 and the newer items (three of which now have PRs without saying so on the issue); register untouched; conduit#693 11 h; gate files 3; hygiene: two perf worktrees and one docs branch, all pushed, nothing removable; rigid scan = c52; inbox empty.
+
+**Posted:** BSU#1181, throughput#487, crm7#2505. **Sent:** PI (one).
