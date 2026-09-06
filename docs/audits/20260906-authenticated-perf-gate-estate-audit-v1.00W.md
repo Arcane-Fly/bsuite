@@ -182,9 +182,13 @@ database, build asset `index-BDVmcETz.js`). **Lab numbers, not field P75:**
 apart, and the difference is measurement conditions, not the page. The 0.95 was a quiet
 desktop machine; the 0.73 is the median of `{0.88, 0.70, 0.73}` taken on a box
 simultaneously running Docker Postgres and a TLS proxy for this exercise. Both are lab
-numbers and neither is the field score. It is also why the public route's assertions
-were left on `optimistic` — switching them to the median would have turned a
-pre-existing, unrelated gate red at its 0.75 floor.
+numbers and neither is the field score. **CI disagrees with the loaded box, and that is the number that counts:** at the head of
+crm7#2507, `/`'s representative (median) run scores **0.83** against its 0.75 floor. So
+the public gate is not passing on luck — it has real headroom, and the local 0.73 was an
+artifact of the measuring machine. The route's assertions were still left on `optimistic`
+in that PR, because switching them would have turned a pre-existing, unrelated gate's
+statistic inside the one change whose evidential value rests on one-variable diffs.
+That decision now has an owner rather than a clause: **open item 10, crm7#2510**.
 
 ## Bite evidence
 
@@ -240,9 +244,10 @@ measured this route at all.
 | RED | route without its content marker | REFUSED — fired twice, live |
 | **CONTROL** | a public URL | **proceeded** — the refusals are not "refuse everything" |
 
-The committed budget is a **ratchet just above today's measurement, not a target** — it
-bites on further regression without blocking on the pre-existing one, and comes down as
-the LCP is fixed. Same shape as crm7's existing lint and test-typecheck ratchets.
+The committed budget is a **ceiling above the worst observed median, not a target** — it
+bites on further regression without blocking on the pre-existing one, and should come
+down as the LCP is fixed. **Nothing brings it down automatically**; open item 3 sets out
+why it is not a ratchet and who has to move it.
 
 ### Four CI failures on the way, each a real gap
 
@@ -275,6 +280,7 @@ Fail-closed working against a real misconfiguration, not a drill.
 | 7 | **A like-for-like production run is still unavailable,** and the resemblance that once seemed to justify one is gone. CI measures a seeded branch database on a slower machine; under the median it reads ~5.7 s against a 4.04 s field P75. `assertNonProductionProject` correctly refuses to point a harness at production, and this should not be faked. | crm7 |
 | 8 | **`/people`'s row bound is `createEntityStore`'s `.range()`, and nothing guards it — crm7#2509.** It sets `manualPagination`, so the guard shipped in crm7#2507 asserts the wrong mechanism for that route and would stay green through the regression. | crm7 |
 | 9 | **Which element is the LCP element on an authenticated list page — crm7#2508.** Never observed. Answer it before optimising anything. | crm7 |
+| 10 | **The public `/` gate is still checked against its BEST run, and nothing watches that — crm7#2510.** Its three assertions are pinned to `aggregationMethod: optimistic`, which for a `minScore` assertion is `Math.max`. That was the right call for crm7#2507 — switching them would have turned a passing, unrelated gate red inside the one PR whose evidential value rests on one-variable diffs — but it leaves the public route with the identical structural weakness this whole audit is about, one route over. **Measured at the head of crm7#2507: `/`'s representative (median) run scores 0.83 against its 0.75 floor**, so it has ~8 points of headroom and is *not* a false green today. The local `{0.88, 0.70, 0.73}` that first raised the alarm came from a loaded machine, not from CI. Nothing guarantees that headroom holds, and no gate would say if it stopped. Move `/` to `median` in its own PR, where a red can be attributed. | crm7 |
 
 ## Related, and deliberately not fixed here
 
