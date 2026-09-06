@@ -65,7 +65,7 @@ import { useMemo, type ComponentType, type ReactNode } from 'react';
 import { PageGridLayout as DefaultPageGridLayout } from './PageGridLayout.js';
 import { buildCanvasCardLayout } from './canvasCardLayout.js';
 import { CanvasCard, type CanvasCardProps } from './CanvasCard.js';
-import type { PageGridLayoutProps } from './types.js';
+import type { LayoutMigration, PageGridLayoutProps } from './types.js';
 
 // Re-exported so a consumer can import both from one module, matching the
 // long-standing crm7 import shape used by ~284 call sites.
@@ -184,10 +184,40 @@ export function DraggableCardPage({
   const defaultCols = pageProps.defaultCols ?? 12;
   const Grid = gridComponent ?? DefaultPageGridLayout;
 
+  /*
+   * `layoutMigrations` keys live in the same version space as `layoutVersion`,
+   * so they cross the epoch boundary with it. A page writes the number it
+   * bumped — `layoutVersion={2}` with `{ 2: … }` — and never has to know this
+   * app's epoch, or the package's.
+   *
+   * Getting this wrong fails SILENTLY and in the worst direction: an unshifted
+   * key simply never matches the step being migrated, the version gate finds
+   * nothing registered, and it falls back to the wholesale discard the
+   * migration existed to prevent. Pinned by
+   * `DraggableCardPage.layoutMigrations.test.tsx`.
+   *
+   * Memoised because the shifted map is an effect dependency inside
+   * `usePageGridLayout`; a fresh object per render would re-run an effect that
+   * writes state.
+   */
+  const layoutMigrations = useMemo(() => {
+    const declared = pageProps.layoutMigrations;
+    if (!declared || layoutEpoch === 0) return declared;
+    const shifted: Record<number, LayoutMigration> = {};
+    for (const [version, migration] of Object.entries(declared)) {
+      shifted[Number(version) + layoutEpoch] = migration;
+    }
+    return shifted;
+  }, [pageProps.layoutMigrations, layoutEpoch]);
+
   return (
     <Grid
       {...pageProps}
       layoutVersion={(pageProps.layoutVersion ?? 1) + layoutEpoch}
+      // AFTER the spread, deliberately — `pageProps` still carries the
+      // consumer's unshifted map, and letting the spread lay it back over this
+      // would look wired and silently discard instead of migrate.
+      layoutMigrations={layoutMigrations}
       defaultCols={defaultCols}
       widgets={widgets}
       defaultLayouts={layouts}

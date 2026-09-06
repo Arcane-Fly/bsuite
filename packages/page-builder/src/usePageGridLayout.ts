@@ -18,6 +18,7 @@ import { rescaleLayout } from './rescaleLayout.js';
 import type {
   GridLayoutItem,
   GridLayouts,
+  LayoutMigration,
   UsePageGridLayoutOptions,
   UsePageGridLayoutResult,
 } from './types.js';
@@ -85,6 +86,62 @@ export const PACKAGE_LAYOUT_EPOCH = 2000;
  */
 const DEFAULT_ITEM_AUTO_HEIGHT = true;
 
+/**
+ * Walk a stored layout from the version it was written at up to the version
+ * the page now declares, applying one registered migration per step.
+ *
+ * Returns the migrated layout, or `null` meaning "this span cannot be
+ * migrated — discard". Discarding is not a failure mode here; it is the
+ * pre-existing behaviour, kept deliberately as the fallback. crm7's dashboard
+ * epoch 8 was raised because saved layouts referenced widgets that no longer
+ * existed, and no transformation can repair that. A step nobody registered a
+ * migration for means nobody has said the transition is safe, and inventing
+ * one silently corrupts a layout instead of resetting it.
+ *
+ * Consequences that fall out of this rule, all of them wanted:
+ *   - A first visit (`from` 0) has no registered step and no stored layout to
+ *     preserve, so it discards onto the defaults exactly as before.
+ *   - A `PACKAGE_LAYOUT_EPOCH` bump moves the target by a thousand, so the span
+ *     cannot be covered and every consumer resets — which is what that lever
+ *     exists to do.
+ *
+ * Exported for direct unit testing: this is the decision, and it should be
+ * assertable without a React tree around it.
+ */
+export function migrateSavedLayout({
+  saved,
+  defaults,
+  from,
+  to,
+  migrations,
+}: {
+  saved: GridLayouts | undefined;
+  defaults: GridLayouts;
+  from: number;
+  to: number;
+  migrations: ReadonlyMap<number, LayoutMigration> | null;
+}): GridLayouts | null {
+  if (!migrations || migrations.size === 0) return null;
+  if (from >= to) return null;
+  // Nothing stored (or an empty object) is not an arrangement worth carrying
+  // across — and `rawLayouts` already treats an empty stored layout as "use
+  // the defaults", so migrating it would be a no-op wearing a cost.
+  if (!saved || Object.keys(saved).length === 0) return null;
+  // O(1) refusal before the loop: a span wider than the number of registered
+  // migrations must contain a step with none. Without this a first visit
+  // (`from` 0, `to` 2103) would spin two thousand times to reach the same
+  // answer.
+  if (to - from > migrations.size) return null;
+
+  let working = saved;
+  for (let version = from + 1; version <= to; version += 1) {
+    const migration = migrations.get(version);
+    if (!migration) return null;
+    working = migration(working, defaults);
+  }
+  return working;
+}
+
 export interface PageGridEditingEventDetail {
   pageKey: string;
   editing: boolean;
@@ -99,6 +156,7 @@ export function usePageGridLayout({
   editorEventNames = DEFAULT_EDITOR_EVENT_NAMES,
   preferenceAdapter = defaultPreferenceAdapter,
   defaultAutoHeight,
+  layoutMigrations,
 }: UsePageGridLayoutOptions): UsePageGridLayoutResult {
   const effectiveLayoutVersion = layoutVersion + PACKAGE_LAYOUT_EPOCH;
   const containerRef = useRef<HTMLElement | null>(null);
@@ -154,20 +212,92 @@ export function usePageGridLayout({
 
   const prefsLoaded = layoutLoaded && versionLoaded;
 
+  /*
+   * Migration keys arrive in the CONSUMER's version space — `layoutVersion={2}`
+   * pairs with `{ 2: … }` — and are shifted onto the stored (effective) space
+   * by exactly the same epoch that shifts `layoutVersion`. That symmetry is the
+   * point: a page author writes the number they bumped, and never has to know
+   * `PACKAGE_LAYOUT_EPOCH` exists. `DraggableCardPage` applies its own
+   * `layoutEpoch` to both in the same way, one level up.
+   */
+  const effectiveMigrations = useMemo(() => {
+    if (!layoutMigrations) return null;
+    const byEffectiveVersion = new Map<number, LayoutMigration>();
+    for (const [version, migration] of Object.entries(layoutMigrations)) {
+      byEffectiveVersion.set(Number(version) + PACKAGE_LAYOUT_EPOCH, migration);
+    }
+    return byEffectiveVersion;
+  }, [layoutMigrations]);
+
+  /*
+   * The stored layout, mirrored for the version gate below — which must READ it
+   * without DEPENDING on it.
+   *
+   * Depending on it would re-run the gate on every drag that saves a layout,
+   * and worse, would re-run it in the window between the gate writing the
+   * migrated layout and the new version landing: an adapter that surfaces those
+   * two writes in separate renders would then apply the same migration twice.
+   * `adoptDefaultWidths` happens to be idempotent; a migration in general is
+   * not, and a contract that only holds for the migrations that exist today is
+   * not a contract.
+   *
+   * `useLayoutEffect`, not a render-phase assignment and not `useEffect`: all
+   * layout effects for a commit run before any passive effect, so on mount this
+   * is populated before the gate's `useEffect` reads it. Declared here, above
+   * the gate, so that ordering is visible rather than inferred.
+   */
+  const savedLayoutForVersionGateRef = useRef<GridLayouts | undefined>(savedLayout);
+  useLayoutEffect(() => {
+    savedLayoutForVersionGateRef.current = savedLayout;
+  }, [savedLayout]);
+
   useEffect(() => {
     if (!prefsLoaded) return;
-    if ((savedLayoutVersion ?? 0) < effectiveLayoutVersion) {
-      startTransition(() => {
-        setSavedLayout(defaultLayouts);
+    const storedVersion = savedLayoutVersion ?? 0;
+    if (storedVersion >= effectiveLayoutVersion) return;
+
+    /*
+     * MIGRATE, DO NOT DISCARD.
+     *
+     * This used to have one branch: overwrite the stored layout with
+     * `defaultLayouts`. So ANY `layoutVersion` bump threw away every card
+     * position the user had ever dragged on that page, for every user — and
+     * the commonest reason to bump a version is that a DEFAULT WIDTH changed,
+     * which is a transformation, not a reason to lose an arrangement.
+     * crm7#2490 bumped four routes purely to change default widths; measured on
+     * one account (braden@braden.com.au), that was 14 layouts.
+     *
+     * The doctrine is forty lines below, in the derived-breakpoint heal: "`lg`
+     * … is preserved untouched, so nobody loses the arrangement they made."
+     * `migrateSavedLayout` returning null keeps the discard for the case that
+     * genuinely needs it.
+     */
+    const migrated = migrateSavedLayout({
+      saved: savedLayoutForVersionGateRef.current,
+      defaults: defaultLayouts,
+      from: storedVersion,
+      to: effectiveLayoutVersion,
+      migrations: effectiveMigrations,
+    });
+
+    startTransition(() => {
+      setSavedLayout(migrated ?? defaultLayouts);
+      // Column choice is part of the arrangement, not part of the layout array:
+      // a migration preserves what the user set up, so it must not reset these
+      // either. A discard still does — the layout it is restoring is authored
+      // at `defaultCols`, and leaving a stale `baseCols` behind would rescale
+      // the fresh defaults against a column count nothing authored them at.
+      if (migrated === null) {
         setLayoutCols(defaultCols);
         setBaseCols(defaultCols);
-        setSavedLayoutVersion(effectiveLayoutVersion);
-      });
-    }
+      }
+      setSavedLayoutVersion(effectiveLayoutVersion);
+    });
   }, [
     defaultCols,
     defaultLayouts,
     effectiveLayoutVersion,
+    effectiveMigrations,
     prefsLoaded,
     savedLayoutVersion,
     setBaseCols,

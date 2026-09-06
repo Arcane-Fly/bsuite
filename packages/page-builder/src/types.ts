@@ -56,6 +56,21 @@ export interface GridLayouts {
   [key: string]: GridLayoutItem[];
 }
 
+/**
+ * Transforms a saved layout from the version immediately below a bump to the
+ * version at it. Pure: it is handed the stored layout and the NEW authored
+ * defaults, and returns the layout to store.
+ *
+ * Registered per target version in {@link UsePageGridLayoutOptions.layoutMigrations}.
+ * A step with no registered migration falls back to the wholesale discard,
+ * which is the correct answer when a bump's reason is that saved layouts
+ * reference widgets that no longer exist.
+ */
+export type LayoutMigration = (
+  saved: GridLayouts,
+  defaults: GridLayouts
+) => GridLayouts;
+
 export interface PageGridPreferenceAdapter<T> {
   value: T;
   setValue: (value: T | ((previous: T) => T)) => void;
@@ -83,6 +98,39 @@ export interface UsePageGridLayoutOptions {
    * can always opt out with an explicit `autoHeight: false`.
    */
   defaultAutoHeight?: boolean;
+  /**
+   * Migrations that TRANSFORM a stored layout across a `layoutVersion` bump
+   * instead of destroying it, keyed by the version each one produces.
+   *
+   * Without this, every bump has exactly one outcome: the stored layout is
+   * overwritten with `defaultLayouts` and every card position the user ever
+   * dragged on that page is gone, for every user. That is the right answer
+   * when the bump's reason is that saved layouts reference widgets which no
+   * longer exist (crm7's dashboard epoch 8), and the wrong one for the reason
+   * a version usually moves — a DEFAULT changed. crm7#2490 bumped four routes
+   * purely to change default card widths and, measured on one account, cost 14
+   * stored layouts.
+   *
+   * Keys are in the SAME version space as `layoutVersion` on the component you
+   * pass them to — `layoutVersion={2}` pairs with `{ 2: … }`. Any app-level
+   * epoch (`DraggableCardPage`'s `layoutEpoch`) and the package-level
+   * `PACKAGE_LAYOUT_EPOCH` are applied to these keys exactly as they are
+   * applied to `layoutVersion`, so a page author never writes an epoch down.
+   *
+   * Every step from the stored version up to the current one must have a
+   * registered migration; they are applied in ascending order. If ANY step in
+   * that span has none, the whole span falls back to the wholesale discard —
+   * a missing migration means "nobody has said this transition is safe", and
+   * guessing is how a layout gets silently corrupted rather than reset. A
+   * `PACKAGE_LAYOUT_EPOCH` bump therefore discards by construction, which is
+   * what that lever is for.
+   *
+   * Use a module-level constant, not an object literal in the render body:
+   * this is an effect dependency.
+   *
+   * @see adoptDefaultWidths for the width-only case.
+   */
+  layoutMigrations?: Readonly<Record<number, LayoutMigration>>;
 }
 
 export interface WidgetMeta {
