@@ -125,18 +125,54 @@ database, build asset `index-BDVmcETz.js`). **Lab numbers, not field P75:**
 
 ## Bite evidence
 
-A perf gate added but never seen to fail is the same defect one level up. Both
-directions, run rather than described:
+A perf gate added but never seen to fail is the same defect one level up. The strongest
+evidence here is not a contrived bite — it is that **the first working run of the new
+gate went red on the operator's actual problem**, at a threshold set before the number
+was known.
+
+```
+[lh-auth] Project guard passed — fyenkvxpzznpfsgcgyup, not production.
+[lh-auth] /contacts verified authenticated — [data-testid="contacts-page"] present.
+  ✘  largest-contentful-paint failure for maxNumericValue assertion
+        expected: <=4000
+           found: 4104.58609378052
+```
+
+**LCP 4104 ms on an authenticated route in CI**, against the reported field P75 of
+**4.04 s**. No CI job in this estate had ever measured that route.
 
 | Direction | Condition | Result |
 |---|---|---|
-| RED | `/contacts` LCP budget 1500 ms | exit **1** — `expected: <=1500` · `found: 2690.33` |
-| GREEN | `/contacts` LCP budget 4000 ms | exit **0** — `All results processed!` |
+| **RED** | `/contacts` budget 4000 ms, in CI | **fail** — `found: 4104.59` |
+| **GREEN** | budget 4500 ms (committed ratchet), in CI | **pass** — `All results processed!` |
+| RED | budget 1500 ms, locally | exit 1 — `found: 2690.33` |
 | RED | credentials absent | REFUSED, named |
 | RED | pointed at production | REFUSED, named |
 | RED | unparseable Supabase URL | REFUSED, named |
 | RED | route without its content marker | REFUSED — fired twice, live |
 | **CONTROL** | a public URL | **proceeded** — the refusals are not "refuse everything" |
+
+The committed budget is a **ratchet just above today's measurement, not a target** — it
+bites on further regression without blocking on the pre-existing one, and comes down as
+the LCP is fixed. Same shape as crm7's existing lint and test-typecheck ratchets.
+
+### Four CI failures on the way, each a real gap
+
+Every one refused rather than quietly measuring the wrong page:
+
+1. **exit 127** — the branch resolver needs the `supabase` CLI, which the Lighthouse job
+   did not install.
+2. **`Chrome installation not found`** (twice) — setting `puppeteerScript` sends LHCI
+   down a Chrome-resolution branch that *throws* rather than falling back to the system
+   install (`@lhci/cli src/utils.js:56`). `CHROME_PATH` is checked before that branch.
+3. **`password grant failed: HTTP 400 (invalid_credentials)`** — a freshly provisioned
+   branch has the fixture *tenants* from `seed.sql` but not the fixture *users*;
+   `auth.users` is GoTrue's and a hand-inserted row cannot authenticate.
+4. **The real LCP.**
+
+Failure 3 is the one worth pausing on: the guard cleared the **branch** project, never
+production, and the hook then **refused** rather than auditing the signed-out shell.
+Fail-closed working against a real misconfiguration, not a drill.
 
 ## Open items
 
@@ -147,7 +183,8 @@ directions, run rather than described:
 | 3 | Ratchet the provisional `/contacts` thresholds (`minScore 0.5`, `LCP ≤ 4000 ms`) once CI has several runs. Loose was deliberate for a first baseline. | crm7 |
 | 4 | Consider a CLS assertion on the authenticated route — 0.099 vs 0.000 is the largest gap the new gate exposed, but one measurement is not a threshold. | crm7 |
 | 5 | Port the recipe to BSU, conduit, braden and throughput. Each needs its own content markers first. | per app |
-| 6 | **Production authenticated LCP remains UNMEASURED.** The numbers above are a local database. `assertNonProductionProject` correctly refuses to sign a harness into production, and the only Supabase branch that exists points at the production ref. The first real number arrives on crm7#2507's own CI run. | crm7 |
+| 6 | **Fix the authenticated LCP itself.** crm7#2507 builds the instrument and pins a ceiling; it does not make `/contacts` faster. ~4.1 s in CI is the number to bring down, and the ratchet comes down with it. | crm7 |
+| 7 | **A like-for-like production run is still unavailable.** CI's 4104 ms is a seeded branch database. It lands within noise of the 4.04 s field P75, which is suggestive rather than proof the same cause dominates both — and `assertNonProductionProject` correctly refuses to point a harness at production, so this should not be faked. | crm7 |
 
 ## Related, and deliberately not fixed here
 
