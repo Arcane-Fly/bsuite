@@ -128,9 +128,20 @@ export function migrateSavedLayout({
   // the defaults", so migrating it would be a no-op wearing a cost.
   if (!saved || Object.keys(saved).length === 0) return null;
   // O(1) refusal before the loop: a span wider than the number of registered
-  // migrations must contain a step with none. Without this a first visit
-  // (`from` 0, `to` 2103) would spin two thousand times to reach the same
-  // answer.
+  // migrations must contain a step with none.
+  //
+  // This is a COST guard, not a correctness one — the loop below reaches the
+  // same `null` without it, because it bails at the first version with no
+  // migration. What it saves is AT MOST `migrations.size + 1` registry lookups,
+  // reached only when the registry happens to be contiguous from `from + 1`;
+  // measured, size 1 -> 2, size 5 -> 6, size 500 -> 501. For crm7#2490's shape
+  // — one migration keyed 2103, a first visit from 0 — it is ONE lookup, since
+  // the very first miss ends the walk.
+  //
+  // An earlier version of this comment claimed a first visit would "spin two
+  // thousand times". That was false: the work is bounded by the REGISTRY, never
+  // by the span. The guard is still worth keeping, and it is worth keeping for
+  // the size it actually has.
   if (to - from > migrations.size) return null;
 
   let working = saved;

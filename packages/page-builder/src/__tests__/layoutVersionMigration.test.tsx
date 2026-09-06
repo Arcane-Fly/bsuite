@@ -21,6 +21,8 @@
  * step nobody registered a migration for.
  */
 
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { act, renderHook } from '@testing-library/react';
 import { useCallback, useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -137,103 +139,328 @@ const CLIENTS_ARRANGED_SAVE: GridLayouts = {
   ),
 };
 
+/*
+ * The /clients layouts are NOT hand-typed. Both sides are produced by
+ * `buildCanvasCardLayout` — the same function the page itself goes through —
+ * from the CanvasCard props the route authored before and after crm7#2490.
+ * Only those props are transcribed, and they were read off the two commits.
+ * Hand-typing x/y would be typing the answer into the fixture.
+ */
+const clientsCards = (post2490: boolean) => (
+  <>
+    <CanvasCard cardKey="stat-total" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+    <CanvasCard cardKey="stat-active" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+    <CanvasCard cardKey="stat-host-employers" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+    <CanvasCard cardKey="stat-inactive" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
+    <CanvasCard cardKey="card2" w={12} h={6}><div /></CanvasCard>
+    <CanvasCard cardKey="card3" w={post2490 ? 4 : 12} h={6}><div /></CanvasCard>
+  </>
+);
+
+const OLD_CLIENTS = buildCanvasCardLayout(clientsCards(false)).layouts;
+const NEW_CLIENTS = buildCanvasCardLayout(clientsCards(true)).layouts;
+
+const row = (layouts: GridLayouts | undefined, i: string) => {
+  const item = itemOf(layouts, 'lg', i);
+  return item ? [item.x, item.y, item.w] : undefined;
+};
+
+const withPlaced = (base: GridLayouts, i: string, x: number, y: number): GridLayouts => ({
+  lg: base.lg.map((item) => (item.i === i ? { ...item, x, y } : item)),
+});
+
+/*
+ * THE ACCEPTANCE FIXTURE, AND WHY IT IS NOT WHAT IT FIRST WAS.
+ *
+ * `OLD_CLIENTS` on its own is a never-arranged layout, and on one of those a
+ * migration that adopts every default and a discard that restores every default
+ * produce byte-identical output. The acceptance test for adopting position was
+ * therefore seeded with a layout that could not tell the feature from its
+ * absence — it passed before the feature existed and after.
+ *
+ * `card3` is hand-placed rather than one of the four stat cards ON PURPOSE: the
+ * property being accepted is that all FOUR stats reach 0/3/6/9, so placing one
+ * of them by hand would buy discrimination by destroying the thing under test.
+ * `card3` is in the migration table, so a discard moves it and a migration does
+ * not — and the four stats still un-wrap. The literal case (a hand-placed stat
+ * card, three siblings still un-wrapping) is covered separately below.
+ */
+const OLD_CLIENTS_DIALOG_PLACED = withPlaced(OLD_CLIENTS, 'card3', 8, 40);
+const OLD_CLIENTS_STAT_PLACED = withPlaced(OLD_CLIENTS, 'stat-inactive', 2, 33);
+
+const CLIENTS_PREVIOUS = {
+  'stat-total': { w: 4, minW: 4, position: { x: 0, y: 0 } },
+  'stat-active': { w: 4, minW: 4, position: { x: 4, y: 0 } },
+  'stat-host-employers': { w: 4, minW: 4, position: { x: 8, y: 0 } },
+  'stat-inactive': { w: 4, minW: 4, position: { x: 0, y: 6 } },
+  card3: { w: 12, position: { x: 0, y: 18 } },
+} as const;
+const CLIENTS_FULL_MIGRATIONS: Readonly<Record<number, LayoutMigration>> = {
+  2: adoptUnchangedDefaults(CLIENTS_PREVIOUS),
+};
+
+/** crm7's own app-level epoch, applied by DraggableCardPage before the hook. */
+const CRM7_LAYOUT_EPOCH = 101;
+
+/* Saved layouts each scenario starts from, named so the meta-check below can
+ * reuse the EXACT fixture a test uses rather than a copy that can drift. */
+const CLIENTS_SAVE_DRAGGED_WIDE: GridLayouts = {
+  lg: [
+    // stat-total dragged to (6,3) and pulled out to w 6 — none of that is the
+    // old default, so all of it is a decision the user made.
+    { i: 'stat-total', x: 6, y: 3, w: 6, h: 9, minW: 4, minH: 2, hUserSet: true },
+    { i: 'stat-active', x: 4, y: 0, w: 4, h: 6, minW: 4, minH: 2 },
+    { i: 'table', x: 0, y: 6, w: 12, h: 6, minW: 4, minH: 2 },
+    { i: 'dialog', x: 0, y: 12, w: 12, h: 6, minW: 4, minH: 2 },
+  ],
+};
+const CLIENTS_SAVE_ONE_MOVED: GridLayouts = {
+  lg: [
+    // Dragged to the second row and nowhere near a default position.
+    { i: 'stat-total', x: 8, y: 30, w: 4, h: 6, minW: 4, minH: 2 },
+    { i: 'stat-active', x: 4, y: 0, w: 4, h: 6, minW: 4, minH: 2 },
+    { i: 'table', x: 0, y: 6, w: 12, h: 6, minW: 4, minH: 2 },
+    { i: 'dialog', x: 0, y: 12, w: 12, h: 6, minW: 4, minH: 2 },
+  ],
+};
+const CLIENTS_SAVE_ACTIVE_MOVED = withPlaced(OLD_CLIENTS, 'stat-active', 7, 24);
+const CRM7_SAVE_TOTAL_MOVED: GridLayouts = {
+  lg: [
+    { i: 'stat-total', x: 8, y: 30, w: 4, h: 6, minW: 4, minH: 2 },
+    { i: 'dialog', x: 0, y: 12, w: 12, h: 6, minW: 4, minH: 2 },
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * THE MIGRATION SCENARIOS, AS DATA — and why they are data.
+ *
+ * Every one of these is a case where a stored layout MUST come back migrated.
+ * They are a table rather than six hand-written tests so that the meta-check at
+ * the bottom of this file can re-run THE SAME fixture and THE SAME assertions
+ * with the feature switched off, and demand that each one fails. A meta-check
+ * holding its own copy of a scenario proves only that the copy is well written.
+ *
+ * The failure this closes: three times in this suite, an assertion was seeded
+ * with a NEVER-ARRANGED layout — and on one of those, "migrated every item onto
+ * the new defaults" and "discarded and restored the new defaults" are the same
+ * bytes. Two of the three were the section-2 headline case and the named
+ * acceptance test for adopting position. Both passed with the feature deleted.
+ * Every seed below therefore carries at least one hand-placed card.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+interface MigrationScenario {
+  name: string;
+  pageKey: string;
+  seedVersion: number;
+  seedLayout: GridLayouts;
+  defaults: GridLayouts;
+  layoutVersion: number;
+  migrations: Readonly<Record<number, LayoutMigration>>;
+  assert: (saved: GridLayouts | undefined, pageKey: string) => void;
+}
+
+const MIGRATION_SCENARIOS: readonly MigrationScenario[] = [
+  {
+    name: 'keeps a width the user chose, and keeps the position they dragged it to',
+    pageKey: '/clients-chosen',
+    seedVersion: 2 - 1 + PACKAGE_LAYOUT_EPOCH,
+    seedLayout: CLIENTS_SAVE_DRAGGED_WIDE,
+    defaults: CLIENTS_NEW_DEFAULTS,
+    layoutVersion: 2,
+    migrations: CLIENTS_MIGRATIONS,
+    assert: (saved, pageKey) => {
+      const total = itemOf(saved, 'lg', 'stat-total');
+      expect(total).toBeDefined();
+      // The chosen width is NOT replaced by the new default of 3.
+      expect(total?.w).toBe(6);
+      // ...and neither is anything else about it.
+      expect(total?.x).toBe(6);
+      expect(total?.y).toBe(3);
+      expect(total?.h).toBe(9);
+      expect(total?.hUserSet).toBe(true);
+      // The version still moves, so the migration runs exactly once.
+      expect(savedVersionFor(pageKey)).toBe(2 + PACKAGE_LAYOUT_EPOCH);
+    },
+  },
+  {
+    name: 'moves a width still sitting at the old default onto the new default',
+    pageKey: '/clients-adopt',
+    seedVersion: 2 - 1 + PACKAGE_LAYOUT_EPOCH,
+    // ARRANGED, not untouched. On an untouched layout this whole assertion set
+    // is satisfied by the discard, which is how this case passed before the
+    // feature existed.
+    seedLayout: CLIENTS_ARRANGED_SAVE,
+    defaults: CLIENTS_NEW_DEFAULTS,
+    layoutVersion: 2,
+    migrations: CLIENTS_MIGRATIONS,
+    assert: (saved) => {
+      // THE DISCRIMINATOR: stat-total was dragged to (6,3) and widened to 6, so
+      // it is immune and survives intact. A discard puts it at (0,0,w3).
+      expect(row(saved, 'stat-total')).toEqual([6, 3, 6]);
+      // Everything nobody touched adopts: w 4 -> 3, minW 4 -> 3.
+      expect(itemOf(saved, 'lg', 'stat-active')?.w).toBe(3);
+      expect(itemOf(saved, 'lg', 'stat-active')?.minW).toBe(3);
+      // dialog 12 -> 4.
+      expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
+      // The table's 12 did not change in the bump and has no previous-default
+      // entry, so it is left exactly alone.
+      expect(itemOf(saved, 'lg', 'table')?.w).toBe(12);
+      // Position is adopted on the same rule as width — everywhere except the
+      // card the user placed.
+      expect((saved?.lg ?? []).map((item) => [item.i, item.x, item.y])).toEqual([
+        ['stat-total', 6, 3],
+        ['stat-active', 3, 0],
+        ['table', 0, 6],
+        ['dialog', 0, 12],
+      ]);
+    },
+  },
+  {
+    name: 'leaves the one card the user moved entirely alone, while its siblings adopt',
+    pageKey: '/clients-one-moved',
+    seedVersion: 2 - 1 + PACKAGE_LAYOUT_EPOCH,
+    seedLayout: CLIENTS_SAVE_ONE_MOVED,
+    defaults: CLIENTS_NEW_DEFAULTS,
+    layoutVersion: 2,
+    migrations: CLIENTS_MIGRATIONS,
+    assert: (saved) => {
+      // Placed by hand: immune. Width and position both survive.
+      expect(row(saved, 'stat-total')).toEqual([8, 30, 4]);
+      // Its untouched siblings still adopt, so the veto is per item, not per
+      // page — and a discard could produce neither half of this.
+      expect(itemOf(saved, 'lg', 'stat-active')?.w).toBe(3);
+      expect(itemOf(saved, 'lg', 'stat-active')?.x).toBe(3);
+      expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
+    },
+  },
+  {
+    name: 'un-wraps the stat row: a never-arranged page reaches the authored 0/3/6/9',
+    pageKey: '/clients-wrap',
+    seedVersion: 2 - 1 + PACKAGE_LAYOUT_EPOCH,
+    // card3 is hand-placed so the case can tell migrate from discard; the four
+    // stats are all still untouched, so the acceptance property is intact.
+    seedLayout: OLD_CLIENTS_DIALOG_PLACED,
+    defaults: NEW_CLIENTS,
+    layoutVersion: 2,
+    migrations: CLIENTS_FULL_MIGRATIONS,
+    assert: (saved) => {
+      expect(row(saved, 'stat-total')).toEqual([0, 0, 3]);
+      expect(row(saved, 'stat-active')).toEqual([3, 0, 3]);
+      expect(row(saved, 'stat-host-employers')).toEqual([6, 0, 3]);
+      // The one that used to wrap. All four on one row, y 0.
+      expect(row(saved, 'stat-inactive')).toEqual([9, 0, 3]);
+      expect(
+        ['stat-total', 'stat-active', 'stat-host-employers', 'stat-inactive'].map(
+          (i) => itemOf(saved, 'lg', i)?.y,
+        ),
+      ).toEqual([0, 0, 0, 0]);
+      // THE DISCRIMINATOR: the hand-placed dialog is untouched. A discard sends
+      // it to the authored (0, 12, w 4).
+      expect(row(saved, 'card3')).toEqual([8, 40, 12]);
+    },
+  },
+  {
+    name: 'un-wraps the three stat cards nobody touched, and leaves the fourth where it was put',
+    pageKey: '/clients-wrap-partial',
+    seedVersion: 2 - 1 + PACKAGE_LAYOUT_EPOCH,
+    seedLayout: OLD_CLIENTS_STAT_PLACED,
+    defaults: NEW_CLIENTS,
+    layoutVersion: 2,
+    migrations: CLIENTS_FULL_MIGRATIONS,
+    assert: (saved) => {
+      // Three un-wrap onto the authored row...
+      expect(row(saved, 'stat-total')).toEqual([0, 0, 3]);
+      expect(row(saved, 'stat-active')).toEqual([3, 0, 3]);
+      expect(row(saved, 'stat-host-employers')).toEqual([6, 0, 3]);
+      // ...and the one the user dragged keeps its place AND its old width, so
+      // the un-wrap never reflows a card someone positioned by hand.
+      expect(row(saved, 'stat-inactive')).toEqual([2, 33, 4]);
+    },
+  },
+  {
+    name: 'leaves a card the user MOVED completely alone — position and width',
+    pageKey: '/clients-moved',
+    seedVersion: 2 - 1 + PACKAGE_LAYOUT_EPOCH,
+    seedLayout: CLIENTS_SAVE_ACTIVE_MOVED,
+    defaults: NEW_CLIENTS,
+    layoutVersion: 2,
+    migrations: CLIENTS_FULL_MIGRATIONS,
+    assert: (saved) => {
+      // Moved: immune. Position kept AND width kept — a card someone placed by
+      // hand must not silently change size underneath them either.
+      expect(row(saved, 'stat-active')).toEqual([7, 24, 4]);
+      // Its untouched neighbours still adopt, so the veto is per item and not
+      // per page.
+      expect(row(saved, 'stat-total')).toEqual([0, 0, 3]);
+      expect(row(saved, 'stat-host-employers')).toEqual([6, 0, 3]);
+    },
+  },
+  {
+    name: 'migrates a real /clients layout across effective 2102 -> 2103',
+    pageKey: '/clients-crm7',
+    // The real numbers. /clients is a DraggableCardPage route, so crm7's
+    // LAYOUT_EPOCH 101 is added to both layoutVersion and the migration keys
+    // before either reaches the hook, and PACKAGE_LAYOUT_EPOCH 2000 is added to
+    // both here: 1 -> 2 is effective 2102 -> 2103, the numbers PR #2490's own
+    // table records and that were read back off user_preferences.
+    seedVersion: 2102,
+    seedLayout: CRM7_SAVE_TOTAL_MOVED,
+    defaults: CLIENTS_NEW_DEFAULTS,
+    layoutVersion: 2 + CRM7_LAYOUT_EPOCH,
+    migrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptUnchangedDefaults(CLIENTS_PREVIOUS_DEFAULTS) },
+    assert: (saved, pageKey) => {
+      expect(savedVersionFor(pageKey)).toBe(2103);
+      // stat-total was dragged to (8, 30): immune, width included.
+      expect(row(saved, 'stat-total')).toEqual([8, 30, 4]);
+      // dialog is still at its old default position, so it adopts: 12 -> 4.
+      expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
+    },
+  },
+];
+
+/**
+ * Render one scenario. `migrations` is a parameter rather than read off the
+ * scenario so the meta-check can run the identical fixture with the feature
+ * switched off — passing no migrations is exactly the pre-PR call site, where
+ * the discard branch was the only branch.
+ */
+async function runScenario(
+  scenario: MigrationScenario,
+  migrations: Readonly<Record<number, LayoutMigration>> | undefined,
+): Promise<GridLayouts | undefined> {
+  seed(scenario.pageKey, scenario.seedVersion, scenario.seedLayout);
+  renderHook(() =>
+    usePageGridLayout({
+      pageKey: scenario.pageKey,
+      defaultLayouts: scenario.defaults,
+      layoutVersion: scenario.layoutVersion,
+      layoutMigrations: migrations,
+      preferenceAdapter: durableAdapter,
+    }),
+  );
+  await act(async () => {});
+  return savedLayoutsFor(scenario.pageKey);
+}
+
+describe('a layoutVersion bump migrates a saved layout instead of discarding it', () => {
+  beforeEach(() => store.clear());
+
+  it.each(MIGRATION_SCENARIOS.map((scenario) => [scenario.name, scenario] as const))(
+    '%s',
+    async (_name, scenario) => {
+      scenario.assert(await runScenario(scenario, scenario.migrations), scenario.pageKey);
+    },
+  );
+});
+
 describe('layoutVersion bump migrates a saved layout instead of discarding it', () => {
   beforeEach(() => store.clear());
 
   // -------------------------------------------------------------------------
   // 1. A width the USER chose survives the bump.
   // -------------------------------------------------------------------------
-  it('keeps a width the user chose, and keeps the position they dragged it to', async () => {
-    const pageKey = '/clients';
-    // stat-total dragged to (6,3) and pulled out to w=6 — none of that is the
-    // old default, so all of it is a decision the user made.
-    seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, {
-      lg: [
-        { i: 'stat-total', x: 6, y: 3, w: 6, h: 9, minW: 4, minH: 2, hUserSet: true },
-        { i: 'stat-active', x: 4, y: 0, w: 4, h: 6, minW: 4, minH: 2 },
-        { i: 'table', x: 0, y: 6, w: 12, h: 6, minW: 4, minH: 2 },
-        { i: 'dialog', x: 0, y: 12, w: 12, h: 6, minW: 4, minH: 2 },
-      ],
-    });
-
-    renderHook(() =>
-      usePageGridLayout({
-        pageKey,
-        defaultLayouts: CLIENTS_NEW_DEFAULTS,
-        layoutVersion: 2,
-        layoutMigrations: CLIENTS_MIGRATIONS,
-        preferenceAdapter: durableAdapter,
-      }),
-    );
-    await act(async () => {});
-
-    const saved = savedLayoutsFor(pageKey);
-    const total = itemOf(saved, 'lg', 'stat-total');
-    expect(total).toBeDefined();
-    // The chosen width is NOT replaced by the new default of 3.
-    expect(total?.w).toBe(6);
-    // ...and neither is anything else about it.
-    expect(total?.x).toBe(6);
-    expect(total?.y).toBe(3);
-    expect(total?.h).toBe(9);
-    expect(total?.hUserSet).toBe(true);
-    // The version still moves, so the migration runs exactly once.
-    expect(savedVersionFor(pageKey)).toBe(2 + PACKAGE_LAYOUT_EPOCH);
-  });
-
   // -------------------------------------------------------------------------
   // 2. A width still at the OLD DEFAULT moves to the new default.
   // -------------------------------------------------------------------------
-  it('moves a width still sitting at the old default onto the new default', async () => {
-    const pageKey = '/clients';
-    seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, CLIENTS_UNTOUCHED_SAVE);
-
-    renderHook(() =>
-      usePageGridLayout({
-        pageKey,
-        defaultLayouts: CLIENTS_NEW_DEFAULTS,
-        layoutVersion: 2,
-        layoutMigrations: CLIENTS_MIGRATIONS,
-        preferenceAdapter: durableAdapter,
-      }),
-    );
-    await act(async () => {});
-
-    const saved = savedLayoutsFor(pageKey);
-    // READ THE POSITIONAL ASSERTION AT THE BOTTOM AS THE DISCRIMINATOR. On a
-    // layout that is identical to the old defaults, "adopted the new default
-    // width" and "was discarded and replaced by the new defaults" produce the
-    // same `w` — so these width assertions pass under the defect too, and only
-    // the untouched `x` tells the two apart. The next test drives both halves
-    // at once on a layout where they cannot agree.
-    // w 4 -> 3 and minW 4 -> 3 on both stat cards: the user never chose either.
-    expect(itemOf(saved, 'lg', 'stat-total')?.w).toBe(3);
-    expect(itemOf(saved, 'lg', 'stat-total')?.minW).toBe(3);
-    expect(itemOf(saved, 'lg', 'stat-active')?.w).toBe(3);
-    expect(itemOf(saved, 'lg', 'stat-active')?.minW).toBe(3);
-    // dialog 12 -> 4.
-    expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
-    // The table's 12 did not change in the bump and has no previous-default
-    // entry, so it is left exactly alone.
-    expect(itemOf(saved, 'lg', 'table')?.w).toBe(12);
-
-    // POSITION IS ADOPTED TOO, on exactly the same rule as width.
-    //
-    // This assertion is INVERTED from what it first pinned. It used to assert
-    // the OLD x/y survived — stat-active still at x 4 — and called the result a
-    // residual worth measuring. It was: an item narrowed from 4 to 3 but left
-    // at x 4 is a layout nobody authored and nobody chose. A saved x/y still
-    // equal to the old default was never a decision either; it is inherited
-    // furniture, and treating width as inherited while treating position as
-    // sacred splits one rule into two.
-    expect((saved?.lg ?? []).map((item) => [item.i, item.x, item.y])).toEqual([
-      ['stat-total', 0, 0],
-      ['stat-active', 3, 0],
-      ['table', 0, 6],
-      ['dialog', 0, 12],
-    ]);
-  });
-
   // -------------------------------------------------------------------------
   // 2b. The real crm7 shape: ONE card dragged, every width still at its
   //     default. Adopting and preserving have to happen in the same pass, and
@@ -245,42 +472,6 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
   //     placed is immune to both: resizing a hand-placed card underneath
   //     someone is the same category of loss as moving it.
   // -------------------------------------------------------------------------
-  it('leaves the one card the user moved entirely alone, while its siblings adopt', async () => {
-    const pageKey = '/clients';
-    seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, {
-      lg: [
-        // Dragged to the second row and nowhere near a default position.
-        { i: 'stat-total', x: 8, y: 30, w: 4, h: 6, minW: 4, minH: 2 },
-        { i: 'stat-active', x: 4, y: 0, w: 4, h: 6, minW: 4, minH: 2 },
-        { i: 'table', x: 0, y: 6, w: 12, h: 6, minW: 4, minH: 2 },
-        { i: 'dialog', x: 0, y: 12, w: 12, h: 6, minW: 4, minH: 2 },
-      ],
-    });
-
-    renderHook(() =>
-      usePageGridLayout({
-        pageKey,
-        defaultLayouts: CLIENTS_NEW_DEFAULTS,
-        layoutVersion: 2,
-        layoutMigrations: CLIENTS_MIGRATIONS,
-        preferenceAdapter: durableAdapter,
-      }),
-    );
-    await act(async () => {});
-
-    const saved = savedLayoutsFor(pageKey);
-    const total = itemOf(saved, 'lg', 'stat-total');
-    // Placed by hand: immune. Width and position both survive.
-    expect(total?.w).toBe(4);
-    expect(total?.x).toBe(8);
-    expect(total?.y).toBe(30);
-    // Its untouched siblings still adopt, so the veto is per item, not per
-    // page — and a discard could produce neither half of this.
-    expect(itemOf(saved, 'lg', 'stat-active')?.w).toBe(3);
-    expect(itemOf(saved, 'lg', 'stat-active')?.x).toBe(3);
-    expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
-  });
-
   // -------------------------------------------------------------------------
   // 3. The epoch-8 escape hatch: a step with NO registered migration discards.
   // -------------------------------------------------------------------------
@@ -317,8 +508,15 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
 
   it('discards when NO migrations are registered at all — the pre-existing behaviour', async () => {
     const pageKey = '/legacy';
-    // ARRANGED, not untouched: on an untouched layout a discard and a migration
-    // produce the same bytes, so the assertion below would hold either way.
+    // ARRANGED, and this one is HARDENING WITH AN UNVERIFIED REASON — said
+    // plainly rather than carried as a claim. It was changed alongside the two
+    // cases that demonstrably needed it, on the argument that it shared their
+    // blindness. That could not be reproduced: this case registers no
+    // migrations at all, so the transform that makes an untouched fixture
+    // indistinguishable needs a registry it deliberately omits, and no
+    // reachable mutation tells the two fixtures apart here. The arranged
+    // fixture is kept because it costs nothing and cannot mislead; the reason
+    // for it is not established.
     seed(pageKey, 1 + PACKAGE_LAYOUT_EPOCH, CLIENTS_ARRANGED_SAVE);
 
     renderHook(() =>
@@ -423,32 +621,6 @@ describe('layoutVersion bump migrates a saved layout instead of discarding it', 
 describe('the /clients wrap — the acceptance test for adopting position', () => {
   beforeEach(() => store.clear());
 
-  /*
-   * The layouts here are NOT hand-typed. Both sides are produced by
-   * `buildCanvasCardLayout` — the same function the page itself goes through —
-   * from the CanvasCard props the route authored before and after crm7#2490.
-   * Only those props are transcribed, and they were read off the two commits.
-   * Hand-typing x/y would be typing the answer into the fixture.
-   */
-  const clientsCards = (post2490: boolean) => (
-    <>
-      <CanvasCard cardKey="stat-total" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
-      <CanvasCard cardKey="stat-active" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
-      <CanvasCard cardKey="stat-host-employers" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
-      <CanvasCard cardKey="stat-inactive" w={3} {...(post2490 ? { minW: 3 } : {})}><div /></CanvasCard>
-      <CanvasCard cardKey="card2" w={12} h={6}><div /></CanvasCard>
-      <CanvasCard cardKey="card3" w={post2490 ? 4 : 12} h={6}><div /></CanvasCard>
-    </>
-  );
-
-  const OLD_CLIENTS = buildCanvasCardLayout(clientsCards(false)).layouts;
-  const NEW_CLIENTS = buildCanvasCardLayout(clientsCards(true)).layouts;
-
-  const row = (layouts: GridLayouts | undefined, i: string) => {
-    const item = itemOf(layouts, 'lg', i);
-    return item ? [item.x, item.y, item.w] : undefined;
-  };
-
   it('the fixture really does reproduce the wrap, and really does author 0/3/6/9', () => {
     // Positive control on the fixture itself. If `buildCanvasCardLayout` did
     // not wrap the fourth stat card before #2490, this whole describe block
@@ -464,80 +636,6 @@ describe('the /clients wrap — the acceptance test for adopting position', () =
     expect(row(NEW_CLIENTS, 'stat-active')).toEqual([3, 0, 3]);
     expect(row(NEW_CLIENTS, 'stat-host-employers')).toEqual([6, 0, 3]);
     expect(row(NEW_CLIENTS, 'stat-inactive')).toEqual([9, 0, 3]);
-  });
-
-  const CLIENTS_PREVIOUS = {
-    'stat-total': { w: 4, minW: 4, position: { x: 0, y: 0 } },
-    'stat-active': { w: 4, minW: 4, position: { x: 4, y: 0 } },
-    'stat-host-employers': { w: 4, minW: 4, position: { x: 8, y: 0 } },
-    'stat-inactive': { w: 4, minW: 4, position: { x: 0, y: 6 } },
-    card3: { w: 12, position: { x: 0, y: 18 } },
-  } as const;
-  const CLIENTS_FULL_MIGRATIONS: Readonly<Record<number, LayoutMigration>> = {
-    2: adoptUnchangedDefaults(CLIENTS_PREVIOUS),
-  };
-
-  it('un-wraps the stat row: a never-arranged page reaches the authored 0/3/6/9', async () => {
-    const pageKey = '/clients-wrap';
-    // A user who has loaded the page and never touched it: the old discard
-    // stored the old defaults verbatim.
-    seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, OLD_CLIENTS);
-
-    renderHook(() =>
-      usePageGridLayout({
-        pageKey,
-        defaultLayouts: NEW_CLIENTS,
-        layoutVersion: 2,
-        layoutMigrations: CLIENTS_FULL_MIGRATIONS,
-        preferenceAdapter: durableAdapter,
-      }),
-    );
-    await act(async () => {});
-
-    const saved = savedLayoutsFor(pageKey);
-    expect(row(saved, 'stat-total')).toEqual([0, 0, 3]);
-    expect(row(saved, 'stat-active')).toEqual([3, 0, 3]);
-    expect(row(saved, 'stat-host-employers')).toEqual([6, 0, 3]);
-    // The one that used to wrap. All four on one row, y 0.
-    expect(row(saved, 'stat-inactive')).toEqual([9, 0, 3]);
-    expect(
-      ['stat-total', 'stat-active', 'stat-host-employers', 'stat-inactive'].map(
-        (i) => itemOf(saved, 'lg', i)?.y,
-      ),
-    ).toEqual([0, 0, 0, 0]);
-  });
-
-  it('leaves a card the user MOVED completely alone — position and width', async () => {
-    const pageKey = '/clients-moved';
-    // Everything at its old default except stat-active, dragged to (7, 24).
-    // Its WIDTH is still the old default 4, so the width rule alone would
-    // narrow it; the position rule must veto the whole item, not half of it.
-    const arranged: GridLayouts = {
-      lg: (OLD_CLIENTS.lg ?? []).map((item) =>
-        item.i === 'stat-active' ? { ...item, x: 7, y: 24 } : item,
-      ),
-    };
-    seed(pageKey, 2 - 1 + PACKAGE_LAYOUT_EPOCH, arranged);
-
-    renderHook(() =>
-      usePageGridLayout({
-        pageKey,
-        defaultLayouts: NEW_CLIENTS,
-        layoutVersion: 2,
-        layoutMigrations: CLIENTS_FULL_MIGRATIONS,
-        preferenceAdapter: durableAdapter,
-      }),
-    );
-    await act(async () => {});
-
-    const saved = savedLayoutsFor(pageKey);
-    // Moved: immune. Position kept AND width kept — a card someone placed by
-    // hand must not silently change size underneath them either.
-    expect(row(saved, 'stat-active')).toEqual([7, 24, 4]);
-    // Its untouched neighbours still adopt, so the veto is per item and not
-    // per page.
-    expect(row(saved, 'stat-total')).toEqual([0, 0, 3]);
-    expect(row(saved, 'stat-host-employers')).toEqual([6, 0, 3]);
   });
 
   it('adopts x and y atomically — never one without the other', () => {
@@ -600,43 +698,6 @@ describe('the real crm7#2490 arithmetic, end to end', () => {
    * either side is shifted and the other is not — the gate finds no migration
    * and discards, which looks exactly like the defect.
    */
-  const CRM7_LAYOUT_EPOCH = 101;
-
-  it('migrates a real /clients layout across effective 2102 -> 2103', async () => {
-    const pageKey = '/clients';
-    expect(PACKAGE_LAYOUT_EPOCH).toBe(2000);
-    expect(1 + CRM7_LAYOUT_EPOCH + PACKAGE_LAYOUT_EPOCH).toBe(2102);
-    expect(2 + CRM7_LAYOUT_EPOCH + PACKAGE_LAYOUT_EPOCH).toBe(2103);
-
-    seed(pageKey, 2102, {
-      lg: [
-        { i: 'stat-total', x: 8, y: 30, w: 4, h: 6, minW: 4, minH: 2 },
-        { i: 'dialog', x: 0, y: 12, w: 12, h: 6, minW: 4, minH: 2 },
-      ],
-    });
-
-    renderHook(() =>
-      usePageGridLayout({
-        pageKey,
-        defaultLayouts: CLIENTS_NEW_DEFAULTS,
-        // What DraggableCardPage hands down after applying LAYOUT_EPOCH.
-        layoutVersion: 2 + CRM7_LAYOUT_EPOCH,
-        layoutMigrations: { [2 + CRM7_LAYOUT_EPOCH]: adoptUnchangedDefaults(CLIENTS_PREVIOUS_DEFAULTS) },
-        preferenceAdapter: durableAdapter,
-      }),
-    );
-    await act(async () => {});
-
-    expect(savedVersionFor(pageKey)).toBe(2103);
-    const saved = savedLayoutsFor(pageKey);
-    // stat-total was dragged to (8, 30): immune, width included.
-    expect(itemOf(saved, 'lg', 'stat-total')?.w).toBe(4);
-    expect(itemOf(saved, 'lg', 'stat-total')?.x).toBe(8);
-    expect(itemOf(saved, 'lg', 'stat-total')?.y).toBe(30);
-    // dialog is still at its old default position, so it adopts: 12 -> 4.
-    expect(itemOf(saved, 'lg', 'dialog')?.w).toBe(4);
-  });
-
   it('discards a layout stored below 2102 — earlier epochs were genuine resets', async () => {
     const pageKey = '/clients';
     // ARRANGED — see CLIENTS_ARRANGED_SAVE. With the untouched fixture this
@@ -751,9 +812,14 @@ describe('the two discard guards, each on its own', () => {
 
   it('refuses an uncoverable span WITHOUT walking it', () => {
     // A first visit: nothing stored, `to` is 2103. The answer is null either
-    // way — the loop would miss at version 1 — so the only observable
-    // difference is the WORK, and the work is what this guard exists to avoid.
-    // Counting registry lookups is how that becomes an assertion.
+    // way — the loop would miss at the first unregistered version — so the only
+    // observable difference is the WORK, and the work is what this guard exists
+    // to avoid. Counting registry lookups is how that becomes an assertion.
+    //
+    // The registry here is CONTIGUOUS from `from + 1`, which is the worst case
+    // and the only shape that reaches the bound: the walk stops at the first
+    // miss, so it costs `size + 1` lookups and never anything proportional to
+    // the span. Asserted below rather than described.
     let lookups = 0;
     const counting = new Map<number, LayoutMigration>(
       [1, 2, 3, 4, 5].map((v) => [v, passthrough] as const),
@@ -775,9 +841,11 @@ describe('the two discard guards, each on its own', () => {
     });
 
     expect(out).toBeNull();
-    // Zero, and the number that matters is that it is not proportional to the
-    // span: without this guard the walk consults the registry until it misses.
+    // Zero with the guard. Without it: `size + 1` = 6, which the bite confirms —
+    // NOT the 2103 a "proportional to the span" reading would predict, and not
+    // the "two thousand" an earlier version of this comment claimed.
     expect(lookups).toBe(0);
+    expect(counting.size + 1).toBe(6);
   });
 
   it('still consults the registry when the span IS coverable', () => {
@@ -861,5 +929,97 @@ describe('adoptUnchangedDefaults', () => {
     adoptUnchangedDefaults(previous)(saved, defaults);
     expect(item.w).toBe(12);
     expect(item.minW).toBe(4);
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+ * THE STANDING META-CHECK
+ *
+ * Four times in this one suite an assertion was seeded with a never-arranged
+ * layout, where a migration and a discard produce identical output — and two of
+ * those were the section-2 headline case and the named acceptance test for
+ * adopting position. Both passed with the feature deleted. Fixing them one at a
+ * time leaves the fifth for whoever comes next.
+ *
+ * So the plant becomes part of the suite. `layoutMigrations: undefined` is
+ * exactly the pre-PR call site — `migrateSavedLayout` is never consulted and the
+ * discard branch is the only branch — and under it EVERY migration scenario must
+ * fail. A scenario that still passes is not a passing test; it is a test that
+ * cannot see the feature.
+ *
+ * The allowlist below is the other half, and it is the half that survives
+ * contact with the next author: a hook-rendering test that is neither a scenario
+ * nor listed here fails BY NAME, so a new case cannot quietly join the file
+ * without declaring which side of the plant it is on.
+ * ═══════════════════════════════════════════════════════════════════════════ */
+const PLANT_MAY_SURVIVE: Readonly<Record<string, string>> = {
+  'still discards wholesale when a version step has no registered migration':
+    'the discard IS the expected outcome, so removing the migration path cannot change it',
+  'discards when NO migrations are registered at all — the pre-existing behaviour':
+    'registers no migrations by construction — it is already running under the plant',
+  'applies every registered step in ascending order, exactly once each':
+    'asserts call ORDER and counts on the migrations themselves, not the stored layout',
+  'does not call a migration when the stored version is already current':
+    'the version gate returns before any migration is considered',
+  'does not call a migration on a first visit — there is no layout to migrate':
+    'nothing is stored, so there is no arrangement for a migration to preserve',
+  'discards a layout stored below 2102 — earlier epochs were genuine resets':
+    'the discard IS the expected outcome — the escape hatch, asserted on an ARRANGED fixture so it can still see the reset',
+  'discards on a PACKAGE_LAYOUT_EPOCH bump, which is what that lever is for':
+    'the discard IS the expected outcome — likewise asserted on an ARRANGED fixture',
+};
+
+describe('META: every migration scenario must fail with the feature switched off', () => {
+  beforeEach(() => store.clear());
+
+  it.each(MIGRATION_SCENARIOS.map((scenario) => [scenario.name, scenario] as const))(
+    'plant (always discard) breaks: %s',
+    async (_name, scenario) => {
+      const saved = await runScenario(scenario, undefined);
+      // `assert` is the SAME function the real test runs, on the SAME fixture —
+      // a meta-check holding its own copy would only prove the copy is good.
+      expect(() => scenario.assert(saved, scenario.pageKey)).toThrow();
+    },
+  );
+
+  const HOOK_CALL_NEEDLE = 'usePageGridLayout' + '({';
+
+  it('every hook-rendering test is either a scenario or an allowlisted survivor', () => {
+    const source = readFileSync(fileURLToPath(import.meta.url), 'utf8').split('\n');
+    let marker = '<file scope>';
+    const sites: string[] = [];
+    for (const line of source) {
+      const named = /^\s*it\('(.+)',/.exec(line);
+      if (named) marker = named[1]!;
+      else if (/^async function runScenario\b/.test(line)) marker = '<runScenario>';
+      // Built by concatenation, not written whole: a scanner that greps for a
+      // literal it also CONTAINS matches itself, and this one duly reported its
+      // own body as an unaccounted hook site on the first run.
+      if (line.includes(HOOK_CALL_NEEDLE) && marker !== '<file scope>') sites.push(marker);
+    }
+
+    // Positive control: a scan that finds nothing would make every assertion
+    // below pass vacuously, and this file's whole subject is that class of
+    // failure.
+    expect(sites.length).toBeGreaterThanOrEqual(8);
+    expect(sites).toContain('<runScenario>');
+
+    const unaccounted = sites.filter(
+      (name) =>
+        name !== '<runScenario>' &&
+        !(name in PLANT_MAY_SURVIVE) &&
+        !MIGRATION_SCENARIOS.some((scenario) => scenario.name === name),
+    );
+    expect(
+      unaccounted,
+      'A test renders usePageGridLayout but is neither in MIGRATION_SCENARIOS nor in ' +
+        'PLANT_MAY_SURVIVE. Add it to the scenario table so the plant covers it, or ' +
+        'allowlist it with a reason saying why a discard satisfies it.',
+    ).toEqual([]);
+
+    // ...and the allowlist may not rot either: an entry naming a test that no
+    // longer exists is a permission nobody is using and a claim nobody checks.
+    const stale = Object.keys(PLANT_MAY_SURVIVE).filter((name) => !sites.includes(name));
+    expect(stale, 'PLANT_MAY_SURVIVE names a test that no longer renders the hook').toEqual([]);
   });
 });
