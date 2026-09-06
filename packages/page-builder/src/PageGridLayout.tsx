@@ -665,6 +665,7 @@ export function PageGridLayout({
   resizeHandles = DEFAULT_RESIZE_HANDLES,
   tenantId,
   defaultAutoHeight,
+  layoutMigrations,
   // CHROME OFF BY DEFAULT — the inversion. See `GridItemProps.chrome`.
   // An app that is not ready to migrate its own card surfaces passes
   // `itemChrome` to get the pre-2.0.0 behaviour back for every slot, and
@@ -709,6 +710,7 @@ export function PageGridLayout({
     editorEventNames,
     preferenceAdapter,
     defaultAutoHeight,
+    layoutMigrations,
   });
 
   // Auto-height dispatcher (blueprint amendment A1, hardened per quality
