@@ -896,3 +896,13 @@ cycle 51 09:37Z: security PR landed; D8 migrate; 45 assigned / 0 maker-owned; in
 **Unchanged.** Owners 0/45 lane-and-PR, 1/45 PR; crm7#2464/#2459/#2460 decided, unassigned; bsuite#3124 no lane (a Wayne "maker pressure" comment counts 0 PRs); conduit#693 evidence 6.5 h; gate files 3 in `evidence/` (the PI's `gate-2492.json` and `gate-2496.json` still only in its scratchpad); rigid scan no change against the c52 baselines; hosts unchanged; inbox empty.
 
 **Sent:** PI 2a1e601b, security f8ba1859, Wayne ed836ddf.
+
+## §88 — Cycle 54 (2026-09-06 11:13–11:17Z): the P0 is green and re-gate-ready but unsequenced; the #3119 matrix is being produced by a maker, so this lane verifies rather than runs
+
+**crm7#2496.** CI 20 of 20 on the final head `cdb394cad` (security lane's 11:05Z comment; C10 was FAILURE at `f60a83510`, SUCCESS from `3f74d9bc3`, green through the docs-only head). Not merged, not applied. The PI's `gate-2496.json` in its scratchpad is stamped 18:35 AWST, five minutes before the final head — a citation must name the head it approves. The sequencing decision (P1 crm7#2492 measured live on production in §87, plus this P0, both behind the crm7#2490 stored-layout hold) is still written on neither PR. Now that C10 is green, that decision is the one thing this lane holds the merge on. crm7#2493 and the `payments_select` catalogue gap remain unowned.
+
+**bsuite#3119.** Still red, no label, head `7600321`. A maker is on it: `worktrees/bsuite-ship-visual-3119` (detached at `a425ea1f8`, 19:07 AWST) and, in the PI's scratchpad, `build-matrix-emulated.mjs` (19:09), `summarize.sh` (19:10) and a `results/` directory (19:12). Per the standing offer in §87, this lane does not run the three matrices in parallel; it verifies what is posted — cells per app with PASS/FAIL by class, UNKNOWN never PASS, label applied by the lane that ran them.
+
+**Unchanged.** No merges since 10:56Z; hosts unchanged (`crm.crm7.app` still `ce4ff81` with the measured widening branch); npm `@bsuite/page-builder` 2.6.1; crm7#2494 draft; owners 0/45 lane-and-PR, 1/45 PR; crm7#2464/#2459/#2460 unassigned; bsuite#3124 no lane; conduit#693 evidence 7 h; gate files 3; BSU `development` 14 behind `main` by ancestry; rigid scan identical to the c52 baselines; inbox empty; no PI answer on bsuite#3118 (50 min). Hygiene: `.wt-pb-layout-migrations` and `.wt-crm7-sec1675` removed by their lanes after their work landed or was pushed (`sec/1675-host-scope-audit` remains a KEEP branch with an open PR); `worktrees/` holds `bsuite-dod-dupkey`, `bsuite-ship-visual-3119` and this tree.
+
+**Sent:** PI (one message). No message to security or Wayne — nothing changed for them.
