@@ -209,8 +209,15 @@ committed. A later run on the same branch failed at **4939.86 ms** — still a `
 
 So the gate as first committed was green on its luckiest run and red on ordinary
 variance, which reads as flakiness and gets a threshold **raised** rather than a page
-fixed. It now names its statistic (`median` on `/contacts`, `numberOfRuns` 3 → 5), and
-the budget is re-derived from that.
+fixed. It now names its statistic (`median` on `/contacts`, `numberOfRuns` 3 → 5), and the
+budget is re-derived from that — by driving it to `1` so a passing gate would print its
+own median, then restoring it.
+
+**Medians actually observed on CI for `/contacts`, per job: 5757 ms and 3028.81 ms.**
+That is ~2700 ms of *job-to-job* variance on a shared runner, on top of a within-job
+spread of similar size. The committed 6500 ms sits above the **worst** observed median
+with headroom, not the best: a budget derived from a good day fails on a bad one, and
+each such failure buys an argument to loosen it.
 
 **This also retracts a claim.** An earlier draft said CI's 4104 ms "lands within noise of
 the 4.04 s field P75". That resemblance was an artifact of the optimistic aggregation:
@@ -223,7 +230,9 @@ measured this route at all.
 |---|---|---|---|
 | **RED** | `/contacts` budget 4000 ms, in CI | optimistic (`Math.min`) | **fail** — `found: 4104.59` |
 | **GREEN** | budget 4500 ms, in CI | optimistic (`Math.min`) | **pass** |
-| **RED again, on variance** | same budget, later run | optimistic (`Math.min`) | **fail** — `found: 4939.86` — the reason the statistic had to change |
+| **RED on ordinary variance** | same budget, later run | optimistic (`Math.min`) | **fail** — `found: 4939.86` — the reason the statistic had to change |
+| **RED**, deliberately, to read the median | budget driven to 1 ms | **median** over 5 runs | **fail** — `found: 3028.8139` |
+| **GREEN** | budget 6500 ms | **median** over 5 runs | **pass** |
 | RED | budget 1500 ms, locally | exit 1 — `found: 2690.33` |
 | RED | credentials absent | REFUSED, named |
 | RED | pointed at production | REFUSED, named |
@@ -262,7 +271,7 @@ Fail-closed working against a real misconfiguration, not a drill.
 | 3 | **Lower the `/contacts` LCP budget, and understand that nothing lowers it for you.** The committed value is `maxNumericValue` with `aggregationMethod: median` over 5 runs — the statistic is part of the threshold and must be quoted with it. **This is NOT wired to `scripts/lib/ratchet.mjs`:** there is no baseline file, no scheduled workflow, and — the limb that matters — **no failure on an unbanked FALL**. crm7's test-typecheck ratchet fails when the number improves and is not re-banked; that is what forces it down. This has no such limb, so if `/contacts` improves to 3000 ms everything stays green and the slack silently absorbs a future 1500 ms regression. **The descent is MANUAL.** Whoever lands an LCP improvement lowers the number in the same PR; whoever reviews that PR checks they did. A comment stating an intention is not a control, and this row is the honest label rather than a claim to be a ratchet. Wiring it properly is its own task. | crm7 |
 | 4 | Consider a CLS assertion on the authenticated route — 0.099 vs 0.000 is the largest gap the new gate exposed, but one measurement is not a threshold. | crm7 |
 | 5 | Port the recipe to BSU, conduit, braden and throughput. Each needs its own content markers first. | per app |
-| 6 | **Fix the authenticated LCP itself — crm7#2508.** crm7#2507 builds the instrument and pins a ceiling; it does not make `/contacts` faster. The number to bring down is the **~5.7 s median** (not the 4.1 s optimistic figure), and the ~2100 ms run-to-run spread has to come down first — a threshold on a signal that noisy mostly teaches people to raise it. | crm7 |
+| 6 | **Fix the authenticated LCP itself — crm7#2508.** crm7#2507 builds the instrument and pins a ceiling; it does not make `/contacts` faster. Medians observed per job are **5757 ms** and **3028.81 ms** — the *job-to-job* spread (~2700 ms) is as large as the number itself, and has to come down before any threshold means much. A gate on a signal that noisy mostly teaches people to raise it. | crm7 |
 | 7 | **A like-for-like production run is still unavailable,** and the resemblance that once seemed to justify one is gone. CI measures a seeded branch database on a slower machine; under the median it reads ~5.7 s against a 4.04 s field P75. `assertNonProductionProject` correctly refuses to point a harness at production, and this should not be faked. | crm7 |
 | 8 | **`/people`'s row bound is `createEntityStore`'s `.range()`, and nothing guards it — crm7#2509.** It sets `manualPagination`, so the guard shipped in crm7#2507 asserts the wrong mechanism for that route and would stay green through the regression. | crm7 |
 | 9 | **Which element is the LCP element on an authenticated list page — crm7#2508.** Never observed. Answer it before optimising anything. | crm7 |
