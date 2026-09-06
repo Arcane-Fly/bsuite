@@ -22,6 +22,23 @@ name: Promotion gate
 #
 # If you want a real lock, it needs a second identity — a machine account that owns the
 # label, or an environment with a required reviewer who is not the PR author.
+#
+# ── OPERATOR RULING, 2026-09-06 ────────────────────────────────────────────────
+# Braden: "That gate is wrong. Nothing from me is meant to gate ship/promote once
+# DoD is met. Visual QA is agent work. It is NOT a GitHub label I click. I cannot
+# apply 'operator sign-off' on open bsuite PRs — bouncing that to me is a broken
+# process. Do not park delivery behind my label."
+#
+# The gate was named for the wrong subject. Its safety property — a promotion is
+# deliberate and leaves a timestamped record — never depended on WHO applied the
+# label; the workflow's own note above says a single shared identity cannot tell
+# them apart anyway. What it depended on was that SOMEONE had done the visual QA
+# and said so on the record.
+#
+# So the requirement is unchanged in force and corrected in subject: the label now
+# records that the AGENT-PERFORMED visual DoD ran (ops-ship-all-apps ->
+# bsuite-ship-visual-promote, V-C1..V-C10) and that its evidence is on this PR.
+# Applying it without having run that is the same false-complete it always was.
 
 on:
   pull_request:
@@ -34,10 +51,10 @@ permissions:
 
 jobs:
   operator-signoff:
-    name: Operator QA sign-off
+    name: Visual DoD sign-off
     runs-on: ubuntu-latest
     steps:
-      - name: Require the qa-signed-off label
+      - name: Require the visual-dod-passed label
         env:
           LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
           IS_DRAFT: ${{ github.event.pull_request.draft }}
@@ -50,8 +67,12 @@ jobs:
           fi
 
           case ",${LABELS}," in
+            *,visual-dod-passed,*)
+              echo "::notice::visual-dod-passed present — promotion permitted."
+              exit 0
+              ;;
             *,qa-signed-off,*)
-              echo "::notice::qa-signed-off present — promotion permitted."
+              echo "::notice::legacy qa-signed-off present — accepted, promotion permitted."
               exit 0
               ;;
           esac
@@ -60,13 +81,55 @@ jobs:
           ::error::BLOCKED — this PR promotes `development` to `main`, which ships to PRODUCTION
           and triggers the Supabase migration applier.
 
-          Braden inspects and QAs `development` BEFORE anything promotes. That gate was bypassed
-          once already (bsuite#1944, 2026-08-13) and the applier ran on the push.
+          A promotion was merged once with this held (bsuite#1944, 2026-08-13) and the applier
+          ran on the push. The gate exists so that never happens by skimming.
 
-          To promote: apply the label `qa-signed-off` to this PR.
+          To promote: run the AGENT-PERFORMED visual DoD, post its evidence on this PR, then
+          apply the label `visual-dod-passed`.
 
-          Apply it only when the QA has ACTUALLY happened. The label is the record that it did —
-          it is not a formality, and it is timestamped in the PR timeline. If you are an agent and
-          Braden has not told you the QA is done, you do not apply this label.
+          The visual DoD is ops-ship-all-apps -> bsuite-ship-visual-promote, V-C1..V-C10:
+          no pure white or black, sensible density (2-up / 3-up), layout that makes sense,
+          the task finishable on-page without needless round-trips, Storybook actually
+          installed and visually editable. Both themes, four breakpoints.
+
+          This is AGENT work and does not wait on Braden — operator ruling, 2026-09-06.
+          Applying the label without having run it is a false-complete, and the label event
+          is timestamped in the PR timeline, so it is attributable afterwards.
           MSG
+          exit 1
+
+  # ── TRANSITIONAL: the context `main` branch protection still requires ────────
+  #
+  # Renaming the job above orphans the required status check "Operator QA
+  # sign-off" that `main` protection names, and a required context no job can
+  # produce blocks EVERY merge into that branch. check-required-contexts-
+  # producible.mjs caught exactly that on bsuite#3103, which is the guard doing
+  # its job.
+  #
+  # So both contexts are emitted during the transition, enforcing the SAME
+  # condition. The gate is not weakened: this job passes only when the visual
+  # DoD label (or the legacy one) is present, identically to the job above.
+  #
+  # REMOVE THIS JOB once `main` protection requires "Visual DoD sign-off"
+  # instead — update the protection, refresh
+  # docs/security/branch-protection/main-*.json, re-bank the ratchet with
+  # `--update-baseline`, then delete this block. Leaving it forever means the
+  # old name never dies.
+  operator-signoff-legacy-context:
+    name: Operator QA sign-off
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require the visual-dod-passed label (legacy context name)
+        env:
+          LABELS: ${{ join(github.event.pull_request.labels.*.name, ',') }}
+        run: |
+          set -euo pipefail
+          echo "labels on this PR: ${LABELS:-<none>}"
+          case ",${LABELS}," in
+            *,visual-dod-passed,*|*,qa-signed-off,*)
+              echo "::notice::sign-off label present — promotion permitted."
+              exit 0
+              ;;
+          esac
+          echo "::error::BLOCKED — see the 'Visual DoD sign-off' check for what has to happen."
           exit 1
