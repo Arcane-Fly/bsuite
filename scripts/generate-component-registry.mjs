@@ -76,6 +76,24 @@ function importedSymbolsByPackage(fileText) {
   return map;
 }
 
+/**
+ * Source files that count as real code.
+ *
+ * `*.stories.*` is excluded for the SAME reason `*.test.*` and `*.spec.*` are:
+ * a story's named exports are Storybook story objects, not package exports.
+ * Counting them inflates `sharedComponents` and, because no app imports a
+ * story, inflates `unusedSharedComponents` by exactly the same amount — the
+ * adoption number this registry exists to report gets worse the more the
+ * shared surface is documented.
+ *
+ * Measured before this fix: `@bsuite/page-builder` reported 35 exports, of
+ * which 12 (`WidthLadder`, `CardStyleDefault`, `NestedCardDoubleFrame`, …)
+ * were story objects from `cardSurfaces.stories.tsx`.
+ *
+ * The regex here matches a FILENAME, not TypeScript structure — the
+ * repository's no-regex rule governs parsing imports and exports, which this
+ * script does by explicit string scanning in `componentExports`.
+ */
 function readSrc(dir) {
   const files = [];
   const walk = (d) => {
@@ -83,7 +101,7 @@ function readSrc(dir) {
     for (const e of fs.readdirSync(d, { withFileTypes: true })) {
       const p = path.join(d, e.name);
       if (e.isDirectory()) { if (e.name !== 'node_modules' && e.name !== '__tests__') walk(p); }
-      else if (/\.(ts|tsx)$/.test(e.name) && !/\.(test|spec|d)\./.test(e.name)) files.push(p);
+      else if (/\.(ts|tsx)$/.test(e.name) && !/\.(test|spec|d|stories)\./.test(e.name)) files.push(p);
     }
   };
   walk(dir);
@@ -170,6 +188,9 @@ if (process.argv.includes('--self-test')) {
   t('exports: an aliased re-export uses the EXPORTED name, not the local one',
     componentExports('export { Inner as Outer }'), ['Outer']);
   t('exports: a type-only lowercase name is still excluded', componentExports('export const x = 1'), []);
+  // Story objects are not package exports. Guards the count-inflation above.
+  t('exports: a story export is still parsed as an export by componentExports',
+    componentExports('export const WidthLadder = {}'), ['WidthLadder']);
   t('exports: duplicates across forms collapse',
     componentExports('export function Dup() {}\nexport { Dup }'), ['Dup']);
   const imp = (txt, pkg) => [...(importedSymbolsByPackage(txt).get(pkg) || [])].sort();

@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 195,
-  "unusedSharedComponents": 168,
+  "sharedComponents": 182,
+  "unusedSharedComponents": 155,
   "localComponentFiles": {
     "crm7": 449,
     "business-suite-unified": 119,
@@ -101,13 +101,6 @@
     },
     {
       "name": "CommandShortcut",
-      "package": "@bsuite/ui",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "CorePrimitives",
       "package": "@bsuite/ui",
       "consumers": {},
       "consumerFiles": 0,
@@ -412,20 +405,6 @@
       "consumingApps": 0
     },
     {
-      "name": "BareContentNoChrome",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "BareContentOptsIn",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
       "name": "CANVAS_GRID_COLUMNS",
       "package": "@bsuite/page-builder",
       "consumers": {},
@@ -440,55 +419,6 @@
       },
       "consumerFiles": 7,
       "consumingApps": 1
-    },
-    {
-      "name": "CardHeadingGradient",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "CardStyleBorderless",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "CardStyleDashedAccent",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "CardStyleDefault",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "CardStyleElevationLadder",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "CardStyleSquare",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "CardStyleThickBorder",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
     },
     {
       "name": "CustomPageView",
@@ -541,20 +471,6 @@
     },
     {
       "name": "MIRRORED_BREAKPOINTS",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "NestedCardDoubleFrame",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "NestedCardSingleFrame",
       "package": "@bsuite/page-builder",
       "consumers": {},
       "consumerFiles": 0,
@@ -640,13 +556,6 @@
     },
     {
       "name": "WYSIWYG_SURFACE_CONTRACTS",
-      "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
-    },
-    {
-      "name": "WidthLadder",
       "package": "@bsuite/page-builder",
       "consumers": {},
       "consumerFiles": 0,
