@@ -40,10 +40,14 @@ export type { CanvasCardLayoutResult } from './canvasCardLayout.js';
 export type { WidgetConfig, PageEditorLauncherProps } from './PageEditorLauncher.js';
 export {
   usePageGridLayout,
+  migrateSavedLayout,
   DEFAULT_EDITOR_EVENT_NAMES,
+  PACKAGE_LAYOUT_EPOCH,
   PAGE_GRID_EDITING_EVENT,
 } from './usePageGridLayout.js';
 export type { PageGridEditingEventDetail } from './usePageGridLayout.js';
+export { adoptUnchangedDefaults } from './layoutMigrations.js';
+export type { PreviousItemDefault } from './layoutMigrations.js';
 export { rescaleLayout } from './rescaleLayout.js';
 export { computeAutoHeightRows } from './autoHeight.js';
 export type { ComputeAutoHeightRowsOptions } from './autoHeight.js';
@@ -83,6 +87,7 @@ export type {
   RelationshipFieldOption,
   RelationshipWidgetDetail,
   RelationshipWidgetFactoryOptions,
+  LayoutMigration,
   UsePageGridLayoutOptions,
   UsePageGridLayoutResult,
   WidgetMeta,
