@@ -305,20 +305,54 @@ function collectMigrations(root, scopes) {
       continue;
     }
     const quarantined = loadQuarantine(absDir);
-    for (const entry of fs.readdirSync(absDir, { withFileTypes: true })) {
-      if (!entry.isFile()) continue;
-      if (!entry.name.endsWith('.sql')) continue;
-      const version = parseVersion(entry.name);
-      if (version === null) continue;
-      found.push({
-        scope: scope.id,
-        basename: entry.name,
-        abs: path.join(absDir, entry.name),
-        rel: path.posix.join(scope.migrationsDir, entry.name),
-        version,
-        nontx: isNonTx(entry.name),
-        quarantined: quarantined.has(entry.name),
-      });
+
+    // BOTH the migrations directory AND its `archive/` subdirectory.
+    //
+    // On 2026-08-26 crm7 moved 658 migrations already recorded in production's
+    // ledger into `supabase/migrations/archive/`. This collector read only the
+    // top level — `entry.isFile()` skips a directory — so every archived file
+    // silently left the replay set.
+    //
+    // That is harmless for the ones the baseline already contains, and it is NOT
+    // harmless above the baseline high-water mark. 153 of those 658 carry a
+    // version ABOVE it, so their objects were in neither half: not inside the
+    // 2026-08-07 dump, and not replayed. Anything referencing one of them failed
+    // with a missing-object error that named the object and not the cause.
+    //
+    // Found 2026-09-07 (bsuite#3142). bsuite#3119 failed on
+    // `20260906120000_host_supervisor_employers_clients_scope.sql` —
+    // "function public.is_host_supervisor_of_tenant(uuid) does not exist" —
+    // whose only creator is `archive/20260820130000_contacts_select_host_employer_limb.sql`,
+    // dated thirteen days after the dump. Production has the helper, which is why
+    // the migration applied there and failed only here.
+    //
+    // crm7's own db-lint.yml has replayed both directories since the move, for
+    // this exact reason, and reports `applied OK: 178 | NEW failures: 0`. The
+    // parent was the half that never caught up. Sorting below is by VERSION, not
+    // by path, so merging the two directories needs nothing else — an `archive/`
+    // prefix would otherwise order every archived migration first.
+    const dirs = [{ abs: absDir, relPrefix: scope.migrationsDir }];
+    const archiveAbs = path.join(absDir, 'archive');
+    if (fs.existsSync(archiveAbs) && fs.statSync(archiveAbs).isDirectory()) {
+      dirs.push({ abs: archiveAbs, relPrefix: path.posix.join(scope.migrationsDir, 'archive') });
+    }
+
+    for (const dir of dirs) {
+      for (const entry of fs.readdirSync(dir.abs, { withFileTypes: true })) {
+        if (!entry.isFile()) continue;
+        if (!entry.name.endsWith('.sql')) continue;
+        const version = parseVersion(entry.name);
+        if (version === null) continue;
+        found.push({
+          scope: scope.id,
+          basename: entry.name,
+          abs: path.join(dir.abs, entry.name),
+          rel: path.posix.join(dir.relPrefix, entry.name),
+          version,
+          nontx: isNonTx(entry.name),
+          quarantined: quarantined.has(entry.name),
+        });
+      }
     }
   }
   // GLOBAL order — this is production's order. Ties broken deterministically so
