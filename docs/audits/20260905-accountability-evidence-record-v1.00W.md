@@ -1,3 +1,17 @@
+---
+kind: record
+authority: none
+owner: bsuite
+evidence:
+  - .github/workflows/promotion-gate.yml
+  - .github/workflows/supabase-migration-rehearsal.yml
+  - scripts/supabase/rehearse-migrations.mjs
+  - scripts/check-branch-protection-drift.mjs
+  - scripts/check-migration-version-collisions.mjs
+  - crm7/scripts/replay-schema-diff.sh
+  - docs/00-roadmap/operator-notes-verdicts.json
+---
+
 # Accountability lane — evidence record (append-only)
 
 > **Recovery note, 2026-09-06 10:2xZ.** The worktree holding this file was removed with `git worktree remove --force` by the PI session at 10:05:22Z while the file was uncommitted (a branch-only content test; the estate script had said KEEP). §23–§85 below were rebuilt verbatim from this lane's session transcript, where every append was recorded as a heredoc. §1–§22 were written by the Copilot lane before the takeover at 5 Sep 22:50 AWST and existed only in the working tree; their bodies are lost — the heading index and the last 120 lines as read at 2026-09-05T14:53:43Z are preserved below. From this cycle the record is committed and pushed at every cycle close.
