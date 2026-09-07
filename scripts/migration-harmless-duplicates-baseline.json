@@ -10,5 +10,5 @@
   ],
   "generated_by": "node scripts/audit-prod-migration-history.mjs --write-baseline",
   "findings": 13,
-  "scanned": 296
+  "scanned": 299
 }
