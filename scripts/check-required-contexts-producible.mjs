@@ -42,6 +42,14 @@
  *     an API token and belongs in a nightly lane, not on the PR path; a
  *     protection write made outside a PR leaves the dump stale and this gate
  *     cannot see it. Re-dump in the PR that writes protection.
+ *
+ *     THAT NIGHTLY LANE NOW EXISTS: scripts/check-branch-protection-drift.mjs,
+ *     run by .github/workflows/branch-protection-drift.yml. It was built on
+ *     2026-09-07, the day this paragraph's scenario happened — main and
+ *     development both lost protection outright, outside any PR, and were found
+ *     by accident forty minutes later. The gap was correctly described here for
+ *     three weeks before anything filled it, which is its own lesson: naming a
+ *     hole in a comment does not watch it.
  *   - that a required gate is CORRECT, or that it can fail. That is each gate's
  *     own `--self-test`, and the LANE-WATCHER that registers it.
  *   - that a `${{ }}` expression in a job-level `if:` is truthy on a PR. The

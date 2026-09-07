@@ -1,0 +1,100 @@
+# Branch protection drift
+#
+# Branch protection is not in the repository. Weakening it produces no diff, no
+# review, no commit and no notification — the only record is whatever the person
+# who changed it happened to paste somewhere.
+#
+# WHY THIS EXISTS
+#
+# On 2026-09-07, between 15:33 and 16:14 +08, `main` and `development` both lost
+# classic branch protection outright. main went from 34 required contexts,
+# enforce_admins=true and allow_force_pushes=false to no protection object at all:
+# production was force-pushable, with no required check and no required review. The
+# repository ruleset was edited in the same window, losing `non_fast_forward` and
+# `required_linear_history` and gaining a malformed ref pattern —
+# `refs/heads/"main", "development"`, one literal ref containing quotes and a comma,
+# matching no branch — which is the shape of a shell-quoting accident rather than a
+# policy decision.
+#
+# Nothing detected any of it. It was found by accident during an unrelated audit,
+# and restored from the committed dumps under docs/security/branch-protection/.
+# scripts/check-required-contexts-producible.mjs had already named this exact gap in
+# its own header and placed it in "a nightly lane" — which did not exist. This is it.
+#
+# WHY THE SELF-TEST RUNS FIRST
+#
+# A drift result is only worth as much as the instrument that produced it, and this
+# instrument's whole job is to distinguish states that look identical from outside:
+# protection absent, protection unreadable, protection present but weakened. If the
+# reader is broken, a clean live run means nothing at all. So the hermetic self-test
+# runs first and its failure fails the job before the live comparison is attempted.
+#
+# WHY IT NEEDS A REAL TOKEN
+#
+# GET /branches/{branch}/protection requires administration read on the repository.
+# The estate's cross-repo PAT is used here, with GITHUB_TOKEN as a fallback that is
+# expected to be insufficient — and that is safe, because a token which cannot read
+# protection is reported as `protection-unreadable` ("a claim about the instrument,
+# not about the branch") rather than as protection having been removed. The gate
+# fails either way; it does not lie about which happened.
+
+name: Branch protection drift
+
+on:
+  schedule:
+    - cron: '23 5 * * *'
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'scripts/check-branch-protection-drift.mjs'
+      - '.github/workflows/branch-protection-drift.yml'
+      - 'docs/security/branch-protection/**'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: branch-protection-drift-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    name: Branch protection drift
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      # The instrument before the measurement. Hermetic: no network, no token.
+      - name: Prove the reader
+        run: node scripts/check-branch-protection-drift.mjs --self-test
+
+      # On a pull_request the token is not expected to carry administration read, and
+      # a PR must not be blocked by that. The self-test above is what a PR proves;
+      # the live comparison is the scheduled lane's job.
+      - name: Compare live protection against the committed dumps
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
+        continue-on-error: false
+
+      - name: Summary
+        if: always() && github.event_name != 'pull_request'
+        run: |
+          {
+            echo '### Branch protection drift'
+            echo
+            if [ -s /tmp/drift.txt ]; then
+              sed 's/^/    /' /tmp/drift.txt
+            else
+              echo 'The live comparison produced no output — treat this as UNKNOWN, not clean.'
+            fi
+            echo
+            echo 'Restore from the newest dump in `docs/security/branch-protection/`;'
+            echo 'the procedure is in the README beside them.'
+          } >> "$GITHUB_STEP_SUMMARY"
