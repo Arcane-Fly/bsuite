@@ -1718,6 +1718,46 @@ export const GUARDS = [
   },
 
   {
+    id: 'branch-protection-drift',
+    label: 'Live branch protection has not drifted below its committed dump',
+    repo: '.',
+    // The comparison needs a token with administration:read on the repo; only the
+    // reader and its cases run here. `--self-test` is what this registry can verify
+    // locally. The live comparison runs nightly in its own workflow.
+    command: ['node', 'scripts/check-branch-protection-drift.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/branch-protection-drift.yml',
+    mode: 'run',
+    notes:
+      'Branch protection lives outside the repository, so weakening it leaves no ' +
+      'diff, no review and no trace. On 2026-09-07 main and development both LOST ' +
+      'classic protection entirely — main went from 34 required contexts, ' +
+      'enforce_admins=true and allow_force_pushes=false to no protection object at ' +
+      'all — and nothing detected it; it surfaced by accident during an unrelated ' +
+      'audit ~40 minutes later. required-contexts-producible had already NAMED this ' +
+      'gap in its own header and placed it in "a nightly lane" that did not exist. ' +
+      'Weakening FAILS and strengthening only WARNS, deliberately: a gate that fires ' +
+      'on every legitimate protection write is one people switch off. It also ' +
+      'separates "not protected" from "could not tell" — a 404 from the protection ' +
+      'endpoint means both, and during the incident that 404 was nearly read as ' +
+      'proof of removal until a positive control against another repo returned 200.',
+    evidence:
+      '"[protection-drift] self-test: 13/13 pass — 13 case(s) exercised (11 ' +
+      'comparison verdicts covering an identical read, a deleted protection object, ' +
+      'an ambiguous 404, an unreadable one, a removed context, an added context that ' +
+      'must only WARN, enforce_admins off, force pushes on, deletions on and removed ' +
+      'PR reviews; plus newest-dump-per-branch and an unparseable dump that must fail ' +
+      'closed)". The summary names its denominator because LANE-WATCHER rejected this ' +
+      'guard on first registration for printing a verdict with no count — the same ' +
+      'silent-pass class it exists to catch. ' +
+      'Bitten twice 2026-09-07: downgrading contexts-removed to a warning and ' +
+      'deleting the ambiguity branch each turned the suite red — the second ' +
+      'reproducing the incident\'s own near-miss, three confident findings ' +
+      'including "contexts-removed" on a branch whose state was merely unreadable. ' +
+      'Against live protection the same day: "compared live protection against 2 ' +
+      'committed dump(s): development@20260906, main@20260906 / no drift." exit 0.',
+  },
+
+  {
     id: 'required-contexts-producible',
     label: 'Every required status check is one some PR can actually report',
     repo: '.',
@@ -1734,7 +1774,9 @@ export const GUARDS = [
       'COMMITTED dumps under docs/security/branch-protection/ rather than the live ' +
       'API, so it needs no token and the rollback for every protection write stays ' +
       'in git history. It does NOT assert that the dump still matches live ' +
-      'protection — re-dump in the PR that writes it.',
+      'protection — re-dump in the PR that writes it. That comparison is the ' +
+      'branch-protection-drift guard, added 2026-09-07 after main and development ' +
+      'both silently lost protection and no control noticed.',
     evidence:
       'Clean pass states "examined N required context(s) across M branch dump(s) ' +
       '... against J job(s) in W workflow file(s); F finding(s)" — 61 / 2 / 129 / ' +
