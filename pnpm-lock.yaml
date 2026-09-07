@@ -562,6 +562,9 @@ importers:
         specifier: ^3.6.0
         version: 3.6.0
     devDependencies:
+      '@bsuite/page-builder':
+        specifier: workspace:^
+        version: link:../page-builder
       '@bsuite/theme':
         specifier: workspace:^
         version: link:../theme
@@ -601,6 +604,12 @@ importers:
       react-dom:
         specifier: ^19.2.8
         version: 19.2.8(react@19.2.8)
+      react-grid-layout:
+        specifier: ^2.2.4
+        version: 2.2.4(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      react-resizable:
+        specifier: ^4.0.2
+        version: 4.0.2(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       storybook:
         specifier: ^10.5.10
         version: 10.5.10(@types/react@19.2.18)(react@19.2.8)

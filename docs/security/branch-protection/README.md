@@ -125,3 +125,81 @@ because they are the rollback for the write that superseded them.
 is the record. That is what happened on 2026-09-03: the first commit of `main-20260903.json` holds
 the 30-context state before `align` and `Every gitlink sits on its app's own main` were appended,
 and the second holds the 32-context state after.
+
+## Restoring from a dump — exercised for the first time on 2026-09-07
+
+Between 15:33 and 16:14 +08 on 2026-09-07, `main` and `development` both lost classic branch
+protection outright. `main` went from 34 required contexts, `enforce_admins: true` and
+`allow_force_pushes: false` to **no protection object at all** — production was force-pushable,
+with no required check and no required review. The repository ruleset was edited in the same
+window: it lost `non_fast_forward` and `required_linear_history`, and gained a ref pattern of
+`refs/heads/"main", "development"` — one literal ref containing quotes and a comma, matching no
+branch, which is the shape of a shell-quoting accident rather than a policy decision.
+
+Nothing detected it. It surfaced by accident during an unrelated audit. Both branches were
+restored from `main-20260906.json` and `development-20260906.json` — this directory's whole
+reason for existing, and the first time it has been needed.
+
+```sh
+S=$(mktemp -d)
+b=main   # or development
+
+# Build the PUT body from the newest committed dump. The dump is the API's RESPONSE
+# shape and the PUT wants a slightly different one: booleans rather than {enabled},
+# and an explicit `restrictions` (null when the dump has no restrictions key).
+python3 - "$b" > "$S/body.json" <<'PY'
+import json,sys,glob,os
+b=sys.argv[1]
+f=sorted(glob.glob(f"docs/security/branch-protection/{b}-*.json"))[-1]
+d=json.load(open(f))
+en=lambda k: bool(d.get(k,{}).get('enabled'))
+json.dump({
+ "required_status_checks":{"strict":d['required_status_checks']['strict'],
+                           "contexts":sorted(d['required_status_checks']['contexts'])},
+ "enforce_admins":en('enforce_admins'),
+ "required_pull_request_reviews":{k:v for k,v in (d.get('required_pull_request_reviews') or {}).items() if k!='url'} or None,
+ "restrictions":None,
+ "required_linear_history":en('required_linear_history'),
+ "allow_force_pushes":en('allow_force_pushes'),
+ "allow_deletions":en('allow_deletions'),
+ "block_creations":en('block_creations'),
+ "required_conversation_resolution":en('required_conversation_resolution'),
+ "lock_branch":en('lock_branch'),
+ "allow_fork_syncing":en('allow_fork_syncing'),
+}, sys.stdout, indent=1)
+PY
+
+gh api -i -X PUT "repos/GaryOcean428/bsuite/branches/$b/protection" --input "$S/body.json" | head -1
+
+# VERIFY BY RE-READING. Do not trust the write: the first attempt on 2026-09-07
+# printed a client-side "unexpected end of JSON input" and left the branch bare,
+# and only the re-read caught it.
+gh api "repos/GaryOcean428/bsuite/branches/$b/protection" \
+  --jq '"contexts=\(.required_status_checks.contexts|length) admins=\(.enforce_admins.enabled) force=\(.allow_force_pushes.enabled)"'
+```
+
+Restoring is a **PUT of the whole object**, which is safe here precisely because the body is
+built from the dump rather than typed by hand — the same PUT-replaces-everything property that
+erased twenty-nine contexts once before is what makes it the correct restore verb.
+
+### "Branch not protected" is two different answers
+
+`GET /branches/{b}/protection` returns 404 both when protection is genuinely absent and when the
+caller cannot see it. During this incident that 404 was very nearly reported as "protection was
+removed" before a positive control — the identical call against `crm7`, which returned 200 —
+proved the token could read protection where it existed. Consult the branch object before
+concluding:
+
+| protection endpoint | `GET /branches/{b}` says | reading |
+| --- | --- | --- |
+| 404 | `protected: false` | genuinely unprotected |
+| 404 | `protected: true` | **ambiguous** — a ruleset, or a token without administration read. Not proof of removal. |
+| any other error | — | the instrument failed; this is a claim about the token, not the branch |
+
+### The watcher
+
+`scripts/check-branch-protection-drift.mjs`, run nightly by
+`.github/workflows/branch-protection-drift.yml`, compares live protection against the newest dump
+here and encodes that table. **Weakening fails; strengthening only warns** — a context added live
+and not yet re-dumped is a stale dump, and a gate that fires on every legitimate protection write
+is one people switch off. Re-dumping after a deliberate write clears the warning.

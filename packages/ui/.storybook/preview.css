@@ -1,17 +1,84 @@
+/*
+ * Storybook preview stylesheet — the estate's REAL theme, not an approximation.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * WHY `@bsuite/theme/css` IS THE FIRST IMPORT
+ *
+ * Until this change this file imported ONLY `preset-v4.css`, and the harness
+ * built green while rendering nothing the estate actually looks like.
+ *
+ * `preset-v4.css` is an `@theme inline` BRIDGE: it maps Tailwind's
+ * `--color-*` onto `var(--role-*)` so `bg-card` follows `.dark` and tenant
+ * white-labelling. It deliberately contains no colour literals at all — the
+ * values live in `vars.css`, which `@bsuite/theme/css` pulls in.
+ *
+ * Importing the bridge without the values leaves every utility resolving
+ * through an UNDEFINED custom property. Measured on the previous build:
+ * 11 distinct `--role-*` referenced, 0 defined. The rendered result was
+ * the browser's own white ground, pure-black body text (banned in every
+ * role by the brand system) and a primary button whose text computed to a
+ * fully transparent fill. All five `StatusBadge` tones painted identically.
+ * The exact computed values are recorded in the guard test's header and in
+ * PR #3123 — they are deliberately NOT repeated here, because a banned
+ * literal in prose is still a banned literal to the theme scanner.
+ *
+ * Nothing in the type system, the unit tests or the build can see that.
+ * Only a rendered surface can — which is the entire reason this harness
+ * exists, so it must render the real tokens or it certifies its own lie.
+ *
+ * The import order below is the same one every D2C app uses in its entry
+ * CSS (see crm7/src/index.css, business-suite-unified/src/index.css):
+ * tailwind, then the token source, then the utility bridge.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
 @import 'tailwindcss';
-@import '@bsuite/theme/preset-v4.css';
+@import '@bsuite/theme/css'; /* vars.css + utilities.css + touch.css — the VALUES */
+@import '@bsuite/theme/preset-v4.css'; /* @theme inline bridge — the UTILITIES */
 
+/*
+ * Tailwind v4 source detection EXCLUDES node_modules, and it does not follow
+ * a relative path out of this package on its own. Both story roots are
+ * registered explicitly, mirroring the `stories` globs in main.ts.
+ *
+ * Missing the page-builder root is the same defect class as the app-level
+ * `@source "../node_modules/@bsuite/ui/dist"` rule: the DOM renders, React
+ * mounts, zero console errors, and the classes silently never exist.
+ */
 @source '../src/**/*.{ts,tsx}';
 @source './**/*.{ts,tsx}';
+@source '../../page-builder/src/**/*.{ts,tsx}';
+
+/* react-grid-layout's own positioning/resize CSS — the card-surface stories
+ * render a real grid, and without this the items stack instead of laying out. */
+@import '@bsuite/page-builder/styles.css';
 
 @layer base {
+  /*
+   * `--role-bg-body` / `--role-text-body` come from vars.css and flip under
+   * `.dark`. They are used here rather than `--color-background` so the page
+   * ground is bound to the SAME token an app's `<body>` uses.
+   *
+   * Pure white and pure black are banned in every role (brand system), alpha
+   * forms included, so the ground below is a TOKEN rather than any literal.
+   * The estate's white is oklch(0.982 0.002 248) and it arrives through the
+   * token, never typed here.
+   */
+  html,
   body {
-    background: var(--color-background);
-    color: var(--color-foreground);
-    font-family:
-      Inter,
-      ui-sans-serif,
-      system-ui,
-      sans-serif;
+    background-color: var(--role-bg-body);
+    color: var(--role-text-body);
+    font-family: var(--font-body, Inter, ui-sans-serif, system-ui, sans-serif);
   }
+}
+
+/*
+ * The Storybook canvas element sits between <body> and the story root and
+ * carries its own background. Bind it to the same token so a story never
+ * renders against the harness's default white ground.
+ */
+.sb-show-main,
+#storybook-root,
+#storybook-docs {
+  background-color: var(--role-bg-body);
+  color: var(--role-text-body);
 }

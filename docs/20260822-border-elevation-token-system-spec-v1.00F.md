@@ -1,3 +1,13 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/audit-d2c-theme.sh
+  - scripts/check-control-boundary-contrast.mjs
+  - .github/workflows/theme-conformance.yml
+---
+
 # Border, Surface & Elevation Token System — Remediation Spec
 
 **Status:** F (Frozen — implemented and verified; see the implementation record below)
@@ -20,7 +30,7 @@ completion note would split the finding from its resolution.
 |---|---|---|---|
 | 1 | the achromatic elevation ramp resolves to `rgba(0,0,0,0)` — elevation does not exist | **fixed** | `@bsuite/theme@1.4.2` `vars.css`: `--shadow-ink-*` resolve from `--shadow-color` (dark `oklch(0.08 0.02 268 / 0.70)`) with real alpha steps 0.4/0.6/1.0/1.6 × `--shadow-strength`. Those are §5.4's proposed values to three decimals. |
 | 2 | surface scale flat, ΔL ≈ 0.002 | **fixed** | dark ladder now steps: sunken `0.145` · body `0.166` · panel `0.190` · surface `0.212` · input `0.240` |
-| 3 | the accent ring is pressed into service as the depth cue | **fixed** | resting `var(--glow-card)` sites: crm7 0 · BSU 0 · conduit 0 · throughput 0 |
+| 3 | the accent ring is pressed into service as the depth cue | **REOPENED 2026-09-06 — the row below was false for crm7** | resting `var(--glow-card)` sites, as re-measured on production: crm7 **2** (shadcn `Card` 0.1316 @ hue 191.9, page-builder chrome 0.1324 @ 191.2) · BSU 0 · conduit 0 · throughput 0 |
 
 Defect 3 was still live until 2026-08-29 — crm7 and BSU had already dropped
 the resting ring, conduit and throughput never received it, and conduit kept
@@ -42,6 +52,57 @@ from `d.ideas.crm7.app` and `d.conduit.crm7.app` with positive controls
 (`bg-card`, `shadow-elev-2`, `.dark` rules all present, so the probe was
 demonstrably seeing the stylesheet): no resting inset-shadow rule survives,
 and the hover rule is present in both.
+
+> ### CORRECTION, 2026-09-06 — this closure record was FALSE for crm7
+>
+> The paragraph above is accurate about the two hosts it names, **and those are
+> the only two it checked**. It was then written up as a four-app result. crm7
+> was never fetched, and crm7 is the one that still carries the ring.
+>
+> Re-measured on production `crm.crm7.app` @ `ce4ff81`, dark **emulated and
+> reloaded** (never a forced `.dark`), transitions killed before the read, with
+> the instrument's own controls bitting in the same call — a known accent must
+> round-trip C 0.132 / H 191.7, a value inside §5.4's band must round-trip
+> C 0.020 / H 262, a grey must read C 0, a `lab()` string must parse, and a junk
+> string must return UNPARSEABLE rather than 0:
+>
+> | surface | n | resting `box-shadow` | max chroma @ hue |
+> |---|---:|---|---|
+> | shadcn `Card` (`dark:shadow-card-glow`, `crm7/src/index.css:353` → `card.tsx:45`) | 4 | `… /0.278 0 0 0 1px`, `/0.22`, `/0.078` | **0.1316 @ 191.9** |
+> | `@bsuite/page-builder` grid chrome (`dark:shadow-[var(--glow-card,none)]`, `PageGridLayout.tsx:505`) | 7 | `/0.302 0 0 0 1px`, `/0.349 0 0 14px -4px` | **0.1324 @ 191.2** |
+>
+> Hue 191–192 is Electric Cyan; the ambient ramp ink is chroma 0.02. So §5.3
+> ("Accent MUST NOT be used for … dark-mode elevation shadows") is **live-violated
+> by crm7**, and by a shared package that ships the same declaration to every
+> consumer that renders the chrome.
+>
+> The full-estate measurement of the same day, for the record:
+>
+> | app | card SURFACE C @ H | §5.4 band 0.020–0.025 @ 260–265 | card SHADOW maxC @ H |
+> |---|---|---|---|
+> | crm7 shadcn `Card` | 0.0192 @ 359.4 | hue outside | **0.1316 @ 191.9** |
+> | crm7 page-builder chrome | 0.0200 @ 262.0 | ✅ | **0.1324 @ 191.2** |
+> | business-suite-unified `/docs` | 0.0200 @ 262.0 | ✅ | 0.0189 @ 233.5 |
+> | conduit | 0.0200 @ 262.0 | ✅ | 0.0189 @ 233.5 |
+> | throughput | 0.0306 @ 263.7 | ✅ | 0.0189 @ 233.5 |
+> | braden | 0.0175 @ 248.7 | Corporate, §0 out of scope | 0.0941 @ 90.4 (gold) |
+>
+> **Why this correction is written here rather than in a new document.** This
+> record is the reason nobody re-checked. `visual-probe.js`'s V-C7 gate was
+> simultaneously *requiring* the accent glow this section says was removed — its
+> threshold is anchored to `--card-glow-source`, the token §5.4 retired — so the
+> gate failed every compliant app and passed the violator. Three issues were
+> filed against the compliant apps (throughput#481, conduit#694,
+> business-suite-unified#1179) and one CSS "fix" was written that would have made
+> a compliant app non-compliant (throughput#482, withdrawn). A frozen document
+> asserting a measurement that live rendering contradicts is worse than one that
+> says nothing, because it turns "nobody has checked" into "somebody checked and
+> it was fine".
+>
+> Tracked: bsuite#3127 (the gate-vs-spec reconciliation), crm7#2506 (the
+> violation), Arcane-Fly/.github-private#20 (the gate rewritten to §5.3/§5.4).
+> The count in defect 3's row above has been corrected in place rather than
+> silently edited, so the original claim and its refutation are both readable.
 
 **Gates cited by this document, all run and passing 2026-08-29:**
 `audit-oklch-lightness.py` (0 violations; self-test 10 cases, 8 asserting the
