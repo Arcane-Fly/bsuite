@@ -179,6 +179,9 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
   - R80.4: prod `https://r8.crm7.app`, dev `https://d.r8.crm7.app`
   - Throughput: prod `https://ideas.crm7.app`, dev `https://d.ideas.crm7.app`
   - Braden: prod `https://www.braden.com.au`, dev `https://d.braden.com.au`
+- **Development prefix:** all development deploys use the `d.*` prefix on the production hostname.
+- **Domain/repo mapping:** `ideas.crm7.app` is the production hostname for the `throughput` repo/app.
+- **Favicon convention:** `braden` uses `braden/public/favicon.ico` as its canonical favicon; every app served on the `crm7.app` domain uses `crm7/public/favicon.ico`.
 - Stripe key policy: client bundles may use publishable keys only (`VITE_STRIPE_PUBLISHABLE_KEY` = `pk_*`); secret keys (`sk_*`) must remain server-only and unprefixed.
 
 ---

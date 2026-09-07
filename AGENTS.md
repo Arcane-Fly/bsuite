@@ -159,7 +159,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 | Auth, OAuth, SSO, client registry, `d.*` previews, redirect allowlist | [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) |
 | Code quality, commits, testing, docs naming | [`docs/20260227-contributing-standards-guide-v1.01W.md`](docs/20260227-contributing-standards-guide-v1.01W.md) |
 | Entity ownership, DRY one-shot | [`docs/20260227-dry-one-shot-architecture-v1.04A.md`](docs/20260227-dry-one-shot-architecture-v1.04A.md) |
-| Setup, lockfiles, shared packages, env vars, GCP WIF, cron checks, memory protocol | [`docs/20260731-platform-operations-reference-v1.00W.md`](docs/20260731-platform-operations-reference-v1.00W.md) |
+| Setup, lockfiles, shared packages, env vars, **domain/favicon conventions**, GCP WIF, cron checks, memory protocol | [`docs/20260731-platform-operations-reference-v1.00W.md`](docs/20260731-platform-operations-reference-v1.00W.md) |
 | Self-validation loop (output/visual equivalence, PR Evidence block) | [`docs/20260507-ff-self-validation-doctrine-v1.00W.md`](docs/20260507-ff-self-validation-doctrine-v1.00W.md) |
 | Supabase policy gates, consumer-package gate, definition of done | [`docs/20260731-supabase-verification-gates-v1.00W.md`](docs/20260731-supabase-verification-gates-v1.00W.md) |
 | Trying a migration **before** you ship it (`pnpm supabase:rehearse`) | [`docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md`](docs/runbooks/20260813-local-migration-rehearsal-guide-v1.00W.md) |
