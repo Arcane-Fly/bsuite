@@ -387,7 +387,16 @@ SQL
     # empty-range path ever ran in CI (bsuite#3109). Asserting the exit code
     # alone would let the same regression back in silently, which is the whole
     # failure mode that meta-check exists to prevent.
-    if printf '%s' "$(cat "$repos/out.txt")" | grep -q "compared 2 tree digests"; then
+    # grep the FILE, never `printf … | grep -q`. Under `set -o pipefail` (line 49)
+    # `grep -q` exits the moment it matches, and when the payload is longer than a
+    # pipe buffer `printf` is still writing — it takes EPIPE, and pipefail turns the
+    # whole pipeline non-zero even though the string WAS found. The clean-pass line
+    # this asserts is multi-line, so the match is near the start and the rest is
+    # still in flight: the assertion failed on a message that contained exactly what
+    # it was looking for, and CI printed `printf: write error: Broken pipe` beside it.
+    # Reproduced both ways 2026-09-07 before this change (short payload passes, long
+    # payload takes the FALSE branch; grepping the file takes the TRUE branch).
+    if grep -q "compared 2 tree digests" "$repos/out.txt"; then
         echo "  ok   the sync-PR pass states a non-zero denominator (2 tree digests)"
     else
         failed=$((failed + 1))

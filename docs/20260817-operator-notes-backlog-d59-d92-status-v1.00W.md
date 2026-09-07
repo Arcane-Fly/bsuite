@@ -109,7 +109,7 @@ Sizes: **S** = hours, **M** = days, **L** = a week or more.
 | # | What you said | Verdict | Measured 2026-08-17 | Size |
 | --- | --- | --- | --- | --- |
 | **D-64** | Fair Work credentials rendered in the R8 interface. Remove, rotate, confirm | **DONE in code — rotation is yours** | `R80.4#37` closed 14 Aug. The key field and the direct-fetch path are gone; the credentials are not prefixed for the browser bundle, so none is shipped to a visitor; the token moved into a request header and both proxies now refuse the old query-string form. **Rotating the key is still yours to do and cannot be verified from here** — the code fix does not un-expose a key that was on screen. | S (yours) |
-| **D-65** | Supervisors belonging to other host employers are selectable on the placement edit form | **DONE — issue still open** | Both halves are now fixed. The screen half shipped (the narrowing hook is used in seven places including the placement create and edit forms). The **database** half — the one the register said was missing — is live: I read the policy off the production database and it now carries a full host-supervisor limb, so a host supervisor sees only contacts belonging to their own host, while ordinary GTO staff keep tenant-wide visibility. `crm7#1729` closed. **`crm7#1675` is still open and should be closed by hand.** | — |
+| **D-65** | Supervisors belonging to other host employers are selectable on the placement edit form | **DONE — `crm7#1675` now closed** | Both halves are now fixed. The screen half shipped (the narrowing hook is used in seven places including the placement create and edit forms). The **database** half — the one the register said was missing — is live: I read the policy off the production database and it now carries a full host-supervisor limb, so a host supervisor sees only contacts belonging to their own host, while ordinary GTO staff keep tenant-wide visibility. `crm7#1729` closed. **WRITEBACK 2026-09-07 (bsuite-plans-keeper):** `crm7#1675` closed 2026-09-06T12:05:19Z as COMPLETED — not by hand, but superseded by a wider fix: `crm7#2496` (merged 2026-09-06T12:00:48Z, commit `5660df5a8482c21a29e58af214ca34d3a9264353`) found the sibling audit this row deferred turned up a live RLS leak across 9 tables (not just the placement-edit picker) and closed all of them, 6 demonstrated leaking + 3 latent per `qig-memory bsuite_project_live_cross_host_rls_leak_including_invoices_20260906`. | — |
 | **D-66** | Platform-level scope visible to tenants, in three surfaces — plus *"sweep every feature in every app and report the count"* | **PARTIAL** | **Three named surfaces: all three done.** (a) The custom report builder now grants platform scope to a platform *developer* only — the code carries your ruling verbatim and an explicit warning not to re-admit `platform_admin`, super-admin or tester. (b) The Platform Kit gate no longer admits super-admin at all: the check is now purely "does this account hold a platform role", measured in the source. Recall a super admin in this estate is an **enterprise tenant admin with sub-organisations**, not a platform account — so that disjunct was handing an enterprise customer platform surfaces. (c) Platform branding and Platform Kit are relocated into the Developer Portal. **The sweep is not done.** No count has been reported anywhere for "every feature in every app carrying the same pattern", which was the larger half of what you asked for. `bsuite#1960` open. | M |
 
 ### §3 — the R8 regression cluster (D-67…D-73)
@@ -434,8 +434,12 @@ The same rule the ledger applies to migrations applies to workflow runs.
 
 ## 8. Suggested sequence
 
-1. **Close the fixed-but-open issues by hand** — `crm7#1675`, `crm7#1568`, `bsuite#1963`. Minutes,
-   and it stops the next status report understating the estate again.
+1. ~~**Close the fixed-but-open issues by hand** — `crm7#1675`, `crm7#1568`, `bsuite#1963`. Minutes,
+   and it stops the next status report understating the estate again.~~ **DONE — WRITEBACK
+   2026-09-07 (bsuite-plans-keeper):** all three are closed on the tracker. `crm7#1568` and
+   `bsuite#1963` closed 2026-08-24 (predates this doc's suggestion — already actioned before it
+   was written down). `crm7#1675` closed 2026-09-06, superseded by `crm7#2496` (see D-65 above),
+   not closed "by hand" as suggested here.
 2. **`bsuite#2055`** — adopt the shared checker in all five apps and publish the counts. This is
    the single change that makes *"we fixed the page you named"* structurally impossible to repeat,
    which is D-62, which is the complaint you have made most often.
