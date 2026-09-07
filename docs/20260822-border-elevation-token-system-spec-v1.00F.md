@@ -1,3 +1,13 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/audit-d2c-theme.sh
+  - scripts/check-control-boundary-contrast.mjs
+  - .github/workflows/theme-conformance.yml
+---
+
 # Border, Surface & Elevation Token System — Remediation Spec
 
 **Status:** F (Frozen — implemented and verified; see the implementation record below)
