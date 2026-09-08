@@ -1,0 +1,11 @@
+BSUITE TAKEOVER LANE - CENSUS REPORT
+==================================================
+
+Repository: bsuite
+  Path: /home/braden/Desktop/Dev/bsuite
+  Current SHA: 86a7ba3d...
+  Ahead/Behind development: 0/42
+  Dirty state: True
+  Local branches (7): chore/gitlink-bsu-fec9672da, chore/gitlink-crm7-bc5d91e, development, docs/voice-addon-shared-number-research-20260908, main ... and 2 more
+  Remote branches (8): origin, origin/chore/auto-advance-submodule-pointers, origin/chore/gitlink-bsu-fec9672da, origin/chore/gitlink-crm7-bc5d91e, origin/development ... and 3 more
+
