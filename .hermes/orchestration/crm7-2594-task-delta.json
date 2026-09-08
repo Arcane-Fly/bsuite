@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "task_id": "crm7-2594-sms-inbound",
+  "parent_task_id": "bsuite#3204",
+  "silo": "bsuite",
+  "index_key": "bsuite_project_truth_index",
+  "index_updated": null,
+  "objective_lock": "crm7#2594 [P1][SMS]: surface Mobile Message inbound replies in CRM conversations/timelines and recover stranded usage rows; one canonical message owner; workflow-event integration; tracked under bsuite#3204, reuses bsuite#3209 workflow catalog",
+  "in_scope": [
+    "BSU sms-inbound edge fn (capture/persist/verify/idempotency)",
+    "communications schema bridge + triggers + RLS tenant resolution",
+    "crm7 SMS inbox/thread/timeline rendering + inline reply",
+    "STOP/START consent handling",
+    "historical usage-row recovery backfill",
+    "inbound-SMS workflow event in catalog/runtime",
+    "docs + plan updates"
+  ],
+  "out_scope": [
+    "deal-specific functionality",
+    "replacing Mobile Message provider",
+    "other apps' SMS surfaces",
+    "building a second workflow engine (reuse bsuite#3209)",
+    "resending historical messages"
+  ],
+  "authority_files_read": [],
+  "packages_tools": {
+    "overrides": {},
+    "mcps": [],
+    "skills": [
+      "project-truth",
+      "definition-of-done"
+    ]
+  },
+  "memory_keys_read": [],
+  "memory_keys_to_write": [],
+  "memory_skipped": false,
+  "known_answers_do_not_reask": [],
+  "success_criteria": [],
+  "dod_profile": "full_E",
+  "children": [],
+  "created": "2026-09-08T10:20:13Z"
+}
