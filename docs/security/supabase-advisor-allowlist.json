@@ -7,6 +7,7 @@
       "object_type": "function",
       "objects": [
         "acting_tenant_id()",
+        "accept_team_invite(p_token text)",
         "ancestors_of(leaf_id uuid)",
         "auth_parent_tenant_id()",
         "auth_tenant_id()",
@@ -67,6 +68,7 @@
         "mark_recurring_error_fingerprint_closed(p_fingerprint text)",
         "migration_high_water_mark()",
         "mint_quote_handoff_token(p_payload jsonb)",
+        "org_roster_for_tenant(p_tenant uuid)",
         "platform_admin_act_as(target_tenant_id uuid)",
         "platform_admin_stop_acting()",
         "platform_is_developer_or_admin()",
@@ -418,7 +420,7 @@
       "reason": "The 2026-08-19 migration dispatch applied a 25-migration backlog in one go and the advisor went 0 new -> 22 new. Two of those were real and are fixed by crm7 migration 20260828010000 (tenant_hierarchy_check is a TRIGGER function with no meaningful RPC form, and _record_merge_authority is an internal helper used by zero policies) — they are NOT in this list. These seventeen are the intended surface, in two groups. (1) RLS PREDICATES, which MUST keep EXECUTE: a policy expression is evaluated with the privileges of the querying role, so revoking EXECUTE does not tighten the policy, it makes every query against the table error. Measured policy reference counts on 2026-08-19: consented_parent_child_tenant_ids 6, is_field_officer 5, is_caseload_apprentice 4, is_caseload_person 1, is_caseload_field_officer 1. This is the same trap the rule above records a prior revoke pass falling into. (2) CLIENT RPCs the UI calls directly — the tenant_link_* link lifecycle (mint/propose/respond/withdraw/set-visibility/force-dissolve/reaffirm/directory), acting_scope_tenant_id, and assess_security_signal. Each does its own authorisation inside the function body; being callable is the point. ADDED AFTER A FAILED REVOKE, which is the most useful line here: _record_merge_authority(uuid) has a leading underscore and is referenced by ZERO policies, so it read as a pure internal helper and crm7#1856 first revoked it. pgTAP 81_merge_dedupe_foundation.sql died mid-plan on 'permission denied for function _record_merge_authority' from inside merge_find_candidates line 16 — an intended authenticated RPC that is SECURITY INVOKER, so its inner call is checked against THE CALLER's privileges. Counting policy references does not find function-to-function calls; scanning pg_proc.prosrc does, and afterwards reported exactly one caller.",
       "added": "2026-08-19",
       "review": "2026-11-19",
-      "notes": "Raised by the promotion gate on bsuite#2133 after the dispatch. If any tenant_link_* RPC is later replaced by an edge function, drop its line here in the same PR rather than leaving an accepted finding for a function nobody calls.",
+      "notes": "ADDED 2026-09-08 — accept_team_invite(p_token text) and org_roster_for_tenant(p_tenant uuid) (BSU#1197, BSU#1198, BSU#1206; applied to production 2026-09-08). accept_team_invite is the invitee-scoped acceptor: it takes only a token, binds every read and write to auth.uid()/auth.email() (no caller-supplied user id), refuses a token whose email differs from the caller's, and writes user_tenants/team_members for the CALLER only; SECURITY DEFINER because the invitation tables have no SELECT policy for the invitee and user_tenants INSERT is membership-shaped. org_roster_for_tenant is SELECT-only, raises 42501 unless the caller is an active owner/admin of p_tenant, and walks descendants_of(p_tenant) only; SECURITY DEFINER because user_tenants RLS hides child-tenant rows from a parent-only caller. Measured live under Caris' claims: 4 rows for mbawa. Both REVOKE from PUBLIC and anon by name. Raised by the promotion gate on bsuite#2133 after the dispatch. If any tenant_link_* RPC is later replaced by an edge function, drop its line here in the same PR rather than leaving an accepted finding for a function nobody calls.",
       "objects": [
         "_record_merge_authority(p_tenant_id uuid)",
         "acting_scope_tenant_id()",

@@ -1,3 +1,11 @@
+---
+kind: record
+authority: none
+owner: bsuite
+evidence:
+  - docs/20260817-estate-remaining-work-register-v3.00W.md
+---
+
 # Estate remaining-work register
 
 > **SUPERSEDED — FROZEN 2026-08-26. Do not work from this file.**
