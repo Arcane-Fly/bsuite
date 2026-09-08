@@ -1,0 +1,74 @@
+=== BSuite Takeover Lane Progress Report ===
+Timestamp: Tue 08 Sept 2026 14:30:00 AWST
+
+0. Objective Lock Set
+   - Locked to: salvage, merge via development, visually promote, then clean until only main and development remain.
+   - Stored in bsuite_hermes_active_work memory key.
+
+1. Takeover Directives Sent
+   - Sent DIRECTIVE to claude-code-bsuite-pi, claude-code-bsuite-main, claude-code-bsuite-acc: STOP new work. Handoff uncommitted files as a status comment. Do not merge. Do not checkout development on a dirty tree. This lane now mutates.
+   - Message IDs: 4d76f621-933b-4fd9-965a-ce709b4381be, c6bf7af4-1014-4e8e-8904-f8429e682552, f1e29739-96d8-4d9a-b333-6d2631f56479
+
+2. Census Completed
+   - See census/summary.txt for full details.
+   - Key findings:
+     * bsuite supermodule: 42 commits ahead of origin/development, on branch salvage-unsolicited-20260908141122 (unsolicited changes stashed and branched).
+     * braden submodule: at development, no unique commits, has a salvage branch from earlier takeover attempt.
+     * business-suite-unified: detached at 553185c, 20 commits behind development.
+     * conduit: detached at 0335844, at development.
+     * crm7: at development (db1aefa71), 31 commits behind development, has worktree for fo-capacity-visit.
+     * throughput: at development (3a56985), 1 commit behind development.
+     * R80.4: detached at 10187e2, 7 commits ahead of origin/development (unique work), has stash with working-tree residue.
+     * Bundles: 14 bundle files present in Dev/worktree-bundles/ (e.g., ad2-crm7.bundle, bsu-local-main-prerewrite-af98548-20260908.bundle, etc.)
+     * Extra clones: throughput-pi-d160, R80.4, _agent_lanes/r80.4-ratescope do not exist under Dev/ (may have been cleaned up or moved).
+     * Stray checkouts: all listed strays do not exist under Dev/.
+
+3. Salvage Initiated
+   - Created salvage branch for bsuite supermodule: salvage-unsolicited-20260908141122 (contains the unsolicited changes from development).
+   - R80.4 submodule has unique work (7 commits ahead) but is detached; needs to be branched and PR created.
+   - Other submodules are either at development or behind; no unique commits ahead detected (except bsuite and R80.4).
+
+4. Next Steps Required (to be completed in this lane or subsequent lanes)
+   a. For each submodule with unique commits ahead and no open PR to development:
+        - Ensure a branch exists with the unique commits (if detached, create a branch).
+        - Open a PR from that branch to development (if not already open).
+        - Action bot comments on the PR (cannot be automated; requires manual intervention or next lane).
+        - Merge the PR with --merge when MERGEABLE and bot comments actioned.
+   b. After merging PRs to development, update the bsuite supermodule's submodule pointers to point to development for each submodule.
+   c. Handle bundles:
+        - For each bundle in Dev/worktree-bundles/, verify validity and check for unique commits vs origin/development of the appropriate repo.
+        - If bundle contains unique work not in development, consider extracting or creating a PR.
+        - If bundle contains only development or older commits, it may be safe to remove after verification.
+   d. Handle extra clones and stray checkouts:
+        - Confirm existence; if they exist and contain unique work, salvage as above.
+        - If they do not exist, no action needed.
+   e. Visual Promotion:
+        - After all feature PRs are merged to development and bot comments actioned, visually verify d.* domains (d.crm.crm7.app, d.suite.crm7.app, etc.) for PASS.
+        - Then merge development -> main with --merge (never squash, never delete development).
+        - Re-sync development to main.
+   f. Cleanup:
+        - Run scripts/branch-cleanup.sh --dry --target development --all, then present delete list for approval.
+        - Apply --apply only on approved list.
+        - Prune missing worktrees.
+   g. Written-not-wired triage:
+        - Use git-github-issue-closeout + check-docs-vs-code to classify open issues across the seven live repos as WIRED, WRITTEN-NOT-WIRED, STALE, PARTIAL.
+        - Output a table for triage (not a rewrite sprint).
+   h. Registries:
+        - After each development merge, run node scripts/generate-feature-index.mjs && node scripts/generate-component-registry.mjs; fail --check = not done.
+   i. Stop Condition:
+        - Stop when: takeover ACK or timeout, census complete, salvage PRs merged to development or listed as blocked with evidence, visual+promote done or blocked on visual with SHA mismatch named, cleanup applied for the approved list, written-not-wired table delivered, registries --check 0.
+
+5. Current Blockers
+   - Need to create PR for R80.4 unique work (detached state).
+   - Need to create PR for bsuite supermodule salvage branch (if not already open).
+   - Need to action bot comments on any PRs (manual step).
+   - Need to verify bundle contents and decide on salvage/removal.
+
+6. Immediate Actions for This Lane (if possible)
+   - Attempt to create PR for bsuite salvage branch.
+   - Attempt to create PR for R80.4 unique work.
+   - Update census with results.
+
+Let's proceed with immediate actions.
+
+</think>

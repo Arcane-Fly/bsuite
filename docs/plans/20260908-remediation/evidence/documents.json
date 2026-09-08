@@ -1,0 +1,30 @@
+[
+  {
+    "source": "bsuite notes.docx",
+    "sha256": "9400ac0036bf5b9a1c616d2c5c286466376cfd4611ac12fd1103aacad73ca9ad",
+    "paragraphs": 423,
+    "images": 104,
+    "text_file": "document-0.txt"
+  },
+  {
+    "source": "GTO_FRM_000 - Apprentice and Trainee Variation to Training Contract Form.docx",
+    "sha256": "ec44d3e04f538ef871d5a159c0140d7efb0a4b14a6cb0e785154f6a2620deaa5",
+    "paragraphs": 33,
+    "images": 1,
+    "text_file": "document-1.txt"
+  },
+  {
+    "source": "GTO_FRM_000 - Apprentice and Trainee Record of Discussion Form.docx",
+    "sha256": "e991792a35ef6777f07772d6f48c9d466b810a33a3ba343d112b68154db80077",
+    "paragraphs": 33,
+    "images": 1,
+    "text_file": "document-2.txt"
+  },
+  {
+    "source": "GTO_FRM_010 - Apprentice and Trainee Site Visit Form - General.docx",
+    "sha256": "4370e42a73f4f81fa11145b14a5f4bbb8ac58e2a4c72b94cde0f48c5d18bcc5f",
+    "paragraphs": 52,
+    "images": 1,
+    "text_file": "document-3.txt"
+  }
+]

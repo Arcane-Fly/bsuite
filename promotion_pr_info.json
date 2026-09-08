@@ -1,0 +1,16 @@
+{
+  "crm7": [
+    {
+      "headRefName": "development",
+      "mergeStateStatus": "BLOCKED",
+      "mergeable": "MERGEABLE",
+      "number": 2580,
+      "title": "promotion: development \u2192 main (money loop + training tab + AASS + workflows 2026-09-08)"
+    }
+  ],
+  "business-suite-unified": [],
+  "throughput": [],
+  "braden": [],
+  "R80.4": [],
+  "conduit": []
+}

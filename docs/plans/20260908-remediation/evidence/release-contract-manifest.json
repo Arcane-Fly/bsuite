@@ -1,0 +1,27 @@
+{
+  "version": 2,
+  "prompt_count": 332,
+  "contract_sha256": "0dd90ec69dac1f5c0dd383712302d07aae7fcfb064ef02958c05c0c1b33649a3",
+  "contract_header": "## Mandatory release, operational closeout and skill evolution \u2014 contract v2",
+  "stages": [
+    "PREPARED",
+    "DEVELOPMENT_MERGED",
+    "DEVELOPMENT_VERIFIED",
+    "PRODUCTION_PROMOTED",
+    "PRODUCTION_VERIFIED",
+    "CLOSED_OUT"
+  ],
+  "required_skills": [
+    "agent-run-master",
+    "agent-mem-truth",
+    "agent-skl-find",
+    "ops-open-run",
+    "ops-ship-close-out",
+    "ops-ship-all-apps",
+    "bsuite-ship-visual-promote",
+    "git-github-issue-closeout",
+    "agent-definition-of-done",
+    "bsuite-false-complete-gates"
+  ],
+  "scope": "Prompt/contract update only. No implementation or release executed."
+}

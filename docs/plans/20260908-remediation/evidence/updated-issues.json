@@ -1,0 +1,32 @@
+[
+  {
+    "repo": "crm7",
+    "number": 2063,
+    "url": "https://github.com/GaryOcean428/crm7/issues/2063",
+    "title": "[P1][caseload] Complete shared assignments and bulk transfer/add/remove through one canonical assignment model"
+  },
+  {
+    "repo": "crm7",
+    "number": 2581,
+    "url": "https://github.com/GaryOcean428/crm7/issues/2581",
+    "title": "Placement create hard-blocks on missing host capacity assessment \u2014 create first, FO safety/capacity via workflow"
+  },
+  {
+    "repo": "bsuite",
+    "number": 3111,
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3111",
+    "title": "[EPIC] Operator 2026-09-06: 'how have so few of these been actioned' \u2014 18% of 152 notes rows done, 0 of 30 filed issues owned; owners and plans on every item, docs/plans/TODO applied rigidly"
+  },
+  {
+    "repo": "bsuite",
+    "number": 3198,
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3198",
+    "title": "[P1][epic] 661-row feature index is not 100% React Flow workflows \u2014 10 mention workflow, 3 definitions, 0 runs; do not mass-complete 618 not-evaluated"
+  },
+  {
+    "repo": "bsuite",
+    "number": 1966,
+    "url": "https://github.com/GaryOcean428/bsuite/issues/1966",
+    "title": "[P2][EPIC] Sweep every CI gate for the &#34;checked nothing vs found nothing&#34; defect \u2014 assert inputs, fail closed"
+  }
+]

@@ -1,0 +1,68 @@
+{
+  "authoring": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3204",
+    "number": 3204,
+    "repo": "bsuite",
+    "title": "[P1][programme] One complete visual customization system: code-equivalent capabilities, all connected through workflows"
+  },
+  "workflow_null": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3205",
+    "number": 3205,
+    "repo": "bsuite",
+    "title": "[P1][workflow] Draft creation writes ai_context=NULL against live NOT NULL schema and can leave a definition without a draft"
+  },
+  "field_parity": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3206",
+    "number": 3206,
+    "repo": "bsuite",
+    "title": "[P1][records] Make create, detail and edit expose one canonical field set across all record surfaces"
+  },
+  "context_widgets": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3207",
+    "number": 3207,
+    "repo": "bsuite",
+    "title": "[P1][customization] Visually bind widgets, selectors and workflow steps to the current person, host or contract\u2014including related collections"
+  },
+  "forms_workflows": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3208",
+    "number": 3208,
+    "repo": "bsuite",
+    "title": "[P1][visual-authoring] Build disciplinary discussions and general site visits visually, then run signatures, follow-ups and HR escalation"
+  },
+  "workflow_runtime": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3209",
+    "number": 3209,
+    "repo": "bsuite",
+    "title": "[P1][workflow] Connect every visual capability to typed executable workflows with human tasks, durable state and in-context history"
+  },
+  "ai_upload": {
+    "url": "https://github.com/GaryOcean428/crm7/issues/2586",
+    "number": 2586,
+    "repo": "crm7",
+    "title": "[P1][Jodie] File attachment reports success but forwards only filenames; complete training-plan import through the real authoring workflow"
+  },
+  "site_visits": {
+    "url": "https://github.com/GaryOcean428/crm7/issues/2587",
+    "number": 2587,
+    "repo": "crm7",
+    "title": "[P1][site-visits] Verify and complete schedule \u2192 form \u2192 signatures \u2192 findings \u2192 follow-up journey after the latest fixes"
+  },
+  "calendar_sync": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3210",
+    "number": 3210,
+    "repo": "bsuite",
+    "title": "[P1][integrations] Complete configurable Google/Microsoft calendar sync with conflict and deletion review"
+  },
+  "bookings": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3211",
+    "number": 3211,
+    "repo": "bsuite",
+    "title": "[P1][integrations] Link BSuite bookings, interviews, portal visits and training milestones to calendars and workflows"
+  },
+  "maps_tracking": {
+    "url": "https://github.com/GaryOcean428/bsuite/issues/3212",
+    "number": 3212,
+    "repo": "bsuite",
+    "title": "[P1][integrations] Deliver visual Maps/travel planning and consent-aware workforce tracking connected to workflows"
+  }
+}
