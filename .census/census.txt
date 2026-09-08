@@ -1,0 +1,115 @@
+=== bsuite ===
+Branches:
++ chore/gitlink-bsu-fec9672da
+* development
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/chore/gitlink-bsu-fec9672da
+  remotes/origin/development
+  remotes/origin/main
+Worktrees:
+/home/braden/Desktop/Dev/bsuite                       81b6d982e [development]
+/home/braden/Desktop/Dev/worktrees/bsuite-gitlink-bsu 1f3a5ac87 [chore/gitlink-bsu-fec9672da]
+Stashes:
+Uncommitted changes:
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+Checking for extra clones of bsuite (remote: https://github.com/GaryOcean428/bsuite.git) under Desktop/Dev
+Checking for bundles in worktree-bundles
+=== crm7 ===
+Branches:
+* development
++ fix/placement-create-capacity-warn-not-block
++ fix/postgrest-parent-visit-id
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/development
+  remotes/origin/fix/placement-create-capacity-warn-not-block
+  remotes/origin/main
+Worktrees:
+/home/braden/Desktop/Dev/bsuite/crm7                        db1aefa71 [development]
+/home/braden/Desktop/Dev/_agent_lanes/crm7-capacity-gate    d5056aba1 [fix/placement-create-capacity-warn-not-block]
+/home/braden/Desktop/Dev/_agent_lanes/crm7-postgrest-parent 3460cd9ac [fix/postgrest-parent-visit-id]
+Stashes:
+stash@{0}: WIP on fix/placement-detail-overview-cards-glued-in-tabs: fd34f1b2 Merge pull request #2018 from GaryOcean428/feat/edit-cards-in-place
+stash@{1}: On fix/ad5-extract-entityselector-to-ui: preserve-before-cleanup-crm7-1812
+Uncommitted changes:
+
+Checking for extra clones of crm7 (remote: https://github.com/GaryOcean428/crm7.git) under Desktop/Dev
+=== conduit ===
+Branches:
+* (HEAD detached at a9edd79)
+  development
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/development
+  remotes/origin/main
+Worktrees:
+/home/braden/Desktop/Dev/bsuite/conduit a9edd79 (detached HEAD)
+/tmp/conduit-salvage-test               b80fd1d (detached HEAD)
+Stashes:
+Uncommitted changes:
+
+Checking for extra clones of conduit (remote: https://github.com/GaryOcean428/conduit.git) under Desktop/Dev
+=== business-suite-unified ===
+Branches:
+* (HEAD detached at 553185c)
+  development
+  fix/1198-team-members-walk-descendant-tenants
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/chore/resync-dev-with-main-20260908
+  remotes/origin/development
+  remotes/origin/main
+Worktrees:
+/home/braden/Desktop/Dev/bsuite/business-suite-unified 553185c (detached HEAD)
+Stashes:
+stash@{0}: WIP on chore/refresh-bsuite-lockfile-pins: 34bd529 chore: refresh the @bsuite lockfile pins so four published fixes can reach this app
+Uncommitted changes:
+
+Checking for extra clones of business-suite-unified (remote: https://github.com/GaryOcean428/business-suite-unified.git) under Desktop/Dev
+=== throughput ===
+Branches:
+* (HEAD detached at 3a56985)
+  development
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/development
+  remotes/origin/main
+Worktrees:
+/home/braden/Desktop/Dev/bsuite/throughput 3a56985 (detached HEAD)
+Stashes:
+Uncommitted changes:
+
+Checking for extra clones of throughput (remote: https://github.com/GaryOcean428/throughput.git) under Desktop/Dev
+=== braden ===
+Branches:
+* (HEAD detached at 31b7d7b)
+  development
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/development
+  remotes/origin/main
+Worktrees:
+/home/braden/Desktop/Dev/bsuite/braden 31b7d7b (detached HEAD)
+Stashes:
+Uncommitted changes:
+
+Checking for extra clones of braden (remote: https://github.com/GaryOcean428/braden.git) under Desktop/Dev
+  Extra clone: /home/braden/Desktop/Dev/archived-repos-docs/business/braden
+=== R80.4 ===
+Branches:
+* (HEAD detached at 10187e2)
+  development
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/development
+  remotes/origin/fix/rate-scope-partials-schedules-20260811
+  remotes/origin/main
+Worktrees:
+/home/braden/Desktop/Dev/bsuite/R80.4 10187e2 (detached HEAD)
+Stashes:
+stash@{0}: On fix/rebank-award-dod-baseline: R80.4 working-tree residue 2026-08-18: stale branch state, net -940 lines vs development. Contains some lines not on dev (11/15 sampled) but would DELETE 940 lines of merged award work if committed. Preserved, not discarded.
+Uncommitted changes:
+
+Checking for extra clones of R80.4 (remote: https://github.com/GaryOcean428/R80.4.git) under Desktop/Dev

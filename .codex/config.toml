@@ -1,0 +1,5 @@
+[mcp_servers.google-dev-knowledge]
+url = "https://developerknowledge.googleapis.com/mcp"
+
+[mcp_servers.google-dev-knowledge.http_headers]
+X-Goog-Api-Key = "AIzaSyBSOIaamwemksKU67uixsNLAMyJOwfAOJ0"

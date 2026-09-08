@@ -1,0 +1,2127 @@
+{
+  "GaryOcean428/crm7": {
+    "local_path": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "local_branches": [
+      "chore/refresh-schema-baseline-20260907",
+      "development",
+      "feat/host-billing-tenant-xero",
+      "feat/pay-items-xero-chart",
+      "feat/placement-edit-r8-host-xero",
+      "feat/site-visit-recurring-follow-up",
+      "feat/workflow-activate-trigger-first-run",
+      "fix/2574-training-tab-filters-by-person",
+      "fix/aass-registration-create-phantom-columns-and-people-fk",
+      "fix/baseline-pg-cron-guard-on-preview-branches",
+      "fix/postgrest-parent-visit-id",
+      "fix/site-visits-person-column-and-people-fk",
+      "fix/sms-compose-recipient-phone-and-billing-gate",
+      "fix/vet-units-list-shows-25-of-49k",
+      "fix/worker-portal-submits-timesheet",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/fix/site-visits-person-column-and-people-fk",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/crm7\nHEAD db1aefa715c2edfaa583ab3bcc0fdb1fc2c6b245\nbranch refs/heads/development\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-aass-fix\nHEAD 1c7bb0d4191d43d74ebd7fea30e3ec0d683d6ba5\nbranch refs/heads/fix/aass-registration-create-phantom-columns-and-people-fk\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-host-xero\nHEAD c38ed8213e76353e3664f0082aff63ecacffdb32\nbranch refs/heads/feat/host-billing-tenant-xero\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-pay-items\nHEAD 0530c38085e3e1ec9583f2f7e1211f83fac85e49\nbranch refs/heads/feat/pay-items-xero-chart\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-pgcron-guard\nHEAD 6abcca41e01065ac7143511a8bac6c58cca24b73\nbranch refs/heads/fix/baseline-pg-cron-guard-on-preview-branches\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-placement-r8\nHEAD 6fc430d574f199423183521ea8482dd8c3c3f017\nbranch refs/heads/feat/placement-edit-r8-host-xero\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-postgrest-parent\nHEAD f239445fb6653a64050aa9d7f4c343a212ae0b55\nbranch refs/heads/fix/postgrest-parent-visit-id\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-site-visits\nHEAD a54c48668c78563d2d2901fe816a6979711d1fcc\nbranch refs/heads/feat/site-visit-recurring-follow-up\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-site-visits-fix\nHEAD 3738e5e9e6e9f38cc4826ab39d8f60743c325e3e\nbranch refs/heads/fix/site-visits-person-column-and-people-fk\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-sms-compose\nHEAD 09c247ae83a717e704b3b732e366899cf0bd9bbd\nbranch refs/heads/fix/sms-compose-recipient-phone-and-billing-gate\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-training-tab\nHEAD 7d8e19ab5b6c8819e4ad1e4ad80511f203e9b7e4\nbranch refs/heads/fix/2574-training-tab-filters-by-person\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-worker-submit\nHEAD bf15755fb3f972775e54991798880ebadd6a8f6b\nbranch refs/heads/fix/worker-portal-submits-timesheet\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/crm7-workflow-activate\nHEAD 4fbff4d786235cb4d8acce7b7e2c31482eb65997\nbranch refs/heads/feat/workflow-activate-trigger-first-run\n\nworktree /home/braden/Desktop/Dev/worktrees/crm7-2533-baseline\nHEAD 59d3c4339a99d8db9bd5110fb2b55bf85fcec4ab\nbranch refs/heads/chore/refresh-schema-baseline-20260907\n\nworktree /home/braden/Desktop/Dev/worktrees/crm7-vet-units-pagination\nHEAD e1cf664398c1dabaad8ecd4ddc4c761cbca5a63a\nbranch refs/heads/fix/vet-units-list-shows-25-of-49k\n\n",
+    "stash": [
+      "stash@{0}: WIP on fix/placement-detail-overview-cards-glued-in-tabs: fd34f1b2 Merge pull request #2018 from GaryOcean428/feat/edit-cards-in-place",
+      "stash@{1}: On fix/ad5-extract-entityselector-to-ui: preserve-before-cleanup-crm7-1812"
+    ],
+    "uncommitted": false,
+    "current_branch": "development",
+    "ahead": "22",
+    "behind": "0",
+    "dirty": true,
+    "unique_commits": [],
+    "unique_commits_count": 0,
+    "keep_reason": "dirty",
+    "extra_clones": [],
+    "worktree_bundles": [
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/po1-ad8-verify.bundle",
+        "bundle_name": "po1-ad8-verify.bundle",
+        "heads": [
+          "4c302cef4a319fcc41b32648f3cd09180f0f768c refs/heads/fix/po1-ad8-verify-and-ledger"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/r804-fwc-rate-limit.bundle",
+        "bundle_name": "r804-fwc-rate-limit.bundle",
+        "heads": [
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 refs/heads/development",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/heads/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/heads/fix/cache-refuses-a-seed",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limit-quota",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limiting-was-stranded",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/heads/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/heads/fix/on3-on8-qualification-and-mapd-warning",
+          "8b2be8de8b527fd2afc528dfb61243175bb1545d refs/heads/main",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/live/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/live/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/live/chore/theme-1.0.2",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/live/docs/agents-rulebook",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/live/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/live/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/live/fix/e2e-session-seed-before-navigation",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/live/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/live/fix/register-bsuite-packages-as-tailwind-sources",
+          "0e5c9d3a518ce5d44e7614c8889550aac4c5ac30 refs/remotes/live/main",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/origin/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/origin/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/origin/chore/theme-1.0.2",
+          "8c85569d09764c13f0fff6309db5eb3c3a654f48 refs/remotes/origin/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/origin/docs/agents-rulebook",
+          "cf4782fb0d74089fab0a82793411ffdc37171593 refs/remotes/origin/docs/datum-directive-20260820",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/remotes/origin/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/remotes/origin/fix/cache-refuses-a-seed",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/origin/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/origin/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/origin/fix/e2e-session-seed-before-navigation",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/remotes/origin/fix/fwc-proxy-rate-limit-quota",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/remotes/origin/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/remotes/origin/fix/on3-on8-qualification-and-mapd-warning",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/origin/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/origin/fix/register-bsuite-packages-as-tailwind-sources",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/main",
+          "af53754c4e457049e939df2de0919ec3f263aeaf refs/tags/engine-2026.08.05-21awards",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 HEAD",
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 main-worktree/HEAD"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-th-theme-finish.bundle",
+        "bundle_name": "sw-th-theme-finish.bundle",
+        "heads": [
+          "9decc7724fef2518707b19875075fe3e35327272 refs/heads/fix/th-theme-finish"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1774.bundle",
+        "bundle_name": "crm7-1774.bundle",
+        "heads": [
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/heads/fix/k1-k4-mock-financial-and-milestones"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-ad3-ad5-ad9-adoption.bundle",
+        "bundle_name": "sw-ad3-ad5-ad9-adoption.bundle",
+        "heads": [
+          "d8327354954482622ed7951364be8c729a46fa24 refs/heads/fix/ad3-ad5-ad9-adoption"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "bundle_name": "bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "heads": [
+          "af98548af93ea55190cce623fb123bd86735c585 refs/heads/main"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-drop-the-duplicate.bundle",
+        "bundle_name": "crm7-drop-the-duplicate.bundle",
+        "heads": [
+          "b1d40784ba9c799583bc3a7c452e40e5f3fb8f07 refs/heads/fix/the-salvaged-migration-was-already-renumbered"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-ad5-extract-entityselector-to-ui.bundle",
+        "bundle_name": "od-ad5-extract-entityselector-to-ui.bundle",
+        "heads": [
+          "b4889230b5ced7c41674d0b553cb517591c5d00d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-r804-charge-calc-consolidation.bundle",
+        "bundle_name": "od-r804-charge-calc-consolidation.bundle",
+        "heads": [
+          "f43219c89632006e7f7dbcc39e49aca49df47d90 refs/heads/fix/r804-charge-calc-consolidation"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1812.bundle",
+        "bundle_name": "crm7-1812.bundle",
+        "heads": [
+          "a3b03ded7b2540f7c606aaba83bfb67fbad0f57d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-m3-m4-award-clause-coverage.bundle",
+        "bundle_name": "sw-m3-m4-award-clause-coverage.bundle",
+        "heads": [
+          "1ae2eaab271a13c610234ba9a51d106ae08c65b1 refs/heads/fix/m3-m4-award-clause-coverage"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-renumber-collision.bundle",
+        "bundle_name": "crm7-renumber-collision.bundle",
+        "heads": [
+          "ec9855dbe6ad9f4a666470611da0780c6037af4b refs/heads/fix/renumber-a-cross-scope-migration-collision"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-docs-full-window-sweep.bundle",
+        "bundle_name": "sw-docs-full-window-sweep.bundle",
+        "heads": [
+          "ac15e7819ddd06b47a9d32cf41f0cf13ee1ad865 refs/heads/fix/docs-full-window-sweep"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsuite-rule-describes-itself.bundle",
+        "bundle_name": "bsuite-rule-describes-itself.bundle",
+        "heads": [
+          "1e93e6ca2051a44a45cc215a6e2929f77b9c88e9 refs/heads/fix/a-rule-need-not-quote-the-token-it-bans"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/ad2-crm7.bundle",
+        "bundle_name": "ad2-crm7.bundle",
+        "heads": [
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/heads/development",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/heads/fix/ad-2-crm7-ungridded-scanner",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/HEAD",
+          "18ce35a65fffad46a005729e61d6be6a87908b14 refs/remotes/origin/chore/bsuite-theme-0.12.0",
+          "d01e08e7767bcb15fe8d2b8e8cbb5b7ead28c91d refs/remotes/origin/chore/bsuite-ui-1.1.0",
+          "2f758d2b38470e80f7c0f5c30de58173f4de2dcd refs/remotes/origin/chore/crm7-theme-fonts-entrypoint",
+          "7d26bb60e38b3e970dca776f55db01653510d5ca refs/remotes/origin/chore/dep-nanoid-floor",
+          "54d417621d07779812dd5f847db769a56a50c57a refs/remotes/origin/copilot/fix-1741-stream-body-cap",
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/remotes/origin/development",
+          "23fa0468cb896abe4fbcd7e4867a59e4e7fd0832 refs/remotes/origin/feat/migration-high-water-mark-rpc",
+          "8070449babaabdbcfba67376d378591997ed455d refs/remotes/origin/feat/schema-lag-banner",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/remotes/origin/fix/ad-2-crm7-ungridded-scanner",
+          "2b95f9bb4d10e63e4e9297941f829deb83d8c6e6 refs/remotes/origin/fix/ad8-xero-sync-health",
+          "c31e0aeac9feb87c6abed1556cb3a6db0cdb7ee5 refs/remotes/origin/fix/d80-module-visibility-hidden-modules",
+          "24e3a92f857164f610c9eced9eda36069bf910c9 refs/remotes/origin/fix/e2e-a11y-forms",
+          "b3ed213e3f5dcf7b356a1952add547836b8ddad7 refs/remotes/origin/fix/e2e-appshell-permission-swap-wait",
+          "c93d8e643e01e32cd5f5d4616661031dd3f90b50 refs/remotes/origin/fix/e2e-locator-timeouts",
+          "287420b45a1c64b63ed954403eaf60a4f85d17d4 refs/remotes/origin/fix/e2e-programmatic-auth",
+          "bad864f161f4f0bf6c4b32fdbf6d3dc799847649 refs/remotes/origin/fix/e2e-selectors-and-urls",
+          "a4eb9d2b4a28f7f9a9c7e8aeb2044f846acd0dcc refs/remotes/origin/fix/k-class-mock-data-honest-states",
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/remotes/origin/fix/k1-k4-mock-financial-and-milestones",
+          "e38f0cf3fbfc2833a49f377d2d26ba2fc53e455d refs/remotes/origin/fix/pf1-rls-initplan-wrap",
+          "390f89ec0a202e4262b110848d0cbe03760bedc1 refs/remotes/origin/fix/pf3-pf4b-provable-redundancies",
+          "8788b90c4a29371ca8575403f36f13670b55af73 refs/remotes/origin/fix/po1-field-officer-landing-queries",
+          "c2e8313e57989503426932c294c5244dab98d660 refs/remotes/origin/fix/po2-host-supervisor-people-placements-scope",
+          "664959e47b731c9f41ebf1159a1551038c04b9c4 refs/remotes/origin/fix/th-2-surface-near-white",
+          "852303afe3db89b9d50c0d4901363b2a0eea0dce refs/remotes/origin/fix/th9-non-responsive-grid-cols-2",
+          "760726d86ca2185749db68b847205f51a3c26ec6 refs/remotes/origin/fix/txn-integrity-t1-t6",
+          "9466c33bff9f6eda97c4eb9c6598c2f29d79b12d refs/remotes/origin/fix/wire-e2e-credentials",
+          "99d4176526c476634e2825c9a56e617e351c3647 refs/remotes/origin/lane/v2-v4-v5-v11-controls",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/main",
+          "ae47bef480ed96ec2ba2367a8dce4fb2c241ce7a refs/remotes/origin/perf/crm7-modulepreload-and-fonts",
+          "2d7b97133cd87ece200b4618974b6d53674bb7a3 refs/tags/archive/land-baseline-regen-20260809",
+          "9649ccdf990b0e3ae762e31092431ddf1b897b3f refs/tags/archive/orphan-CKLoS-20260508",
+          "64b02a9b7a600494e3d62d32e73add1b9f6f8704 refs/tags/archive/orphan-IOl7X-20260508",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a HEAD"
+        ]
+      }
+    ]
+  },
+  "GaryOcean428/conduit": {
+    "local_path": "/home/braden/Desktop/Dev/bsuite/conduit",
+    "local_branches": [
+      "(HEAD detached at a9edd79)",
+      "development",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/conduit\nHEAD a9edd797e25192b0ed21a5da31292543fe093af2\ndetached\n\n",
+    "stash": [],
+    "uncommitted": false,
+    "current_branch": "HEAD",
+    "ahead": "0",
+    "behind": "5",
+    "dirty": true,
+    "unique_commits": [
+      "a9edd79 Merge pull request #697 from GaryOcean428/development",
+      "9770eb4 Merge pull request #693: D-160 update notice and the theme scan fix",
+      "e48c193 Merge pull request #688 from GaryOcean428/development",
+      "dee8958 Merge pull request #686 from GaryOcean428/development",
+      "fb984bf Merge pull request #681 from GaryOcean428/development"
+    ],
+    "unique_commits_count": 5,
+    "keep_reason": "feature branch, unique commits, dirty",
+    "extra_clones": [],
+    "worktree_bundles": [
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/po1-ad8-verify.bundle",
+        "bundle_name": "po1-ad8-verify.bundle",
+        "heads": [
+          "4c302cef4a319fcc41b32648f3cd09180f0f768c refs/heads/fix/po1-ad8-verify-and-ledger"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/r804-fwc-rate-limit.bundle",
+        "bundle_name": "r804-fwc-rate-limit.bundle",
+        "heads": [
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 refs/heads/development",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/heads/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/heads/fix/cache-refuses-a-seed",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limit-quota",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limiting-was-stranded",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/heads/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/heads/fix/on3-on8-qualification-and-mapd-warning",
+          "8b2be8de8b527fd2afc528dfb61243175bb1545d refs/heads/main",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/live/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/live/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/live/chore/theme-1.0.2",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/live/docs/agents-rulebook",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/live/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/live/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/live/fix/e2e-session-seed-before-navigation",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/live/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/live/fix/register-bsuite-packages-as-tailwind-sources",
+          "0e5c9d3a518ce5d44e7614c8889550aac4c5ac30 refs/remotes/live/main",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/origin/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/origin/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/origin/chore/theme-1.0.2",
+          "8c85569d09764c13f0fff6309db5eb3c3a654f48 refs/remotes/origin/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/origin/docs/agents-rulebook",
+          "cf4782fb0d74089fab0a82793411ffdc37171593 refs/remotes/origin/docs/datum-directive-20260820",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/remotes/origin/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/remotes/origin/fix/cache-refuses-a-seed",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/origin/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/origin/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/origin/fix/e2e-session-seed-before-navigation",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/remotes/origin/fix/fwc-proxy-rate-limit-quota",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/remotes/origin/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/remotes/origin/fix/on3-on8-qualification-and-mapd-warning",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/origin/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/origin/fix/register-bsuite-packages-as-tailwind-sources",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/main",
+          "af53754c4e457049e939df2de0919ec3f263aeaf refs/tags/engine-2026.08.05-21awards",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 HEAD",
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 main-worktree/HEAD"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-th-theme-finish.bundle",
+        "bundle_name": "sw-th-theme-finish.bundle",
+        "heads": [
+          "9decc7724fef2518707b19875075fe3e35327272 refs/heads/fix/th-theme-finish"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1774.bundle",
+        "bundle_name": "crm7-1774.bundle",
+        "heads": [
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/heads/fix/k1-k4-mock-financial-and-milestones"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-ad3-ad5-ad9-adoption.bundle",
+        "bundle_name": "sw-ad3-ad5-ad9-adoption.bundle",
+        "heads": [
+          "d8327354954482622ed7951364be8c729a46fa24 refs/heads/fix/ad3-ad5-ad9-adoption"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "bundle_name": "bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "heads": [
+          "af98548af93ea55190cce623fb123bd86735c585 refs/heads/main"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-drop-the-duplicate.bundle",
+        "bundle_name": "crm7-drop-the-duplicate.bundle",
+        "heads": [
+          "b1d40784ba9c799583bc3a7c452e40e5f3fb8f07 refs/heads/fix/the-salvaged-migration-was-already-renumbered"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-ad5-extract-entityselector-to-ui.bundle",
+        "bundle_name": "od-ad5-extract-entityselector-to-ui.bundle",
+        "heads": [
+          "b4889230b5ced7c41674d0b553cb517591c5d00d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-r804-charge-calc-consolidation.bundle",
+        "bundle_name": "od-r804-charge-calc-consolidation.bundle",
+        "heads": [
+          "f43219c89632006e7f7dbcc39e49aca49df47d90 refs/heads/fix/r804-charge-calc-consolidation"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1812.bundle",
+        "bundle_name": "crm7-1812.bundle",
+        "heads": [
+          "a3b03ded7b2540f7c606aaba83bfb67fbad0f57d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-m3-m4-award-clause-coverage.bundle",
+        "bundle_name": "sw-m3-m4-award-clause-coverage.bundle",
+        "heads": [
+          "1ae2eaab271a13c610234ba9a51d106ae08c65b1 refs/heads/fix/m3-m4-award-clause-coverage"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-renumber-collision.bundle",
+        "bundle_name": "crm7-renumber-collision.bundle",
+        "heads": [
+          "ec9855dbe6ad9f4a666470611da0780c6037af4b refs/heads/fix/renumber-a-cross-scope-migration-collision"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-docs-full-window-sweep.bundle",
+        "bundle_name": "sw-docs-full-window-sweep.bundle",
+        "heads": [
+          "ac15e7819ddd06b47a9d32cf41f0cf13ee1ad865 refs/heads/fix/docs-full-window-sweep"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsuite-rule-describes-itself.bundle",
+        "bundle_name": "bsuite-rule-describes-itself.bundle",
+        "heads": [
+          "1e93e6ca2051a44a45cc215a6e2929f77b9c88e9 refs/heads/fix/a-rule-need-not-quote-the-token-it-bans"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/ad2-crm7.bundle",
+        "bundle_name": "ad2-crm7.bundle",
+        "heads": [
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/heads/development",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/heads/fix/ad-2-crm7-ungridded-scanner",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/HEAD",
+          "18ce35a65fffad46a005729e61d6be6a87908b14 refs/remotes/origin/chore/bsuite-theme-0.12.0",
+          "d01e08e7767bcb15fe8d2b8e8cbb5b7ead28c91d refs/remotes/origin/chore/bsuite-ui-1.1.0",
+          "2f758d2b38470e80f7c0f5c30de58173f4de2dcd refs/remotes/origin/chore/crm7-theme-fonts-entrypoint",
+          "7d26bb60e38b3e970dca776f55db01653510d5ca refs/remotes/origin/chore/dep-nanoid-floor",
+          "54d417621d07779812dd5f847db769a56a50c57a refs/remotes/origin/copilot/fix-1741-stream-body-cap",
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/remotes/origin/development",
+          "23fa0468cb896abe4fbcd7e4867a59e4e7fd0832 refs/remotes/origin/feat/migration-high-water-mark-rpc",
+          "8070449babaabdbcfba67376d378591997ed455d refs/remotes/origin/feat/schema-lag-banner",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/remotes/origin/fix/ad-2-crm7-ungridded-scanner",
+          "2b95f9bb4d10e63e4e9297941f829deb83d8c6e6 refs/remotes/origin/fix/ad8-xero-sync-health",
+          "c31e0aeac9feb87c6abed1556cb3a6db0cdb7ee5 refs/remotes/origin/fix/d80-module-visibility-hidden-modules",
+          "24e3a92f857164f610c9eced9eda36069bf910c9 refs/remotes/origin/fix/e2e-a11y-forms",
+          "b3ed213e3f5dcf7b356a1952add547836b8ddad7 refs/remotes/origin/fix/e2e-appshell-permission-swap-wait",
+          "c93d8e643e01e32cd5f5d4616661031dd3f90b50 refs/remotes/origin/fix/e2e-locator-timeouts",
+          "287420b45a1c64b63ed954403eaf60a4f85d17d4 refs/remotes/origin/fix/e2e-programmatic-auth",
+          "bad864f161f4f0bf6c4b32fdbf6d3dc799847649 refs/remotes/origin/fix/e2e-selectors-and-urls",
+          "a4eb9d2b4a28f7f9a9c7e8aeb2044f846acd0dcc refs/remotes/origin/fix/k-class-mock-data-honest-states",
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/remotes/origin/fix/k1-k4-mock-financial-and-milestones",
+          "e38f0cf3fbfc2833a49f377d2d26ba2fc53e455d refs/remotes/origin/fix/pf1-rls-initplan-wrap",
+          "390f89ec0a202e4262b110848d0cbe03760bedc1 refs/remotes/origin/fix/pf3-pf4b-provable-redundancies",
+          "8788b90c4a29371ca8575403f36f13670b55af73 refs/remotes/origin/fix/po1-field-officer-landing-queries",
+          "c2e8313e57989503426932c294c5244dab98d660 refs/remotes/origin/fix/po2-host-supervisor-people-placements-scope",
+          "664959e47b731c9f41ebf1159a1551038c04b9c4 refs/remotes/origin/fix/th-2-surface-near-white",
+          "852303afe3db89b9d50c0d4901363b2a0eea0dce refs/remotes/origin/fix/th9-non-responsive-grid-cols-2",
+          "760726d86ca2185749db68b847205f51a3c26ec6 refs/remotes/origin/fix/txn-integrity-t1-t6",
+          "9466c33bff9f6eda97c4eb9c6598c2f29d79b12d refs/remotes/origin/fix/wire-e2e-credentials",
+          "99d4176526c476634e2825c9a56e617e351c3647 refs/remotes/origin/lane/v2-v4-v5-v11-controls",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/main",
+          "ae47bef480ed96ec2ba2367a8dce4fb2c241ce7a refs/remotes/origin/perf/crm7-modulepreload-and-fonts",
+          "2d7b97133cd87ece200b4618974b6d53674bb7a3 refs/tags/archive/land-baseline-regen-20260809",
+          "9649ccdf990b0e3ae762e31092431ddf1b897b3f refs/tags/archive/orphan-CKLoS-20260508",
+          "64b02a9b7a600494e3d62d32e73add1b9f6f8704 refs/tags/archive/orphan-IOl7X-20260508",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a HEAD"
+        ]
+      }
+    ]
+  },
+  "GaryOcean428/business-suite-unified": {
+    "local_path": "/home/braden/Desktop/Dev/bsuite/business-suite-unified",
+    "local_branches": [
+      "(HEAD detached at 553185c)",
+      "chore/resync-dev-with-main-20260908",
+      "development",
+      "fix/1198-team-members-walk-descendant-tenants",
+      "fix/cascade-migration-owns-no-transaction",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/chore/resync-dev-with-main-20260908",
+      "origin/development",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/business-suite-unified\nHEAD 553185cda6aa5f2b176d2312754160f8042f3667\ndetached\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/bsu-cascade-no-txn\nHEAD fdbf03dc65e179fc82a2784372413019386193ea\nbranch refs/heads/fix/cascade-migration-owns-no-transaction\n\n",
+    "stash": [
+      "stash@{0}: WIP on chore/refresh-bsuite-lockfile-pins: 34bd529 chore: refresh the @bsuite lockfile pins so four published fixes can reach this app"
+    ],
+    "uncommitted": false,
+    "current_branch": "HEAD",
+    "ahead": "16",
+    "behind": "20",
+    "dirty": true,
+    "unique_commits": [
+      "553185c Merge pull request #1195 from GaryOcean428/development",
+      "56a95ca Merge pull request #1192 from GaryOcean428/development",
+      "9a2f8fd Merge pull request #1189 from GaryOcean428/development",
+      "b4c58c5 Merge pull request #1187 from GaryOcean428/development",
+      "5438750 Merge pull request #1184 from GaryOcean428/development",
+      "c72355a Merge pull request #1181 from GaryOcean428/development",
+      "9292b84 Merge pull request #1172: restore card elevation",
+      "fbbbecf Merge pull request #1169: visible spinner arcs and vendored route inventory",
+      "bb748fa Merge pull request #1155 from GaryOcean428/development",
+      "ecd78f4 Merge pull request #1153 from GaryOcean428/development",
+      "2725605 Merge pull request #1150 from GaryOcean428/development",
+      "9f396c7 Merge pull request #1147 from GaryOcean428/development",
+      "375bc1c Merge pull request #1144 from GaryOcean428/development",
+      "8bd64f6 Merge pull request #1139 from GaryOcean428/development",
+      "0f49459 Merge pull request #1134 from GaryOcean428/chore/reach-6-packages-20260904",
+      "311b244 Merge pull request #1135 from GaryOcean428/fix/follow49-aria-label-override-siblings",
+      "a710e5f chore(deps): reach 4 published @bsuite/* versions",
+      "f2d17da Merge pull request #1132 from GaryOcean428/development",
+      "927e58b Merge pull request #1131 from GaryOcean428/fix/follow53-admin-elevation-uniformity",
+      "b332de2 Merge pull request #1124 from GaryOcean428/development"
+    ],
+    "unique_commits_count": 20,
+    "keep_reason": "feature branch, unique commits, dirty",
+    "extra_clones": [],
+    "worktree_bundles": [
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/po1-ad8-verify.bundle",
+        "bundle_name": "po1-ad8-verify.bundle",
+        "heads": [
+          "4c302cef4a319fcc41b32648f3cd09180f0f768c refs/heads/fix/po1-ad8-verify-and-ledger"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/r804-fwc-rate-limit.bundle",
+        "bundle_name": "r804-fwc-rate-limit.bundle",
+        "heads": [
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 refs/heads/development",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/heads/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/heads/fix/cache-refuses-a-seed",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limit-quota",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limiting-was-stranded",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/heads/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/heads/fix/on3-on8-qualification-and-mapd-warning",
+          "8b2be8de8b527fd2afc528dfb61243175bb1545d refs/heads/main",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/live/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/live/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/live/chore/theme-1.0.2",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/live/docs/agents-rulebook",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/live/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/live/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/live/fix/e2e-session-seed-before-navigation",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/live/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/live/fix/register-bsuite-packages-as-tailwind-sources",
+          "0e5c9d3a518ce5d44e7614c8889550aac4c5ac30 refs/remotes/live/main",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/origin/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/origin/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/origin/chore/theme-1.0.2",
+          "8c85569d09764c13f0fff6309db5eb3c3a654f48 refs/remotes/origin/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/origin/docs/agents-rulebook",
+          "cf4782fb0d74089fab0a82793411ffdc37171593 refs/remotes/origin/docs/datum-directive-20260820",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/remotes/origin/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/remotes/origin/fix/cache-refuses-a-seed",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/origin/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/origin/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/origin/fix/e2e-session-seed-before-navigation",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/remotes/origin/fix/fwc-proxy-rate-limit-quota",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/remotes/origin/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/remotes/origin/fix/on3-on8-qualification-and-mapd-warning",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/origin/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/origin/fix/register-bsuite-packages-as-tailwind-sources",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/main",
+          "af53754c4e457049e939df2de0919ec3f263aeaf refs/tags/engine-2026.08.05-21awards",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 HEAD",
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 main-worktree/HEAD"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-th-theme-finish.bundle",
+        "bundle_name": "sw-th-theme-finish.bundle",
+        "heads": [
+          "9decc7724fef2518707b19875075fe3e35327272 refs/heads/fix/th-theme-finish"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1774.bundle",
+        "bundle_name": "crm7-1774.bundle",
+        "heads": [
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/heads/fix/k1-k4-mock-financial-and-milestones"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-ad3-ad5-ad9-adoption.bundle",
+        "bundle_name": "sw-ad3-ad5-ad9-adoption.bundle",
+        "heads": [
+          "d8327354954482622ed7951364be8c729a46fa24 refs/heads/fix/ad3-ad5-ad9-adoption"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "bundle_name": "bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "heads": [
+          "af98548af93ea55190cce623fb123bd86735c585 refs/heads/main"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-drop-the-duplicate.bundle",
+        "bundle_name": "crm7-drop-the-duplicate.bundle",
+        "heads": [
+          "b1d40784ba9c799583bc3a7c452e40e5f3fb8f07 refs/heads/fix/the-salvaged-migration-was-already-renumbered"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-ad5-extract-entityselector-to-ui.bundle",
+        "bundle_name": "od-ad5-extract-entityselector-to-ui.bundle",
+        "heads": [
+          "b4889230b5ced7c41674d0b553cb517591c5d00d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-r804-charge-calc-consolidation.bundle",
+        "bundle_name": "od-r804-charge-calc-consolidation.bundle",
+        "heads": [
+          "f43219c89632006e7f7dbcc39e49aca49df47d90 refs/heads/fix/r804-charge-calc-consolidation"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1812.bundle",
+        "bundle_name": "crm7-1812.bundle",
+        "heads": [
+          "a3b03ded7b2540f7c606aaba83bfb67fbad0f57d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-m3-m4-award-clause-coverage.bundle",
+        "bundle_name": "sw-m3-m4-award-clause-coverage.bundle",
+        "heads": [
+          "1ae2eaab271a13c610234ba9a51d106ae08c65b1 refs/heads/fix/m3-m4-award-clause-coverage"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-renumber-collision.bundle",
+        "bundle_name": "crm7-renumber-collision.bundle",
+        "heads": [
+          "ec9855dbe6ad9f4a666470611da0780c6037af4b refs/heads/fix/renumber-a-cross-scope-migration-collision"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-docs-full-window-sweep.bundle",
+        "bundle_name": "sw-docs-full-window-sweep.bundle",
+        "heads": [
+          "ac15e7819ddd06b47a9d32cf41f0cf13ee1ad865 refs/heads/fix/docs-full-window-sweep"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsuite-rule-describes-itself.bundle",
+        "bundle_name": "bsuite-rule-describes-itself.bundle",
+        "heads": [
+          "1e93e6ca2051a44a45cc215a6e2929f77b9c88e9 refs/heads/fix/a-rule-need-not-quote-the-token-it-bans"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/ad2-crm7.bundle",
+        "bundle_name": "ad2-crm7.bundle",
+        "heads": [
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/heads/development",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/heads/fix/ad-2-crm7-ungridded-scanner",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/HEAD",
+          "18ce35a65fffad46a005729e61d6be6a87908b14 refs/remotes/origin/chore/bsuite-theme-0.12.0",
+          "d01e08e7767bcb15fe8d2b8e8cbb5b7ead28c91d refs/remotes/origin/chore/bsuite-ui-1.1.0",
+          "2f758d2b38470e80f7c0f5c30de58173f4de2dcd refs/remotes/origin/chore/crm7-theme-fonts-entrypoint",
+          "7d26bb60e38b3e970dca776f55db01653510d5ca refs/remotes/origin/chore/dep-nanoid-floor",
+          "54d417621d07779812dd5f847db769a56a50c57a refs/remotes/origin/copilot/fix-1741-stream-body-cap",
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/remotes/origin/development",
+          "23fa0468cb896abe4fbcd7e4867a59e4e7fd0832 refs/remotes/origin/feat/migration-high-water-mark-rpc",
+          "8070449babaabdbcfba67376d378591997ed455d refs/remotes/origin/feat/schema-lag-banner",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/remotes/origin/fix/ad-2-crm7-ungridded-scanner",
+          "2b95f9bb4d10e63e4e9297941f829deb83d8c6e6 refs/remotes/origin/fix/ad8-xero-sync-health",
+          "c31e0aeac9feb87c6abed1556cb3a6db0cdb7ee5 refs/remotes/origin/fix/d80-module-visibility-hidden-modules",
+          "24e3a92f857164f610c9eced9eda36069bf910c9 refs/remotes/origin/fix/e2e-a11y-forms",
+          "b3ed213e3f5dcf7b356a1952add547836b8ddad7 refs/remotes/origin/fix/e2e-appshell-permission-swap-wait",
+          "c93d8e643e01e32cd5f5d4616661031dd3f90b50 refs/remotes/origin/fix/e2e-locator-timeouts",
+          "287420b45a1c64b63ed954403eaf60a4f85d17d4 refs/remotes/origin/fix/e2e-programmatic-auth",
+          "bad864f161f4f0bf6c4b32fdbf6d3dc799847649 refs/remotes/origin/fix/e2e-selectors-and-urls",
+          "a4eb9d2b4a28f7f9a9c7e8aeb2044f846acd0dcc refs/remotes/origin/fix/k-class-mock-data-honest-states",
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/remotes/origin/fix/k1-k4-mock-financial-and-milestones",
+          "e38f0cf3fbfc2833a49f377d2d26ba2fc53e455d refs/remotes/origin/fix/pf1-rls-initplan-wrap",
+          "390f89ec0a202e4262b110848d0cbe03760bedc1 refs/remotes/origin/fix/pf3-pf4b-provable-redundancies",
+          "8788b90c4a29371ca8575403f36f13670b55af73 refs/remotes/origin/fix/po1-field-officer-landing-queries",
+          "c2e8313e57989503426932c294c5244dab98d660 refs/remotes/origin/fix/po2-host-supervisor-people-placements-scope",
+          "664959e47b731c9f41ebf1159a1551038c04b9c4 refs/remotes/origin/fix/th-2-surface-near-white",
+          "852303afe3db89b9d50c0d4901363b2a0eea0dce refs/remotes/origin/fix/th9-non-responsive-grid-cols-2",
+          "760726d86ca2185749db68b847205f51a3c26ec6 refs/remotes/origin/fix/txn-integrity-t1-t6",
+          "9466c33bff9f6eda97c4eb9c6598c2f29d79b12d refs/remotes/origin/fix/wire-e2e-credentials",
+          "99d4176526c476634e2825c9a56e617e351c3647 refs/remotes/origin/lane/v2-v4-v5-v11-controls",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/main",
+          "ae47bef480ed96ec2ba2367a8dce4fb2c241ce7a refs/remotes/origin/perf/crm7-modulepreload-and-fonts",
+          "2d7b97133cd87ece200b4618974b6d53674bb7a3 refs/tags/archive/land-baseline-regen-20260809",
+          "9649ccdf990b0e3ae762e31092431ddf1b897b3f refs/tags/archive/orphan-CKLoS-20260508",
+          "64b02a9b7a600494e3d62d32e73add1b9f6f8704 refs/tags/archive/orphan-IOl7X-20260508",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a HEAD"
+        ]
+      }
+    ]
+  },
+  "GaryOcean428/throughput": {
+    "local_path": "/home/braden/Desktop/Dev/bsuite/throughput",
+    "local_branches": [
+      "(HEAD detached at 3a56985)",
+      "development",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/throughput\nHEAD 3a569851f87f77616656cc021ec4997345bbecc2\ndetached\n\n",
+    "stash": [],
+    "uncommitted": false,
+    "current_branch": "HEAD",
+    "ahead": "0",
+    "behind": "728",
+    "dirty": true,
+    "unique_commits": [
+      "3a56985 Merge pull request #491 from GaryOcean428/development",
+      "4a96d5d Merge pull request #487 from GaryOcean428/development",
+      "c3590cf Merge pull request #477 from GaryOcean428/development",
+      "54e255a Merge pull request #475 from GaryOcean428/development",
+      "c530060 Merge pull request #469 from GaryOcean428/development",
+      "166ceff Merge pull request #468 from GaryOcean428/chore/lockfiles-let-the-published-fixes-arrive",
+      "4f7b1b5 merge: take the 2.6.0 specifier, which is this branch's point",
+      "33cbca5 chore(deps): let nav-core 1.3.0 and page-builder 2.6.0 reach this app",
+      "189fb12 Merge pull request #467 from GaryOcean428/development",
+      "8c74f61 Merge pull request #465 from GaryOcean428/feat/d160-update-notice",
+      "850adc5 refactor(check-version-json-built): one node:fs import, not two",
+      "a7ee0d5 fix(layout): a viewport-tall loader inside a shell that already owns the scroll",
+      "acb1800 feat(update-notice): throughput tells a client their tab is stale instead of reloading it",
+      "ca64cde Merge pull request #464 from GaryOcean428/chore/reconcile-throughput-20260903",
+      "f96d557 Merge pull request #463 from GaryOcean428/development",
+      "4afeb59 Merge pull request #462 from GaryOcean428/chore/refresh-bsuite-lockfile-pins-20260901",
+      "2bb2c64 chore(deps): refresh stale @bsuite/theme lockfile pin",
+      "1451d9a Merge pull request #461 from GaryOcean428/development",
+      "67aadd9 Merge pull request #460 from GaryOcean428/chore/theme-1.5.0-touch-targets-20260831",
+      "842cde9 chore(deps): bump @bsuite/theme floor to ^1.5.0 for touch-target fix",
+      "35bd6ed Merge pull request #459 from GaryOcean428/reconcile/dev-plus-main-20260831",
+      "482decc Merge pull request #457 from GaryOcean428/development",
+      "cd8fabc Merge pull request #456 from GaryOcean428/fix/phantom-relations-throughput-20260831",
+      "47d6996 fix(throughput): remove or make honest 11 queries against tables that do not exist",
+      "685636d Merge pull request #455 from GaryOcean428/chore/make-the-gates-actually-gate-20260831",
+      "888432d Merge pull request #454 from GaryOcean428/chore/pr-template-closing-keywords-20260831",
+      "7fd4e16 docs(agents): the closing-keyword rule reaches the file PR authors actually read",
+      "aea05a2 ci: let the drift scan report on every PR so it can be required",
+      "1404bd5 docs(pr-template): tell authors the closing keyword works, and what honours it",
+      "8b40bfc Merge pull request #453 from GaryOcean428/chore/consume-theme-1.4.4-20260830",
+      "8b16a04 chore(deps): consume @bsuite/theme 1.4.4",
+      "11f764f Merge pull request #452 from GaryOcean428/development",
+      "8bfd249 chore(deps): consume @bsuite/theme 1.4.3 so the AA fix reaches users (#451)",
+      "3be47c9 Merge pull request #450 from GaryOcean428/chore/reconcile-main-si-20260829",
+      "72c375d reconcile: main into development",
+      "8fa4f01 promote: Speed Insights reports routes, not paths (#449)",
+      "5500879 fix(perf): Speed Insights reports routes, not paths (#448)",
+      "27804e5 Merge pull request #447 from GaryOcean428/chore/reconcile-main-close-20260829",
+      "a8cd65d reconcile: main into development",
+      "d66e40a promote: throughput to production (#446)",
+      "020bfb1 fix(theme): my own comment tripped the pure-white/black gate (#445)",
+      "a5dc9cf Merge pull request #444 from GaryOcean428/chore/reconcile-main-20260829-throughput-post",
+      "4d1d019 reconcile: main into development",
+      "4a3c7e7 promote: throughput to production (#443)",
+      "90c9ac1 docs: repair every dangling link, including the 49 the gate cannot see (#442)",
+      "7736b56 fix(theme): resting cards stop wearing the accent (#441)",
+      "c6d5d7b Merge pull request #440 from GaryOcean428/chore/reconcile-main-20260829-tp-last",
+      "906ee6f reconcile: main into development",
+      "cdb7aee promote: state plainly that the enhanced navigation suite is not mounted (#439)",
+      "0560550 docs(nav): state plainly that the enhanced navigation suite is not mounted (#438)",
+      "c1e4fa9 Merge pull request #437 from GaryOcean428/chore/reconcile-main-20260829-tp2",
+      "7f6e4b7 reconcile: main into development",
+      "db9feb6 fix(ci): the security audit could not fail, and its reason had already been fixed (#435) (#436)",
+      "ca4ab44 fix(ci): the security audit could not fail, and its reason had already been fixed (#435)",
+      "04f4954 Merge pull request #434 from GaryOcean428/chore/reconcile-main-20260829-throughput",
+      "4233294 reconcile: main into development",
+      "50ab190 Merge pull request #433 from GaryOcean428/development",
+      "54a5f48 chore(deps): reach @bsuite/page-builder 2.5.0 (#432)",
+      "320b4a9 Merge pull request #431 from GaryOcean428/development",
+      "355797e fix: render dates and times in Australian format (#430)",
+      "2d11556 Merge pull request #429 from GaryOcean428/main",
+      "5d2a0e0 Merge pull request #428 from GaryOcean428/development",
+      "4f36847 Merge pull request #427 from GaryOcean428/chore/reconcile-124252-throughput",
+      "d2e6915 Merge remote-tracking branch 'origin/main' into chore/reconcile-124252-throughput",
+      "d77666b chore(deps): state the current @bsuite/theme rather than merely permitting it (#426)",
+      "3c7acbd Merge pull request #425 from GaryOcean428/development",
+      "3622e59 fix(security): the scanner's own fixture tripped the secret scanner (#424)",
+      "3561d2c Merge pull request #423 from GaryOcean428/chore/reconcile-throughput-20260828-b",
+      "0e06709 Merge remote-tracking branch 'origin/main' into chore/reconcile-throughput-20260828-b",
+      "d5486a9 fix(ci): the pr-drift-scan workflow had no scanner to run (#422)",
+      "41eb71e Merge pull request #420 from GaryOcean428/development",
+      "edbc508 Merge pull request #421 from GaryOcean428/chore/take-main-into-development-before-promoting",
+      "1b00ba1 Merge remote-tracking branch 'origin/main' into chore/take-main-into-development-before-promoting",
+      "a084672 ci: add the DOM Layout Invariant gate, and pin every third-party action to a SHA (#419)",
+      "4f4fe22 Merge pull request #418 from GaryOcean428/development",
+      "30e0bf4 chore(deps): reach the published @bsuite/* versions (#417)",
+      "437cfb9 Merge pull request #416 from GaryOcean428/development",
+      "fa46c1b fix(a11y): an AA-tuned text token must not be dimmed \u2014 an opacity modifier voids the tuning (#415)",
+      "e6d9321 Merge pull request #414 from GaryOcean428/development",
+      "8b0edf5 chore(lint): enforce --max-warnings 0, so a warning fails here as it already does in two sibling apps (#413)",
+      "214c22c Merge pull request #412 from GaryOcean428/development",
+      "93f81f9 chore(deps): reach the published @bsuite/* versions (#411)",
+      "9083c1e Merge pull request #410 from GaryOcean428/development",
+      "fc187c1 Merge pull request #409 from GaryOcean428/docs/parent-docs-byte-identical",
+      "3936b90 docs: PARENT-DOCS said it was byte-identical across six apps, and was not",
+      "d1b1432 Merge pull request #408 from GaryOcean428/development",
+      "f232dce Merge pull request #407 from GaryOcean428/chore/take-page-builder-2.4.1",
+      "b802298 chore(deps): take page-builder 2.4.1 \u2014 the auto-height card stopped clipping its heading",
+      "133b1d1 Merge pull request #406 from GaryOcean428/development",
+      "7ffd191 Merge pull request #405 from GaryOcean428/chore/take-page-builder-2.4.0",
+      "c75e9dc chore(deps): take page-builder 2.4.0 \u2014 the doubled bottom border reaches this app",
+      "570e0b1 chore(deps): reach the published @bsuite/* versions (#404)",
+      "6b88618 Merge pull request #403 from GaryOcean428/docs/this-audit-snapshot-is-a-record",
+      "363f552 docs: this audit snapshot is a record, and now says so",
+      "9f309c8 Merge pull request #402 from GaryOcean428/chore/take-main-into-development-before-promotion",
+      "c00816e Merge pull request #401 from GaryOcean428/development",
+      "dd7aeba Merge pull request #400 from GaryOcean428/chore/dependabot-version-updates",
+      "96af4b8 fix(dependabot): this config would have opened PRs against PRODUCTION",
+      "742c888 chore(ci): enable Dependabot version updates",
+      "bd1ee20 Merge pull request #399 from GaryOcean428/development",
+      "ebe3271 Merge pull request #398 from GaryOcean428/chore/take-page-builder-2.3.1",
+      "5f65372 chore(deps): take @bsuite/page-builder 2.3.1 \u2014 a privacy fix that reached nobody",
+      "9174e50 Merge pull request #397 from GaryOcean428/development",
+      "89d5d1f Merge pull request #396 from GaryOcean428/chore/refresh-theme-lock-to-1.3.0",
+      "3172847 Merge remote-tracking branch 'origin/development' into chore/refresh-theme-lock-to-1.3.0",
+      "b57df38 chore(deps): take @bsuite/theme 1.3.0 \u2014 the crash fix reached zero apps",
+      "e826bae Merge pull request #395 from GaryOcean428/development",
+      "72b8406 Merge pull request #394 from GaryOcean428/fix/verified-live-item-patches",
+      "1ff4c3a docs: stop the provenance banners quoting the placeholder token they replaced",
+      "ec6a36c Merge pull request #393 from GaryOcean428/development",
+      "6cdb3cc Merge pull request #392 from GaryOcean428/docs/freeze-finished-documents",
+      "441be5c docs: freeze the finished documents in this repo \u2014 part of a 202-document estate audit",
+      "6e003ee Merge pull request #391 from GaryOcean428/development",
+      "c11023a Merge pull request #390 from GaryOcean428/fix/take-theme-1.2.0",
+      "7d183f0 fix(deps): take @bsuite/theme 1.2.0 \u2014 tenant heading gradients and the card radius",
+      "c9ea4c6 chore(deps): refresh the throughput lockfile onto the published @bsuite packages (#388)",
+      "13362ab Merge pull request #389 from GaryOcean428/development",
+      "450b636 Merge pull request #387 from GaryOcean428/sync/development-level-with-main-1328343",
+      "7729047 Merge pull request #386 from GaryOcean428/development",
+      "ba3efa7 Merge pull request #385: take @bsuite/page-builder 2.1.0",
+      "a2aacdc fix(deps): take @bsuite/page-builder 2.1.0",
+      "9aa6ae3 Merge pull request #384 from GaryOcean428/development",
+      "9ecbb57 Merge pull request #383 from GaryOcean428/chore/sync-development-with-main-7185",
+      "7493aa7 chore: bring development up to date with main (1 commits)",
+      "44804d7 fix(pricing): the \"Most Popular\" badge was clipped by the grid item (#382)",
+      "9222b4d Merge pull request #381 from GaryOcean428/development",
+      "7b6e166 Merge pull request #380 from GaryOcean428/fix/state-card-widths-remaining-grid-pages",
+      "ca87048 fix(grid pages): state the card widths these pages were authored for",
+      "9ddc2cf Merge pull request #379 from GaryOcean428/fix/state-the-card-widths-pricing-was-authored-for",
+      "35d80cf fix(pricing): state the card widths this page was authored for",
+      "62b9714 Merge pull request #378 from GaryOcean428/refactor/stop-copying-a-package-we-download",
+      "030deec refactor(hooks): stop shipping a copy of a package we already download",
+      "2292a27 docs: follow the master roadmap rename \u2014 v1.00W -> v1.00F (#377)",
+      "521170f fix(e2e): throughput was the one app whose signed-in routes could not be audited (#376)",
+      "177a92e chore: reach @bsuite/page-builder 2.0.0 \u2014 the estate gate has been red on this (#375)",
+      "51901a5 Merge pull request #374 from GaryOcean428/main",
+      "d7a3706 Merge pull request #372 from GaryOcean428/development",
+      "8f5905e Merge pull request #373 from GaryOcean428/main",
+      "b16cafa fix(layout): four pages stayed narrow while the dashboard widened (#371)",
+      "c5a7ce4 fix(i18n): Australian spelling in the business-plan section titles (#370)",
+      "98b06ca Merge pull request #369 from GaryOcean428/fix/width-caps",
+      "0f1ac85 fix(theme): align Card corner radius with the rest of the estate",
+      "b18271a feat(theme): card headings get the gradient, and stop being dimmer than body text",
+      "b4af0d5 fix(layout): three width caps, and /ideas/new used 31% of the screen",
+      "fbfc653 Merge pull request #368 from GaryOcean428/development",
+      "a4d2bbb fix(export): my own comment kept the gate reporting a caller I had just deleted (#367)",
+      "d5fa321 Merge pull request #366 from GaryOcean428/development",
+      "d7918ef fix(export): delete the call to an edge function that was never written (#365)",
+      "3ec946d Merge pull request #364 from GaryOcean428/development",
+      "74d8a2e Merge pull request #363 from GaryOcean428/chore/page-builder-1.0.7",
+      "18758ed chore(deps): @bsuite/page-builder 1.0.7 \u2014 only a pointer gesture may commit a layout",
+      "2386814 Merge pull request #362 from GaryOcean428/development",
+      "599b499 Merge pull request #361 from GaryOcean428/chore/page-builder-1.0.6",
+      "230f7d5 chore(deps): @bsuite/page-builder 1.0.6 \u2014 the column-change fix, third and last writer",
+      "9c97d70 Merge pull request #360 from GaryOcean428/chore/page-builder-1.0.5",
+      "337f97f chore(deps): @bsuite/page-builder 1.0.5 \u2014 the column-change fix, completed",
+      "9069c78 Merge pull request #359 from GaryOcean428/chore/page-builder-1.0.4",
+      "2181ef5 chore(deps): @bsuite/page-builder 1.0.4 \u2014 the column control no longer destroys the saved layout",
+      "7ea961a Merge pull request #358 from GaryOcean428/development",
+      "802360e docs: point at the frozen retirement doc, not its old name (#357)",
+      "4a55244 Merge pull request #356 from GaryOcean428/development",
+      "0bfa727 Merge pull request #355 from GaryOcean428/chore/nav-core-1.1.0",
+      "1019cda chore: take @bsuite/nav-core 1.1.0",
+      "87612d2 Merge pull request #353 from GaryOcean428/development",
+      "f035278 Merge pull request #352 from GaryOcean428/docs/dispose-the-last-seventeen",
+      "6fdb2af docs: dispose the last GONE reference \u2014 86 unresolved to 23, and GONE is now ZERO",
+      "0ff86d4 Merge pull request #351 from GaryOcean428/development",
+      "0fbb6e2 Merge pull request #350 from GaryOcean428/chore/lockfiles-theme-1.1.0",
+      "df06931 chore(deps): take @bsuite/theme 1.1.0 and schema-builder 1.5.0 \u2014 the lockfile is the pin",
+      "4ef0ed3 Merge pull request #349 from GaryOcean428/development",
+      "aa73b46 Merge pull request #348 from GaryOcean428/chore/doc-naming-convention",
+      "205f71b chore(docs): follow the estate-wide dated-doc rename",
+      "0c0013b Merge pull request #347 from GaryOcean428/development",
+      "adde069 Merge pull request #346 from GaryOcean428/chore/dry-lint-1.0.2",
+      "efc8317 chore(deps): move onto @bsuite/dry-lint 1.0.2 \u2014 the retired funding_offsets ruling",
+      "a22e714 Merge pull request #345 from GaryOcean428/development",
+      "98a6120 Merge pull request #344 from GaryOcean428/chore/theme-1.0.2",
+      "0f228a4 chore(deps): move onto @bsuite/theme 1.0.2 \u2014 the lockfile is the pin",
+      "aeec7b3 Merge pull request #343 from GaryOcean428/development",
+      "4bb7d28 chore: take @bsuite/page-builder 1.0.3 \u2014 auto-height cards no longer clip their content (#342)",
+      "f2e9050 Merge pull request #341 from GaryOcean428/development",
+      "7b205c8 chore: refresh the @bsuite lockfile pins so four published fixes can reach this app (#340)",
+      "867a03d fix(throughput): notification bell and tenant switcher get real outside-click + Escape dismiss (#339)",
+      "9019983 Merge pull request #338 from GaryOcean428/development",
+      "fda8d39 fix(throughput): /monitoring rendered with no nav \u2014 the user was trapped (#337)",
+      "be93642 fix(throughput): register every class-shipping @bsuite package as a Tailwind source (#336)",
+      "ec9ba41 fix(lint): retire two stale lint exemptions (BU-5/BU-6) (#335)",
+      "07ba641 docs(throughput): mark baseAgent.ts UNRELEASED (register \u00a73.1) (#334)",
+      "7e2c17c fix(export): three of five formats called a function that does not exist (#333)",
+      "bc782ac fix(e2e): auth.setup.ts raced its own app's redirects and lost in CI (#331)",
+      "62a816d chore(deps): refresh lockfile for @bsuite/theme, nav-core, page-builder, ui (#329)",
+      "78205ad feat(e2e): add auth.setup.ts and fix a dead-on-arrival e2e config (V-9) (#328)",
+      "1c7a756 fix(theme): cards carried no elevation, and the glow token was declared and never read (#327)",
+      "abc84d6 fix(theme): the page ground was the card colour, so cards had nothing to stand out from (#326)",
+      "3ce8d2e fix(a11y,theme): three card headings rendered flat; the bell had no name (#325)",
+      "3ad6b05 perf(build): match react by package boundary, not bare substring (#324)",
+      "f61a31d Merge pull request #323 from GaryOcean428/development",
+      "2055486 chore(deps): adopt the @bsuite/* 1.0.0 wave, keeping the auth pin exact (#322)",
+      "4f581a1 docs: repoint links whose target was RENAMED, not deleted (#321)",
+      "f2d2b51 docs: repoint links into the relocated archive so they resolve (#320)",
+      "053c19e docs(parent-docs): drop the stale package pins, fix the dead path (#319)",
+      "64fc167 Merge pull request #318 from GaryOcean428/development",
+      "f58ff8a refactor(throughput): delete the local copy of the card algorithm the package ships (AD-1) (#317)",
+      "384c607 Merge pull request #316 from GaryOcean428/development",
+      "1330a28 fix(theme): WCAG 1.4.11 \u2014 light --border-shell alpha raised to clear 3:1 (#309)",
+      "3015ebd Merge pull request #315 from GaryOcean428/chore/sync-development-from-main",
+      "9ed3c53 Merge pull request #314 from GaryOcean428/development",
+      "fa1100e chore(deps): bump @bsuite/theme to 0.14.0 and @bsuite/ui to 1.2.0 (#313)",
+      "2a25b7b fix(ci): pr-drift-scan needs issues:write to post its own comment (#312)",
+      "ae5530f ci(perf): add Lighthouse CI gate for /pricing (#311)",
+      "29b6684 chore(entity): delete dead EntitySelector/ProfileSelector copy (AD-5) (#310)",
+      "f6d6103 docs(components): fill Alert/Badge/Card/Input/Textarea templates (D-10) (#308)",
+      "ebd709f Merge pull request #307 from GaryOcean428/development",
+      "132158b fix(AD-2): adopt shared @bsuite/page-builder/scanner for ungridded-multi-card (#306)",
+      "8772389 fix(theme): TH-9 \u2014 collapse non-responsive grid-cols-2 to grid-cols-1 on mobile (#305)",
+      "259b77c Merge pull request #304 from GaryOcean428/chore/bsuite-theme-0.12.0",
+      "693b390 Merge development (@bsuite/ui@1.1.0 refresh)",
+      "9851801 Merge pull request #303 from GaryOcean428/chore/bsuite-ui-1.1.0",
+      "67595bd chore(deps): @bsuite/theme@0.13.0 \u2014 the faces the tokens name",
+      "047f2e2 chore(deps): consume @bsuite/ui@1.1.0",
+      "0a0969e Merge pull request #302 from GaryOcean428/chore/dependabot-floors-20260817",
+      "f4fb59c fix(deps): scoped security floors for undici, nanoid, react-router",
+      "006931a Merge pull request #301 from GaryOcean428/fix/th-2-surface-near-white",
+      "287cff3 fix(theme): bind --bg-shell-hero to the shared near-white (TH-2)",
+      "178a40c Merge pull request #300 from GaryOcean428/chore/bsuite-pkg-freshness",
+      "fe4b76f chore(deps): consume our own @bsuite packages at latest",
+      "da5e4b5 Merge pull request #299 from GaryOcean428/chore/pnpm-overrides-to-workspace",
+      "357d29e chore(pnpm): move overrides from package.json to pnpm-workspace.yaml",
+      "dcf6067 chore(throughput): bump @bsuite/dry-lint to ^1.0.1 (#298)",
+      "5000b7d Merge pull request #297 from GaryOcean428/development",
+      "8fc891d Merge pull request #296 from GaryOcean428/fix/nav-core-0-9-0-braden-app-key",
+      "3167462 fix(deps): @bsuite/nav-core ^0.8.0 -> ^0.9.0, and wire the braden app key",
+      "3bbed4a Merge pull request #295 from GaryOcean428/development",
+      "531e672 Merge pull request #294 from GaryOcean428/chore/unlock-page-builder-0-9-0",
+      "394660c chore(deps): @bsuite/page-builder ^0.8.0 -> ^0.9.0 \u2014 unlock the shipped card-class fix",
+      "63b50d6 Merge pull request #293 from GaryOcean428/fix/remove-dead-second-nav-subscription",
+      "72e54c0 fix(throughput): remove a dead SECOND tenant-nav subscription before it can fire",
+      "f9169ac Merge pull request #292 from GaryOcean428/development",
+      "97bf2ec fix(deps): declare react-grid-layout + react-resizable in throughput (throughput#284) (#289)",
+      "59a0d6c Merge pull request #290 from GaryOcean428/fix/db-nav-live-component",
+      "296493e fix(throughput): wire DB nav overlay into the component that actually renders",
+      "d255b0c feat(throughput): wire DB nav overlay via useTenantNavigation",
+      "d350c17 feat(throughput): wire utility pages into header nav",
+      "a1fd202 fix(throughput): remove dead /todos nav link",
+      "6f69398 Merge pull request #283 from GaryOcean428/main",
+      "027abc7 Merge pull request #276 from GaryOcean428/development",
+      "b416b6d Merge pull request #282 from GaryOcean428/fix/colour-rule-sees-call-arguments-20260813",
+      "8277366 chore(throughput): regenerate the inlined colour rule \u2014 it can now see a call argument",
+      "810c01f chore(security): ignore every .env* variant, not an enumerated list (#281)",
+      "2ffbe5b Merge pull request #280 from GaryOcean428/chore/page-builder-0.8.0-20260813",
+      "ae3e6e6 chore(throughput): move the page-builder pin to ^0.8.0",
+      "0c89dc5 Merge pull request #279 from GaryOcean428/fix/d74-per-card-grid-20260813",
+      "1f13748 docs(throughput): attach D-74 visual-equivalence screenshot",
+      "dae945c fix(throughput): D-74 per-card grid \u2014 retire PageGridPage's single-widget primitive",
+      "4387ccf fix(throughput): the OAuth bridge guard the roadmap said was wired, and the grep a comment could satisfy (#278)",
+      "796bde6 Merge pull request #277 from GaryOcean428/lane/colourport-rule-sync-20260813",
+      "fcda055 chore(throughput): regenerate the colour rule \u2014 tokeniser replaces the regexes",
+      "39cd365 Merge pull request #275 from GaryOcean428/lane/rollout-theme-0.11-navcore-0.8",
+      "7705a02 chore(deps): move @bsuite/schema-registry to ^1.0.2",
+      "db4928f chore(deps): move @bsuite/theme to ^0.11.1",
+      "9f2573e chore(deps): @bsuite/theme 0.11.0 + nav-core 0.8.0 \u2014 shadow-elev stops being a phantom",
+      "42bb349 feat(ci): this repo had no secret scanning at all (#274)",
+      "046b59e Merge pull request #273 from GaryOcean428/main",
+      "72ad633 Merge pull request #272 from GaryOcean428/development",
+      "6e359c1 chore: sync no-hardcoded-colours from the monorepo source (crm7#1579) (#271)",
+      "54c2d46 Merge pull request #270 from GaryOcean428/chore/retire-dashboard-pointer-20260810",
+      "ed4f3ce docs: the plan dashboard is retired \u2014 stop calling it source of truth",
+      "353e6f6 Merge pull request #269 from GaryOcean428/development",
+      "b42053e fix(deps): raise brace-expansion above both DoS advisories",
+      "ec692eb Merge pull request #268 from GaryOcean428/development",
+      "df4eae7 chore: install the shared-clone branch guard (pre-commit + pre-push)",
+      "6b5918f Merge pull request #267 from GaryOcean428/development",
+      "fc96f3d fix: consume @bsuite/auth 0.2.8 \u2014 the env-leak fix was published but the pin stayed on leaky 0.2.7",
+      "e6455bf Merge pull request #266 from GaryOcean428/development",
+      "7f4baf9 chore: consume @bsuite/theme 0.10.5",
+      "ce6733a fix: neon palette primitives used as type, and links with no colour of their own",
+      "1ba55ff fix(throughput): a fill token is wrong as type with or without a tint",
+      "33a236d fix(throughput): stop Vite inlining every env secret into the client bundle",
+      "c7bb3a9 feat(throughput): complete the Groq retirement \u2014 same-origin AI Gateway replaces the edge functions",
+      "b220917 fix(throughput): a tinted pill must not caption itself in its own fill colour",
+      "3f21bc3 fix(throughput): prod-pinned checkout hand-off + retire Groq for the AI Gateway",
+      "cca37d7 Merge pull request #265 from GaryOcean428/development",
+      "e08f9af fix(throughput): repoint semantic colour tokens at the package",
+      "a862dbb Merge pull request #264 from GaryOcean428/development",
+      "53927ba chore(theme): pin @bsuite/theme ^0.10.3",
+      "f3d5190 chore(theme): pin @bsuite/theme ^0.10.0",
+      "f249a27 fix(theme): stop forking the package \u2014 remove redeclared tokens",
+      "6e0562f fix(theme): red-team findings \u2014 wrong destructive colour, defeated ramp, dead utilities",
+      "5ccfc30 fix(theme): apply the heading ramp \u2014 it existed and nothing used it",
+      "6d34370 feat(theme): Geist, per the contract \u2014 one family across the suite",
+      "fba75da fix(theme): bind to role tokens \u2014 the app did not build against theme 0.7.1",
+      "5be576d feat(throughput): set data-app on the shell, add the missing FOUC script",
+      "bcdbfd1 refactor(throughput): delete the duplicated Tailwind palette, normalise theme imports",
+      "1c5e5d6 refactor(throughput): replace text-white and ring-gray-400 with theme tokens",
+      "a68ed8b chore(deps): @bsuite/theme ^0.6.0 -> ^0.7.0",
+      "b228440 Merge pull request #263 from GaryOcean428/development",
+      "e2a3e8c Merge pull request #262 from GaryOcean428/feat/qa-backlog-throughput",
+      "3d401fe feat(t10): idea_analytics write path \u2014 record view/edit events",
+      "e4bdbd7 feat(t9): Jodie branding parity stub for Throughput",
+      "b954f9a Merge pull request #261 from GaryOcean428/development",
+      "de2bd20 merge: repair 42 PARENT-DOCS links to relocated archive paths (docs)",
+      "410821e Merge pull request #260 from GaryOcean428/development",
+      "54a54b4 docs: repoint stale archive links in PARENT-DOCS.md to relocated files",
+      "cdf715e merge: repair 30 malformed PARENT-DOCS links + stale SSoT claim (docs)",
+      "5a9866a docs: repair malformed PARENT-DOCS.md links + stale v5 roadmap SSoT claim",
+      "3a8aa7b merge: repoint roadmap references at the live canonical (docs)",
+      "a5d2a28 docs(throughput): repoint roadmap mirrors off dead v5 file",
+      "fdbdc15 chore(throughput): untrack generated coverage/ (87 files, stale since 2025-07-22)",
+      "cc082ef docs: fix lockfile-regen procedure \u2014 include patches/, base lockfile, verification (bsuite#1612)",
+      "efd0282 Merge pull request #259 from GaryOcean428/development",
+      "c1c58a7 Merge pull request #258 from GaryOcean428/feat/schema-registry-pin-1.0",
+      "00270d9 chore(deps): pin schema-registry@^1.0.0",
+      "7c98db6 Merge pull request #257 from GaryOcean428/development",
+      "fa2fe47 fix(security): remove orphaned cors block tail lines",
+      "1da3ae7 fix(security): drop leftover unused corsHeaders consts (lint)",
+      "aef4b39 fix(security): edge-fn CORS wildcard -> shared origin allowlist (NEW_ISSUES_FOUND W5)",
+      "4883b12 Merge pull request #256 from GaryOcean428/development",
+      "28cce9b feat(auth): privacy/terms links on sign-in page (OAuth app domain legal)",
+      "2be77b1 Merge pull request #255 from GaryOcean428/development",
+      "416bb79 merge: W4 pin @bsuite/ui ^1.0.1",
+      "6220757 chore(deps): pin @bsuite/ui to ^1.0.1 (W4 pin train)",
+      "29ce504 Merge pull request #254 from GaryOcean428/development",
+      "c8d7ffa docs: stale-doc cleanup \u2014 schema-registry 1.0.0 + dry-one-shot v1.02A refs",
+      "a7d80d3 Merge pull request #253 from GaryOcean428/development",
+      "2a3189d test(throughput): drop orphan useProjects test",
+      "030acea chore(throughput): remove unreferenced demo/scaffold files",
+      "600d43c docs: relocate archive trees to archived-repos-docs/20260725-bsuite-cleanup",
+      "4fa3d16 Merge pull request #252 from GaryOcean428/development",
+      "2cefd66 Merge branch 'fix/localised-date-iso-blur' into development",
+      "0308f46 fix(throughput): LocalisedDateInput ISO paste on blur (bsuite#1610)",
+      "dd53987 Merge pull request #251 from GaryOcean428/development",
+      "a130981 Merge branch 'fix/bug-hunt-throughput-batch' into development",
+      "a343400 fix(throughput): wire tenant BrandingProvider into Navigation logo (#240)",
+      "5b5f93a Merge pull request #250 from GaryOcean428/development",
+      "a1c3863 Merge branch 'fix/capture-button-clip-2026-07-22' into development",
+      "caef70e fix(throughput): prevent Capture '+ New Idea' button from clipping at narrow viewports",
+      "c32b024 Merge pull request #249 from GaryOcean428/development",
+      "f765f74 Merge branch 'fix/kanban-card-dark-bg-2026-07-22' into development",
+      "cff41c2 fix(theme): kanban grid backing card transparent in dark mode",
+      "8e8695e Merge branch 'fix/dark-mode-kanban-polish-2026-07-22' into development",
+      "8b579eb fix(header+cards): wordmark overlap, duplicate Ideas affordance, card contrast",
+      "57096df fix(dashboard): bump layoutVersion to 2 to invalidate stale saved kanban layouts",
+      "f1a3d4d fix(theme): load tailwind.config.js via @config so darkMode: class takes effect",
+      "f0698d6 fix(dashboard+shell): autoHeight kanban cards + crm7 chrome theme match",
+      "0a2d38d fix(shell): restyle header/footer/cards to match crm7 chrome theme",
+      "a53625e fix(dashboard): enable autoHeight on kanban backing cards to eliminate white voids",
+      "20157c4 Merge branch 'fix/bsuite-swirl-favicon-2026-07-22' into development",
+      "d6a31e8 fix(brand): adopt crm7 swirl favicon suite-wide",
+      "56ed98c fix(ui): dot pattern visible after mount \u2014 transparent shell bg (mirror BSU bd68e8d)",
+      "f80a7cc fix(ui): dot pattern visible after mount \u2014 transparent shell bg (mirror BSU bd68e8d)",
+      "7308ed3 Merge branch 'fix/nav-core-source-2026-07-21' into development",
+      "4aab692 fix(css): add @source for @bsuite/nav-core Tailwind v4 detection",
+      "c82f46e Merge pull request #248 from GaryOcean428/development",
+      "4c3270c fix(throughput): include AppShell utilities in standalone builds",
+      "b9641f3 feat(throughput): migrate app shell to @bsuite/ui AppShell (Bug 1 durable fix)",
+      "0a706e6 Merge pull request #247 from GaryOcean428/development",
+      "9fb924b fix(shared): braden-exempt path check matched operator's own home dir on every file (#246)",
+      "da3d523 Merge pull request #244 from GaryOcean428/main",
+      "94be5e4 chore(throughput): bump @bsuite/page-builder ^0.5.2 (bsuite#1588 layout persistence fix) (#243)",
+      "87bb342 chore(throughput): bump @bsuite/theme ^0.5.0 + page-builder ^0.5.1 (card-glow) (#242)",
+      "510230d fix(throughput): wire @bsuite/theme BrandingProvider at app root (#241)",
+      "5ab0c07 fix(throughput): restore compiling logo src in Navigation header",
+      "c680404 chore(throughput): bump @bsuite/page-builder to ^0.5.0",
+      "e7d27dc docs(throughput): archive 7 root point-in-time reports to parent + correct stale React-18 claims in CLAUDE.md",
+      "ce9315e Merge remote-tracking branch 'origin/development'",
+      "89e6a77 docs(throughput): archive superseded deployment docs \u2014 validation hygiene",
+      "146799f fix(nav): wire tenant branding logo into Navigation header",
+      "1d13813 docs: archive obsolete deployment and architecture documentation",
+      "c9a4cf0 chore: remove obsolete scripts and config files",
+      "023d4b8 Merge pull request #238 from GaryOcean428/development",
+      "d2ee00e Merge pull request #231 from GaryOcean428/feat/throughput-brand-glow-consistency",
+      "068b0f5 fix(throughput): bump @bsuite/auth to 0.2.7 \u2014 concurrent OAuth flow race fix",
+      "e9487ce chore(throughput): bump @bsuite/page-builder to 0.4.3 \u2014 Canvas Editor banner UX",
+      "101369e Merge pull request #237 from GaryOcean428/development",
+      "339205a fix(throughput): logger.warn context type \u2014 wrap unknown err in Record (TS2345)",
+      "6a4a427 fix(throughput): use operator-supplied BSuite logo (glowing G/S monogram)",
+      "ccfc551 chore(throughput): bump @bsuite/page-builder to 0.4.2 \u2014 collapsible Canvas Editor banner",
+      "62b0311 test(throughput): fix JSDOM localStorage availability for vitest suite",
+      "9bbae07 fix(throughput): logout hardening + Invalid Date guard on idea cards",
+      "6275e02 Merge pull request #236 from GaryOcean428/development",
+      "f45bd33 fix(throughput): lint \u2014 window.location.assign instead of .href= in pricing handler",
+      "67837f7 chore(throughput): signed retrigger \u2014 Vercel requires verified commits on this project",
+      "d254455 chore(throughput): bump @bsuite/theme to 0.4.2 \u2014 anon-safe BrandingProvider",
+      "3aa96bb fix(throughput): public /pricing route + OAuth loop-guard escape (#234)",
+      "b3ad8fe Merge pull request #233 from GaryOcean428/development",
+      "aa70e8a feat(throughput): add tiered pricing section ($10/$15/$20, BSU checkout)",
+      "823a453 Merge pull request #232 from GaryOcean428/development",
+      "f7ed4bc fix(throughput): fix 4 Qodo PR#232 findings \u2014 RLS search, placeholder data, keyboard nav, dead UI",
+      "18675d8 fix(throughput): fix 4 Qodo PR#232 findings \u2014 RLS search, placeholder data, keyboard nav, dead UI",
+      "481df11 fix(throughput): dark logo glow uses D2C Electric Cyan, not off-palette green (#228 review)",
+      "5146483 chore(throughput): re-trigger dev deploy for canonical-tails",
+      "81e6a40 Merge feat/throughput-canonical-tails into development",
+      "28caa85 feat(throughput): EntitySelector (ProfileSelector) + Cmd+K command palette",
+      "eaec81c docs(throughput): archive stack modernization plan",
+      "ecf53f1 fix(throughput): tolerate display order schema lag",
+      "477fabe Merge pull request #229 from GaryOcean428/feat/throughput-idea-order-persistence-1782812012",
+      "19d06a9 fix(throughput): harden capture-order RPC + validate ids client-side",
+      "e913efb feat(throughput): persist capture-stage idea order to Supabase",
+      "e035db6 Merge pull request #228 from GaryOcean428/devin/1782805392-brand-assets-restore",
+      "f2bfbb7 fix(throughput): use brand mark in EnhancedNavigation for consistency",
+      "adaef7a perf(throughput): optimize BSuite brand mark to 256px",
+      "fee3b8c feat(throughput): restore BSuite brand mark logo with dark-theme accent glow",
+      "b22d16a chore(throughput): refresh readiness config",
+      "bb414e5 fix(auth): recover throughput OAuth loop guard",
+      "6ffa37d fix(branding): use CRM7 favicon",
+      "5aa19b1 Merge pull request #227 from GaryOcean428/development",
+      "121337a chore(deps): Zod 4 top-level format sweep \u2014 z.string().{email,uuid,url}() \u2192 z.{email,uuid,url}() (bsuite#1505 \u00a74.1) (#226)",
+      "d43768c docs: point mirror banners + PARENT-DOCS at real parent canonicals (bsuite#1522) (#225)",
+      "458b526 chore(deps): @bsuite/schema-registry ^0.3.6 \u2014 nav overlay reads the real table shape (bsuite#1506) (#224)",
+      "4084f44 docs: closure-audit verdict table + archive moves (#223)",
+      "1b87ac4 docs(throughput): naming-convention sweep \u2014 fix fictitious 2025 date prefixes + undated plan filenames (bsuite#1500) (#222)",
+      "b45fe42 Merge pull request #220 from GaryOcean428/development",
+      "0121ff0 chore(throughput): refresh dependencies to latest compatible versions (#221)",
+      "1a10774 Merge pull request #219 from GaryOcean428/chore/ignore-playwright-scratch-20260610",
+      "235388b fix(.gitignore): add Playwright scratch directories to ignore list",
+      "9c4d080 Merge pull request #218 from GaryOcean428/codex/throughput-explicit-health-checks-20260609",
+      "0b99b1e fix(throughput): make health checks explicit",
+      "cd3889c Merge pull request #217 from GaryOcean428/codex/throughput-error-driven-connection-monitor-20260609",
+      "8387a64 fix(throughput): make connection probe error-driven",
+      "780a923 Merge pull request #216 from GaryOcean428/codex/throughput-auth-state-sync-20260609",
+      "553aef8 fix(throughput): sync auth provider after oauth callback",
+      "c18bc6e Merge pull request #215 from GaryOcean428/codex/throughput-dev-oauth-loop-20260609",
+      "5fabf5d fix(throughput): harden dev OAuth login recovery",
+      "6148864 Merge pull request #213 from GaryOcean428/main",
+      "035fff5 Merge pull request #212 from GaryOcean428/development",
+      "aa85999 fix(deploy): bridge Supabase publishable env aliases (#211)",
+      "5b0568a fix(throughput): keep Supabase runtime env names Vite-native (#210)",
+      "26139c1 fix(throughput): accept Supabase preview env aliases (#209)",
+      "9672fc5 feat(throughput): roll out page grid layouts (#208)",
+      "c4a6a2e fix(metrics): add Throughput Speed Insights",
+      "eb3d86a fix(pwa): add Throughput app icon set",
+      "5c3da4e fix(ui): complete throughput semantic token sweep",
+      "f534679 fix(throughput): align focused UI surfaces with theme tokens",
+      "f80359d chore(auth): bump bsuite auth to 0.2.5 (#203)",
+      "a245a1b chore(deps): bump dry-lint to 0.5.0 (#202)",
+      "4226205 fix(deploy): split throughput vendor chunks (#201)",
+      "8631e76 chore(deploy): align Vercel Node 24 config",
+      "102fe6e Merge pull request #199 from GaryOcean428/chore/bump-bsuite-packages-20260601",
+      "7697ce9 chore(throughput): bump @bsuite/* to latest published versions",
+      "547c7a9 Merge pull request #198 from GaryOcean428/chore/align-development-with-main-20260601",
+      "1648b03 Merge pull request #197 from GaryOcean428/development",
+      "f1dc94c Merge pull request #196 from GaryOcean428/fix/auth-logout-sync-20260529",
+      "a3a8801 chore(deps): bump bsuite auth",
+      "b9002fe a11y(throughput): wire aria-expanded + aria-controls on 2 mobile hamburger menus \u2014 WCAG 4.1.2 fix (#195)",
+      "d891707 Merge pull request #194 from GaryOcean428/chore/sync-development-with-main-20260528104610",
+      "e8ebacf Merge pull request #193 from GaryOcean428/development",
+      "5bb4fde feat(auth): register /auth/login route alias for cross-app SSO (#192)",
+      "9236b16 chore(deps): add pnpm override ws@^8.20.1 \u2014 patch GHSA-58qx-3vcg-4xpx (moderate) (#187)",
+      "7c91693 ui(throughput): content-shape Skeleton on 5 dashboard surfaces (UI rotation) (#188)",
+      "4808b17 refactor(throughput): delete dead billing.ts module (453 LOC, 0 importers) (#189)",
+      "3561596 fix(throughput): pin Node to 24.x format (resolves silent Node 22.22.2 fallback) (#191)",
+      "0a70368 fix(csp): allow Pusher for Vercel Live preview comments (#190)",
+      "3f069de fix(throughput): remove THEME-REVIEW annotation comments leaking into the UI (#185)",
+      "cb780d4 fix(csp): remove qig-memory-api from connect-src (namespace leak) (#186)",
+      "7d628af Merge pull request #183 from GaryOcean428/main",
+      "cdcc84d Merge pull request #182 from GaryOcean428/development",
+      "b61089d fix(throughput/auth): wait for setSession to propagate before navigating (mirrors crm7#821) (#181)",
+      "a180b05 Merge pull request #180 from GaryOcean428/development",
+      "d496b22 chore(throughput): promote react-hooks v7 rules to error + remediate set-state-in-effect (#179)",
+      "649b6db feat(throughput): add canonical CSP baseline (bsuite#477) (#178)",
+      "20473fb fix(db): harden calculate_launch_readiness against IDOR \u2014 INVOKER + auth.uid() guard (#176)",
+      "7dbeba5 fix(throughput): typecheck script now actually checks types (bsuite#1104) (#177)",
+      "089307e Merge pull request #175 from GaryOcean428/development",
+      "cf9ea93 Merge pull request #174 from GaryOcean428/main",
+      "ad53f9c chore(deps): pin minimatch@9 >=9.0.7 via pnpm override (resolve 3 ReDoS advisories) (#163)",
+      "306567e ui(throughput): add focus-visible rings to 12 nav buttons \u2014 WCAG 2.4.7 fix (#164)",
+      "ce327b8 a11y(throughput): add scroll-padding-top to html \u2014 WCAG 2.4.11 (Focus Not Obscured) (#165)",
+      "58f630c fix(db): harden get_user_analytics_summary against IDOR \u2014 P1 security carry-forward closed (#166)",
+      "15df152 ui(throughput): replace raw color classes with role tokens in primitives (#167)",
+      "4676649 refactor(types): remove unused React imports \u2014 React 19 jsx-runtime makes them dead (#172)",
+      "882dd5f fix(types): add vitest/globals reference to surface 26 hidden test-globals errors (#173)",
+      "39a72e7 Merge pull request #171 from GaryOcean428/development",
+      "026458a Merge pull request #170 from GaryOcean428/chore/sync-main-to-dev-20260519",
+      "8af30a6 chore(throughput): delete dead src/lib/ai.ts + drop direct openai/anthropic deps (#168)",
+      "ed165bf chore(throughput): delete dead src/lib/ai.ts + drop direct openai/anthropic deps (#162)",
+      "12a7b25 Merge pull request #161 from GaryOcean428/development",
+      "af4ce61 Merge pull request #160 from GaryOcean428/claude/gracious-darwin-WguQj",
+      "6c3bf5a chore(throughput): align @bsuite/page-builder declared minimum ^0.2.6 \u2192 ^0.2.9 (suite parity)",
+      "79a6533 chore(ci): add drift-scan.mjs + pr-drift-scan.yml (9-signal PR auto-comment scanner) (#159)",
+      "ce5b603 Merge pull request #158 from GaryOcean428/chore/sync-main-to-dev-pkce-hotfix-20260512",
+      "dd37c9a chore: sync main \u2192 development \u2014 PKCE localStorage hotfix #157",
+      "71a8d70 fix(auth): read bs_oauth_state from localStorage, not sessionStorage (#157)",
+      "dfbebaf Merge pull request #156 from GaryOcean428/chore/sync-main-to-dev-oauth-trim-20260512",
+      "e93b189 chore: sync main \u2192 development \u2014 OAuth client_id .trim() defence-in-depth",
+      "a69061b fix(auth): trim BS OAuth client_id env var to prevent newline pollution (#155)",
+      "2ae4c10 Merge pull request #154 from GaryOcean428/chore/sync-main-to-dev-post-cycle-20260511",
+      "a042b5a Merge pull request #153 from GaryOcean428/development",
+      "b3f800e Merge pull request #152 from GaryOcean428/chore/parallel-session-o11-theme-20260511",
+      "66cb49a docs+css(throughput): align CLAUDE.md + docs + index.css with O.11 centralized theming",
+      "418661d Merge pull request #150 from GaryOcean428/development",
+      "30c2d1b Merge pull request #151 from GaryOcean428/chore/sync-main-to-dev-20260511-pm",
+      "b8dc5a7 chore(sync): bring main forward into development (parent-linkage repair)",
+      "cac6e89 ci: add verify-bs-oauth-session-sync workflow (gap A-3 closure) (#149)",
+      "8cc7477 Merge pull request #141 from GaryOcean428/claude/gracious-darwin-2B725",
+      "c3d62d0 Merge pull request #147 from GaryOcean428/development",
+      "46834c6 Merge pull request #148 from GaryOcean428/chore/sync-main-to-dev-20260511",
+      "f571ab4 chore(sync): main \u2192 development (post-merge parent-linkage repair)",
+      "3033541 Merge pull request #146 from GaryOcean428/fix/localised-date-input-20260511",
+      "643e29d fix(throughput): replace native date input with LocalisedDateInput",
+      "a4c161e Merge pull request #145 from GaryOcean428/development",
+      "dac37bc Merge pull request #144 from GaryOcean428/chore/reconcile-main-to-dev-20260511",
+      "320081e chore(reconcile): merge main into development \u2014 squash divergence (throughput)",
+      "446b09e feat(throughput): Phase A \u2014 bump @bsuite/page-builder ^0.2.5 \u2192 ^0.2.6 (#142) (#143)",
+      "083c058 feat(throughput): Phase A \u2014 bump @bsuite/page-builder ^0.2.5 \u2192 ^0.2.6 (#142)",
+      "fbb35f7 chore(deps): pin Node 24 \u2014 add .node-version + engines.node parity with 6 sibling repos",
+      "c4d3cfd Merge pull request #140 from GaryOcean428/development",
+      "7e827dc Merge pull request #139 from GaryOcean428/main",
+      "138eb58 docs(readme): markdownlint auto-fixes \u2014 blank-around-fenced-code-blocks + lists (#138)",
+      "8f1e92e Merge pull request #137 from GaryOcean428/development",
+      "346556f docs(agents): add \u00a710 Roadmap Dashboard Update Protocol (FF-DASHBOARD-20260508) (#136)",
+      "d73845c feat(observability): wire VITE_APP_URL + git SHA into Sentry release tagging (bsuite#611 Phase 4 \u2014 throughput) (#135)",
+      "40020d4 fix(auth): add 60s setSession sync interval \u2014 bridge BS OAuth tokens to Supabase session per AUTH_CANONICAL.md (#134)",
+      "15210a7 Merge pull request #133 from GaryOcean428/chore/run21-sync-dev-from-main-20260507",
+      "2e92947 Merge pull request #132 from GaryOcean428/development",
+      "83cb2a8 Merge pull request #131 from GaryOcean428/chore/final-sync-dev-from-main-20260507",
+      "be557d3 Merge pull request #130 from GaryOcean428/development",
+      "016faa2 Merge pull request #129 from GaryOcean428/chore/sync-dev-from-main-20260507",
+      "e3c67cc chore: sync development with main (ship-all reconcile)",
+      "f2a1a44 promote: dev\u2192main 2026-05-07 (canvas editor page-builder@0.2.5) (#128)",
+      "28e49f4 fix(canvas): bump @bsuite/page-builder ^0.2.1 \u2192 ^0.2.5 (1-col slider + resize handle) (#127)",
+      "8657a1d chore(deps): bump @bsuite/auth 0.2.2 \u2192 0.2.3 (Stage-4 ID token aud fix) (#126)",
+      "fb51c04 chore(deps): bump @bsuite/auth to 0.2.2 (Stage-3 PKCE localStorage fix) (#125)",
+      "dd1e12d Merge pull request #124 from GaryOcean428/perplexity/doctrine/ff-self-validation-20260507",
+      "e056956 docs(rulebook): adopt FF-SELF-VALIDATION-20260507 \u2014 Self-Validation Loop doctrine",
+      "1474b70 Merge pull request #123 from GaryOcean428/perplexity/codehouse/doc-drift-throughput",
+      "c78091c docs: fix React 18->19 + surface Teams/Monitoring/collab + parity (bsuite#579)",
+      "d2edeed Merge pull request #122 from GaryOcean428/development",
+      "9baeba2 chore(throughput): extend oauth-contract.test.ts with deprecated-cookie-SSO ban (#121)",
+      "93a5cbd Merge pull request #120 from GaryOcean428/main",
+      "1484914 Merge pull request #119 from GaryOcean428/chore/promote-bumps-clean-20260506",
+      "fcec75c Merge remote-tracking branch 'origin/main' into chore/promote-bumps-clean-20260506",
+      "78e67bf promote: development \u2192 main (OAuth freeze) (#113) (#117)",
+      "b7c8ac0 chore(throughput): bump @bsuite/auth 0.2.0\u21920.2.1 + @bsuite/dry-lint ^0.2.0\u21920.4.0 (#115)",
+      "28cbb1d promote: development \u2192 main (OAuth freeze) (#113) (#114)",
+      "3cd6713 promote: development \u2192 main (OAuth freeze) (#113)",
+      "21d148a chore(throughput): land OAuth freeze (Tier 1+2) (#112)",
+      "f06f863 Merge pull request #111 from GaryOcean428/chore/alpha-reconcile-main-into-dev-v0.2.0-20260506",
+      "ade797e chore(deps): bump @bsuite/auth to ^0.2.0 (Track B activation) (#106) (#110)",
+      "195e4ce chore(deps): bump @bsuite/auth to ^0.2.0 (Track B activation) (#106)",
+      "5700ef4 Merge pull request #108 from GaryOcean428/development",
+      "164e189 Merge pull request #109 from GaryOcean428/chore/alpha-reconcile-main-into-dev-20260506",
+      "606460e merge: \u03b1-reconcile main into development (tandem 2026-05-06)",
+      "7b332cd chore(parent): bump R80.3/braden/crm7 pointers + retire shared cookie-SSO surface (#505) (#107)",
+      "6cd3bc9 promote(auth): dev\u2192main \u2014 Track B OIDC silent re-auth wiring + accumulated dev commits (#105)",
+      "7ea24f7 feat(auth): wire attemptSilentAuth() in AuthProvider + handle error=login_required (#104)",
+      "4a0a33e Merge pull request #99 from GaryOcean428/cascade/ship-all-apps-20260505",
+      "eb8e4d8 ci(throughput): align pnpm action version",
+      "c162f4e chore(throughput): align auth and lint verification",
+      "c374034 feat(throughput): bump @bsuite/* + add PageEditorLauncher + @dnd-kit on capture stage (#98)",
+      "fc1a639 Merge pull request #97 from GaryOcean428/main",
+      "f071956 promote: throughput dev\u2192main 2026-05-04 round-2 (#96)",
+      "8053b44 chore(throughput): bump lucide-react ^0.344.0 \u2192 ^1.8.0 (closes #89) (#95)",
+      "d270b8a docs(bsuite): document bsuite_session_latest API bug + migrate to _v2 pointer (#94)",
+      "e3aa4b9 Merge pull request #93 from GaryOcean428/sync/throughput-post-ceremony-main-to-development-2026-05-04",
+      "f5d1a31 Merge remote-tracking branch 'origin/main' into development",
+      "e387672 promote: dev\u2192main 2026-05-04 ceremony (#92)",
+      "0814228 docs: record WCAG bsuite#208/#209 + TS6 #90 status (2026-05-04) (#91)",
+      "e43cf03 docs(plans): tick off Wave A 2026-05-04 stack + adopt items (#88)",
+      "0e809ff feat(adopt): EntitySelector primitive (oneship reads, no-create) (#87)",
+      "1f75b82 feat(adopt): init shadcn/ui \u2014 components.json + cn() helper (#86)",
+      "906d2d2 feat(adopt): add @tanstack/react-query 5.x with QueryClientProvider (#84)",
+      "457e1e2 feat(adopt): add @dnd-kit/core + sortable + utilities (#85)",
+      "962faa4 chore(deps): upgrade Zod 3 \u2192 4.4 (#83)",
+      "d8b6bea chore(deps): upgrade Vite 6 \u2192 8.0 (#82)",
+      "b7be3f9 chore(deps): upgrade React 18 \u2192 19.2 (#81)",
+      "30215d4 Merge pull request #80 from GaryOcean428/sync/main-to-development-2026-05-04-wave-a",
+      "268b8d5 Merge remote-tracking branch 'origin/main' into development",
+      "f7e44bb docs: add unified roadmap mirrors + adopt-plan stubs (2026-05-04 sweep) (#76)",
+      "05227ef Merge pull request #79 from GaryOcean428/promote/docs-unification-20260504",
+      "b130776 Merge origin/main into promote branch \u2014 reconcile docs unification over already-promoted main-side merge",
+      "ab81e32 docs(throughput): add PARENT-DOCS.md cross-link to bsuite canonical docs (#78)",
+      "ac95369 sync(throughput): main \u2192 development (post-final-promote merge markers) (#75)",
+      "73a8cde Merge pull request #74 from GaryOcean428/development",
+      "9df66a3 Merge pull request #73 from GaryOcean428/sync/main-to-development-20260502b",
+      "82d24aa docs(throughput): MD022 blank-line fixes in 3 component docs (#72)",
+      "cba6300 Merge pull request #71 from GaryOcean428/reconcile/main-into-dev-post-69-20260502",
+      "a7a680b merge: main into development to reconcile squash-merge divergence from PR #69",
+      "e167ec1 docs(components): fix jest.fn() \u2192 vi.fn() in test examples (#66) (#69)",
+      "45fb117 chore(throughput): archive shipped docs (2026-04-30 wave) (#67)",
+      "65da9db docs(components): fix jest.fn() \u2192 vi.fn() in test examples (#66)",
+      "29c8e9f Merge pull request #64 from GaryOcean428/development",
+      "7fa7a6c docs(throughput): document npm\u2192pnpm migration completion (PR #41) (#65)",
+      "c559ded reconcile(throughput): merge main back to development",
+      "aa4f928 release(throughput): promote CSS warning cleanup",
+      "16ae1a6 fix(throughput): silence css optimizer warning",
+      "988b7dc fix(throughput): silence css optimizer warning",
+      "cae8a0e Merge pull request #59 from GaryOcean428/development",
+      "5443204 Merge pull request #60 from GaryOcean428/reconcile/throughput/main-into-dev-20260428",
+      "e072458 merge: main \u2192 development (sync prior merge commits, unblock dev\u2192main release)",
+      "42b7a97 fix(lint): pin dry-lint app ownership enforcement (#58)",
+      "378a4cd chore(throughput): enforce dry-lint ownership rule (#57)",
+      "4f3007a Merge pull request #56 from GaryOcean428/codex/nav-core-0.5.0",
+      "9ae12fe chore(deps): bump nav core to 0.5.0",
+      "f34b701 release(throughput): ship theme 0.3.3 (#55)",
+      "c31163d chore(throughput): bump @bsuite/theme to 0.3.3 (#54)",
+      "b4ca52f chore(throughput): bump @bsuite/dry-lint ^0.1.1 \u2192 ^0.2.0 (#52) (#53)",
+      "b5c3dba chore(throughput): bump @bsuite/dry-lint ^0.1.1 \u2192 ^0.2.0 (#52)",
+      "bc1f120 Merge pull request #51 from GaryOcean428/development",
+      "7f2f934 Merge pull request #50 from GaryOcean428/fix/throughput-login-url-bsu-path",
+      "f396156 fix(throughput): redirect to BSU /login (not /auth/login) for SSO bounce",
+      "b04c576 fix(throughput): triage 9 quarantined test files (WS-C follow-up) (#49)",
+      "92610bd Merge pull request #48 from GaryOcean428/development",
+      "2c154c2 Merge pull request #47 from GaryOcean428/chore/doc-archival-sweep-finish-line",
+      "322a82a docs(throughput): WS-H finish-line \u2014 add OUTSTANDING.md status doc",
+      "f5b7041 feat(throughput): @bsuite/dry-lint warn-mode rule for one-shot enforcement (#46)",
+      "10574ec fix(throughput): correct bg-gray-* mapping (use bg-muted not bg-secondary/muted-foreground) (#45)",
+      "9b33e7c Merge pull request #44 from GaryOcean428/feat/theme-0.3.0-palette-cleanup",
+      "c184f4d fix(throughput): replace bg-gray-* with semantic tokens to clear no-hardcoded-colours error",
+      "fcb98c4 chore(throughput): bump @bsuite/theme to ^0.3.1 (preset-v4 nested-comment fix)",
+      "61c2928 feat(throughput): @bsuite/theme 0.3.0 + hex\u2192OKLCH cleanup + colour rule to error",
+      "fa286d4 Merge pull request #41 from GaryOcean428/chore/throughput-npm-to-pnpm",
+      "869c51b ci(throughput): make Security Scan non-blocking \u2014 pre-existing undici CVEs",
+      "7d26946 ci(throughput): align audit gate with BSuite parent \u2014 high+prod only",
+      "c63ff11 fix(throughput): unblock CI test suite after pnpm migration",
+      "a65e8d3 chore(throughput): migrate from npm to pnpm@10.30.3",
+      "0958a3c Merge pull request #42 from GaryOcean428/development",
+      "ff7740d fix(throughput): bump CI Node.js 18 \u2192 24 for vitest 4 compatibility",
+      "943ebf8 fix(throughput): demote no-hardcoded-colours to warn + DRY exemptions on REFERENCE-ONLY migration",
+      "31af00b fix(throughput): exempt tailwind.config.js from bsuite/no-hardcoded-colours",
+      "27d6b7d fix(throughput): regenerate package-lock.json + revert CI workflow to npm",
+      "25201b8 fix(throughput): migrate CI/CD workflow from npm to pnpm",
+      "fa7e874 fix(throughput): require VITE_BSU_URL on BS-OAuth paths \u2014 remove hardcoded production fallback (P0-7)",
+      "63b79af refactor(throughput): remove team_members writes \u2014 deep-link to BSU admin instead (P1-6 / CAW-V9)",
+      "2530f98 docs(throughput): annotate unified schema migration as REFERENCE ONLY",
+      "439f309 refactor(throughput): rename VITE_SUPABASE_ANON_KEY \u2192 VITE_SUPABASE_PUBLISHABLE_KEY (Migrate phase)",
+      "088951a fix(throughput): append return_origin to BSU login URL for preview-branch OAuth",
+      "bac969e chore(throughput): remove cargo-culted pnpm packageManager (#40)",
+      "440ffeb fix(auth): remove latent github oauth provider",
+      "2738114 chore(deploy): redeploy trigger \u2014 Supabase legacy anon JWT \u2192 publishable key rotation (dev+preview only; prod untouched)",
+      "25876a6 Merge pull request #39 from GaryOcean428/development",
+      "062bbe4 Merge pull request #38 from GaryOcean428/main",
+      "41b7a8e Merge pull request #37 from GaryOcean428/development",
+      "390edaf feat(observability): wire Sentry SDK \u2014 throughput (#34)",
+      "61a3036 fix(security): remove unsafe-eval from CSP \u2014 throughput (#36)",
+      "457fee9 docs(throughput): Phase 9.2 \u2014 document @bsuite/auth adoption in business-suite-oauth.ts (#35)",
+      "66f52dd chore(throughput): Phase 10 \u2014 dependency standardisation (#33)",
+      "18f5959 Merge pull request #32 from GaryOcean428/docs/phase6-consumer-claude-md",
+      "a37358c docs(throughput): Phase 6b+6c \u2014 TenantLayoutSlot pattern + DRY lint rule",
+      "e2cd575 Merge pull request #31 from GaryOcean428/development",
+      "0d87057 docs(claude): add CLAUDE.md with Phase 5 Tailwind v4 notes",
+      "4c1180a feat(throughput): upgrade Tailwind CSS v3 \u2192 v4",
+      "08d3c5a Merge pull request #28 from GaryOcean428/development",
+      "09dcf2e feat(throughput): @bsuite/theme v0.2.0 \u2014 ESLint guardrail",
+      "2782ecf Merge pull request #26 from GaryOcean428/development",
+      "c94895b Merge remote-tracking branch 'origin/main' into development",
+      "0f924c5 chore(throughput): ignore .vercel (added by vercel CLI link)",
+      "e5b50d6 chore(redeploy): rotate to sb_publishable_ anon key post-legacy-revoke (2026-04-22T03:16:32Z)",
+      "f35fa02 Merge pull request #25 from GaryOcean428/development",
+      "7f3b0e1 refactor(throughput): clear React compiler warnings (N.6) (#24)",
+      "4685731 fix(throughput): [N.3] WCAG P0 \u2014 autocomplete + dialog a11y (bsuite#208, #209) (#23)",
+      "26ec580 Merge pull request #19 from GaryOcean428/development",
+      "2c70c92 style(throughput): migrate top-5 slate-heavy files to D2C tokens (M.1.b) (#22)",
+      "733984e test(throughput): WCAG 2.2 AA spec + focus-not-obscured checks (M.2) (#21)",
+      "0c63b68 style(throughput): OKLCH @theme remap for standard Tailwind palette (M.1.a) (#20)",
+      "d20b42c docs: linter-applied contributing-standards propagation",
+      "a126615 Fix: URL-encoded double-slash bypass in return_path sanitization allows potential open-redirect via /%2F%2Fevil.com",
+      "395ad11 feat(throughput): adopt @bsuite/ui DotPattern + drop bg-grid utilities",
+      "f3f842b fix(throughput): sanitize return_path to block open-redirect on login + callback",
+      "342d4ec feat(throughput): @bsuite/auth migration + pre-existing build fixes (#18)",
+      "0f9517c chore(throughput): bump eslint-plugin-react-hooks v5\u2192v7 + demote new rules",
+      "9862b2b feat(throughput): migrate to @bsuite/theme@0.1.1 \u2014 Wave 4",
+      "a5470ef feat(throughput): platform_role bypass \u2014 developers bypass team RBAC",
+      "f84469f feat(throughput): migrate AppSwitcher to @bsuite/nav-core@0.3.0 (#17)",
+      "bf19b79 feat(throughput): add AppSwitcher to header (#16)",
+      "9b5bc3c feat(throughput): centralize OAuth UI to BSU \u2014 delete native login UI (#15)",
+      "b546479 style(throughput): Tailwind v4 second-pass sweep (#14)",
+      "b9c3ee9 Merge pull request #13 from GaryOcean428/development",
+      "48a0986 style(throughput): migrate Tailwind class patterns to v4 shorthand (#12)",
+      "a82f633 fix(throughput): clear BS OAuth tokens in AuthOperations.signOut (#11)",
+      "94742bd chore(throughput): merge BS OAuth SSO wiring into development",
+      "9b78c2e fix(lint): resolve all 132 ESLint errors blocking CI",
+      "0b5c46c fix(throughput): resolve lint errors and paren syntax bug in conversationStore",
+      "fae7563 fix(auth): align cookie storage with BSU/CRM7/R80.3 canonical pattern",
+      "5bf8436 Implement BS OAuth 2.1 SSO wiring for throughput auth flow",
+      "8fcebbf Initial plan",
+      "ea45e0b security(throughput): add OIDC nonce + bump supabase-js + jose",
+      "9121808 chore(bsuite): sync submodules + replace pure white (#ffffff) with off-white (#f2f2f2) across email templates, docs, and D2C tokens",
+      "4ce1724 style(throughput): Phase 4.7 \u2014 add prefers-reduced-motion media query",
+      "96b258c feat(auth): integrate BS OAuth 2.1 server (ideas.crm7.app)",
+      "10e7822 Updated BusinessPlan.tsx",
+      "6de756b Updated ResearchPanel.tsx",
+      "afdedf5 Updated generate-component-docs.js",
+      "4654731 Updated package.json",
+      "76067fd Added NAVIGATION_COMPARISON.md",
+      "5cb38cb Added 20251014120000_unified_business_suite_schema.sql",
+      "57b9768 Added MIGRATION_GUIDE.md",
+      "f2ffe9e Updated package.json",
+      "2d0ccc6 Added AUTH_FIX_SUMMARY.md",
+      "9043763 Updated package-lock.json",
+      "3d3389d Added AUDIT_SUMMARY.md",
+      "e833322 Updated llmApi.ts",
+      "26b3a90 Added FEATURE_DOCUMENTATION.md",
+      "213fcf2 Updated App.tsx",
+      "771fee9 Updated App.tsx",
+      "2ffec0c Updated index.ts",
+      "51846c7 Added PRODUCTION_DEPLOYMENT_GUIDE.md",
+      "0d0be28 Added GROQ_SETUP.md",
+      "d9d3397 Added 20251014041334_create_missing_rpc_functions.sql",
+      "7857e6f Added 20251014035559_initial_schema_setup.sql",
+      "2423950 Updated package-lock.json",
+      "c246696 Updated package-lock.json",
+      "20013ff Complete enterprise collaboration platform with real-time editing, team management, and communication tools (#6)",
+      "4931df2 Add comprehensive production roadmap for Throughput application",
+      "69ba76b Fix Vercel deployment: Add missing requestLLMCompletion export",
+      "d280aec Merge pull request #3 from GaryOcean428/copilot/fix-2eebc87a-7249-4126-9edf-0cc8efa13f6a",
+      "21bb4de Replace hard-coded test URLs with proper environment variable validation",
+      "fd1824d Initial plan",
+      "16d6801 do it",
+      "a817ab8 Add vercel.json deployment configuration",
+      "46cc7b1 Merge pull request #2 from GaryOcean428/copilot/fix-1",
+      "8aa97df Fix RLS Admin Permission Errors",
+      "b8b45e2 Phase 2 final achievement: Complete 3 major component modularizations with comprehensive test coverage",
+      "abca122 Phase 2 major achievement: Modularize Layout (274\u2192175 lines across 5 modules) and MindMap (268\u2192363 lines across 6 modules)",
+      "a3948b9 Phase 2 continued: Modularize Login component (323\u2192390 lines across 6 focused modules)",
+      "f782f71 Phase 2 continued: Modularize Dashboard component (324\u2192455 lines across 6 focused modules)",
+      "10a715b Phase 2 major achievement: Modularize auth.tsx (545\u2192613 lines across 6 focused files)",
+      "b2d343c Security fix: Resolve critical form-data vulnerability",
+      "35b27c9 Add tests for modularized components: StatusIndicator, AuthDiagnosticsHeader, DatabaseStatusHeader, DatabaseSetupPrompt",
+      "c5f0d2b Phase 2 major progress: Modularize AuthDiagnostics and DatabaseSetup components",
+      "233dc82 Phase 2 start: Modularize DatabaseSetup component into focused sub-components",
+      "d830580 Phase 1 completion: Bundle size analysis, route analysis, unused deps check, and remaining lint fixes",
+      "6cb1612 Phase 1 continued: Fix TypeScript any types, remove unused imports and variables",
+      "a979e38 Phase 1 critical fixes: Remove duplicate components, fix test setup, clean dependencies",
+      "13714bd Initial plan",
+      "2763ffb Update migration file with IF NOT EXISTS clauses",
+      "9f59fec Update README.md with Comprehensive Project Documentation",
+      "02b8aee Updated .gitignore",
+      "2053118 Start repository"
+    ],
+    "unique_commits_count": 728,
+    "keep_reason": "feature branch, unique commits, dirty",
+    "extra_clones": [],
+    "worktree_bundles": [
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/po1-ad8-verify.bundle",
+        "bundle_name": "po1-ad8-verify.bundle",
+        "heads": [
+          "4c302cef4a319fcc41b32648f3cd09180f0f768c refs/heads/fix/po1-ad8-verify-and-ledger"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/r804-fwc-rate-limit.bundle",
+        "bundle_name": "r804-fwc-rate-limit.bundle",
+        "heads": [
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 refs/heads/development",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/heads/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/heads/fix/cache-refuses-a-seed",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limit-quota",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limiting-was-stranded",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/heads/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/heads/fix/on3-on8-qualification-and-mapd-warning",
+          "8b2be8de8b527fd2afc528dfb61243175bb1545d refs/heads/main",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/live/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/live/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/live/chore/theme-1.0.2",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/live/docs/agents-rulebook",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/live/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/live/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/live/fix/e2e-session-seed-before-navigation",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/live/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/live/fix/register-bsuite-packages-as-tailwind-sources",
+          "0e5c9d3a518ce5d44e7614c8889550aac4c5ac30 refs/remotes/live/main",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/origin/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/origin/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/origin/chore/theme-1.0.2",
+          "8c85569d09764c13f0fff6309db5eb3c3a654f48 refs/remotes/origin/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/origin/docs/agents-rulebook",
+          "cf4782fb0d74089fab0a82793411ffdc37171593 refs/remotes/origin/docs/datum-directive-20260820",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/remotes/origin/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/remotes/origin/fix/cache-refuses-a-seed",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/origin/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/origin/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/origin/fix/e2e-session-seed-before-navigation",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/remotes/origin/fix/fwc-proxy-rate-limit-quota",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/remotes/origin/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/remotes/origin/fix/on3-on8-qualification-and-mapd-warning",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/origin/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/origin/fix/register-bsuite-packages-as-tailwind-sources",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/main",
+          "af53754c4e457049e939df2de0919ec3f263aeaf refs/tags/engine-2026.08.05-21awards",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 HEAD",
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 main-worktree/HEAD"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-th-theme-finish.bundle",
+        "bundle_name": "sw-th-theme-finish.bundle",
+        "heads": [
+          "9decc7724fef2518707b19875075fe3e35327272 refs/heads/fix/th-theme-finish"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1774.bundle",
+        "bundle_name": "crm7-1774.bundle",
+        "heads": [
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/heads/fix/k1-k4-mock-financial-and-milestones"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-ad3-ad5-ad9-adoption.bundle",
+        "bundle_name": "sw-ad3-ad5-ad9-adoption.bundle",
+        "heads": [
+          "d8327354954482622ed7951364be8c729a46fa24 refs/heads/fix/ad3-ad5-ad9-adoption"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "bundle_name": "bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "heads": [
+          "af98548af93ea55190cce623fb123bd86735c585 refs/heads/main"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-drop-the-duplicate.bundle",
+        "bundle_name": "crm7-drop-the-duplicate.bundle",
+        "heads": [
+          "b1d40784ba9c799583bc3a7c452e40e5f3fb8f07 refs/heads/fix/the-salvaged-migration-was-already-renumbered"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-ad5-extract-entityselector-to-ui.bundle",
+        "bundle_name": "od-ad5-extract-entityselector-to-ui.bundle",
+        "heads": [
+          "b4889230b5ced7c41674d0b553cb517591c5d00d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-r804-charge-calc-consolidation.bundle",
+        "bundle_name": "od-r804-charge-calc-consolidation.bundle",
+        "heads": [
+          "f43219c89632006e7f7dbcc39e49aca49df47d90 refs/heads/fix/r804-charge-calc-consolidation"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1812.bundle",
+        "bundle_name": "crm7-1812.bundle",
+        "heads": [
+          "a3b03ded7b2540f7c606aaba83bfb67fbad0f57d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-m3-m4-award-clause-coverage.bundle",
+        "bundle_name": "sw-m3-m4-award-clause-coverage.bundle",
+        "heads": [
+          "1ae2eaab271a13c610234ba9a51d106ae08c65b1 refs/heads/fix/m3-m4-award-clause-coverage"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-renumber-collision.bundle",
+        "bundle_name": "crm7-renumber-collision.bundle",
+        "heads": [
+          "ec9855dbe6ad9f4a666470611da0780c6037af4b refs/heads/fix/renumber-a-cross-scope-migration-collision"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-docs-full-window-sweep.bundle",
+        "bundle_name": "sw-docs-full-window-sweep.bundle",
+        "heads": [
+          "ac15e7819ddd06b47a9d32cf41f0cf13ee1ad865 refs/heads/fix/docs-full-window-sweep"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsuite-rule-describes-itself.bundle",
+        "bundle_name": "bsuite-rule-describes-itself.bundle",
+        "heads": [
+          "1e93e6ca2051a44a45cc215a6e2929f77b9c88e9 refs/heads/fix/a-rule-need-not-quote-the-token-it-bans"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/ad2-crm7.bundle",
+        "bundle_name": "ad2-crm7.bundle",
+        "heads": [
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/heads/development",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/heads/fix/ad-2-crm7-ungridded-scanner",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/HEAD",
+          "18ce35a65fffad46a005729e61d6be6a87908b14 refs/remotes/origin/chore/bsuite-theme-0.12.0",
+          "d01e08e7767bcb15fe8d2b8e8cbb5b7ead28c91d refs/remotes/origin/chore/bsuite-ui-1.1.0",
+          "2f758d2b38470e80f7c0f5c30de58173f4de2dcd refs/remotes/origin/chore/crm7-theme-fonts-entrypoint",
+          "7d26bb60e38b3e970dca776f55db01653510d5ca refs/remotes/origin/chore/dep-nanoid-floor",
+          "54d417621d07779812dd5f847db769a56a50c57a refs/remotes/origin/copilot/fix-1741-stream-body-cap",
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/remotes/origin/development",
+          "23fa0468cb896abe4fbcd7e4867a59e4e7fd0832 refs/remotes/origin/feat/migration-high-water-mark-rpc",
+          "8070449babaabdbcfba67376d378591997ed455d refs/remotes/origin/feat/schema-lag-banner",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/remotes/origin/fix/ad-2-crm7-ungridded-scanner",
+          "2b95f9bb4d10e63e4e9297941f829deb83d8c6e6 refs/remotes/origin/fix/ad8-xero-sync-health",
+          "c31e0aeac9feb87c6abed1556cb3a6db0cdb7ee5 refs/remotes/origin/fix/d80-module-visibility-hidden-modules",
+          "24e3a92f857164f610c9eced9eda36069bf910c9 refs/remotes/origin/fix/e2e-a11y-forms",
+          "b3ed213e3f5dcf7b356a1952add547836b8ddad7 refs/remotes/origin/fix/e2e-appshell-permission-swap-wait",
+          "c93d8e643e01e32cd5f5d4616661031dd3f90b50 refs/remotes/origin/fix/e2e-locator-timeouts",
+          "287420b45a1c64b63ed954403eaf60a4f85d17d4 refs/remotes/origin/fix/e2e-programmatic-auth",
+          "bad864f161f4f0bf6c4b32fdbf6d3dc799847649 refs/remotes/origin/fix/e2e-selectors-and-urls",
+          "a4eb9d2b4a28f7f9a9c7e8aeb2044f846acd0dcc refs/remotes/origin/fix/k-class-mock-data-honest-states",
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/remotes/origin/fix/k1-k4-mock-financial-and-milestones",
+          "e38f0cf3fbfc2833a49f377d2d26ba2fc53e455d refs/remotes/origin/fix/pf1-rls-initplan-wrap",
+          "390f89ec0a202e4262b110848d0cbe03760bedc1 refs/remotes/origin/fix/pf3-pf4b-provable-redundancies",
+          "8788b90c4a29371ca8575403f36f13670b55af73 refs/remotes/origin/fix/po1-field-officer-landing-queries",
+          "c2e8313e57989503426932c294c5244dab98d660 refs/remotes/origin/fix/po2-host-supervisor-people-placements-scope",
+          "664959e47b731c9f41ebf1159a1551038c04b9c4 refs/remotes/origin/fix/th-2-surface-near-white",
+          "852303afe3db89b9d50c0d4901363b2a0eea0dce refs/remotes/origin/fix/th9-non-responsive-grid-cols-2",
+          "760726d86ca2185749db68b847205f51a3c26ec6 refs/remotes/origin/fix/txn-integrity-t1-t6",
+          "9466c33bff9f6eda97c4eb9c6598c2f29d79b12d refs/remotes/origin/fix/wire-e2e-credentials",
+          "99d4176526c476634e2825c9a56e617e351c3647 refs/remotes/origin/lane/v2-v4-v5-v11-controls",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/main",
+          "ae47bef480ed96ec2ba2367a8dce4fb2c241ce7a refs/remotes/origin/perf/crm7-modulepreload-and-fonts",
+          "2d7b97133cd87ece200b4618974b6d53674bb7a3 refs/tags/archive/land-baseline-regen-20260809",
+          "9649ccdf990b0e3ae762e31092431ddf1b897b3f refs/tags/archive/orphan-CKLoS-20260508",
+          "64b02a9b7a600494e3d62d32e73add1b9f6f8704 refs/tags/archive/orphan-IOl7X-20260508",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a HEAD"
+        ]
+      }
+    ]
+  },
+  "GaryOcean428/braden": {
+    "local_path": "/home/braden/Desktop/Dev/bsuite/braden",
+    "local_branches": [
+      "(HEAD detached at 31b7d7b)",
+      "development",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/braden\nHEAD 31b7d7b43abbdad21039d3aa2a5de69d69276750\ndetached\n\n",
+    "stash": [],
+    "uncommitted": false,
+    "current_branch": "HEAD",
+    "ahead": "0",
+    "behind": "8",
+    "dirty": true,
+    "unique_commits": [
+      "31b7d7b Merge pull request #605 from GaryOcean428/development",
+      "d9ad488 Merge pull request #601 from GaryOcean428/development",
+      "40c13ad Merge pull request #599 from GaryOcean428/development",
+      "d9a66e0 Merge pull request #595 from GaryOcean428/development",
+      "3263835 Merge pull request #592 from GaryOcean428/development",
+      "b383bc9 Merge pull request #590 from GaryOcean428/development",
+      "35f9f21 Merge pull request #588 from GaryOcean428/development",
+      "a7c0fa0 Merge pull request #585 from GaryOcean428/development"
+    ],
+    "unique_commits_count": 8,
+    "keep_reason": "feature branch, unique commits, dirty",
+    "extra_clones": [],
+    "worktree_bundles": [
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/po1-ad8-verify.bundle",
+        "bundle_name": "po1-ad8-verify.bundle",
+        "heads": [
+          "4c302cef4a319fcc41b32648f3cd09180f0f768c refs/heads/fix/po1-ad8-verify-and-ledger"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/r804-fwc-rate-limit.bundle",
+        "bundle_name": "r804-fwc-rate-limit.bundle",
+        "heads": [
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 refs/heads/development",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/heads/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/heads/fix/cache-refuses-a-seed",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limit-quota",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limiting-was-stranded",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/heads/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/heads/fix/on3-on8-qualification-and-mapd-warning",
+          "8b2be8de8b527fd2afc528dfb61243175bb1545d refs/heads/main",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/live/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/live/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/live/chore/theme-1.0.2",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/live/docs/agents-rulebook",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/live/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/live/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/live/fix/e2e-session-seed-before-navigation",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/live/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/live/fix/register-bsuite-packages-as-tailwind-sources",
+          "0e5c9d3a518ce5d44e7614c8889550aac4c5ac30 refs/remotes/live/main",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/origin/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/origin/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/origin/chore/theme-1.0.2",
+          "8c85569d09764c13f0fff6309db5eb3c3a654f48 refs/remotes/origin/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/origin/docs/agents-rulebook",
+          "cf4782fb0d74089fab0a82793411ffdc37171593 refs/remotes/origin/docs/datum-directive-20260820",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/remotes/origin/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/remotes/origin/fix/cache-refuses-a-seed",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/origin/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/origin/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/origin/fix/e2e-session-seed-before-navigation",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/remotes/origin/fix/fwc-proxy-rate-limit-quota",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/remotes/origin/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/remotes/origin/fix/on3-on8-qualification-and-mapd-warning",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/origin/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/origin/fix/register-bsuite-packages-as-tailwind-sources",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/main",
+          "af53754c4e457049e939df2de0919ec3f263aeaf refs/tags/engine-2026.08.05-21awards",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 HEAD",
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 main-worktree/HEAD"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-th-theme-finish.bundle",
+        "bundle_name": "sw-th-theme-finish.bundle",
+        "heads": [
+          "9decc7724fef2518707b19875075fe3e35327272 refs/heads/fix/th-theme-finish"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1774.bundle",
+        "bundle_name": "crm7-1774.bundle",
+        "heads": [
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/heads/fix/k1-k4-mock-financial-and-milestones"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-ad3-ad5-ad9-adoption.bundle",
+        "bundle_name": "sw-ad3-ad5-ad9-adoption.bundle",
+        "heads": [
+          "d8327354954482622ed7951364be8c729a46fa24 refs/heads/fix/ad3-ad5-ad9-adoption"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "bundle_name": "bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "heads": [
+          "af98548af93ea55190cce623fb123bd86735c585 refs/heads/main"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-drop-the-duplicate.bundle",
+        "bundle_name": "crm7-drop-the-duplicate.bundle",
+        "heads": [
+          "b1d40784ba9c799583bc3a7c452e40e5f3fb8f07 refs/heads/fix/the-salvaged-migration-was-already-renumbered"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-ad5-extract-entityselector-to-ui.bundle",
+        "bundle_name": "od-ad5-extract-entityselector-to-ui.bundle",
+        "heads": [
+          "b4889230b5ced7c41674d0b553cb517591c5d00d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-r804-charge-calc-consolidation.bundle",
+        "bundle_name": "od-r804-charge-calc-consolidation.bundle",
+        "heads": [
+          "f43219c89632006e7f7dbcc39e49aca49df47d90 refs/heads/fix/r804-charge-calc-consolidation"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1812.bundle",
+        "bundle_name": "crm7-1812.bundle",
+        "heads": [
+          "a3b03ded7b2540f7c606aaba83bfb67fbad0f57d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-m3-m4-award-clause-coverage.bundle",
+        "bundle_name": "sw-m3-m4-award-clause-coverage.bundle",
+        "heads": [
+          "1ae2eaab271a13c610234ba9a51d106ae08c65b1 refs/heads/fix/m3-m4-award-clause-coverage"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-renumber-collision.bundle",
+        "bundle_name": "crm7-renumber-collision.bundle",
+        "heads": [
+          "ec9855dbe6ad9f4a666470611da0780c6037af4b refs/heads/fix/renumber-a-cross-scope-migration-collision"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-docs-full-window-sweep.bundle",
+        "bundle_name": "sw-docs-full-window-sweep.bundle",
+        "heads": [
+          "ac15e7819ddd06b47a9d32cf41f0cf13ee1ad865 refs/heads/fix/docs-full-window-sweep"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsuite-rule-describes-itself.bundle",
+        "bundle_name": "bsuite-rule-describes-itself.bundle",
+        "heads": [
+          "1e93e6ca2051a44a45cc215a6e2929f77b9c88e9 refs/heads/fix/a-rule-need-not-quote-the-token-it-bans"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/ad2-crm7.bundle",
+        "bundle_name": "ad2-crm7.bundle",
+        "heads": [
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/heads/development",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/heads/fix/ad-2-crm7-ungridded-scanner",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/HEAD",
+          "18ce35a65fffad46a005729e61d6be6a87908b14 refs/remotes/origin/chore/bsuite-theme-0.12.0",
+          "d01e08e7767bcb15fe8d2b8e8cbb5b7ead28c91d refs/remotes/origin/chore/bsuite-ui-1.1.0",
+          "2f758d2b38470e80f7c0f5c30de58173f4de2dcd refs/remotes/origin/chore/crm7-theme-fonts-entrypoint",
+          "7d26bb60e38b3e970dca776f55db01653510d5ca refs/remotes/origin/chore/dep-nanoid-floor",
+          "54d417621d07779812dd5f847db769a56a50c57a refs/remotes/origin/copilot/fix-1741-stream-body-cap",
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/remotes/origin/development",
+          "23fa0468cb896abe4fbcd7e4867a59e4e7fd0832 refs/remotes/origin/feat/migration-high-water-mark-rpc",
+          "8070449babaabdbcfba67376d378591997ed455d refs/remotes/origin/feat/schema-lag-banner",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/remotes/origin/fix/ad-2-crm7-ungridded-scanner",
+          "2b95f9bb4d10e63e4e9297941f829deb83d8c6e6 refs/remotes/origin/fix/ad8-xero-sync-health",
+          "c31e0aeac9feb87c6abed1556cb3a6db0cdb7ee5 refs/remotes/origin/fix/d80-module-visibility-hidden-modules",
+          "24e3a92f857164f610c9eced9eda36069bf910c9 refs/remotes/origin/fix/e2e-a11y-forms",
+          "b3ed213e3f5dcf7b356a1952add547836b8ddad7 refs/remotes/origin/fix/e2e-appshell-permission-swap-wait",
+          "c93d8e643e01e32cd5f5d4616661031dd3f90b50 refs/remotes/origin/fix/e2e-locator-timeouts",
+          "287420b45a1c64b63ed954403eaf60a4f85d17d4 refs/remotes/origin/fix/e2e-programmatic-auth",
+          "bad864f161f4f0bf6c4b32fdbf6d3dc799847649 refs/remotes/origin/fix/e2e-selectors-and-urls",
+          "a4eb9d2b4a28f7f9a9c7e8aeb2044f846acd0dcc refs/remotes/origin/fix/k-class-mock-data-honest-states",
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/remotes/origin/fix/k1-k4-mock-financial-and-milestones",
+          "e38f0cf3fbfc2833a49f377d2d26ba2fc53e455d refs/remotes/origin/fix/pf1-rls-initplan-wrap",
+          "390f89ec0a202e4262b110848d0cbe03760bedc1 refs/remotes/origin/fix/pf3-pf4b-provable-redundancies",
+          "8788b90c4a29371ca8575403f36f13670b55af73 refs/remotes/origin/fix/po1-field-officer-landing-queries",
+          "c2e8313e57989503426932c294c5244dab98d660 refs/remotes/origin/fix/po2-host-supervisor-people-placements-scope",
+          "664959e47b731c9f41ebf1159a1551038c04b9c4 refs/remotes/origin/fix/th-2-surface-near-white",
+          "852303afe3db89b9d50c0d4901363b2a0eea0dce refs/remotes/origin/fix/th9-non-responsive-grid-cols-2",
+          "760726d86ca2185749db68b847205f51a3c26ec6 refs/remotes/origin/fix/txn-integrity-t1-t6",
+          "9466c33bff9f6eda97c4eb9c6598c2f29d79b12d refs/remotes/origin/fix/wire-e2e-credentials",
+          "99d4176526c476634e2825c9a56e617e351c3647 refs/remotes/origin/lane/v2-v4-v5-v11-controls",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/main",
+          "ae47bef480ed96ec2ba2367a8dce4fb2c241ce7a refs/remotes/origin/perf/crm7-modulepreload-and-fonts",
+          "2d7b97133cd87ece200b4618974b6d53674bb7a3 refs/tags/archive/land-baseline-regen-20260809",
+          "9649ccdf990b0e3ae762e31092431ddf1b897b3f refs/tags/archive/orphan-CKLoS-20260508",
+          "64b02a9b7a600494e3d62d32e73add1b9f6f8704 refs/tags/archive/orphan-IOl7X-20260508",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a HEAD"
+        ]
+      }
+    ]
+  },
+  "GaryOcean428/R80.4": {
+    "local_path": "/home/braden/Desktop/Dev/bsuite/R80.4",
+    "local_branches": [
+      "(HEAD detached at 10187e2)",
+      "development",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/fix/rate-scope-partials-schedules-20260811",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/R80.4\nHEAD 10187e27271c065777a86312d2daaa633b2fb57b\ndetached\n\n",
+    "stash": [
+      "stash@{0}: On fix/rebank-award-dod-baseline: R80.4 working-tree residue 2026-08-18: stale branch state, net -940 lines vs development. Contains some lines not on dev (11/15 sampled) but would DELETE 940 lines of merged award work if committed. Preserved, not discarded."
+    ],
+    "uncommitted": false,
+    "current_branch": "HEAD",
+    "ahead": "0",
+    "behind": "7",
+    "dirty": true,
+    "unique_commits": [
+      "10187e2 Merge pull request #319 from GaryOcean428/development",
+      "c3de303 Merge pull request #315 from GaryOcean428/development",
+      "708e0f6 Merge pull request #312 from GaryOcean428/development",
+      "2edbc1c Merge pull request #308 from GaryOcean428/development",
+      "8a23d99 Merge pull request #306 from GaryOcean428/development",
+      "42ac417 Merge pull request #304 from GaryOcean428/development",
+      "d46fd8d Merge pull request #301 from GaryOcean428/development"
+    ],
+    "unique_commits_count": 7,
+    "keep_reason": "feature branch, unique commits, dirty",
+    "extra_clones": [],
+    "worktree_bundles": [
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/po1-ad8-verify.bundle",
+        "bundle_name": "po1-ad8-verify.bundle",
+        "heads": [
+          "4c302cef4a319fcc41b32648f3cd09180f0f768c refs/heads/fix/po1-ad8-verify-and-ledger"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/r804-fwc-rate-limit.bundle",
+        "bundle_name": "r804-fwc-rate-limit.bundle",
+        "heads": [
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 refs/heads/development",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/heads/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/heads/fix/cache-refuses-a-seed",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limit-quota",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/heads/fix/fwc-proxy-rate-limiting-was-stranded",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/heads/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/heads/fix/on3-on8-qualification-and-mapd-warning",
+          "8b2be8de8b527fd2afc528dfb61243175bb1545d refs/heads/main",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/live/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/live/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/live/chore/theme-1.0.2",
+          "cb056e3133b6c9cc808be8effc8a92ab016cadf5 refs/remotes/live/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/live/docs/agents-rulebook",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/live/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/live/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/live/fix/e2e-session-seed-before-navigation",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/live/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/live/fix/register-bsuite-packages-as-tailwind-sources",
+          "0e5c9d3a518ce5d44e7614c8889550aac4c5ac30 refs/remotes/live/main",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/HEAD",
+          "347bbfcec331c59ef4b386ec2777aac4feb646c2 refs/remotes/origin/chore/nav-core-1.1.0",
+          "a6ae08b8f41e59f84069c1f3de89705b5b1da2e1 refs/remotes/origin/chore/refresh-lockfile-for-1.0.1",
+          "16a9c70a763db4f1eb415ca4c218f4e9ba10a302 refs/remotes/origin/chore/theme-1.0.2",
+          "8c85569d09764c13f0fff6309db5eb3c3a654f48 refs/remotes/origin/development",
+          "c2d22735170c62da989d3d9b60d39dbe0044093b refs/remotes/origin/docs/agents-rulebook",
+          "cf4782fb0d74089fab0a82793411ffdc37171593 refs/remotes/origin/docs/datum-directive-20260820",
+          "9c8268070655e2f374f85adb0a82ba99afb3b65c refs/remotes/origin/feat/school-based-ladder-bridge",
+          "e832ff15db4257b621cbd091a3dd0d329a4ded0a refs/remotes/origin/fix/cache-refuses-a-seed",
+          "284987d0ac67c1a4ad372a49298e4a7891ede1f0 refs/remotes/origin/fix/cross-app-launch-landing-paths",
+          "0c1e88b3c46204eb743f4661b9dc0237af1815ec refs/remotes/origin/fix/drop-superseded-wic-index-migration",
+          "e810769e7ac23315eece536aafa6bc9763b9a234 refs/remotes/origin/fix/e2e-session-seed-before-navigation",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 refs/remotes/origin/fix/fwc-proxy-rate-limit-quota",
+          "8ad8e3b392cb3da46890cac421207a8616bfe988 refs/remotes/origin/fix/missing-react-query-peer",
+          "b7d6c95c83fcd995a87b927ca007c4102a086f66 refs/remotes/origin/fix/on3-on8-qualification-and-mapd-warning",
+          "e5b2273bfc83afb466cf7634ceaa4519fcdb3eeb refs/remotes/origin/fix/prose-colour-literals-trip-the-c2-gate",
+          "16070d13c9d1cde9f7c12dbb423491c311dba690 refs/remotes/origin/fix/register-bsuite-packages-as-tailwind-sources",
+          "c7f64df0d72d55091fe0998f006615c5cebcad4d refs/remotes/origin/main",
+          "af53754c4e457049e939df2de0919ec3f263aeaf refs/tags/engine-2026.08.05-21awards",
+          "ca1aa8eb9033728f22003a9dfeed234b6686af92 HEAD",
+          "3f8b7d9776866f46650fdd475e50bdad1e4111e1 main-worktree/HEAD"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-th-theme-finish.bundle",
+        "bundle_name": "sw-th-theme-finish.bundle",
+        "heads": [
+          "9decc7724fef2518707b19875075fe3e35327272 refs/heads/fix/th-theme-finish"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1774.bundle",
+        "bundle_name": "crm7-1774.bundle",
+        "heads": [
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/heads/fix/k1-k4-mock-financial-and-milestones"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-ad3-ad5-ad9-adoption.bundle",
+        "bundle_name": "sw-ad3-ad5-ad9-adoption.bundle",
+        "heads": [
+          "d8327354954482622ed7951364be8c729a46fa24 refs/heads/fix/ad3-ad5-ad9-adoption"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "bundle_name": "bsu-local-main-prerewrite-af98548-20260908.bundle",
+        "heads": [
+          "af98548af93ea55190cce623fb123bd86735c585 refs/heads/main"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-drop-the-duplicate.bundle",
+        "bundle_name": "crm7-drop-the-duplicate.bundle",
+        "heads": [
+          "b1d40784ba9c799583bc3a7c452e40e5f3fb8f07 refs/heads/fix/the-salvaged-migration-was-already-renumbered"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-ad5-extract-entityselector-to-ui.bundle",
+        "bundle_name": "od-ad5-extract-entityselector-to-ui.bundle",
+        "heads": [
+          "b4889230b5ced7c41674d0b553cb517591c5d00d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/od-r804-charge-calc-consolidation.bundle",
+        "bundle_name": "od-r804-charge-calc-consolidation.bundle",
+        "heads": [
+          "f43219c89632006e7f7dbcc39e49aca49df47d90 refs/heads/fix/r804-charge-calc-consolidation"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-1812.bundle",
+        "bundle_name": "crm7-1812.bundle",
+        "heads": [
+          "a3b03ded7b2540f7c606aaba83bfb67fbad0f57d refs/heads/fix/ad5-extract-entityselector-to-ui"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-m3-m4-award-clause-coverage.bundle",
+        "bundle_name": "sw-m3-m4-award-clause-coverage.bundle",
+        "heads": [
+          "1ae2eaab271a13c610234ba9a51d106ae08c65b1 refs/heads/fix/m3-m4-award-clause-coverage"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/crm7-renumber-collision.bundle",
+        "bundle_name": "crm7-renumber-collision.bundle",
+        "heads": [
+          "ec9855dbe6ad9f4a666470611da0780c6037af4b refs/heads/fix/renumber-a-cross-scope-migration-collision"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/sw-docs-full-window-sweep.bundle",
+        "bundle_name": "sw-docs-full-window-sweep.bundle",
+        "heads": [
+          "ac15e7819ddd06b47a9d32cf41f0cf13ee1ad865 refs/heads/fix/docs-full-window-sweep"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/bsuite-rule-describes-itself.bundle",
+        "bundle_name": "bsuite-rule-describes-itself.bundle",
+        "heads": [
+          "1e93e6ca2051a44a45cc215a6e2929f77b9c88e9 refs/heads/fix/a-rule-need-not-quote-the-token-it-bans"
+        ]
+      },
+      {
+        "type": "worktree_bundle",
+        "path": "/home/braden/Desktop/Dev/worktree-bundles/ad2-crm7.bundle",
+        "bundle_name": "ad2-crm7.bundle",
+        "heads": [
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/heads/development",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/heads/fix/ad-2-crm7-ungridded-scanner",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/HEAD",
+          "18ce35a65fffad46a005729e61d6be6a87908b14 refs/remotes/origin/chore/bsuite-theme-0.12.0",
+          "d01e08e7767bcb15fe8d2b8e8cbb5b7ead28c91d refs/remotes/origin/chore/bsuite-ui-1.1.0",
+          "2f758d2b38470e80f7c0f5c30de58173f4de2dcd refs/remotes/origin/chore/crm7-theme-fonts-entrypoint",
+          "7d26bb60e38b3e970dca776f55db01653510d5ca refs/remotes/origin/chore/dep-nanoid-floor",
+          "54d417621d07779812dd5f847db769a56a50c57a refs/remotes/origin/copilot/fix-1741-stream-body-cap",
+          "0ef1fc9b93294bbdfe3d5ec024aebc99ec3ea8be refs/remotes/origin/development",
+          "23fa0468cb896abe4fbcd7e4867a59e4e7fd0832 refs/remotes/origin/feat/migration-high-water-mark-rpc",
+          "8070449babaabdbcfba67376d378591997ed455d refs/remotes/origin/feat/schema-lag-banner",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a refs/remotes/origin/fix/ad-2-crm7-ungridded-scanner",
+          "2b95f9bb4d10e63e4e9297941f829deb83d8c6e6 refs/remotes/origin/fix/ad8-xero-sync-health",
+          "c31e0aeac9feb87c6abed1556cb3a6db0cdb7ee5 refs/remotes/origin/fix/d80-module-visibility-hidden-modules",
+          "24e3a92f857164f610c9eced9eda36069bf910c9 refs/remotes/origin/fix/e2e-a11y-forms",
+          "b3ed213e3f5dcf7b356a1952add547836b8ddad7 refs/remotes/origin/fix/e2e-appshell-permission-swap-wait",
+          "c93d8e643e01e32cd5f5d4616661031dd3f90b50 refs/remotes/origin/fix/e2e-locator-timeouts",
+          "287420b45a1c64b63ed954403eaf60a4f85d17d4 refs/remotes/origin/fix/e2e-programmatic-auth",
+          "bad864f161f4f0bf6c4b32fdbf6d3dc799847649 refs/remotes/origin/fix/e2e-selectors-and-urls",
+          "a4eb9d2b4a28f7f9a9c7e8aeb2044f846acd0dcc refs/remotes/origin/fix/k-class-mock-data-honest-states",
+          "dcd338132d67b338633ea7fe3d6874c1b3d99fb8 refs/remotes/origin/fix/k1-k4-mock-financial-and-milestones",
+          "e38f0cf3fbfc2833a49f377d2d26ba2fc53e455d refs/remotes/origin/fix/pf1-rls-initplan-wrap",
+          "390f89ec0a202e4262b110848d0cbe03760bedc1 refs/remotes/origin/fix/pf3-pf4b-provable-redundancies",
+          "8788b90c4a29371ca8575403f36f13670b55af73 refs/remotes/origin/fix/po1-field-officer-landing-queries",
+          "c2e8313e57989503426932c294c5244dab98d660 refs/remotes/origin/fix/po2-host-supervisor-people-placements-scope",
+          "664959e47b731c9f41ebf1159a1551038c04b9c4 refs/remotes/origin/fix/th-2-surface-near-white",
+          "852303afe3db89b9d50c0d4901363b2a0eea0dce refs/remotes/origin/fix/th9-non-responsive-grid-cols-2",
+          "760726d86ca2185749db68b847205f51a3c26ec6 refs/remotes/origin/fix/txn-integrity-t1-t6",
+          "9466c33bff9f6eda97c4eb9c6598c2f29d79b12d refs/remotes/origin/fix/wire-e2e-credentials",
+          "99d4176526c476634e2825c9a56e617e351c3647 refs/remotes/origin/lane/v2-v4-v5-v11-controls",
+          "3fe3d2769c98ff91ccf628d2dd3e2e789323f35f refs/remotes/origin/main",
+          "ae47bef480ed96ec2ba2367a8dce4fb2c241ce7a refs/remotes/origin/perf/crm7-modulepreload-and-fonts",
+          "2d7b97133cd87ece200b4618974b6d53674bb7a3 refs/tags/archive/land-baseline-regen-20260809",
+          "9649ccdf990b0e3ae762e31092431ddf1b897b3f refs/tags/archive/orphan-CKLoS-20260508",
+          "64b02a9b7a600494e3d62d32e73add1b9f6f8704 refs/tags/archive/orphan-IOl7X-20260508",
+          "78bb1b3d415c3603f7d5e233334c301cba29a75a HEAD"
+        ]
+      }
+    ]
+  }
+}
