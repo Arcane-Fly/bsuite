@@ -1,0 +1,135 @@
+[
+  {
+    "repo": "R80.4",
+    "path": "/home/braden/Desktop/Dev/bsuite/R80.4",
+    "local_branches": [
+      "(HEAD detached at 10187e2)",
+      "development",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/fix/rate-scope-partials-schedules-20260811",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/R80.4\nHEAD 10187e27271c065777a86312d2daaa633b2fb57b\ndetached\n\n",
+    "stash": "stash@{0}: On fix/rebank-award-dod-baseline: R80.4 working-tree residue 2026-08-18: stale branch state, net -940 lines vs development. Contains some lines not on dev (11/15 sampled) but would DELETE 940 lines of merged award work if committed. Preserved, not discarded.\n",
+    "has_changes": false,
+    "dirty": true,
+    "ahead": 0,
+    "behind": 7,
+    "current_sha": "10187e27271c065777a86312d2daaa633b2fb57b"
+  },
+  {
+    "repo": "braden",
+    "path": "/home/braden/Desktop/Dev/bsuite/braden",
+    "local_branches": [
+      "development",
+      "main",
+      "salvage/takeover-20260908-052921"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main",
+      "origin/salvage/takeover-20260908-052921"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/braden\nHEAD 51681d200c9b079efb249d50e14c307e915c9c6f\nbranch refs/heads/salvage/takeover-20260908-052921\n\n",
+    "stash": "",
+    "has_changes": false,
+    "dirty": false,
+    "ahead": 0,
+    "behind": 0,
+    "current_sha": "51681d200c9b079efb249d50e14c307e915c9c6f"
+  },
+  {
+    "repo": "business-suite-unified",
+    "path": "/home/braden/Desktop/Dev/bsuite/business-suite-unified",
+    "local_branches": [
+      "(HEAD detached at 31e9261)",
+      "chore/bsu-merge-main-before-promote",
+      "chore/route-inventory-after-crm7-bc5d91e",
+      "development",
+      "fix/1198-org-roster-rpc-missing-fallback",
+      "fix/1198-team-members-walk-descendant-tenants",
+      "main",
+      "pr/1209"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/business-suite-unified\nHEAD 31e9261549f7329bff0eeb3ba41dfd8b563f2854\ndetached\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/bsu-merge-main\nHEAD c7134ec3f71f832f0342e653a20a4f63a6c72e83\nbranch refs/heads/chore/bsu-merge-main-before-promote\n\nworktree /home/braden/Desktop/Dev/_agent_lanes/bsu-route-inv\nHEAD 86becb59dd70bc7b853e0f3173651bec7bdefc20\nbranch refs/heads/chore/route-inventory-after-crm7-bc5d91e\nprunable gitdir file points to non-existent location\n\n",
+    "stash": "stash@{0}: WIP on chore/refresh-bsuite-lockfile-pins: 34bd529 chore: refresh the @bsuite lockfile pins so four published fixes can reach this app\n",
+    "has_changes": false,
+    "dirty": true,
+    "ahead": 5,
+    "behind": 0,
+    "current_sha": "31e9261549f7329bff0eeb3ba41dfd8b563f2854"
+  },
+  {
+    "repo": "conduit",
+    "path": "/home/braden/Desktop/Dev/bsuite/conduit",
+    "local_branches": [
+      "development",
+      "main",
+      "salvage/takeover-20260908-052914"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main",
+      "origin/salvage/takeover-20260908-052914"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/conduit\nHEAD 03358448d8560c7377f9281be6da58194df109b5\nbranch refs/heads/salvage/takeover-20260908-052914\n\n",
+    "stash": "",
+    "has_changes": false,
+    "dirty": false,
+    "ahead": 0,
+    "behind": 0,
+    "current_sha": "03358448d8560c7377f9281be6da58194df109b5"
+  },
+  {
+    "repo": "crm7",
+    "path": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "local_branches": [
+      "development",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/crm7\nHEAD db1aefa715c2edfaa583ab3bcc0fdb1fc2c6b245\nbranch refs/heads/development\n\n",
+    "stash": "stash@{0}: WIP on fix/placement-detail-overview-cards-glued-in-tabs: fd34f1b2 Merge pull request #2018 from GaryOcean428/feat/edit-cards-in-place\nstash@{1}: On fix/ad5-extract-entityselector-to-ui: preserve-before-cleanup-crm7-1812\n",
+    "has_changes": false,
+    "dirty": true,
+    "ahead": 34,
+    "behind": 0,
+    "current_sha": "db1aefa715c2edfaa583ab3bcc0fdb1fc2c6b245"
+  },
+  {
+    "repo": "throughput",
+    "path": "/home/braden/Desktop/Dev/bsuite/throughput",
+    "local_branches": [
+      "chore/resync-dev-with-main-20260908",
+      "development",
+      "main"
+    ],
+    "remote_branches": [
+      "origin",
+      "origin/development",
+      "origin/main"
+    ],
+    "worktrees": "worktree /home/braden/Desktop/Dev/bsuite/throughput\nHEAD 3a569851f87f77616656cc021ec4997345bbecc2\nbranch refs/heads/chore/resync-dev-with-main-20260908\n\n",
+    "stash": "",
+    "has_changes": false,
+    "dirty": false,
+    "ahead": 1,
+    "behind": 0,
+    "current_sha": "3a569851f87f77616656cc021ec4997345bbecc2"
+  }
+]
