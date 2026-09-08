@@ -102,6 +102,7 @@
     "crm7/src/services/customPageService.ts::restorePageRevision",
     "crm7/src/services/documentTemplateImport.ts::DOCX_MIME",
     "crm7/src/services/emailLinkService.ts::getLinksForEmail",
+    "crm7/src/services/emailService.ts::SMS_BILLING_NOT_SETUP_MESSAGE",
     "crm7/src/services/fieldLinkerService.ts::findFieldsByFKTable",
     "crm7/src/services/fieldLinkerService.ts::findLinkedFields",
     "crm7/src/services/formLayoutService.ts::createFormLayout",
@@ -139,6 +140,7 @@
     "crm7/src/services/wageSnapshotService.ts::getSnapshotsForTimesheet",
     "crm7/src/stores/chargeRateStore.ts::recalculateBatch",
     "crm7/src/stores/chargeRateStore.ts::transitionBatchQuoteStatus",
-    "crm7/src/stores/complianceAlertStore.ts::useComplianceAlertBadge"
+    "crm7/src/stores/complianceAlertStore.ts::useComplianceAlertBadge",
+    "crm7/src/stores/siteVisitStore.ts::aliasSiteVisitRow"
   ]
 }
