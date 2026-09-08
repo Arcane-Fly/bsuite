@@ -1,8 +1,8 @@
 # Discrete remediation prompts
 
-> **Release contract v2, 8 September:** all 332 prompts now require development PR → verified d.* deployment → production PR → production verification → ops-ship-close-out and final DoD. They explicitly route ops-ship-all-apps for affected multi-app releases and require evidenced skill interoperability/evolution. [Read the mandatory contract](release-contract.md). Merely naming a skill or chains_with does not execute it.
+> **Release contract v2, 8 September:** all 333 prompts now require development PR → verified d.* deployment → production PR → production verification → ops-ship-close-out and final DoD. They explicitly route ops-ship-all-apps for affected multi-app releases and require evidenced skill interoperability/evolution. [Read the mandatory contract](release-contract.md). Merely naming a skill or chains_with does not execute it.
 
-**332 open issues across seven repositories**, captured 8 September 2026. Each prompt contains the live issue, captured requirements, relevant installed skills, paired agents, validation and an Astra/Grok handoff. Re-read live state before launch; the backlog changes during work.
+**333 open issues across seven repositories**, captured 8 September 2026. Each prompt contains the live issue, captured requirements, relevant installed skills, paired agents, validation and an Astra/Grok handoff. Re-read live state before launch; the backlog changes during work.
 
 Claude Code is the default driver. Grok CLI grok-4.6 is available for general implementation/research/review. Codex CLI gpt-6-astra is the requested escalation. Model IDs and local CLI flags were verified. The attempted Grok review did not finish (offloaded prompt, MCP startup and max-turn failure); no Grok approval is claimed.
 
@@ -410,3 +410,7 @@ Grouping is a title-based navigation aid, not fresh severity adjudication or pro
 ## Execution and validation
 
 [Hermes sequential queue runbook](hermes-queue-runbook.md). Validate all embedded release contracts with `python3 docs/plans/20260908-remediation/verify_prompt_contract.py`. The persistent queue tracks dispatch and verification independently of GitHub auto-closure.
+
+## Priority addition: inbound SMS
+
+[crm7#2594](https://github.com/GaryOcean428/crm7/issues/2594) — [discrete prompt](prompts/crm7-2594.md). Mobile Message replies must reach CRM conversations, record histories and visual workflows; recover stranded historical usage rows. First eligible item after existing Hermes work completes.

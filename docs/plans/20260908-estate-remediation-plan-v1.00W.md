@@ -54,3 +54,7 @@ This session reviewed histories and targeted source/live schema, not every produ
 - [Related specification inventory](20260908-remediation/documentation-inventory.md).
 - [Machine-readable issue snapshot](20260908-remediation/backlog.json).
 - [Source and creation evidence](20260908-remediation/evidence/created-issues.json).
+
+## 8 September addition — inbound SMS
+
+crm7#2594 (https://github.com/GaryOcean428/crm7/issues/2594) is a P1 live defect independent of deal work: Mobile Message inbound capture → canonical conversation → inbox/record timeline → visually configured workflow. Includes full-content recovery, correlation, consent, unread/reply controls, tenant isolation and operational replay. See docs/plans/20260908-remediation/prompts/crm7-2594.md. Source audit found usage-only writes and a separate communications reader; deployed bridge/catalog verification remains required.

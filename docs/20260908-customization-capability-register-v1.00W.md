@@ -75,3 +75,7 @@ The supplied variation-named file has the same extracted discussion text as the 
 ## Execution and evidence
 
 See [remediation plan and launch prompts](plans/20260908-estate-remediation-plan-v1.00W.md), [audit](audits/20260908-estate-remediation-audit-v1.00W.md), and [all discovered related document paths](plans/20260908-remediation/documentation-inventory.md). The document-path inventory is discovery, not an assertion that every paragraph was revalidated. Implementation must widen it through backlinks, feature-index rows and app documentation.
+
+## 8 September addition — inbound SMS
+
+crm7#2594 (https://github.com/GaryOcean428/crm7/issues/2594) is a P1 live defect independent of deal work: Mobile Message inbound capture → canonical conversation → inbox/record timeline → visually configured workflow. Includes full-content recovery, correlation, consent, unread/reply controls, tenant isolation and operational replay. See docs/plans/20260908-remediation/prompts/crm7-2594.md. Source audit found usage-only writes and a separate communications reader; deployed bridge/catalog verification remains required.

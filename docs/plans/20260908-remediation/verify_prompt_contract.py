@@ -29,7 +29,9 @@ def main():
     prompts = sorted((PACK / "prompts").glob("*.md"))
     results = {p.name: errors_for(p.read_text(), manifest) for p in prompts}
     errors = {k: v for k, v in results.items() if v}
-    assert len(prompts) == manifest["prompt_count"] == 332
+    assert len(prompts) == manifest["prompt_count"]
+    backlog = json.loads((PACK / "backlog.json").read_text())["issues"]
+    assert {i["prompt"] for i in backlog} == {str(f.relative_to(PACK)) for f in prompts}
     canonical = (PACK / "release-contract.md").read_text().split(HEADER, 1)[1]
     canonical = HEADER + canonical
     assert hashlib.sha256(canonical.encode()).hexdigest() == manifest["contract_sha256"]
