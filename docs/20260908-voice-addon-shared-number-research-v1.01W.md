@@ -61,6 +61,7 @@ own-number support from where replies arrive and how they reach the shared inbox
 |---|---|---|---|---|---|
 | E1 | Mobile Message 3CX connector requires "a 3CX Hosted licence with BYO (generic) trunks — available on Pro and Enterprise tiers"; self-hosted also works; needs a dedicated SMS number; DID routed to a Ring Group or Queue; chat appears in the 3CX Web Client in ~2 s | help.mobilemessage.com.au/integrations/mobile-message-3cx-sms-integration-guide | 2026-09-08 | current | High |
 | E2 | Own mobile number as sender: "replies are sent directly to your phone", "replies do not appear in the Messenger", "conversations are not managed inside Mobile Message" | help.mobilemessage.com.au/sending-receiving-sms/choosing-a-sender-what-are-the-options ; …/two-way-sms-basics-how-replies-work | 2026-09-08 | current | High |
+| E2b | Own-number SENDING through Mobile Message and crm7 is proven in production: the operator sends from his own mobile number today; replies arrive on that handset, not in crm7 or Mobile Message | Operator statement 2026-09-08 16:34 AWST | 2026-09-08 | production | High |
 | E3 | Inbound automations: receiving-number picker shows "only your active dedicated numbers"; actions include Webhook (JSON) and "Forward 3CX"; retried; 25 automations/account | help.mobilemessage.com.au/sending-receiving-sms/inbound-automations | 2026-09-08 | current | High |
 | E4 | Dedicated number is "an Australian mobile number assigned exclusively to your account", first free after credit purchase, must send once per six months; voice not mentioned | help.mobilemessage.com.au/sending-receiving-sms/how-to-get-your-free-dedicated-number | 2026-09-08 | current | High (SMS); voice unknown |
 | E5 | Inbound webhook fields: to, sender, message, received_at, type (inbound/unsubscribe), original_message_id, original_custom_ref; retries 10× exponential from 60 s; signing X-MM-Signature HMAC-SHA256 over `{timestamp}.{raw_body}`, X-MM-Timestamp ±5 min | help.mobilemessage.com.au/api/setting-up-webhooks ; …/verifying-webhook-signatures | 2026-09-08 | current | High |
@@ -279,7 +280,7 @@ her a migration.
 
 | # | Question | Resolves by |
 |---|---|---|
-| Q1 | Does Mobile Message accept a CPaaS/SIP-hosted 04 as an own number, and does the verification code reach us? | Account test on Braden's Mobile Message + an existing Twilio/APC number (10 min) |
+| Q1 | Does Mobile Message accept a CPaaS/SIP-hosted 04 (no SIM) as an own number, and does the verification code reach us? Handset own-number sending is already proven (E2b); this is only relevant to the custom path | Account test with a hosted Twilio/APC number (10 min), only if the custom path is pursued |
 | Q2 | Does 3CX Hosted PRO accept a generic (BYO) trunk today? | 3CX or partner confirmation (Mobile Message's 2026 guide says yes; older 3CX threads said no) |
 | Q3 | Does the APC-hosted "3CX SMB Advanced" add-on allow a generic trunk for Mobile Message? | Provider documentation / APC support |
 | Q4 | APC inbound per-minute on DIDs and 1300s; APC inbound SMS delivery outside 3CX (webhook/API) | Provider documentation or contact |
