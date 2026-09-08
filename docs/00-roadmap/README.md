@@ -11,7 +11,7 @@
 | [Main lane continuation prompt (paste this into the `claude-code-bsuite-main` session)](20260903-main-lane-continuation-prompt-v1.00W.md) | Working | 2026-09-03 |
 | [One row, one truth — the alignment process](20260827-one-row-one-truth-alignment-process-v1.00W.md) | Working | 2026-08-27 |
 | [Colour gate — two things that need you, 2026-08-13](20260813-colour-gate-operator-items-v1.00W.md) | Working | 2026-08-13 |
-| [Estate remaining-work register](20260812-estate-remaining-work-register-v1.00F.md) | Frozen | 2026-08-12 |
+| [Estate remaining-work register](20260812-estate-remaining-work-register-v1.00W.md) | Working | 2026-08-12 |
 | [PI orchestration brief — paste this as the opening prompt of a new session](20260812-pi-orchestration-brief-v1.00W.md) | Working | 2026-08-12 |
 | [PI run handback — 2026-08-12](20260812-pi-run-handback-v1.00W.md) | Working | 2026-08-12 |
 | [crm7 full-spectrum review — working register](20260811-crm7-full-spectrum-review-register-v1.00W.md) | Working | 2026-08-11 |
