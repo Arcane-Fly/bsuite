@@ -1,7 +1,12 @@
 ---
-kind: research
-authority: agent
+kind: record
+authority: none
 owner: bsuite
+evidence:
+  - business-suite-unified/supabase/functions/sms-inbound/index.ts
+  - business-suite-unified/supabase/functions/_shared/sms-inbound.ts
+  - docs/20260828-messaging-platform-design-v1.00W.md
+  - scripts/audit-doc-completion.mjs
 ---
 
 # Shared business number for a small client: 3CX, custom calling, or managed — research record
@@ -11,7 +16,7 @@ owner: bsuite
 **Trigger:** enquiry from Rahawa Abraham, Service Coordinator, Life Purpose Australia (NDIS
 provider, Wembley WA), 08 Sep 2026, "Shared Business Phone & Messaging System"
 **Relates to:** `20260828-messaging-platform-design-v1.00W.md` (SMS on Mobile Message);
-crm7#2594 / bsuite#3204 (inbound SMS into the conversation record, in flight, Hermes + Codex)
+crm7#2594 (inbound SMS dual-write to communications — closed 2026-09-08, edge deployed); bsuite#3204 (customization programme, open)
 
 **The question:** what is the best supported, commercially sensible way to meet the client's
 requirements while retaining Mobile Message, and why?
@@ -42,7 +47,7 @@ CRM7. Recommendation and conditions in §9.
 | C5 | "Twilio replies terminate on our sms-inbound webhook" stated as if working | `sms-inbound` is JSON-only, authenticated by a `?secret=` query parameter, keyed on `message_numbers.sender`; a Twilio form-encoded POST returns 400 (§6.1) | Any carrier-inbound path needs an adapter and evidence; none exists |
 | C6 | "Softphone becomes worthwhile above ~150 min/month" | Payback computed in §7.5: 3–5 years at this client's volumes; browser softphone is desk-only in practice | Not a lever for this client |
 | C7 | $450 setup, $146/month, 60 minutes, 25c overage, four weeks | Provisional assumptions; re-costed per architecture in §7 | Retail figures restated |
-| C8 | Inbound-SMS inbox gap treated as a lane risk | crm7#2594 under bsuite#3204 is in flight (Hermes, Codex); it defines the canonical inbound contract | This record consumes that work and must not duplicate it |
+| C8 | Inbound-SMS inbox gap treated as a lane risk | crm7#2594 is closed (dual-write + edge deploy 2026-09-08); bsuite#3204 remains the customization programme epic; it defines the canonical inbound contract | This record consumes that work and must not duplicate it |
 
 ## 1. Requirements and constraints
 
