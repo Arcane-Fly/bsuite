@@ -63,7 +63,11 @@ import { validateConnection } from '../validation/connection.js';
 import type { ConnectionVerdict } from '../validation/connection.js';
 import { computeSwimlaneLayout } from '../utils/autoLayout.js';
 import type { SwimlaneLayoutOptions } from '../utils/autoLayout.js';
-import { restoreDraftGraphCaches, writeDraftGraphCaches } from './draftCache.js';
+import {
+  patchDraftGraphInVersions,
+  restoreDraftGraphCaches,
+  writeDraftGraphCaches,
+} from './draftCache.js';
 import {
   workflowDefinitionOptions,
   workflowDefinitionsOptions,
@@ -247,6 +251,9 @@ export function useWorkflowController({
   const versionsKey = workflowVersionsOptions(supabase, definitionId).queryKey;
   const lastSavedDraftRef = useRef<WorkflowDefinitionVersionRow | null>(null);
   const lastSavedVersionsRef = useRef<WorkflowDefinitionVersionRow[] | undefined>(undefined);
+  /** Bumps on every `scheduleSave`. Stale in-flight saves must not write caches. */
+  const saveSeqRef = useRef(0);
+  const saveChainRef = useRef(Promise.resolve());
   // The LIST key's first segment, for prefix invalidation after a duplicate.
   const definitionsKeyPrefix = [workflowDefinitionsOptions(supabase, tenantId).queryKey[0]];
 
@@ -293,8 +300,14 @@ export function useWorkflowController({
 
   // --- save -----------------------------------------------------------------
   const saveMutation = useMutation({
-    mutationFn: ({ versionId, next }: { versionId: string; next: WorkflowGraph }) =>
-      saveVersionGraph(supabase, versionId, next),
+    mutationFn: ({
+      versionId,
+      next,
+    }: {
+      versionId: string;
+      next: WorkflowGraph;
+      seq: number;
+    }) => saveVersionGraph(supabase, versionId, next),
     onMutate: async ({ next }) => {
       await qc.cancelQueries({ queryKey: draftKey });
       await qc.cancelQueries({ queryKey: versionsKey });
@@ -307,7 +320,9 @@ export function useWorkflowController({
       writeDraftGraphCaches(qc, draftKey, versionsKey, next);
       return { prevDraft, prevVersions };
     },
-    onError: (err, _vars, ctx) => {
+    onError: (err, vars, ctx) => {
+      onError?.('Could not save the workflow', err);
+      if (vars.seq !== saveSeqRef.current) return;
       restoreDraftGraphCaches(
         qc,
         draftKey,
@@ -315,16 +330,18 @@ export function useWorkflowController({
         ctx?.prevDraft,
         ctx?.prevVersions,
       );
-      onError?.('Could not save the workflow', err);
       // Resync on FAILURE only — see the header.
       void qc.invalidateQueries({ queryKey: draftKey });
       void qc.invalidateQueries({ queryKey: versionsKey });
     },
-    onSuccess: (saved) => {
+    onSuccess: (saved, vars) => {
       lastSavedDraftRef.current = saved;
+      lastSavedVersionsRef.current =
+        patchDraftGraphInVersions(lastSavedVersionsRef.current, saved.graph) ??
+        lastSavedVersionsRef.current;
+      if (vars.seq !== saveSeqRef.current) return;
       qc.setQueryData<WorkflowDefinitionVersionRow | null>(draftKey, saved);
       writeDraftGraphCaches(qc, draftKey, versionsKey, saved.graph);
-      lastSavedVersionsRef.current = qc.getQueryData<WorkflowDefinitionVersionRow[]>(versionsKey);
     },
   });
 
@@ -353,27 +370,36 @@ export function useWorkflowController({
     }
     const next = pendingRef.current;
     const versionId = seededVersionRef.current;
+    const seq = saveSeqRef.current;
     pendingRef.current = null;
     if (!next || !versionId) {
-      setIsDirty(false);
+      if (seq === saveSeqRef.current) setIsDirty(false);
       return;
     }
-    try {
-      await saveMutateRef.current({ versionId, next });
-      // Only clear on SUCCESS. A failed save leaves the edit unsaved, and
-      // saying otherwise is how work gets lost quietly — the mutation's
-      // onError has already rolled the cache back and told the caller.
-      setIsDirty(false);
-    } catch {
-      // Left dirty deliberately. The error is surfaced by the mutation's
-      // onError; swallowing it here only stops it becoming an unhandled
-      // rejection from the debounce timer, which has no caller to catch it.
-    }
+    const run = async () => {
+      try {
+        await saveMutateRef.current({ versionId, next, seq });
+        // Only clear on SUCCESS of the LATEST scheduled graph. A older
+        // in-flight save landing after a newer edit is not "all changes saved".
+        if (seq === saveSeqRef.current) setIsDirty(false);
+      } catch {
+        // Left dirty deliberately. The error is surfaced by the mutation's
+        // onError; swallowing it here only stops it becoming an unhandled
+        // rejection from the debounce timer, which has no caller to catch it.
+      }
+    };
+    const chained = saveChainRef.current.then(run, run);
+    saveChainRef.current = chained.then(
+      () => undefined,
+      () => undefined,
+    );
+    await chained;
   }, []);
 
   const scheduleSave = useCallback(
     (next: WorkflowGraph) => {
       if (readOnly) return;
+      saveSeqRef.current += 1;
       pendingRef.current = next;
       setIsDirty(true);
       // The step table (and any other reader of the draft/versions caches)
@@ -398,13 +424,22 @@ export function useWorkflowController({
       if (timerRef.current) clearTimeout(timerRef.current);
       const next = pendingRef.current;
       const versionId = seededVersionRef.current;
-      if (next && versionId) void saveMutateRef.current({ versionId, next });
+      if (next && versionId) {
+        void saveMutateRef.current({ versionId, next, seq: saveSeqRef.current });
+      }
     },
     [],
   );
 
+  const graphRef = useRef(graph);
+  graphRef.current = graph;
+
   const commit = useCallback(
     (next: WorkflowGraph, checkpoint: boolean) => {
+      // Same-tick readers (palette add then select) must see this graph.
+      // Waiting for the next render left onNodesChange on the pre-add list,
+      // and replaceGraph then dropped the node.
+      graphRef.current = next;
       if (checkpoint) setGraph(next);
       else replaceGraph(next);
       // The save is NOT scheduled here. See the effect below: UNDO and REDO
@@ -432,9 +467,6 @@ export function useWorkflowController({
   }, [graph, readOnly, scheduleSave]);
 
   // --- xyflow change handlers ----------------------------------------------
-  const graphRef = useRef(graph);
-  graphRef.current = graph;
-
   // Whether a drag gesture is currently in progress, so its FIRST frame can be
   // told from its middle ones. See the predicates above.
   const draggingRef = useRef(false);
@@ -530,12 +562,24 @@ export function useWorkflowController({
         id: newNodeId(),
         type: kind,
         position,
+        selected: true,
         data: { ...descriptor.defaultData(), ...(laneId ? { laneId } : {}) },
         ...(lane ? { parentId: lane.id, extent: 'parent' as const } : {}),
       };
       // A parent must precede its children in the array; appending a child of
       // an existing lane is always safe because the lane is already earlier.
-      commit({ ...current, nodes: [...current.nodes, node] }, true);
+      // Select here so a same-tick onNodeAdded cannot replaceGraph from a
+      // pre-add node list and drop the node, and so the inspector opens.
+      commit(
+        {
+          ...current,
+          nodes: [
+            ...current.nodes.map((n) => (n.selected ? { ...n, selected: false } : n)),
+            node,
+          ],
+        },
+        true,
+      );
       return node;
     },
     [commit, registry],

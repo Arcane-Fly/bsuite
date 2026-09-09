@@ -19,6 +19,8 @@ Layout follow-up named from 0.3.0's known gap (`canvas-overlays-collide-narrow`)
 - **Container width, not viewport.** Compact chip-row palette below 800px of *canvas* (1024 viewport + expanded nav). Three columns at 1220/1440 expanded (~884px / ~1184px canvas). Tokens stay `--role-*` / `bg-card`; Braden does not pick up D2C glow (`dark:shadow-[var(--glow-card,none)]` already no-ops there).
 - **Nested width (SEND_BACK on b92517dff).** Region `w-56 p-2` wrapping palette `w-56` (and inspector `w-72` in `w-72 p-2`) overflowed 16px (measured 224/240 and 288/304). The region now owns the column width with no padding; slotted chrome is `w-full min-w-0` and keeps `bg-card` padding on the card. Standalone chrome still uses `w-56`/`w-72`.
 - **Draft cache is the live graph owner.** `scheduleSave` / `saveMutation` write the same graph to `workflow-draft` AND the draft row in `workflow-versions`, and roll both back on save error. Published rows in the list are not touched. Pane click clears selection so the inspector slot can collapse. Toolbar accepts `children` for host controls (fullscreen) in the reserved row.
+- **Same-tick add+select** no longer `replaceGraph`s the pre-add list: `commit` updates `graphRef` immediately and `addNode` selects the new node.
+- **Overlapped saves:** an older in-flight `onSuccess`/`onError` does not overwrite a newer `scheduleSave` cache write; saves are chained so server order is A then B.
 
 ### Not chosen
 
