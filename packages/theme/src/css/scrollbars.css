@@ -29,9 +29,11 @@
   /* Older WebKit has only pseudo-elements. Leave forced colours to the UA. */
   @supports not (scrollbar-color: auto) {
     @media (forced-colors: none) {
-      ::-webkit-scrollbar {
-        width: 12px;
-        height: 12px;
+      @media (pointer: fine) {
+        ::-webkit-scrollbar {
+          width: 12px;
+          height: 12px;
+        }
       }
 
       ::-webkit-scrollbar-track,
