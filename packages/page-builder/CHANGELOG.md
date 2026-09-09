@@ -5,6 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [2.7.1] — 2026-09-09 — Edit-mode label and hide sit in a measured strip, not on the card
+
+GridItem painted the widget name `absolute top-2 left-2` and hide `absolute top-2 right-2` over unchanged card content. On the live Candidates card that overlay sat on the gradient heading at 1440 and 390.
+
+The strip is now in-flow (`data-slot="grid-item-editor-chrome"`). AutoHeight includes it in the unconstrained measure wrapper so the slot grows; leaving edit mode unmounts it and the observer restores content-only height. Fixed-height cards keep the strip above the scroll body. Drag handle, resize handle, and hide stay callable. The label is not removed.
+
+Consumers: every `PageGridLayout` mount (crm7 `^2.7.0`, BSU/conduit/braden/throughput `^2.6.1` which already accepts 2.7.1; R80.4 has no page-builder). Do not pin until this version is published. No Candidates-only CSS.
+
+---
+
 ## [1.0.7] — 2026-08-25 — Only a pointer gesture may commit a layout
 
 The fix. 1.0.4, 1.0.5 and 1.0.6 each tried to classify the grid's emission by

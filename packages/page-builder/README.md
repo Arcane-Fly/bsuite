@@ -48,3 +48,12 @@ Behaviour and guarantees:
 
 When adding `autoHeight` to an existing page's layout, bump that page's
 `layoutVersion` so stale persisted layouts (without the flag) are reset.
+
+## Edit-mode chrome (2.7.1+)
+
+While the canvas editor is open, each grid item renders an in-flow strip
+(`[data-slot="grid-item-editor-chrome"]`) above the card content: the widget
+name and a Hide control. The strip is **not** absolutely positioned over the
+card heading. AutoHeight measures it with the content so the grid grows;
+leaving edit mode removes it and restores the content-only measurement.
+Do not restyle this in a consumer — it is the shared contract.
