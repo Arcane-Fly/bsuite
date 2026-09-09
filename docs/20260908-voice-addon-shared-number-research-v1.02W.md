@@ -11,8 +11,8 @@ evidence:
 
 # Shared business number for a small client: 3CX, custom calling, or managed — research record
 
-**Status:** W (working) · **Version:** 1.01 · **Date:** 2026-09-08 (reopened 16:16 AWST) ·
-**Author:** Claude Code (bsuite lane) · **Supersedes:** v1.00W of the same date
+**Status:** W (working) · **Version:** 1.02 · **Date:** 2026-09-08, updated 2026-09-09 11:45 AWST ·
+**Author:** Claude Code (bsuite lane) · **Supersedes:** v1.01W (merged in bsuite#3215)
 **Trigger:** enquiry from Rahawa Abraham, Service Coordinator, Life Purpose Australia (NDIS
 provider, Wembley WA), 08 Sep 2026, "Shared Business Phone & Messaging System"
 **Relates to:** `20260828-messaging-platform-design-v1.00W.md` (SMS on Mobile Message);
@@ -323,7 +323,70 @@ If the CRM7 journaling line is bought: 11. each completed call and each closed c
 direction; a duplicate journaling POST creates no second row; an unmatched number appears as
 unmatched, not against a wrong contact.
 
-## 12. Client email
+## 12. Client email and deal state (updated 2026-09-09)
 
-The revised email is in the operator's Outlook Drafts (thread "Shared Business Phone &
-Messaging System"), not reproduced here.
+The operator sent his own reply on 2026-09-08 17:33 AWST, not the draft in §12 of v1.01W. It
+committed to the bSuite path with **one business number for outgoing calls and texts**, a
+shared inbox, call history, mobiles and desktop, the extras list (training $250 remote / $450
+onsite; contact import, after-hours routing and voicemail transcription "quoted separately"),
+a slower "wholesale account" option and "around four weeks". The estimate block was sent
+empty. That is an operator decision: option B in §4 is the committed architecture, and the
+3CX recommendation in §9 is superseded for this client while remaining the evidence base.
+
+The client accepted on 2026-09-09 10:04 AWST: incoming calls routed by working day (Nat
+Mon/Wed/Thu, Matilda Mon/Tue/Wed/Fri, Rah as backup with oversight), after-hours recorded
+message plus voicemail all can access next business day, low volume, contacts in ShiftCare,
+voicemail transcription and one-hour remote training wanted, happy to wait for the wholesale
+option if it saves a reasonable amount, and asked for the setup and monthly figures.
+
+A pricing reply is drafted, unsent: setup $450 core + $150 after-hours + $95 transcription
+setup + $95 ShiftCare CSV import + $250 training = $1,040; monthly $146 (3 × Basic $29 + $59
+number incl. the first hour of pooled conversation minutes, support and updates); usage 25c/min
+beyond, texts 7c–10c, replies free, transcription 5c/min; four weeks as a target with go-live
+confirmed once the number is provisioned; wholesale not quantified to the client. ShiftCare
+offers a self-serve client-list CSV under Integrations > CSV Import, so import is a load, not an
+API project.
+
+## 13. Reconciliation with the second researcher's plan (Astra, "bSuite communications integration", 8 Sep 2026, v1.00W)
+
+Read in full on 2026-09-09 (2,656 words). Its referenced handoff files (README, implementation
+plan, communications-contracts.md, launch-invariants.md, source ledger, provider RFQ, cost
+guide, agent briefs, acceptance/runbook, review log) were not in the operator's Downloads; only
+the .docx was. Claims checked against live state:
+
+| Astra's claim | Checked | Result |
+|---|---|---|
+| "The current research PR has merged" | `gh pr view 3215` | True, merged 2026-09-08 09:49Z |
+| "the CRM7 inbound-SMS issue is closed" | `gh issue view crm7#2594` | **False on GitHub: OPEN, state REOPENED.** The substance has landed: crm7#2597 (read state, provider receive time) and #2599 (workflow triggers) merged; live migrations 20260908110607, 20261125000000 backfill, 20261127000000 durable persist (also ledgered under wall-clock 20260908121749), 20261128 and 20261129 hardening are applied on tuybltdrdefjblnplpqo. Edge-function deployment and the live inbox are separate, unchecked claims |
+| "nonunique provider message IDs" | migrations | Addressed: `message_usage_provider_message_id_uidx` unique (tenant_id, provider_message_id), applied |
+| "per-tenant number uniqueness" | BSU migration | True: `unique (tenant_id, sender)` on message_numbers; a number could be claimed by two tenants |
+| "broad tenant-scoped communication updates" | crm7 baseline | True: `tenant_update_communications` lets any authenticated tenant member update any row in the tenant |
+| Supabase project in us-east-1, separate Sydney project, no migration completed | not re-checked | Consistent with the estate memory; not verified this session |
+| Mobile Message 3CX integration was a material omission | agreed | Same as C1 in §0 |
+| Shared 04 identity needs a proven incoming callback route; verified outbound CLI alone does not establish it | agreed | Same as §3.1 and Q1 |
+| $450 / ~$145 / 60 min / four weeks not validated for the expanded programme | agreed, with a distinction | v1.01W §7.4 reached the same view for the client deal; Astra's programme adds PracticeBridge (a separate practice app on Cliniko, not a registered suite app) and totals 29–48 engineering days, CRM7 subset 20–33 days. The client deal is the lean 16–20 day build of §9 plus the P0 baseline; PracticeBridge is a separate decision |
+| "Test Crazytel Hybrid first, MaxoTel next; wholesale proposals from Swoop and Symbio" | first-party docs, 2026-09-09 | **Crazytel:** hosted PBX / SIP hybrid, plans $20–$149.95 + $5 Hybrid fee with AU calls included, CrazyPhone iOS/Android app, ring groups as $1/mo add-on; API is provisioning + DID + SMS send + `GET /api/v1/cdrs`; **no call-origination or event webhook endpoint; 04 numbers not documented**; channel programme is a 10% referral, not white-label. **Maxo:** hosted PBX from $24.95–29.95/mo, virtual mobile numbers from $14.95/mo usable as outbound identity with ring groups and time switches, `calls/initiate` (rings the extension then bridges: **two legs, same shape as Twilio**), `calls/list` CDR pull, no webhooks found, inbound SMS API "planned". **Swoop and Symbio:** contact-sales, enterprise/reseller positioning, no public minimums; fit for a 3-seat vendor unverified. Verdict: Crazytel cannot be "first" because it has no call control; Maxo is the only managed candidate with call control and is not a single-leg cost saving. Neither replaces Twilio programmable voice as a drop-in today |
+| Wholesale can be more expensive (minimums, fees) | agreed | Client-facing wording now does not quantify a wholesale saving |
+| 44 acceptance scenarios, pilot targets (95% of call status within 10 s), emergency-call and recording gates, 1300 cutover discipline | not in this record before | Adopted as the superset of §11; recording/transcription: Astra says off initially pending storage-location and legal review, while the client has asked for transcription. Decide before the agreement: Voice Intelligence en-AU processing location must be confirmed |
+
+**Reconciled position for the client deal.** Committed architecture: custom bSuite calling on a
+Twilio AU mobile number with Mobile Message own-number sending, per the operator's email.
+Twilio stays the voice provider for the first build because it is the only verified path with
+programmable call control, event webhooks and a documented AU 04 number; Maxo is the managed
+alternative to spike (one trial account: virtual mobile number, two extensions in a ring group,
+`calls/initiate`, check CDR attribution, caller ID and the billed rate). Crazytel is not a
+candidate for call control. Wholesale (Swoop, Symbio) is a P9 commercial decision, not a
+dependency for this client. PracticeBridge is out of this deal's scope.
+
+**What changes in the build order (§9).** Add P0 from Astra: pin current refs, ownership map,
+writers and grants before the first edit. Add durable idempotency keys on every outbound
+command and per-call session/leg identities so one answered ring-group call cannot create two
+missed-call tasks. Keep the inbound-SMS work as landed by crm7#2594; the carrier-inbound
+adapter emits into `sms_inbound_persist`. Recording and transcription: confirm processing
+location and retention before enabling; the client has asked for transcription, so this is a
+pre-agreement item, not a post-launch one.
+
+**Open, by resolution type.** Q1 SIM-less own-number verification (account test, now critical
+path). Maxo spike (trial account). Astra's handoff package location (operator). Voice
+Intelligence en-AU processing location and retention (provider documentation, legal). Whether
+the four-week target survives P0 (repository inspection after P0).
