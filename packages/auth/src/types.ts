@@ -30,6 +30,8 @@ export interface VerifiedUser {
 export type OidcPrompt = 'none' | 'login';
 
 export interface SignInOptions {
+  /** Synchronously bind state to session ownership before navigation. Throw to cancel. */
+  beforeRedirect?: (state: string) => undefined;
   /** OIDC prompt parameter — when `'none'`, the call attempts silent re-auth. */
   prompt?: OidcPrompt;
   /**
@@ -41,6 +43,8 @@ export interface SignInOptions {
 }
 
 export interface SilentAuthOptions {
+  /** Passed through only when silent auth initiates an authorization redirect. */
+  beforeRedirect?: (state: string) => undefined;
   /** Where to return after silent re-auth completes. Defaults to current URL. */
   returnTo?: string;
 }

@@ -4,6 +4,10 @@ OAuth 2.1 PKCE client shared across BSuite apps (CRM7, Conduit, R80.4, Braden, T
 
 ## Concurrent sign-in and callback recovery
 
+The opt-in [session ownership coordinator](docs/session-ownership.md) serializes
+consumer SDK writes and logout across same-origin tabs. Consumer adapter wiring,
+transaction snapshot binding and deployed verification remain required.
+
 Login initiators should use `attemptSilentAuthDetailed()`. Continue to the destination on `authenticated`; stop on `redirecting` or `superseded`; offer interactive recovery on `failed`. The old boolean helper remains compatible but cannot distinguish a scheduled navigation from failure. Assigning `window.location` does not stop subsequent JavaScript.
 
 Route callbacks with `hasPendingBusinessSuiteTransaction(state)`, which requires this origin's complete, fresh transaction state. Do not dispatch from state shape or the presence of an unrelated legacy key. Legacy transactions also require their verifier, nonce and timestamp. Incomplete transactions need a fresh sign-in.

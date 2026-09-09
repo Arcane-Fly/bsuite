@@ -721,6 +721,24 @@ export function createOAuthClient(clientId: string): OAuthClient {
     flowMap[state] = { verifier: codeVerifier, nonce, startedAt };
     writeFlowMap(pruneFlowMap(flowMap));
 
+    try {
+      if (options?.beforeRedirect && options.beforeRedirect(state) !== undefined) {
+        throw new Error('beforeRedirect must finish synchronously');
+      }
+    } catch (error) {
+      // Binding failed: do not navigate or consume another flow's state.
+      const fresh = readFlowMap();
+      delete fresh[state];
+      writeFlowMap(fresh);
+      if (localStorage.getItem('bs_oauth_state') === state) {
+        localStorage.removeItem('bs_oauth_state');
+        localStorage.removeItem('bs_oauth_code_verifier');
+        localStorage.removeItem('bs_oauth_nonce');
+        localStorage.removeItem('bs_oauth_started_at');
+      }
+      throw error;
+    }
+
     const returnTo = options?.returnTo ?? window.location.href;
     try {
       localStorage.setItem('auth_return_path', returnTo);
@@ -1129,6 +1147,7 @@ export function createOAuthClient(clientId: string): OAuthClient {
     try {
       await signInWithBusinessSuite({
         prompt: 'none',
+        beforeRedirect: options?.beforeRedirect,
         returnTo: options?.returnTo ?? window.location.href,
       });
     } catch (err) {

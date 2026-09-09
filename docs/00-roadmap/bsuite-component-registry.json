@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 186,
-  "unusedSharedComponents": 159,
+  "sharedComponents": 188,
+  "unusedSharedComponents": 161,
   "localComponentFiles": {
     "crm7": 451,
     "business-suite-unified": 119,
@@ -1038,6 +1038,20 @@
     {
       "name": "TYPE_VALUES",
       "package": "@bsuite/jodie",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "AuthCoordinationUnavailableError",
+      "package": "@bsuite/auth",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "AuthOwnershipSupersededError",
+      "package": "@bsuite/auth",
       "consumers": {},
       "consumerFiles": 0,
       "consumingApps": 0
