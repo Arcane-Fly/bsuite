@@ -57,11 +57,28 @@
  * Exit 1 = at least one does not, or nothing citation-like was found.
  */
 
-import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
-import { join, basename } from 'node:path';
+import { basename, dirname, join } from 'node:path';
+import {
+  existsSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  mkdtempSync,
+  writeFileSync,
+  mkdirSync,
+  rmSync,
+} from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { tmpdir } from 'node:os';
+import { fileURLToPath } from 'node:url';
 
-const SOURCE_EXT =
-  '(?:ts|tsx|js|jsx|mjs|cjs|py|sql|json|ya?ml|md|sh|toml|css|html|rs|go|java|rb)';
+const SOURCE_EXT = '(?:tsx|jsx|ts|js|mjs|cjs|py|sql|json|ya?ml|md|sh|toml|css|html|rs|go|java|rb)';
+
+/** Full-extension boundary: avoid truncating `.tsx` to `.ts` / `.jsx` to `.js`
+ * and avoid matching `.tsx.bak` as `.ts` while still allowing line/column
+ * suffixes and punctuation immediately after a citation.
+ */
+const EXTEND = '(?::(\\d+)(?::(\\d+))?)?(?![A-Za-z0-9_/-]|\\.[A-Za-z0-9_-])';
 
 /**
  * A citation is a slash-bearing path ending in a known source extension,
@@ -81,9 +98,10 @@ const CITATION = new RegExp(
     '((?:[\\w.@~-]+\\/)+[\\w.@-]+\\.' + // dir segments + filename
     SOURCE_EXT +
     ')' +
-    '(?::(\\d+))?', // optional :line
+    EXTEND, // optional :line, optional :col, and hard extension boundary
   'g',
 );
+const SELF = fileURLToPath(import.meta.url);
 
 /** Noise that looks like a repo path but never is. */
 const IGNORED_PREFIXES = [
@@ -177,11 +195,11 @@ function main() {
   const text = readInput(file);
   const roots = candidateRoots(root);
 
-  const seen = new Map(); // path -> {line}
+  const seen = new Map(); // path -> { line, col }
   for (const m of text.matchAll(CITATION)) {
     const p = m[1];
     if (IGNORED_PREFIXES.some((pre) => p.startsWith(pre))) continue;
-    if (!seen.has(p)) seen.set(p, m[2] ?? null);
+    if (!seen.has(p)) seen.set(p, { line: m[2] ?? null, col: m[3] ?? null });
   }
 
   if (seen.size === 0) {
@@ -252,4 +270,88 @@ function main() {
   );
 }
 
-main();
+function runFixtureReview(reviewFile, root) {
+  try {
+    const out = execFileSync(process.execPath, [SELF, reviewFile, '--root', root], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    return { code: 0, out };
+  } catch (e) {
+    return {
+      code: e.status ?? 1,
+      out: `${e.stdout || ''}${e.stderr || ''}`,
+    };
+  }
+}
+
+function selfTest() {
+  let testCount = 0;
+  const fixture = mkdtempSync(join(tmpdir(), 'check-review-citations-selftest-'));
+  const reviewFile = join(fixture, 'review.md');
+
+  const write = (rel, content) => {
+    const target = join(fixture, rel);
+    mkdirSync(dirname(target), { recursive: true });
+    writeFileSync(target, `${content}\n`);
+  };
+
+  let bad = 0;
+  const check = (name, ok) => {
+    testCount += 1;
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${name}`);
+    if (!ok) bad += 1;
+  };
+
+  try {
+    write('crm7/src/components/common/DocumentEditor/index.tsx', '// exists');
+    write('crm7/src/pages/documents/templates/editor.jsx', '// exists');
+    write('crm7/src/services/builder.mjs', '// exists');
+    write('crm7/src/pages/truncation.ts', '// sibling for false-pass bait');
+    write('review.md', [
+      'A valid sentence cites crm7/src/components/common/DocumentEditor/index.tsx.',
+      'A parenthesized one cites `crm7/src/pages/documents/templates/editor.jsx`',
+      'A file with line and punctuation cites crm7/src/services/builder.mjs:3:2.',
+      'A non-source extension should not be treated as a citation: crm7/src/pages/truncation.tsx.bak.',
+    ].join('\n'));
+
+    const clean = runFixtureReview(reviewFile, fixture);
+    const cleanFound = clean.out.match(/citations found (\d+)\s+ resolved (\d+)\s+ unresolved (\d+)/);
+    check(
+      'clean fixture passes with .tsx/.jsx/.mjs, sentence-period citation, and ignores unsupported .tsx.bak',
+      clean.code === 0 &&
+        cleanFound !== null &&
+        Number(cleanFound[1]) === 3 &&
+        Number(cleanFound[2]) === 3 &&
+        Number(cleanFound[3]) === 0,
+    );
+
+    write('review.md', [
+      '- `crm7/src/components/common/DocumentEditor/index.tsx`',
+      '- `crm7/src/pages/documents/templates/editor.jsx`',
+      '- `crm7/src/services/builder.mjs`',
+      '- `crm7/src/pages/truncation.tsx`',
+      '- `crm7/src/pages/truncation.tsx.bak`',
+    ].join('\n'));
+
+    const fail = runFixtureReview(reviewFile, fixture);
+    check(
+      'false-pass bite: .tsx cited while only .ts sibling exists',
+      fail.code !== 0 &&
+        fail.out.includes('FAIL: 1 of 4 cited path(s) do not exist in this repo.') &&
+        fail.out.includes('crm7/src/pages/truncation.tsx'),
+    );
+  } finally {
+    rmSync(fixture, { recursive: true, force: true });
+  }
+
+  const ok = testCount - bad;
+  console.log(`\n  ${ok}/${testCount} review self-test(s) passed`);
+  process.exit(bad === 0 ? 0 : 1);
+}
+
+if (process.argv.includes('--self-test')) {
+  selfTest();
+} else {
+  main();
+}
