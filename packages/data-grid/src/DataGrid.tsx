@@ -364,6 +364,9 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
   const fillSourceRef = useRef<CellRange | null>(null);
 
   const undoStackRef = useRef(new UndoStack<CellEdit<TRow>[]>(undoLimit));
+  const historyEpoch = useRef(0);
+  const traversalRunning = useRef(false);
+  const traversalQueue = useRef<Array<{ epoch: number; run: () => Promise<void> }>>([]);
   const [, forceRender] = useReducer((n: number) => n + 1, 0);
 
   const rowVirtualizer = useVirtualizer({
@@ -456,6 +459,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
     traversal?: { entry: UndoEntry<CellEdit<TRow>[]>; direction: 'undo' | 'redo' },
   ): Promise<void> {
     if (input.length === 0) return;
+    if (!traversal) historyEpoch.current += 1;
     const owner = Symbol('cell mutation');
     let selected = input;
     // An undo must not persist a failed predecessor's draft while that predecessor
@@ -588,15 +592,36 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
     }
   }
 
-  const handleUndo = (): void => {
-    const entry = undoStackRef.current.begin('undo');
-    if (entry) void commitEdits(entry.before, 'undo', { entry, direction: 'undo' });
-  };
+  function drainTraversals(): void {
+    if (traversalRunning.current) return;
+    const intent = traversalQueue.current.shift();
+    if (!intent) return;
+    if (intent.epoch !== historyEpoch.current) {
+      drainTraversals();
+      return;
+    }
+    traversalRunning.current = true;
+    void intent.run().finally(() => {
+      traversalRunning.current = false;
+      drainTraversals();
+    });
+  }
 
-  const handleRedo = (): void => {
-    const entry = undoStackRef.current.begin('redo');
-    if (entry) void commitEdits(entry.after, 'redo', { entry, direction: 'redo' });
-  };
+  // Preserve the sequence of history operations. Overlay ownership can change
+  // between normal edits, but two successful undos must each retain their redo.
+  function enqueueTraversal(direction: 'undo' | 'redo'): void {
+    traversalQueue.current.push({
+      epoch: historyEpoch.current,
+      run: async () => {
+        const entry = undoStackRef.current.begin(direction);
+        if (entry) await commitEdits(direction === 'undo' ? entry.before : entry.after, direction, {entry, direction});
+      },
+    });
+    drainTraversals();
+  }
+
+  const handleUndo = (): void => enqueueTraversal('undo');
+  const handleRedo = (): void => enqueueTraversal('redo');
 
   const handleCopy = useCallback(async (): Promise<void> => {
     if (!selection) return;

@@ -209,4 +209,60 @@ describe('per-cell persistence outcomes', () => {
     expect(cell('a')).toHaveTextContent('Newest');
   });
 
+  it('queues rapid undo and redo without dropping either successful history entry', async () => {
+    const undoOne = deferred(), undoTwo = deferred(), redoOne = deferred(), redoTwo = deferred();
+    const save = vi.fn().mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined)
+      .mockReturnValueOnce(undoOne.promise).mockReturnValueOnce(undoTwo.promise)
+      .mockReturnValueOnce(redoOne.promise).mockReturnValueOnce(redoTwo.promise);
+    const {ref} = fixture(save);
+    await paste('X'); await paste('Y');
+    act(() => { ref.current!.undo(); ref.current!.undo(); });
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(3));
+    await act(async () => undoOne.resolve());
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(4));
+    await act(async () => undoTwo.resolve());
+    expect(cell('a')).toHaveTextContent('Ada');
+    expect(ref.current!.canUndo()).toBe(false);
+    act(() => { ref.current!.redo(); ref.current!.redo(); });
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(5));
+    expect(save.mock.calls[4][0][0].value).toBe('X');
+    await act(async () => redoOne.resolve());
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(6));
+    expect(save.mock.calls[5][0][0].value).toBe('Y');
+    await act(async () => redoTwo.resolve());
+    expect(cell('a')).toHaveTextContent('Y');
+    expect(ref.current!.canRedo()).toBe(false);
+  });
+  it('queued undo retries only the refused subset after a partial first undo', async () => {
+    const undoOne = deferred();
+    const save = vi.fn().mockResolvedValueOnce(undefined).mockReturnValueOnce(undoOne.promise).mockResolvedValue(undefined);
+    const {ref} = fixture(save);
+    await paste('Alice\nBeth');
+    act(() => { ref.current!.undo(); ref.current!.undo(); });
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+    await act(async () => undoOne.resolve(failure('b')));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(3));
+    expect(save.mock.calls[2][0].map((edit: CellEdit<Row>) => edit.rowId)).toEqual(['b']);
+    expect(cell('a')).toHaveTextContent('Ada');
+    expect(cell('b')).toHaveTextContent('Grace');
+    act(() => {ref.current!.redo(); ref.current!.redo();});
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(5));
+    expect(cell('a')).toHaveTextContent('Alice');
+    expect(cell('b')).toHaveTextContent('Beth');
+  });
+  it('a new edit cancels queued history intentions', async () => {
+    const firstUndo = deferred();
+    const save = vi.fn().mockResolvedValueOnce(undefined).mockResolvedValueOnce(undefined)
+      .mockReturnValueOnce(firstUndo.promise).mockResolvedValue(undefined);
+    const {ref} = fixture(save);
+    await paste('X'); await paste('Y');
+    act(() => {ref.current!.undo(); ref.current!.undo();});
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(3));
+    await paste('Latest');
+    await act(async () => firstUndo.resolve());
+    expect(save).toHaveBeenCalledTimes(4);
+    expect(cell('a')).toHaveTextContent('Latest');
+    expect(ref.current!.canRedo()).toBe(false);
+  });
+
 });
