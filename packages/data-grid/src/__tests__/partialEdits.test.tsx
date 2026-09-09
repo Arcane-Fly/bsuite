@@ -270,7 +270,7 @@ describe('per-cell persistence outcomes', () => {
     const {ref} = fixture(save);
     await paste('Alice\nBeth');
     expect(cell('b')).toHaveAttribute('aria-invalid', 'true');
-    await act(async () => ref.current!.applyCells([{rowId: 'b', columnId: 'name', value: 'Beth'}]));
+    await act(async () => { expect(await ref.current!.applyCells([{rowId: 'b', columnId: 'name', value: 'Beth'}])).toEqual({failures: []}); });
     expect(cell('b')).toHaveTextContent('Beth');
     expect(cell('b')).not.toHaveAttribute('aria-invalid');
     act(() => ref.current!.undo());
@@ -286,16 +286,53 @@ describe('per-cell persistence outcomes', () => {
     expect(save).not.toHaveBeenCalled();
     expect(ref.current!.canUndo()).toBe(false);
   });
-  it.each(['readonly', 'linked'] as const)('refuses %s field writes through the common mutation pipeline', async (kind) => {
+  it.each([
+    ['readonly', 'This field is read-only.'],
+    ['linked', 'Choose the related record using its picker.'],
+  ] as const)('refuses %s field writes through the common mutation pipeline', async (kind, message) => {
     const ref = createRef<DataGridHandle>(), save = vi.fn(), onError = vi.fn();
     const guarded: DataGridColumn<Row>[] = [{...columns[0], editable: kind === 'linked' ? true : undefined,
       ...(kind === 'linked' ? {link: {entity: 'person', refId: (row: Row) => row.id}, renderEditor: () => null} : {})}];
     render(<DataGrid ref={ref} columns={guarded} data={initial} getRowId={getRowId} onCellsEdited={save} onError={onError} />);
-    await act(async () => ref.current!.applyCells([{rowId: 'a', columnId: 'name', value: 'Unsafe text'}]));
+    await act(async () => { expect(await ref.current!.applyCells([{rowId: 'a', columnId: 'name', value: 'Unsafe text'}]))
+      .toEqual({failures: [{rowId: 'a', columnId: 'name', status: 'failed', message}]}); });
     expect(save).not.toHaveBeenCalled();
     expect(onError).toHaveBeenCalledOnce();
     expect(cell('a')).toHaveTextContent('Ada');
     expect(ref.current!.canUndo()).toBe(false);
+  });
+
+  it('keeps superseded applyCells receipts with mixed failures, while newer edits stay visible and undo follows the latest attempt', async () => {
+    const older = deferred();
+    const newer = deferred();
+    const save = vi.fn()
+      .mockReturnValueOnce(older.promise)
+      .mockReturnValueOnce(newer.promise)
+      .mockResolvedValue(undefined);
+    const { ref, onError } = fixture(save);
+    const olderResult = ref.current!.applyCells([
+      { rowId: 'a', columnId: 'name', value: 'Older Ada' },
+      { rowId: 'b', columnId: 'name', value: 'Older Beth' },
+    ]);
+    const newerResult = ref.current!.applyCells([
+      { rowId: 'a', columnId: 'name', value: 'Newest Ada' },
+    ]);
+    await act(async () => newer.resolve());
+    expect(cell('a')).toHaveTextContent('Newest Ada');
+    expect(cell('b')).toHaveTextContent('Older Beth');
+    expect(await newerResult).toEqual({ failures: [] });
+    await act(async () => older.resolve({failures: [...failure('a').failures, ...failure('b').failures]}));
+    expect(await olderResult).toEqual({ failures: [
+      { rowId: 'a', columnId: 'name', status: 'failed', message: 'Not permitted' },
+      { rowId: 'b', columnId: 'name', status: 'failed', message: 'Not permitted' },
+    ] });
+    expect(onError).toHaveBeenCalledOnce();
+    expect(onError.mock.calls[0][0].edits.map((edit: CellEdit<Row>) => edit.rowId)).toEqual(['b']);
+    expect(cell('b')).toHaveTextContent('Grace');
+    act(() => ref.current!.undo());
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(3));
+    expect(save.mock.calls[2][0]).toEqual([expect.objectContaining({ rowId: 'a', value: 'Ada' })]);
+    expect(cell('a')).toHaveTextContent('Ada');
   });
 
   it('recovers from a refused linked value through the record picker', async () => {

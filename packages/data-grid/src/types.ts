@@ -176,7 +176,7 @@ export interface CellValueChange {
 
 export interface DataGridHandle {
   /** Retry retained drafts through the same persistence/refusal/undo pipeline. */
-  applyCells: (changes: readonly CellValueChange[]) => Promise<void>;
+  applyCells: (changes: readonly CellValueChange[]) => Promise<CellEditResult>;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;

@@ -41,6 +41,7 @@ import type { LinkEdit } from './types.js';
 import { UndoStack, type UndoEntry } from './lib/undo.js';
 import type {
   CellEdit,
+  CellEditResult,
   CellValueChange,
   CellEditorProps,
   DataGridColumn,
@@ -458,8 +459,8 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
     input: CellEdit<TRow>[],
     phase: DataGridErrorPhase,
     traversal?: { entry: UndoEntry<CellEdit<TRow>[]>; direction: 'undo' | 'redo' },
-  ): Promise<void> {
-    if (input.length === 0) return;
+  ): Promise<CellEditResult> {
+    if (input.length === 0) return { failures: [] };
     if (!traversal) historyEpoch.current += 1;
     const owner = Symbol('cell mutation');
     let selected = input;
@@ -474,7 +475,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
       if (!selected.length) {
         undoStackRef.current.replace(traversal.entry);
         forceRender();
-        return;
+        return { failures: [] };
       }
     }
     const edits = selected.map((edit) => {
@@ -594,9 +595,12 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
     for (const message of new Set(failedEdits.map((e) => failures.get(keyOf(e))!))) {
       onError({ message, cause, phase, edits: failedEdits.filter((e) => failures.get(keyOf(e)) === message) });
     }
+    return { failures: edits.filter(edit => failures.has(keyOf(edit))).map(edit => ({
+      rowId: edit.rowId!, columnId: edit.columnId, status: 'failed' as const, message: failures.get(keyOf(edit))!,
+    })) };
   }
 
-  async function applyCells(changes: readonly CellValueChange[]): Promise<void> {
+  async function applyCells(changes: readonly CellValueChange[]): Promise<CellEditResult> {
     const seen = new Set<string>();
     const edits = changes.map(change => {
       const current = currentRows.current.get(change.rowId);
@@ -609,7 +613,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
         columnId: change.columnId, value: change.value,
         previousValue: getEffectiveValue(current.index, change.columnId)};
     });
-    await commitEdits(edits, 'edit');
+    return commitEdits(edits, 'edit');
   }
 
   function drainTraversals(): void {

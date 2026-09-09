@@ -44,6 +44,8 @@ identities invalidate the result and report the submitted cells as failed; the
 host must refresh before retrying an uncertain write. Rejecting the callback
 continues to mean the whole batch failed. A partial saver must therefore return
 the actual failed subset instead of throwing after some writes have succeeded.
+Each `applyCells` (or retry) call resolves with the receipt for that exact
+invocation, even if a newer attempt later supersedes one or more of its cells.
 
 Failed optimistic values are removed and the corresponding cells show their
 refusal message. Host data/refetch controls their displayed value; discarding a
