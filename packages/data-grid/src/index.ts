@@ -35,6 +35,8 @@ export type {
   CellRendererProps,
   DataGridColumn,
   CellEdit,
+  CellEditFailure,
+  CellEditResult,
   DataGridErrorPhase,
   DataGridError,
   DataGridHandle,

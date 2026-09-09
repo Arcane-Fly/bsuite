@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/data-grid",
-  "version": "3.0.3",
+  "version": "3.0.4-next.0",
   "description": "Virtualized, spreadsheet-feel data grid for BSuite apps \u2014 cell range selection, keyboard grid navigation, TSV clipboard round-trip, fill handle, undo/redo. Built on @tanstack/react-table + @tanstack/react-virtual.",
   "type": "module",
   "license": "UNLICENSED",
