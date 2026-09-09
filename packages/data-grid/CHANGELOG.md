@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.0.4-next.1] — 2026-09-09 — Retry through the grid
+
+- Expose `applyCells` on the grid handle for typed retained drafts, preserving refusal clearing, save ownership and undo history.
+- Enforce readonly and linked-record value guards in the common mutation path; raw paste/fill cannot bypass the record picker.
+- Reject missing or duplicate retry identities before any persistence call.
+
 ## [3.0.4-next.0] — 2026-09-09 — Per-cell persistence outcomes
 
 - Add optional `CellEditResult` failures by stable row and column identity; void callbacks retain all-success behavior.

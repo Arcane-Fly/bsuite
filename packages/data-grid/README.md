@@ -67,6 +67,20 @@ a failed batch into success. Keep latest-attempt ownership for host draft/error
 state as well. `onError` receives only currently owned failed cells; it does not
 report stale failures belonging to an older attempt.
 
+## Retrying a retained draft
+
+Use `gridRef.current.applyCells([{ rowId, columnId, value }])` with the already typed
+values from failed `CellEdit`s. It rebinds each identity to the current row and
+uses the same refusal, persistence and undo pipeline as direct editing. The
+promise settles after persistence outcomes are handled; inspect the host draft
+store for any remaining failures. Missing/duplicate identities reject before
+any write. Do not call the host persistence callback directly for retry: that
+would leave grid refusal and history state disconnected from the save.
+
+All value mutations, including paste/fill/clear/undo/retry, require an explicitly
+editable column. Linked fields must use their supplied record picker and the
+link mutation callback; a pasted label is never a record reference.
+
 ## Implementation and verification bounds
 
 This extends the existing grid and undo stack; no replacement engine or new
