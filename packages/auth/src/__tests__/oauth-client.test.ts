@@ -580,7 +580,8 @@ describe('exchangeCodeForTokens', () => {
     seedPkceState('s', 'v', 'n', elevenMinutesAgo)
     await expect(
       client.exchangeCodeForTokens('code', 's'),
-    ).rejects.toThrow(/PKCE state expired/i)
+    ).rejects.toThrow()
+    expect(fetchMock).not.toHaveBeenCalled()
     // Cleanup: all PKCE keys should be wiped after TTL expiry
     expect(localMock.getItem('bs_oauth_state')).toBeNull()
     expect(localMock.getItem('bs_oauth_code_verifier')).toBeNull()
@@ -602,7 +603,8 @@ describe('exchangeCodeForTokens', () => {
     seedPkceState('s', 'v', 'n', oneHourFromNow)
     await expect(
       createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
-    ).rejects.toThrow(/PKCE state expired/i)
+    ).rejects.toThrow()
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('is idempotent for the same code — a duplicate submission while the first is still in flight throws, without firing a second network request', async () => {
@@ -628,7 +630,7 @@ describe('exchangeCodeForTokens', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
 
     releaseFetch()
-    await expect(firstCall).rejects.toThrow(/response unknown/i)
+    await expect(firstCall).rejects.toMatchObject({ recovery: 'fresh-sign-in' })
   })
 
   it('raises with server body when token endpoint returns non-OK', async () => {
@@ -995,7 +997,7 @@ describe('exchangeCodeForTokens — network failure exposes a structured, non-bl
     expect((caught as InstanceType<typeof BusinessSuiteOAuthExchangeUncertainError>).recovery).toBe(
       'fresh-sign-in',
     )
-    expect((caught as Error).message).toMatch(/do not assume it is safe to retry/i)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
 
     // A DETERMINISTIC server rejection (a real HTTP response, even an error
     // one) is a settled outcome and must remain a plain Error, not this
@@ -1013,7 +1015,9 @@ describe('exchangeCodeForTokens — network failure exposes a structured, non-bl
       deterministicCaught = err
     }
     expect(deterministicCaught).not.toBeInstanceOf(BusinessSuiteOAuthExchangeUncertainError)
-    expect((deterministicCaught as Error).message).toMatch(/Token exchange failed: 400/)
+    expect(deterministicCaught).toBeInstanceOf(Error)
+    expect(localMock.getItem('bs_oauth_state')).toBeNull()
+    expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
   it('regression: the server may have already consumed the code before the response was lost — a blind retry with the same code fails deterministically, and the recommended fresh-sign-in recovery succeeds', async () => {
@@ -1065,7 +1069,7 @@ describe('exchangeCodeForTokens — network failure exposes a structured, non-bl
     seedPkceState('s', 'v', 'n')
 
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
-    await expect(client.exchangeCodeForTokens('authcode', 's')).rejects.toThrow(/response unknown/i)
+    await expect(client.exchangeCodeForTokens('authcode', 's')).rejects.toMatchObject({ recovery: 'fresh-sign-in' })
 
     expect(localMock.getItem('bs_oauth_code_verifier')).toBe('v')
     expect(localMock.getItem('bs_oauth_state')).toBe('s')
@@ -1083,7 +1087,7 @@ describe('exchangeCodeForTokens — network failure exposes a structured, non-bl
     const verifierB = localMock.getItem('bs_oauth_code_verifier')!
 
     fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
-    await expect(client.exchangeCodeForTokens('code-a', stateA)).rejects.toThrow(/response unknown/i)
+    await expect(client.exchangeCodeForTokens('code-a', stateA)).rejects.toMatchObject({ recovery: 'fresh-sign-in' })
 
     // B's own legacy PKCE data must be completely untouched by A's failure.
     expect(localMock.getItem('bs_oauth_state')).toBe(stateB)
@@ -1636,7 +1640,7 @@ describe('attemptSilentAuthDetailed', () => {
     })
     const result = await client.attemptSilentAuthDetailed()
     expect(result.status).toBe('failed')
-    expect(result.reason).toMatch(/unwritable/i)
+    expect(result.reason).toBe('window.location is unwritable in this context')
   })
 
   it('attemptSilentAuth is a thin boolean wrapper: true only for "authenticated"', async () => {
