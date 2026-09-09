@@ -47,10 +47,23 @@ import {
   TASK_PRIORITY_OPTIONS,
   WORKFLOW_ACTION_VOCABULARY,
   actionVocabularyEntry,
+  describeUnmetRequirement,
+  unmetActionRequirement,
 } from '../actionVocabulary.js';
+import type { WorkflowActionContext } from '../actionVocabulary.js';
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
 import { terminatorRole } from '../nodes/TerminatorNode.js';
 import type { TerminatorRole, WorkflowNode } from '../types.js';
+
+export interface WorkflowAssigneeOption {
+  id: string;
+  label: string;
+}
+
+export interface WorkflowEmailTemplateOption {
+  key: string;
+  label: string;
+}
 
 export interface WorkflowInspectorProps {
   controller: WorkflowController;
@@ -65,6 +78,16 @@ export interface WorkflowInspectorProps {
    * was asked rather than stubbing a global.
    */
   confirmDelete?: (message: string) => boolean;
+  /**
+   * What the workflow's subject actually is, so the action picker can gate a
+   * kind the processor cannot execute against it (e.g. `send_email` needs a
+   * candidate). Absent = ungated, same as before this prop existed.
+   */
+  actionContext?: WorkflowActionContext;
+  /** A real picker for the assignee field. Absent keeps the raw-UUID input. */
+  assigneeOptions?: WorkflowAssigneeOption[];
+  /** A real picker for the email template field. Absent keeps the raw-key input. */
+  emailTemplateOptions?: WorkflowEmailTemplateOption[];
 }
 
 const FIELD_CLASS =
@@ -122,6 +145,9 @@ export function WorkflowInspector({
   className,
   onNodeDeleted,
   confirmDelete,
+  actionContext,
+  assigneeOptions,
+  emailTemplateOptions,
 }: WorkflowInspectorProps) {
   const node = controller.nodes.find((n) => n.id === selectedNodeId);
   const kind = node?.type ?? 'step';
@@ -222,7 +248,12 @@ export function WorkflowInspector({
       };
       const next: Record<string, unknown> = {};
       for (const [k, v] of Object.entries(merged)) {
-        if (v === '' || v === undefined || v === null) continue;
+        // A key drops out ONLY when THIS patch just blanked it — an untouched
+        // key the user never edited (an extension field, or one this package
+        // doesn't know about) is kept byte-for-byte, including null/''/false/0.
+        const blankedByThisPatch =
+          Object.prototype.hasOwnProperty.call(patch, k) && (v === '' || v === undefined || v === null);
+        if (blankedByThisPatch) continue;
         next[k] = v;
       }
       commit({ action: next });
@@ -387,11 +418,15 @@ export function WorkflowInspector({
             className={FIELD_CLASS}
           >
             <option value="">No action — a manual step</option>
-            {WORKFLOW_ACTION_VOCABULARY.map((entry) => (
-              <option key={entry.kind} value={entry.kind}>
-                {entry.implemented ? entry.label : `${entry.label} (not automated yet)`}
-              </option>
-            ))}
+            {WORKFLOW_ACTION_VOCABULARY.map((entry) => {
+              const unmet = unmetActionRequirement(entry, actionContext);
+              return (
+                <option key={entry.kind} value={entry.kind} disabled={unmet !== null}>
+                  {entry.implemented ? entry.label : `${entry.label} (not automated yet)`}
+                  {unmet !== null ? ' (unavailable here)' : ''}
+                </option>
+              );
+            })}
           </select>
 
           {selectedVocabEntry && !selectedVocabEntry.implemented ? (
@@ -403,6 +438,43 @@ export function WorkflowInspector({
               Not automated yet — {selectedVocabEntry.notAutomatedReason}. The step will save, but
               the processor records it as skipped rather than performing it.
             </p>
+          ) : null}
+
+          {actionContext ? (
+            <ul className="mt-1 space-y-1" data-testid="workflow-inspector-action-unavailable-reasons">
+              {WORKFLOW_ACTION_VOCABULARY.map((entry) => {
+                const unmet = unmetActionRequirement(entry, actionContext);
+                // The currently-selected kind gets its own dedicated notice below,
+                // right where the rest of its fields render — no need to repeat it here.
+                if (unmet === null || entry.kind === committedActionKind) return null;
+                return (
+                  <li
+                    key={entry.kind}
+                    className="text-xs"
+                    style={{ color: 'var(--color-warning, currentColor)' }}
+                    data-testid={`workflow-inspector-action-unavailable-${entry.kind}`}
+                  >
+                    {entry.label}: {describeUnmetRequirement(entry, unmet, actionContext)}
+                  </li>
+                );
+              })}
+            </ul>
+          ) : null}
+
+          {selectedVocabEntry && actionContext ? (
+            (() => {
+              const unmet = unmetActionRequirement(selectedVocabEntry, actionContext);
+              if (unmet === null) return null;
+              return (
+                <p
+                  className="mt-1 text-xs"
+                  style={{ color: 'var(--color-error, currentColor)' }}
+                  data-testid="workflow-inspector-action-unavailable-selected"
+                >
+                  {describeUnmetRequirement(selectedVocabEntry, unmet, actionContext)}
+                </p>
+              );
+            })()
           ) : null}
 
           {committedActionKind === 'notify_internal' ? (
@@ -469,25 +541,51 @@ export function WorkflowInspector({
               </div>
               <div>
                 <label className={LABEL_CLASS} htmlFor="workflow-node-action-assignee">
-                  Assignee (optional)
+                  {assigneeOptions ? 'Assignee (optional)' : 'Assignee user id'}
                 </label>
-                <input
-                  id="workflow-node-action-assignee"
-                  data-testid="workflow-inspector-action-assignee"
-                  value={actionAssignee}
-                  readOnly={readOnly}
-                  placeholder="User UUID"
-                  onChange={(event) => setActionAssignee(event.target.value)}
-                  onBlur={commitAssignee}
-                  onKeyDown={commitOnEnterOrEscape(commitAssignee, () =>
-                    setActionAssignee(committedAssignee),
-                  )}
-                  className={FIELD_CLASS}
-                />
-                <p className="mt-1 text-xs text-muted-foreground">
-                  A people picker is not available yet — paste a user&apos;s UUID to assign the
-                  task, or leave this blank for the tenant queue.
-                </p>
+                {assigneeOptions ? (
+                  <select
+                    id="workflow-node-action-assignee"
+                    data-testid="workflow-inspector-action-assignee"
+                    value={committedAssignee}
+                    disabled={readOnly}
+                    onChange={(event) => commitActionPatch({ to: event.target.value })}
+                    className={FIELD_CLASS}
+                  >
+                    <option value="">Unassigned</option>
+                    {assigneeOptions.map((option) => (
+                      <option key={option.id} value={option.id}>
+                        {option.label}
+                      </option>
+                    ))}
+                    {committedAssignee &&
+                    !assigneeOptions.some((option) => option.id === committedAssignee) ? (
+                      <option value={committedAssignee} disabled>
+                        {committedAssignee}
+                      </option>
+                    ) : null}
+                  </select>
+                ) : (
+                  <>
+                    <input
+                      id="workflow-node-action-assignee"
+                      data-testid="workflow-inspector-action-assignee"
+                      value={actionAssignee}
+                      readOnly={readOnly}
+                      placeholder="User UUID"
+                      onChange={(event) => setActionAssignee(event.target.value)}
+                      onBlur={commitAssignee}
+                      onKeyDown={commitOnEnterOrEscape(commitAssignee, () =>
+                        setActionAssignee(committedAssignee),
+                      )}
+                      className={FIELD_CLASS}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      A list of assignees is not available yet — paste a user&apos;s UUID to assign
+                      the task, or leave this blank for the tenant queue.
+                    </p>
+                  </>
+                )}
               </div>
             </div>
           ) : null}
@@ -496,20 +594,49 @@ export function WorkflowInspector({
             <div className="mt-2 space-y-2">
               <div>
                 <label className={LABEL_CLASS} htmlFor="workflow-node-action-template">
-                  Template key
+                  {emailTemplateOptions ? 'Template' : 'Email template key'}
                 </label>
-                <input
-                  id="workflow-node-action-template"
-                  data-testid="workflow-inspector-action-template-key"
-                  value={actionTemplateKey}
-                  readOnly={readOnly}
-                  onChange={(event) => setActionTemplateKey(event.target.value)}
-                  onBlur={commitTemplateKey}
-                  onKeyDown={commitOnEnterOrEscape(commitTemplateKey, () =>
-                    setActionTemplateKey(committedTemplateKey),
-                  )}
-                  className={FIELD_CLASS}
-                />
+                {emailTemplateOptions ? (
+                  <select
+                    id="workflow-node-action-template"
+                    data-testid="workflow-inspector-action-template-key"
+                    value={committedTemplateKey}
+                    disabled={readOnly}
+                    onChange={(event) => commitActionPatch({ template_key: event.target.value })}
+                    className={FIELD_CLASS}
+                  >
+                    <option value="">Choose a template</option>
+                    {emailTemplateOptions.map((option) => (
+                      <option key={option.key} value={option.key}>
+                        {option.label}
+                      </option>
+                    ))}
+                    {committedTemplateKey &&
+                    !emailTemplateOptions.some((option) => option.key === committedTemplateKey) ? (
+                      <option value={committedTemplateKey} disabled>
+                        {committedTemplateKey}
+                      </option>
+                    ) : null}
+                  </select>
+                ) : (
+                  <>
+                    <input
+                      id="workflow-node-action-template"
+                      data-testid="workflow-inspector-action-template-key"
+                      value={actionTemplateKey}
+                      readOnly={readOnly}
+                      onChange={(event) => setActionTemplateKey(event.target.value)}
+                      onBlur={commitTemplateKey}
+                      onKeyDown={commitOnEnterOrEscape(commitTemplateKey, () =>
+                        setActionTemplateKey(committedTemplateKey),
+                      )}
+                      className={FIELD_CLASS}
+                    />
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      A list of templates is not available yet — paste the template&apos;s key.
+                    </p>
+                  </>
+                )}
               </div>
               <div>
                 <label className={LABEL_CLASS} htmlFor="workflow-node-action-to">

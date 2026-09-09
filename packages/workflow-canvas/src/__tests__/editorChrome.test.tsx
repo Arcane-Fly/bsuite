@@ -79,6 +79,41 @@ const NOTIFY_STEP: WorkflowNode = {
   },
 };
 
+// crm7#2594 C6 / CODEX_ACCOUNTABILITY_20260909_INITIAL finding 1: extension
+// keys whose value happens to be falsy (null, '', false, 0) must survive an
+// edit exactly like `custom_marker` above does — only a key the PATCH itself
+// just blanked may be dropped.
+const NOTIFY_STEP_WITH_FALSY_EXTENSIONS: WorkflowNode = {
+  id: 'step-notify-falsy',
+  type: 'step',
+  position: { x: 0, y: 0 },
+  data: {
+    label: 'Tell the coordinator',
+    actionKey: 'notify_internal',
+    action: {
+      kind: 'notify_internal',
+      message: 'a',
+      extensionNull: null,
+      extensionEmpty: '',
+      extensionFalse: false,
+      extensionZero: 0,
+      extensionArray: [1, 2, 3],
+      extensionObject: { nested: 'value' },
+    },
+  },
+};
+
+const SEND_EMAIL_STEP: WorkflowNode = {
+  id: 'step-send-email',
+  type: 'step',
+  position: { x: 0, y: 0 },
+  data: {
+    label: 'Email the applicant',
+    actionKey: 'send_email',
+    action: { kind: 'send_email', template_key: 'welcome', to: 'someone@example.com' },
+  },
+};
+
 function makeController(overrides: Partial<WorkflowController> = {}): WorkflowController {
   const graph = emptyWorkflowGraph();
   return {
@@ -86,7 +121,14 @@ function makeController(overrides: Partial<WorkflowController> = {}): WorkflowCo
     versions: [],
     draft: null,
     registry: workflowNodeTypeRegistry,
-    nodes: [LANE, STEP, END_TERMINATOR, NOTIFY_STEP],
+    nodes: [
+      LANE,
+      STEP,
+      END_TERMINATOR,
+      NOTIFY_STEP,
+      NOTIFY_STEP_WITH_FALSY_EXTENSIONS,
+      SEND_EMAIL_STEP,
+    ],
     edges: graph.edges,
     viewport: graph.viewport,
     isLoading: false,
@@ -373,6 +415,220 @@ describe('WorkflowInspector', () => {
       expect(updateNodeData).toHaveBeenCalledWith('step-1', {
         actionKey: 'notify_internal',
         action: { kind: 'notify_internal' },
+      });
+    });
+
+    describe('field preservation on commit (CODEX_ACCOUNTABILITY_20260909_INITIAL finding 1)', () => {
+      it('keeps every untouched key byte-for-byte — null, empty string, false, 0, array, object', () => {
+        const updateNodeData = vi.fn();
+        const controller = makeController({ updateNodeData });
+        render(
+          <WorkflowInspector controller={controller} selectedNodeId="step-notify-falsy" />,
+        );
+
+        const field = screen.getByTestId('workflow-inspector-action-message');
+        fireEvent.change(field, { target: { value: 'b' } });
+        fireEvent.blur(field);
+
+        expect(updateNodeData).toHaveBeenCalledTimes(1);
+        expect(updateNodeData).toHaveBeenCalledWith('step-notify-falsy', {
+          action: {
+            kind: 'notify_internal',
+            message: 'b',
+            extensionNull: null,
+            extensionEmpty: '',
+            extensionFalse: false,
+            extensionZero: 0,
+            extensionArray: [1, 2, 3],
+            extensionObject: { nested: 'value' },
+          },
+        });
+      });
+
+      it('drops ONLY the key the patch itself just blanked, keeping every other key', () => {
+        const updateNodeData = vi.fn();
+        const controller = makeController({ updateNodeData });
+        render(
+          <WorkflowInspector controller={controller} selectedNodeId="step-notify-falsy" />,
+        );
+
+        const field = screen.getByTestId('workflow-inspector-action-message');
+        fireEvent.change(field, { target: { value: '' } });
+        fireEvent.blur(field);
+
+        expect(updateNodeData).toHaveBeenCalledTimes(1);
+        const [, patch] = updateNodeData.mock.calls[0] as [string, { action: Record<string, unknown> }];
+        expect(patch.action).not.toHaveProperty('message');
+        expect(patch.action).toEqual({
+          kind: 'notify_internal',
+          extensionNull: null,
+          extensionEmpty: '',
+          extensionFalse: false,
+          extensionZero: 0,
+          extensionArray: [1, 2, 3],
+          extensionObject: { nested: 'value' },
+        });
+      });
+    });
+
+    describe('action availability by context (CODEX_ACCOUNTABILITY_20260909_INITIAL finding 2)', () => {
+      it('disables send_email with its explanation when the subject cannot supply a candidate, and leaves notify_internal enabled', () => {
+        const controller = makeController();
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-1"
+            actionContext={{ subjectTable: 'communications' }}
+          />,
+        );
+
+        const select = screen.getByTestId('workflow-inspector-action-kind') as HTMLSelectElement;
+        const sendEmailOption = Array.from(select.options).find((o) => o.value === 'send_email')!;
+        const notifyOption = Array.from(select.options).find((o) => o.value === 'notify_internal')!;
+
+        expect(sendEmailOption.disabled).toBe(true);
+        expect(notifyOption.disabled).toBe(false);
+        expect(
+          screen.getByTestId('workflow-inspector-action-unavailable-send_email'),
+        ).toHaveTextContent(/candidate/i);
+        expect(
+          screen.getByTestId('workflow-inspector-action-unavailable-send_email'),
+        ).toHaveTextContent(/communication/i);
+      });
+
+      it('does not gate anything when actionContext is absent — current behaviour', () => {
+        const controller = makeController();
+        render(<WorkflowInspector controller={controller} selectedNodeId="step-1" />);
+
+        const select = screen.getByTestId('workflow-inspector-action-kind') as HTMLSelectElement;
+        for (const option of Array.from(select.options)) {
+          expect(option.disabled).toBe(false);
+        }
+        expect(
+          screen.queryByTestId('workflow-inspector-action-unavailable-reasons'),
+        ).toBeNull();
+      });
+
+      it('shows the explanation inline for the CURRENTLY SAVED kind when it becomes unavailable, instead of silently clearing it', () => {
+        const controller = makeController();
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-send-email"
+            actionContext={{ subjectTable: 'communications' }}
+          />,
+        );
+
+        // Still selected — not cleared.
+        expect(
+          (screen.getByTestId('workflow-inspector-action-kind') as HTMLSelectElement).value,
+        ).toBe('send_email');
+        expect(
+          screen.getByTestId('workflow-inspector-action-unavailable-selected'),
+        ).toHaveTextContent(/candidate/i);
+      });
+    });
+
+    describe('real assignee/template selectors (CODEX_ACCOUNTABILITY_20260909_INITIAL finding 3)', () => {
+      it('renders the assignee as a text input, honestly labelled, when no options are given', () => {
+        const controller = makeController();
+        render(<WorkflowInspector controller={controller} selectedNodeId="step-notify" />);
+
+        const field = screen.getByTestId('workflow-inspector-action-assignee');
+        expect(field.tagName).toBe('INPUT');
+        expect(screen.getByText('Assignee user id')).toBeInTheDocument();
+      });
+
+      it('renders the assignee as a select when assigneeOptions is given, and writes action.to on change', () => {
+        const updateNodeData = vi.fn();
+        const controller = makeController({ updateNodeData });
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-notify"
+            assigneeOptions={[
+              { id: 'user-1', label: 'Alex Chen' },
+              { id: 'user-2', label: 'Priya Singh' },
+            ]}
+          />,
+        );
+
+        const field = screen.getByTestId('workflow-inspector-action-assignee');
+        expect(field.tagName).toBe('SELECT');
+
+        fireEvent.change(field, { target: { value: 'user-2' } });
+
+        expect(updateNodeData).toHaveBeenCalledWith('step-notify', {
+          action: {
+            kind: 'notify_internal',
+            message: 'Inbound SMS received',
+            custom_marker: 'kept-through-edits',
+            to: 'user-2',
+          },
+        });
+      });
+
+      it('still shows a saved assignee that is not in the option list, disabled rather than dropped', () => {
+        const controller = makeController();
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-notify"
+            assigneeOptions={[{ id: 'user-1', label: 'Alex Chen' }]}
+          />,
+        );
+
+        const select = screen.getByTestId('workflow-inspector-action-assignee') as HTMLSelectElement;
+        expect(select.value).toBe('');
+      });
+
+      it('renders the template key as a text input, honestly labelled, when no options are given', () => {
+        const controller = makeController();
+        render(<WorkflowInspector controller={controller} selectedNodeId="step-send-email" />);
+
+        const field = screen.getByTestId('workflow-inspector-action-template-key');
+        expect(field.tagName).toBe('INPUT');
+        expect(screen.getByText('Email template key')).toBeInTheDocument();
+      });
+
+      it('renders the template key as a select when emailTemplateOptions is given, and writes action.template_key on change', () => {
+        const updateNodeData = vi.fn();
+        const controller = makeController({ updateNodeData });
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-send-email"
+            emailTemplateOptions={[
+              { key: 'welcome', label: 'Welcome email' },
+              { key: 'reminder', label: 'Reminder email' },
+            ]}
+          />,
+        );
+
+        const field = screen.getByTestId('workflow-inspector-action-template-key');
+        expect(field.tagName).toBe('SELECT');
+
+        fireEvent.change(field, { target: { value: 'reminder' } });
+
+        expect(updateNodeData).toHaveBeenCalledWith('step-send-email', {
+          action: { kind: 'send_email', to: 'someone@example.com', template_key: 'reminder' },
+        });
+      });
+
+      it('shows a saved template key that is not in the option list as a disabled selected option, not dropped', () => {
+        const controller = makeController();
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-send-email"
+            emailTemplateOptions={[{ key: 'reminder', label: 'Reminder email' }]}
+          />,
+        );
+
+        const select = screen.getByTestId('workflow-inspector-action-template-key') as HTMLSelectElement;
+        expect(select.value).toBe('welcome');
+        const savedOption = Array.from(select.options).find((o) => o.value === 'welcome')!;
+        expect(savedOption.disabled).toBe(true);
       });
     });
 
