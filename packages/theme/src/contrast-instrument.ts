@@ -91,7 +91,8 @@ export function sheet(absPath: string) {
   const raw = readFileSync(absPath, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
   const blocksIn = (selector: string): string => {
     const out: string[] = []
-    const re = /([^{}]*)\{/g
+    // Statement at-rules (such as @import) are not part of the next selector.
+    const re = /([^{};]*)\{/g
     let m: RegExpExecArray | null
     while ((m = re.exec(raw))) {
       const sel = m[1].trim()

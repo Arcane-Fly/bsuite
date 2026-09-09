@@ -1,0 +1,53 @@
+/* Shared native scrollbars. Both brand entry points supply these role tokens. */
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+
+  :root.dark {
+    color-scheme: dark;
+  }
+
+  * {
+    scrollbar-color: var(--role-text-muted) var(--role-bg-surface);
+    scrollbar-width: thin;
+  }
+
+  /* Keep the platform's larger drag target for touch and high-contrast users. */
+  @media (pointer: coarse), (forced-colors: active) {
+    * {
+      scrollbar-width: auto;
+    }
+  }
+
+  @media (forced-colors: active) {
+    * {
+      scrollbar-color: auto;
+    }
+  }
+
+  /* Older WebKit has only pseudo-elements. Leave forced colours to the UA. */
+  @supports not (scrollbar-color: auto) {
+    @media (forced-colors: none) {
+      ::-webkit-scrollbar {
+        width: 12px;
+        height: 12px;
+      }
+
+      ::-webkit-scrollbar-track,
+      ::-webkit-scrollbar-corner {
+        background: var(--role-bg-surface);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: var(--role-text-muted);
+        border: 3px solid var(--role-bg-surface);
+        border-radius: 9999px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: var(--role-text-body);
+      }
+    }
+  }
+}
