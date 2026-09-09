@@ -196,6 +196,24 @@ function newNodeId(): string {
     : `node-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+/**
+ * One persist attempt, bound to the definition that queued it.
+ *
+ * `seq` is the same-definition debounce generation: a newer schedule must not
+ * have its optimistic caches rolled back by an older in-flight write.
+ * `generation` is the definition-scope generation: a late response from a
+ * previous `definitionId` must not touch this editor's last-saved snapshots.
+ */
+type SaveWrite = {
+  versionId: string;
+  next: WorkflowGraph;
+  seq: number;
+  generation: number;
+  definitionId: string | null;
+  draftKey: readonly unknown[];
+  versionsKey: readonly unknown[];
+};
+
 export function useWorkflowController({
   supabase,
   tenantId,
@@ -254,6 +272,16 @@ export function useWorkflowController({
   /** Bumps on every `scheduleSave`. Stale in-flight saves must not write caches. */
   const saveSeqRef = useRef(0);
   const saveChainRef = useRef(Promise.resolve());
+  /**
+   * Bumps when `definitionId` changes on this same hook instance (CRM's canvas
+   * is unkeyed). In-flight writes keep the generation they were queued with.
+   */
+  const generationRef = useRef(0);
+  const definitionIdRef = useRef(definitionId);
+  const draftKeyRef = useRef<readonly unknown[]>(draftKey);
+  const versionsKeyRef = useRef<readonly unknown[]>(versionsKey);
+  /** Skip one persist pass after seed / definition switch so the pre-reset graph is not written. */
+  const skipPersistRef = useRef(false);
   // The LIST key's first segment, for prefix invalidation after a duplicate.
   const definitionsKeyPrefix = [workflowDefinitionsOptions(supabase, tenantId).queryKey[0]];
 
@@ -282,6 +310,7 @@ export function useWorkflowController({
     lastScheduledRef.current = seeded;
     lastSavedDraftRef.current = draftRow;
     lastSavedVersionsRef.current = versionsQuery.data;
+    skipPersistRef.current = true;
   }, [draftRow, resetGraph, versionsQuery.data]);
 
   /*
@@ -295,53 +324,68 @@ export function useWorkflowController({
     if (!publishedRow) return;
     if (seededPublishedRef.current === publishedRow.id) return;
     seededPublishedRef.current = publishedRow.id;
-    resetGraph(publishedRow.graph ?? emptyWorkflowGraph());
+    const seeded = publishedRow.graph ?? emptyWorkflowGraph();
+    resetGraph(seeded);
+    lastScheduledRef.current = seeded;
+    skipPersistRef.current = true;
   }, [draftRow, publishedRow, resetGraph]);
 
   // --- save -----------------------------------------------------------------
   const saveMutation = useMutation({
-    mutationFn: ({
-      versionId,
-      next,
-    }: {
-      versionId: string;
-      next: WorkflowGraph;
-      seq: number;
-    }) => saveVersionGraph(supabase, versionId, next),
-    onMutate: async ({ next }) => {
-      await qc.cancelQueries({ queryKey: draftKey });
-      await qc.cancelQueries({ queryKey: versionsKey });
-      const prevDraft =
-        lastSavedDraftRef.current ??
-        qc.getQueryData<WorkflowDefinitionVersionRow | null>(draftKey);
-      const prevVersions =
-        lastSavedVersionsRef.current ??
-        qc.getQueryData<WorkflowDefinitionVersionRow[]>(versionsKey);
-      writeDraftGraphCaches(qc, draftKey, versionsKey, next);
+    mutationFn: ({ versionId, next }: SaveWrite) =>
+      saveVersionGraph(supabase, versionId, next),
+    onMutate: async (vars) => {
+      await qc.cancelQueries({ queryKey: vars.draftKey });
+      await qc.cancelQueries({ queryKey: vars.versionsKey });
+      const sameScope = vars.generation === generationRef.current;
+      const prevDraft = sameScope
+        ? (lastSavedDraftRef.current ??
+          qc.getQueryData<WorkflowDefinitionVersionRow | null>(vars.draftKey))
+        : qc.getQueryData<WorkflowDefinitionVersionRow | null>(vars.draftKey);
+      const prevVersions = sameScope
+        ? (lastSavedVersionsRef.current ??
+          qc.getQueryData<WorkflowDefinitionVersionRow[]>(vars.versionsKey))
+        : qc.getQueryData<WorkflowDefinitionVersionRow[]>(vars.versionsKey);
+      writeDraftGraphCaches(qc, vars.draftKey, vars.versionsKey, vars.next);
       return { prevDraft, prevVersions };
     },
     onError: (err, vars, ctx) => {
       onError?.('Could not save the workflow', err);
-      if (vars.seq !== saveSeqRef.current) return;
+      const sameScope = vars.generation === generationRef.current;
+      // Same definition: a stale seq must not roll a newer optimistic graph
+      // back. Cross-scope writes restore only the keys they captured.
+      if (sameScope && vars.seq !== saveSeqRef.current) return;
       restoreDraftGraphCaches(
         qc,
-        draftKey,
-        versionsKey,
+        vars.draftKey,
+        vars.versionsKey,
         ctx?.prevDraft,
         ctx?.prevVersions,
       );
+      if (!sameScope) return;
       // Resync on FAILURE only — see the header.
-      void qc.invalidateQueries({ queryKey: draftKey });
-      void qc.invalidateQueries({ queryKey: versionsKey });
+      void qc.invalidateQueries({ queryKey: vars.draftKey });
+      void qc.invalidateQueries({ queryKey: vars.versionsKey });
     },
     onSuccess: (saved, vars) => {
-      lastSavedDraftRef.current = saved;
-      lastSavedVersionsRef.current =
-        patchDraftGraphInVersions(lastSavedVersionsRef.current, saved.graph) ??
-        lastSavedVersionsRef.current;
-      if (vars.seq !== saveSeqRef.current) return;
-      qc.setQueryData<WorkflowDefinitionVersionRow | null>(draftKey, saved);
-      writeDraftGraphCaches(qc, draftKey, versionsKey, saved.graph);
+      if (
+        vars.definitionId != null &&
+        saved.workflow_definition_id !== vars.definitionId
+      ) {
+        return;
+      }
+      const sameScope = vars.generation === generationRef.current;
+      if (sameScope) {
+        // Do NOT seq-gate last-saved. Same-definition A-success then B-fail
+        // must roll back to A, not to the pre-A snapshot.
+        lastSavedDraftRef.current = saved;
+        lastSavedVersionsRef.current =
+          patchDraftGraphInVersions(lastSavedVersionsRef.current, saved.graph) ??
+          lastSavedVersionsRef.current;
+        if (vars.seq !== saveSeqRef.current) return;
+      }
+      qc.setQueryData<WorkflowDefinitionVersionRow | null>(vars.draftKey, saved);
+      writeDraftGraphCaches(qc, vars.draftKey, vars.versionsKey, saved.graph);
     },
   });
 
@@ -352,6 +396,43 @@ export function useWorkflowController({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveMutateRef = useRef(saveMutation.mutateAsync);
   saveMutateRef.current = saveMutation.mutateAsync;
+
+  const enqueueSave = useCallback((vars: SaveWrite): Promise<void> => {
+    const run = async () => {
+      try {
+        await saveMutateRef.current(vars);
+        if (
+          vars.generation === generationRef.current &&
+          vars.seq === saveSeqRef.current
+        ) {
+          setIsDirty(false);
+        }
+      } catch {
+        // Left dirty deliberately. The error is surfaced by the mutation's
+        // onError; swallowing it here only stops it becoming an unhandled
+        // rejection from the debounce timer, which has no caller to catch it.
+      }
+    };
+    const chained = saveChainRef.current.then(run, run);
+    saveChainRef.current = chained.then(
+      () => undefined,
+      () => undefined,
+    );
+    return chained;
+  }, []);
+
+  const captureSaveWrite = useCallback(
+    (next: WorkflowGraph, versionId: string, seq: number): SaveWrite => ({
+      versionId,
+      next,
+      seq,
+      generation: generationRef.current,
+      definitionId: definitionIdRef.current,
+      draftKey: [...draftKeyRef.current],
+      versionsKey: [...versionsKeyRef.current],
+    }),
+    [],
+  );
 
   // `isDirty` is STATE, not `pendingRef.current !== null`.
   //
@@ -371,30 +452,16 @@ export function useWorkflowController({
     const next = pendingRef.current;
     const versionId = seededVersionRef.current;
     const seq = saveSeqRef.current;
+    const generation = generationRef.current;
     pendingRef.current = null;
     if (!next || !versionId) {
-      if (seq === saveSeqRef.current) setIsDirty(false);
+      if (seq === saveSeqRef.current && generation === generationRef.current) {
+        setIsDirty(false);
+      }
       return;
     }
-    const run = async () => {
-      try {
-        await saveMutateRef.current({ versionId, next, seq });
-        // Only clear on SUCCESS of the LATEST scheduled graph. A older
-        // in-flight save landing after a newer edit is not "all changes saved".
-        if (seq === saveSeqRef.current) setIsDirty(false);
-      } catch {
-        // Left dirty deliberately. The error is surfaced by the mutation's
-        // onError; swallowing it here only stops it becoming an unhandled
-        // rejection from the debounce timer, which has no caller to catch it.
-      }
-    };
-    const chained = saveChainRef.current.then(run, run);
-    saveChainRef.current = chained.then(
-      () => undefined,
-      () => undefined,
-    );
-    await chained;
-  }, []);
+    await enqueueSave(captureSaveWrite(next, versionId, seq));
+  }, [captureSaveWrite, enqueueSave]);
 
   const scheduleSave = useCallback(
     (next: WorkflowGraph) => {
@@ -406,29 +473,93 @@ export function useWorkflowController({
       // follows this write. Waiting for the 900 ms debounce left the table
       // on the last fetched versions row while the canvas already had the
       // new node. Rollback of these caches is the mutation's onError.
-      writeDraftGraphCaches(qc, draftKey, versionsKey, next);
+      writeDraftGraphCaches(qc, draftKeyRef.current, versionsKeyRef.current, next);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         void flush();
       }, saveDebounceMs);
     },
-    [draftKey, flush, qc, readOnly, saveDebounceMs, versionsKey],
+    // Keys live in refs so this callback stays stable. A new queryKey tuple
+    // every render would re-fire the persist effect and write the live graph
+    // over a lastSaved restore.
+    [flush, qc, readOnly, saveDebounceMs],
   );
+
+  // Same hook instance, new definition (CRM inner is unkeyed). Bind leftover
+  // writes to the previous generation so their callbacks cannot contaminate
+  // this editor's last-saved snapshots, then start a fresh serial chain.
+  useEffect(() => {
+    if (definitionIdRef.current === definitionId) return;
+
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+
+    const leftover = pendingRef.current;
+    const leftoverVersionId = seededVersionRef.current;
+    const leftoverSeq = saveSeqRef.current;
+    const leftoverGeneration = generationRef.current;
+    const leftoverDefinitionId = definitionIdRef.current;
+    const leftoverDraftKey = [...draftKeyRef.current];
+    const leftoverVersionsKey = [...versionsKeyRef.current];
+    pendingRef.current = null;
+
+    if (leftover && leftoverVersionId && leftoverDefinitionId) {
+      const previousChain = saveChainRef.current;
+      const runLeftover = async () => {
+        try {
+          await saveMutateRef.current({
+            versionId: leftoverVersionId,
+            next: leftover,
+            seq: leftoverSeq,
+            generation: leftoverGeneration,
+            definitionId: leftoverDefinitionId,
+            draftKey: leftoverDraftKey,
+            versionsKey: leftoverVersionsKey,
+          });
+        } catch {
+          /* mutation onError */
+        }
+      };
+      void previousChain.then(runLeftover, runLeftover);
+    }
+
+    generationRef.current += 1;
+    saveSeqRef.current = 0;
+    saveChainRef.current = Promise.resolve();
+    lastSavedDraftRef.current = null;
+    lastSavedVersionsRef.current = undefined;
+    seededVersionRef.current = null;
+    seededPublishedRef.current = null;
+    lastScheduledRef.current = null;
+    skipPersistRef.current = true;
+    definitionIdRef.current = definitionId;
+    draftKeyRef.current = draftKey;
+    versionsKeyRef.current = versionsKey;
+    setIsDirty(false);
+    // Keys are derived from definitionId; listing them would re-fire every
+    // render because queryOptions allocates a new queryKey tuple.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
+  }, [definitionId]);
 
   // A pending edit must not be lost because the user navigated away. Flushing
   // in the cleanup is the difference between "saved a moment later" and
   // "silently discarded", and a silently discarded save is the failure this
-  // estate keeps finding after the fact.
+  // estate keeps finding after the fact. Must use the same serial chain as
+  // flush — a raw mutate here raced an in-flight A with the pending B.
   useEffect(
     () => () => {
       if (timerRef.current) clearTimeout(timerRef.current);
       const next = pendingRef.current;
       const versionId = seededVersionRef.current;
-      if (next && versionId) {
-        void saveMutateRef.current({ versionId, next, seq: saveSeqRef.current });
-      }
+      pendingRef.current = null;
+      if (!next || !versionId) return;
+      void enqueueSave(
+        captureSaveWrite(next, versionId, saveSeqRef.current),
+      );
     },
-    [],
+    [captureSaveWrite, enqueueSave],
   );
 
   const graphRef = useRef(graph);
@@ -455,6 +586,10 @@ export function useWorkflowController({
   // a new object when the graph actually changed.
   useEffect(() => {
     if (readOnly) return;
+    if (skipPersistRef.current) {
+      skipPersistRef.current = false;
+      return;
+    }
     if (lastScheduledRef.current === null) {
       // First render, or the graph a draft was just seeded with. Saving it
       // back verbatim would be a write that changes nothing.

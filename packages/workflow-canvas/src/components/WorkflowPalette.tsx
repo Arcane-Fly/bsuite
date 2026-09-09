@@ -109,8 +109,8 @@ export function WorkflowPalette({
               onClick={() => place(descriptor.kind)}
               className={
                 compact
-                  ? 'rounded-lg border border-border bg-background px-2 py-1 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
-                  : 'w-full rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                  ? 'rounded-lg border border-border-interactive bg-background px-2 py-1 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                  : 'w-full rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border-interactive hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
               }
               data-testid={`workflow-palette-add-${descriptor.kind}`}
               data-node-kind={descriptor.kind}

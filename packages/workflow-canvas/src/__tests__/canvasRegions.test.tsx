@@ -209,10 +209,10 @@ describe('WorkflowCanvas reserved regions', () => {
     expect(diagram.contains(paletteRegion)).toBe(false);
     expect(diagram.contains(inspectorRegion)).toBe(false);
     expect(canvas.getAttribute('data-layout')).toBe('regions');
-    expect(paletteRegion.className).toContain('w-56');
-    expect(paletteRegion.className).not.toMatch(/\bp-2\b/);
-    expect(inspectorRegion.className).toContain('w-72');
-    expect(inspectorRegion.className).not.toMatch(/\bp-2\b/);
+    expect(paletteRegion.classList.contains('w-56')).toBe(true);
+    expect(paletteRegion.classList.contains('p-2')).toBe(false);
+    expect(inspectorRegion.classList.contains('w-72')).toBe(true);
+    expect(inspectorRegion.classList.contains('p-2')).toBe(false);
   });
 
   it('contracts to a chip-row palette at a 1024-expanded canvas width (~700px)', () => {
@@ -220,7 +220,7 @@ describe('WorkflowCanvas reserved regions', () => {
     render(
       <WorkflowCanvas controller={controllerStub()}>
         <Toolbar />
-        <Palette />
+        <WorkflowPalette controller={controllerStub()} />
         <Inspector />
       </WorkflowCanvas>,
     );
@@ -230,7 +230,10 @@ describe('WorkflowCanvas reserved regions', () => {
     const paletteRegion = screen.getByTestId('workflow-region-palette');
     const diagram = screen.getByTestId('workflow-region-diagram');
     expect(diagram.contains(paletteRegion)).toBe(false);
-    expect(paletteRegion.className).not.toContain('w-56');
+    expect(paletteRegion.classList.contains('w-56')).toBe(false);
+    const add = screen.getByTestId('workflow-palette-add-step');
+    expect(add.classList.contains('border-border-interactive')).toBe(true);
+    expect(add.classList.contains('border-border')).toBe(false);
   });
 
   it('still keeps real chrome surfaces when the live adapter className is passed through', () => {
@@ -246,9 +249,15 @@ describe('WorkflowCanvas reserved regions', () => {
       </WorkflowCanvas>,
     );
 
-    expect(screen.getByTestId('workflow-palette').className).toContain('bg-card');
-    expect(screen.getByTestId('workflow-palette').className).toContain('w-full');
-    expect(screen.getByTestId('workflow-palette').className).not.toMatch(/\bw-56\b/);
+    expect(screen.getByTestId('workflow-palette').classList.contains('bg-card')).toBe(true);
+    expect(screen.getByTestId('workflow-palette').classList.contains('w-full')).toBe(true);
+    expect(screen.getByTestId('workflow-palette').classList.contains('w-56')).toBe(false);
+    expect(
+      screen.getByTestId('workflow-palette-add-step').classList.contains('hover:border-border-interactive'),
+    ).toBe(true);
+    expect(screen.getByTestId('workflow-palette-add-step').classList.contains('border-border')).toBe(
+      false,
+    );
     expect(screen.getByTestId('workflow-toolbar').className).toContain('flex');
     expect(screen.getByTestId('workflow-inspector').className).toContain('bg-card');
     expect(screen.getByTestId('workflow-region-diagram').contains(screen.getByTestId('workflow-palette'))).toBe(
@@ -270,18 +279,24 @@ describe('WorkflowCanvas reserved regions', () => {
     const inspectorRegion = screen.getByTestId('workflow-region-inspector');
     const inspector = screen.getByTestId('workflow-inspector');
 
-    expect(paletteRegion.className).toMatch(/\bw-56\b/);
-    expect(paletteRegion.className).not.toMatch(/\bp-2\b/);
-    expect(palette.className).toMatch(/\bw-full\b/);
-    expect(palette.className).not.toMatch(/\bw-56\b/);
-    expect(palette.className).toContain('bg-card');
-    expect(palette.className).toContain('p-2');
+    expect(paletteRegion.classList.contains('w-56')).toBe(true);
+    expect(paletteRegion.classList.contains('p-2')).toBe(false);
+    expect(palette.classList.contains('w-full')).toBe(true);
+    expect(palette.classList.contains('w-56')).toBe(false);
+    expect(palette.classList.contains('bg-card')).toBe(true);
+    expect(palette.classList.contains('p-2')).toBe(true);
+    expect(
+      screen.getByTestId('workflow-palette-add-step').classList.contains('hover:border-border-interactive'),
+    ).toBe(true);
+    expect(screen.getByTestId('workflow-palette-add-step').classList.contains('border-border')).toBe(
+      false,
+    );
 
-    expect(inspectorRegion.className).toMatch(/\bw-72\b/);
-    expect(inspectorRegion.className).not.toMatch(/\bp-2\b/);
-    expect(inspector.className).toMatch(/\bw-full\b/);
-    expect(inspector.className).not.toMatch(/\bw-72\b/);
-    expect(inspector.className).toContain('bg-card');
+    expect(inspectorRegion.classList.contains('w-72')).toBe(true);
+    expect(inspectorRegion.classList.contains('p-2')).toBe(false);
+    expect(inspector.classList.contains('w-full')).toBe(true);
+    expect(inspector.classList.contains('w-72')).toBe(false);
+    expect(inspector.classList.contains('bg-card')).toBe(true);
   });
 
   it('collapses the inspector slot when nothing is selected', () => {
