@@ -265,4 +265,37 @@ describe('per-cell persistence outcomes', () => {
     expect(ref.current!.canRedo()).toBe(false);
   });
 
+  it('retries retained drafts through cell refusal and undo history', async () => {
+    const save = vi.fn().mockResolvedValueOnce(failure('b')).mockResolvedValue(undefined);
+    const {ref} = fixture(save);
+    await paste('Alice\nBeth');
+    expect(cell('b')).toHaveAttribute('aria-invalid', 'true');
+    await act(async () => ref.current!.applyCells([{rowId: 'b', columnId: 'name', value: 'Beth'}]));
+    expect(cell('b')).toHaveTextContent('Beth');
+    expect(cell('b')).not.toHaveAttribute('aria-invalid');
+    act(() => ref.current!.undo());
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(3));
+    expect(save.mock.calls[2][0]).toEqual([expect.objectContaining({rowId: 'b', value: 'Grace'})]);
+    act(() => ref.current!.undo());
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(4));
+    expect(save.mock.calls[3][0]).toEqual([expect.objectContaining({rowId: 'a', value: 'Ada'})]);
+  });
+  it('rejects missing retry identities before issuing any write', async () => {
+    const save = vi.fn(); const {ref} = fixture(save);
+    await expect(ref.current!.applyCells([{rowId: 'a', columnId: 'name', value: 'Alice'}, {rowId: 'gone', columnId: 'name', value: 'Other'}])).rejects.toThrow('This row or field is no longer available. Refresh before retrying.');
+    expect(save).not.toHaveBeenCalled();
+    expect(ref.current!.canUndo()).toBe(false);
+  });
+  it.each(['readonly', 'linked'] as const)('refuses %s field writes through the common mutation pipeline', async (kind) => {
+    const ref = createRef<DataGridHandle>(), save = vi.fn(), onError = vi.fn();
+    const guarded: DataGridColumn<Row>[] = [{...columns[0], editable: kind === 'linked' ? true : undefined,
+      ...(kind === 'linked' ? {link: {entity: 'person', refId: (row: Row) => row.id}, renderEditor: () => null} : {})}];
+    render(<DataGrid ref={ref} columns={guarded} data={initial} getRowId={getRowId} onCellsEdited={save} onError={onError} />);
+    await act(async () => ref.current!.applyCells([{rowId: 'a', columnId: 'name', value: 'Unsafe text'}]));
+    expect(save).not.toHaveBeenCalled();
+    expect(onError).toHaveBeenCalledOnce();
+    expect(cell('a')).toHaveTextContent('Ada');
+    expect(ref.current!.canUndo()).toBe(false);
+  });
+
 });

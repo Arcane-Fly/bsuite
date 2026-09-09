@@ -41,6 +41,7 @@ import type { LinkEdit } from './types.js';
 import { UndoStack, type UndoEntry } from './lib/undo.js';
 import type {
   CellEdit,
+  CellValueChange,
   CellEditorProps,
   DataGridColumn,
   DataGridErrorPhase,
@@ -520,9 +521,12 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
     const failures = new Map<string, string>();
     for (const edit of edits) {
       if (edit.rowIndex < 0) failures.set(keyOf(edit), 'This row is no longer available. Refresh before retrying.');
+      const config = columnConfigById.get(edit.columnId);
+      if (config?.editable !== true) failures.set(keyOf(edit), 'This field is read-only.');
+      if (config?.link) failures.set(keyOf(edit), 'Choose the related record using its picker.');
     }
     let cause: unknown;
-    const available = edits.filter((edit) => edit.rowIndex >= 0);
+    const available = edits.filter((edit) => !failures.has(keyOf(edit)));
     try {
       const result = available.length ? await onCellsEdited(available) : undefined;
       if (result) {
@@ -590,6 +594,22 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
     for (const message of new Set(failedEdits.map((e) => failures.get(keyOf(e))!))) {
       onError({ message, cause, phase, edits: failedEdits.filter((e) => failures.get(keyOf(e)) === message) });
     }
+  }
+
+  async function applyCells(changes: readonly CellValueChange[]): Promise<void> {
+    const seen = new Set<string>();
+    const edits = changes.map(change => {
+      const current = currentRows.current.get(change.rowId);
+      const config = columnConfigById.get(change.columnId);
+      const key = overlayKey(change.rowId, change.columnId);
+      if (!current || !config) throw new Error('This row or field is no longer available. Refresh before retrying.');
+      if (seen.has(key)) throw new Error('A retry must contain each cell once.');
+      seen.add(key);
+      return {rowId: change.rowId, rowIndex: current.index, row: current.row,
+        columnId: change.columnId, value: change.value,
+        previousValue: getEffectiveValue(current.index, change.columnId)};
+    });
+    await commitEdits(edits, 'edit');
   }
 
   function drainTraversals(): void {
@@ -1068,6 +1088,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
   useImperativeHandle(
     ref,
     () => ({
+      applyCells,
       undo: handleUndo,
       redo: handleRedo,
       canUndo: () => undoStackRef.current.canUndo(),
@@ -1076,7 +1097,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
       getFocusedCell: () => (selection ? selection.focus : null),
       copySelection: handleCopy,
     }),
-    [handleUndo, handleRedo, selection, handleCopy],
+    [applyCells, handleUndo, handleRedo, selection, handleCopy],
   );
 
   const normalizedSelection = selection ? normalizeRange(selection.anchor, selection.focus) : null;

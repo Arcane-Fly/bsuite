@@ -49,7 +49,7 @@ export interface DataGridColumn<TRow = unknown> {
   minWidth?: number;
   maxWidth?: number;
   sortable?: boolean;
-  /** Default true. Set false for a computed/read-only column. */
+  /** Read-only unless explicitly true. */
   editable?: boolean;
   /**
    * This cell is a LINK to another record, not a value typed into this row.
@@ -167,7 +167,16 @@ export interface DataGridError<TRow = unknown> {
   edits: CellEdit<TRow>[];
 }
 
+export interface CellValueChange {
+  rowId: string;
+  columnId: string;
+  /** An already typed value, as emitted by a previous CellEdit. */
+  value: unknown;
+}
+
 export interface DataGridHandle {
+  /** Retry retained drafts through the same persistence/refusal/undo pipeline. */
+  applyCells: (changes: readonly CellValueChange[]) => Promise<void>;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
