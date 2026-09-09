@@ -2,6 +2,16 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.0.1-next.1 — 2026-09-09
+
+### Added
+
+- Opt-in same-origin session ownership coordinator using Web Locks, durable logout revocations and recovery markers. Older commits cannot publish after a newer sign-in or logout; failed cleanup must reconcile before another commit.
+- Per-state ownership bindings and a synchronous `beforeRedirect` hook for carrying the original attempt across OAuth navigation. A failed binding cancels its redirect and preserves unrelated flows.
+- Adapter guide and adversarial tests covering superseded session writes, partial publication, cleanup failure and delayed logout.
+
+All session writers in each consumer must adopt the coordinator. Publication alone does not change consumer behavior or complete deployed acceptance.
+
 ## 1.0.1-next.0 — 2026-09-09
 
 ### Fixed

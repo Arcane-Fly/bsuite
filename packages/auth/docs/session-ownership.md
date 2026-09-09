@@ -1,3 +1,12 @@
+---
+kind: reference
+authority: engineering
+owner: bsuite
+evidence:
+  - packages/auth/src/session-ownership.ts
+  - packages/auth/src/__tests__/session-ownership.test.ts
+---
+
 # Coordinating session changes across tabs
 
 This module is an opt-in adapter contract. Publishing it does not change any app's
