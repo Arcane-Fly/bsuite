@@ -45,6 +45,27 @@ export interface SilentAuthOptions {
   returnTo?: string;
 }
 
+/**
+ * Outcome of an `attemptSilentAuthDetailed` call.
+ * - `authenticated` — a usable session exists (local token or refresh succeeded).
+ * - `redirecting`   — an OIDC `prompt=none` redirect was initiated. In a real
+ *   browser the page is navigating away; callers must NOT treat this as a
+ *   failure and fall back to interactive sign-in, which would race a second
+ *   navigation against the one already in flight.
+ * - `failed`        — the redirect itself could not be initiated (e.g. the
+ *   10s redirect-loop breaker tripped, or `window.location` is unwritable).
+ *   No navigation is under way; it is safe to fall back to interactive UI.
+ * - `superseded` — another session change took ownership while this call
+ *   awaited refresh. Stop; do not initiate another navigation.
+ */
+export type SilentAuthStatus = 'authenticated' | 'redirecting' | 'failed' | 'superseded';
+
+export interface SilentAuthResult {
+  status: SilentAuthStatus;
+  /** Present only when `status === 'failed'`. */
+  reason?: string;
+}
+
 export interface OAuthClient {
   signInWithBusinessSuite: (options?: SignInOptions) => Promise<void>;
   exchangeCodeForTokens: (
@@ -58,5 +79,18 @@ export interface OAuthClient {
   getUserInfo: (accessToken: string) => Promise<Record<string, unknown>>;
   clearBSTokens: () => void;
   startBSTokenRefresh: () => () => void;
+  /**
+   * Boolean convenience wrapper — see {@link SilentAuthResult} and
+   * `attemptSilentAuthDetailed` for the full outcome contract this
+   * collapses. `true` only for `'authenticated'`.
+   */
   attemptSilentAuth: (options?: SilentAuthOptions) => Promise<boolean>;
+  /**
+   * Additive, non-breaking sibling of `attemptSilentAuth` that reports the
+   * full three-outcome result instead of a boolean. Prefer this for any new
+   * call site — it is the only way to distinguish "a `prompt=none` redirect
+   * is in flight" from "silent auth genuinely failed", which matters
+   * because treating the former as the latter double-initiates sign-in.
+   */
+  attemptSilentAuthDetailed: (options?: SilentAuthOptions) => Promise<SilentAuthResult>;
 }

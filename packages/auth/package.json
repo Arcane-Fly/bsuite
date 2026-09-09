@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/auth",
-  "version": "1.0.0",
+  "version": "1.0.1-next.0",
   "type": "module",
   "license": "UNLICENSED",
   "publishConfig": {
@@ -11,7 +11,7 @@
     "url": "https://github.com/GaryOcean428/bsuite.git",
     "directory": "packages/auth"
   },
-  "description": "BSuite OAuth 2.1 PKCE client — shared across CRM7, R80.3, Braden, and Throughput. Uses JWKS for token verification via jose.",
+  "description": "BSuite OAuth 2.1 PKCE client — shared across CRM7, R80.4, Braden, Conduit, and Throughput. Uses JWKS for token verification via jose.",
   "files": [
     "dist"
   ],

@@ -24,6 +24,7 @@ import type {
   OAuthClient,
   SignInOptions,
   SilentAuthOptions,
+  SilentAuthResult,
   VerifiedUser,
 } from './types.js';
 
@@ -201,9 +202,8 @@ async function verifyAccessToken(token: string): Promise<VerifiedUser> {
  * crm.crm7.app/auth/callback regression). Pass the consumer app's clientId
  * so the audience check matches the issuer's intent.
  *
- * Nonce check (OIDC Core §3.1.2.2): only rejects when the server returns a
- * nonce that does NOT match — if the server omits the nonce claim we skip
- * verification rather than hard-fail.
+ * This client sends a nonce. OIDC Core §3.1.3.7 therefore requires the ID
+ * token to contain the same value; omission is also a validation failure.
  */
 async function verifyIdToken(
   idToken: string,
@@ -214,7 +214,7 @@ async function verifyIdToken(
     issuer: `${BUSINESS_SUITE_SUPABASE_URL}/auth/v1`,
     audience: clientId,
   });
-  if (payload.nonce !== undefined && payload.nonce !== expectedNonce) {
+  if (payload.nonce !== expectedNonce) {
     throw new Error('id_token nonce mismatch — possible replay attack');
   }
 }
@@ -233,6 +233,24 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
   } catch {
     return null;
   }
+}
+
+/**
+ * Is a stored access token still usable (well-formed AND not expired)?
+ *
+ * `attemptSilentAuth`'s fast path previously trusted ANY truthy value under
+ * `bs_access_token` — including a token past its `exp`, or a corrupted /
+ * partially-written string left behind by a crashed tab — and reported the
+ * caller as authenticated on that basis alone. A caller that then makes an
+ * authenticated request gets a 401 it has no path to recover from, because
+ * `attemptSilentAuth` already told it silent auth succeeded. Requiring a
+ * decodable payload with a still-future `exp` makes the fast path agree with
+ * what `checkAndRefreshToken` already treats as "valid" for the same key.
+ */
+function isAccessTokenUsable(token: string): boolean {
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== 'number') return false;
+  return Date.now() < payload.exp * 1000;
 }
 
 /**
@@ -282,19 +300,77 @@ interface OAuthFlowEntry {
 
 type OAuthFlowMap = Record<string, OAuthFlowEntry>;
 
+/**
+ * Is `value` a sane "started at" timestamp: a finite positive number, not
+ * timestamped in the future (corrupted/tampered storage — clocks do not run
+ * backwards for a value this package itself wrote), and within
+ * {@link PKCE_TTL_MS} of now? All timestamp-bounded eligibility checks in
+ * this file (the flow map, the legacy single-flow fallback, and
+ * {@link hasPendingBusinessSuiteTransaction}) route through this single
+ * function so "fresh" means the same thing everywhere.
+ */
+function isFreshTimestamp(value: unknown): value is number {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) return false;
+  const now = Date.now();
+  if (value > now) return false; // reject timestamps from the future
+  return now - value <= PKCE_TTL_MS;
+}
+
+/**
+ * Is `entry` a complete, well-formed, still-fresh flow-map entry? Requires
+ * non-empty `verifier`/`nonce` strings in addition to a fresh timestamp —
+ * an entry missing either field is exactly as useless to
+ * `exchangeCodeForTokens` (which would immediately throw "PKCE code
+ * verifier not found") as no entry at all, so it must not be reported as
+ * "pending" by {@link hasPendingBusinessSuiteTransaction} or treated as a
+ * usable hit anywhere else.
+ */
+function isValidFlowEntry(entry: unknown): entry is OAuthFlowEntry {
+  if (!entry || typeof entry !== 'object') return false;
+  const candidate = entry as Partial<OAuthFlowEntry>;
+  return (
+    typeof candidate.verifier === 'string' &&
+    candidate.verifier.length > 0 &&
+    typeof candidate.nonce === 'string' &&
+    candidate.nonce.length > 0 &&
+    isFreshTimestamp(candidate.startedAt)
+  );
+}
+
+/**
+ * Copy `source`'s OWN enumerable string keys onto a `null`-prototype object.
+ *
+ * A flow map read via `JSON.parse` (or the `{}` fallback) inherits from
+ * `Object.prototype`, so `map[state]` for an attacker- or accident-chosen
+ * `state` value equal to an inherited member name (`toString`,
+ * `constructor`, `hasOwnProperty`, `__proto__`, …) returns that inherited
+ * function/object — which is truthy — even when the map has no own entry
+ * for it at all. A `null`-prototype object has no inherited members, so
+ * `map[state]` can only ever be non-`undefined` for a key this package
+ * itself wrote.
+ */
+function toNullPrototypeMap<T>(source: Record<string, T>): Record<string, T> {
+  const result: Record<string, T> = Object.create(null);
+  for (const key of Object.keys(source)) {
+    result[key] = source[key];
+  }
+  return result;
+}
+
 function readFlowMap(): OAuthFlowMap {
+  const empty: OAuthFlowMap = Object.create(null);
   try {
     const raw = localStorage.getItem(OAUTH_FLOWS_KEY);
-    if (!raw) return {};
+    if (!raw) return empty;
     const parsed: unknown = JSON.parse(raw);
     if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
-      return parsed as OAuthFlowMap;
+      return toNullPrototypeMap(parsed as Record<string, OAuthFlowEntry>);
     }
-    return {};
+    return empty;
   } catch {
     // Corrupt JSON / storage-disabled — treat as empty; the legacy
     // single-key path still covers the non-concurrent case.
-    return {};
+    return empty;
   }
 }
 
@@ -308,17 +384,180 @@ function writeFlowMap(map: OAuthFlowMap): void {
 }
 
 /**
- * Drop entries older than {@link PKCE_TTL_MS}, then cap to the
- * {@link FLOW_MAP_MAX_ENTRIES} most recent survivors so localStorage can't
- * grow unbounded across many abandoned sign-in attempts.
+ * Drop entries that are malformed, incomplete, or stale per
+ * {@link isValidFlowEntry}, then cap to the {@link FLOW_MAP_MAX_ENTRIES}
+ * most recent survivors so localStorage can't grow unbounded across many
+ * abandoned sign-in attempts. Returns a `null`-prototype object — see
+ * {@link toNullPrototypeMap}.
  */
 function pruneFlowMap(map: OAuthFlowMap): OAuthFlowMap {
-  const now = Date.now();
-  const fresh = Object.entries(map).filter(
-    ([, entry]) => typeof entry?.startedAt === 'number' && now - entry.startedAt <= PKCE_TTL_MS
-  );
+  const fresh = Object.entries(map).filter(([, entry]) => isValidFlowEntry(entry));
   fresh.sort(([, a], [, b]) => b.startedAt - a.startedAt);
-  return Object.fromEntries(fresh.slice(0, FLOW_MAP_MAX_ENTRIES));
+  const result: OAuthFlowMap = Object.create(null);
+  for (const [key, entry] of fresh.slice(0, FLOW_MAP_MAX_ENTRIES)) {
+    result[key] = entry;
+  }
+  return result;
+}
+
+/**
+ * Per-code exchange-in-progress guard, keyed by the authorization `code`
+ * itself rather than a single flat slot.
+ *
+ * A single global `bs_oauth_inflight_code` value cannot guard concurrent
+ * transactions: flow A claims the slot for its code, flow B (a different
+ * code) immediately overwrites it with its own code, and a duplicate
+ * submission of A's original code no longer sees a match — three network
+ * requests fire (A, B, and the unguarded A-duplicate) where at most two
+ * (A and B) should. Keying by code gives each transaction its own slot, so
+ * B claiming its own guard can never clobber A's, and a true duplicate of
+ * A's code is still caught. Bounded by {@link PKCE_TTL_MS} (via
+ * {@link isFreshTimestamp}) so a claim whose release never ran (a crashed
+ * tab mid-fetch) cannot block that code forever.
+ */
+const INFLIGHT_CODES_KEY = 'bs_oauth_inflight_codes';
+/** Legacy single-value key from prior releases — cleared defensively, never read. */
+const LEGACY_INFLIGHT_CODE_KEY = 'bs_oauth_inflight_code';
+
+interface InflightEntry {
+  owner: string;
+  startedAt: number;
+}
+
+type InflightMap = Record<string, InflightEntry>;
+
+function readInflightMap(): InflightMap {
+  const empty: InflightMap = Object.create(null);
+  try {
+    const raw = localStorage.getItem(INFLIGHT_CODES_KEY);
+    if (!raw) return empty;
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return toNullPrototypeMap(parsed as Record<string, InflightEntry>);
+    }
+    return empty;
+  } catch {
+    return empty;
+  }
+}
+
+function writeInflightMap(map: InflightMap): void {
+  try {
+    localStorage.setItem(INFLIGHT_CODES_KEY, JSON.stringify(map));
+  } catch {
+    // Storage write failures are non-fatal — worst case, the duplicate
+    // guard degrades to "not guarded" rather than blocking a legitimate
+    // request.
+  }
+}
+
+function pruneInflightMap(map: InflightMap): InflightMap {
+  const result: InflightMap = Object.create(null);
+  for (const [key, entry] of Object.entries(map)) {
+    if (isFreshTimestamp(entry?.startedAt)) {
+      result[key] = entry;
+    }
+  }
+  return result;
+}
+
+/**
+ * Claim the per-code duplicate-exchange guard. Returns `null` (does NOT
+ * claim) if `code` already has a live, unexpired claim — the caller must
+ * treat that as "already in progress" and reject rather than firing a
+ * second network request for the same code.
+ */
+function claimInflightCode(code: string): string | null {
+  const map = pruneInflightMap(readInflightMap());
+  if (map[code]) return null;
+  const owner = generateState();
+  map[code] = { owner, startedAt: Date.now() };
+  writeInflightMap(map);
+  return owner;
+}
+
+/** Release this code's own claim. A no-op if it was already released or pruned. */
+function releaseInflightCode(code: string, owner: string): void {
+  const map = pruneInflightMap(readInflightMap());
+  if (map[code]?.owner === owner) {
+    delete map[code];
+    writeInflightMap(map);
+  }
+}
+
+/**
+ * Read-only predicate: did THIS origin actually mint `state` via
+ * `signInWithBusinessSuite` (either the concurrent-flow map or the legacy
+ * single-flow fallback), and does it still have everything
+ * `exchangeCodeForTokens` needs to redeem it?
+ *
+ * Consumers receiving an OAuth callback need to decide whether an incoming
+ * `?state=...` belongs to a @bsuite/auth-initiated transaction before routing
+ * it to `exchangeCodeForTokens`. Guessing from callback shape or a flat-key
+ * match alone (the per-app patterns this replaces: flat-key dispatch,
+ * state-shape fallback, or an unconditional direct-BS assumption) has no
+ * relationship to which flow this package actually started — this reads the
+ * same storage `exchangeCodeForTokens` will consult, and (via
+ * {@link isValidFlowEntry} / the matching legacy checks below) requires a
+ * COMPLETE, freshly-timestamped entry, so a `true` result is a reliable
+ * predictor of whether that call will actually find its PKCE data rather
+ * than immediately throwing. This function only reads storage; it never
+ * mutates or consumes a transaction, so it is safe to call speculatively
+ * (e.g. from multiple callback handlers) without affecting the eventual
+ * `exchangeCodeForTokens` outcome.
+ */
+export function hasPendingBusinessSuiteTransaction(state: string): boolean {
+  if (!state) return false;
+
+  const flowMap = pruneFlowMap(readFlowMap());
+  if (flowMap[state]) return true;
+
+  try {
+    const storedState = localStorage.getItem('bs_oauth_state');
+    if (storedState !== state) return false;
+    // Aligned with exchangeCodeForTokens's legacy path: a state match alone
+    // is not enough — that call also hard-requires a code_verifier (it
+    // throws "PKCE code verifier not found" without one), so a state-only
+    // match here would report "pending" for a transaction that cannot
+    // actually be redeemed.
+    const codeVerifier = localStorage.getItem('bs_oauth_code_verifier');
+    if (!codeVerifier || !localStorage.getItem('bs_oauth_nonce')) return false;
+    const startedAtRaw = localStorage.getItem('bs_oauth_started_at');
+    if (!startedAtRaw) return false;
+    return isFreshTimestamp(Number(startedAtRaw));
+  } catch {
+    // SSR / private-browsing / storage-disabled.
+    return false;
+  }
+}
+
+/**
+ * Thrown by `exchangeCodeForTokens` when the exchange's outcome is
+ * genuinely UNKNOWN: the token request failed at the network level (the
+ * connection dropped, DNS failed, etc.) before any HTTP response — success
+ * or failure — arrived. This is NOT the same as a deterministic server
+ * rejection (`Token exchange failed: 4xx …`, thrown as a plain `Error`),
+ * which means the server definitely saw and definitively rejected the
+ * request.
+ *
+ * OAuth authorization codes are single-use. If the server DID receive and
+ * process the request before the response was lost, the code is already
+ * consumed server-side — retrying with the SAME code will simply fail with
+ * `invalid_grant`. This package therefore makes no "safe to retry" promise
+ * for this case; `recovery: 'fresh-sign-in'` names the only recovery it
+ * vouches for — starting a brand new `signInWithBusinessSuite()` flow,
+ * which mints a fresh authorization code the server has never seen.
+ */
+export class BusinessSuiteOAuthExchangeUncertainError extends Error {
+  readonly recovery = 'fresh-sign-in' as const;
+  /** The underlying network-level error, if any (e.g. the rejected fetch). */
+  readonly cause?: unknown;
+
+  constructor(message: string, cause?: unknown) {
+    super(message);
+    this.name = 'BusinessSuiteOAuthExchangeUncertainError';
+    this.cause = cause;
+  }
 }
 
 /**
@@ -360,12 +599,9 @@ export function createOAuthClient(clientId: string): OAuthClient {
    * That legitimate two-redirect sequence happens well within the 10s
    * window, so the breaker must not block it.
    *
-   * Under normal OAuth flow timing this never fires: the browser navigates
-   * away from our origin the moment `window.location.href` is assigned and
-   * does not execute client JS again for at least the round-trip to BSU +
-   * consent + callback — well beyond 10s. The guard exists purely so that
-   * if a caller (e.g. a future AuthProvider mount-effect) ever wires a loop
-   * back in, production users see a loud error rather than a redirect spin.
+   * Assigning location schedules navigation; JavaScript may continue and
+   * initiate another flow before the browser leaves. Callers must honor the
+   * detailed silent-auth result as well as this interactive loop guard.
    *
    * To manually reset (e.g. after a recovery flow or a deliberate retry),
    * clear `localStorage['bs_oauth_last_redirect_at']`.
@@ -459,6 +695,12 @@ export function createOAuthClient(clientId: string): OAuthClient {
     // same browser and device where the flow was started" — localStorage is
     // per-origin and fulfils this requirement across all the above failure modes.
     // @see https://supabase.com/docs/guides/auth/sessions/pkce-flow
+    // Single timestamp shared by the legacy sentinel and the flow-map entry
+    // below — two separate Date.now() calls could straddle a millisecond
+    // boundary and disagree, which is both semantically wrong (they claim
+    // to record the same "flow started" instant) and was observed to flake
+    // an exact-equality test comparing the two.
+    const startedAt = Date.now();
     localStorage.setItem('bs_oauth_code_verifier', codeVerifier);
     localStorage.setItem('bs_oauth_state', state);
     localStorage.setItem('bs_oauth_nonce', nonce);
@@ -466,7 +708,7 @@ export function createOAuthClient(clientId: string): OAuthClient {
     // can reject stale state (>10min) that survived across sessions.
     // Auth codes are single-use and expire after 10min per Supabase OAuth docs.
     // @see https://supabase.com/docs/guides/auth/oauth-server/oauth-flows
-    localStorage.setItem('bs_oauth_started_at', String(Date.now()));
+    localStorage.setItem('bs_oauth_started_at', String(startedAt));
 
     // Concurrent-flow safety net: append this flow to the state-keyed map
     // (dual-write alongside the legacy flat keys above) so a slower/earlier
@@ -476,7 +718,7 @@ export function createOAuthClient(clientId: string): OAuthClient {
     // consumer. Pruned for staleness before insertion, then again after so
     // the size cap accounts for the newly-added entry.
     const flowMap = pruneFlowMap(readFlowMap());
-    flowMap[state] = { verifier: codeVerifier, nonce, startedAt: Date.now() };
+    flowMap[state] = { verifier: codeVerifier, nonce, startedAt };
     writeFlowMap(pruneFlowMap(flowMap));
 
     const returnTo = options?.returnTo ?? window.location.href;
@@ -519,11 +761,10 @@ export function createOAuthClient(clientId: string): OAuthClient {
     // reject immediately rather than sending a second token request.
     // Auth codes are single-use — a duplicate request would fail with
     // invalid_grant; the sentinel gives a more descriptive error first.
-    const inflightCode = localStorage.getItem('bs_oauth_inflight_code');
-    if (inflightCode === code) {
+    const claimOwner = claimInflightCode(code);
+    if (!claimOwner) {
       throw new Error('Code exchange already in progress — please wait or retry sign-in');
     }
-    localStorage.setItem('bs_oauth_inflight_code', code);
 
     // Concurrent-flow lookup: try the state-keyed map first. A hit here is
     // exactly as CSRF-safe as the legacy single-key comparison below — the
@@ -531,9 +772,9 @@ export function createOAuthClient(clientId: string): OAuthClient {
     // signInWithBusinessSuite — and it survives a second/faster flow having
     // clobbered the legacy flat keys in the meantime. See the OAUTH_FLOWS_KEY
     // doc comment above for the full race-condition rationale.
-    const flowMap = pruneFlowMap(readFlowMap());
-    writeFlowMap(flowMap); // persist the prune even if this exchange fails below
-    const flowEntry: OAuthFlowEntry | undefined = flowMap[state];
+    const flowMapAtStart = pruneFlowMap(readFlowMap());
+    writeFlowMap(flowMapAtStart); // persist the prune even if this exchange fails below
+    const flowEntry: OAuthFlowEntry | undefined = flowMapAtStart[state];
     const usingFlowMap = flowEntry !== undefined;
 
     let codeVerifier: string | null;
@@ -546,66 +787,109 @@ export function createOAuthClient(clientId: string): OAuthClient {
       // Legacy fallback path — kept for one release of back-compat with
       // consumers still on an @bsuite/auth build predating the flow map.
       const storedState = localStorage.getItem('bs_oauth_state');
-      const startedAt = localStorage.getItem('bs_oauth_started_at');
+      const ownsLegacySlot = storedState !== null && storedState === state;
 
-      // TTL guard: auth codes expire after 10 minutes per Supabase OAuth docs.
-      // Reject stale PKCE state that survived across sessions (e.g. user closed
-      // the tab before completing sign-in, then returned later).
-      if (startedAt) {
-        const elapsed = Date.now() - Number(startedAt);
-        if (elapsed > PKCE_TTL_MS) {
-          // Clean up before throwing so the user gets a fresh start on retry.
-          localStorage.removeItem('bs_oauth_code_verifier');
-          localStorage.removeItem('bs_oauth_state');
-          localStorage.removeItem('bs_oauth_nonce');
-          localStorage.removeItem('bs_oauth_started_at');
-          localStorage.removeItem('bs_oauth_inflight_code');
-          throw new Error('PKCE state expired (>10min) — please retry sign-in');
-        }
+      if (!ownsLegacySlot) {
+        // The legacy flat keys — if any are even present — belong to a
+        // DIFFERENT transaction: a newer flow that has since overwritten
+        // them, or simply an unrelated/unknown state. They are not ours to
+        // touch. Only release our own per-code inflight claim; do NOT clear
+        // storage that may be another in-progress flow's own PKCE data.
+        releaseInflightCode(code, claimOwner);
+        throw new Error('Invalid state parameter - possible CSRF attack');
       }
 
-      if (!storedState || storedState !== state) {
-        // Hygiene: an unmatched/unknown state means this attempt's own PKCE
-        // data (if any) is unrecoverable — clear the stale flat keys too,
-        // not just the inflight sentinel, so a retry starts clean.
+      // From here the legacy slot is CONFIRMED to be this transaction's own
+      // data (storedState === state) — safe to inspect and, if needed, clear.
+      const startedAtRaw = localStorage.getItem('bs_oauth_started_at');
+      if (!startedAtRaw || !isFreshTimestamp(Number(startedAtRaw))) {
+        // TTL guard: auth codes expire after 10 minutes per Supabase OAuth
+        // docs. Also rejects a future-dated timestamp (corrupted/tampered
+        // storage) — either way this is not usable. Clean up before
+        // throwing; these keys are confirmed ours to clear.
         localStorage.removeItem('bs_oauth_code_verifier');
         localStorage.removeItem('bs_oauth_state');
         localStorage.removeItem('bs_oauth_nonce');
         localStorage.removeItem('bs_oauth_started_at');
-        localStorage.removeItem('bs_oauth_inflight_code');
-        throw new Error('Invalid state parameter - possible CSRF attack');
+        releaseInflightCode(code, claimOwner);
+        throw new Error('PKCE state expired (>10min) — please retry sign-in');
       }
+
       codeVerifier = localStorage.getItem('bs_oauth_code_verifier');
       storedNonce = localStorage.getItem('bs_oauth_nonce');
     }
 
     if (!codeVerifier) {
-      localStorage.removeItem('bs_oauth_inflight_code');
+      releaseInflightCode(code, claimOwner);
       throw new Error('PKCE code verifier not found in storage — sign-in session may have been interrupted. Please retry sign-in.');
     }
 
-    const response = await fetch(`${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams({
-        grant_type: 'authorization_code',
-        code,
-        redirect_uri: getRedirectUri(),
-        client_id: clientId,
-        code_verifier: codeVerifier,
-      }),
-    });
+    if (!storedNonce) {
+      releaseInflightCode(code, claimOwner);
+      throw new Error('PKCE nonce not found in storage — please retry sign-in.');
+    }
 
-    // Clean up stored PKCE values, nonce, TTL sentinel, and inflight sentinel
-    // (legacy dual-write keys) — plus this flow's own entry in the map, if any.
-    localStorage.removeItem('bs_oauth_code_verifier');
-    localStorage.removeItem('bs_oauth_state');
-    localStorage.removeItem('bs_oauth_nonce');
-    localStorage.removeItem('bs_oauth_started_at');
-    localStorage.removeItem('bs_oauth_inflight_code');
+    let response: Response;
+    try {
+      response = await fetch(`${BUSINESS_SUITE_SUPABASE_URL}/auth/v1/oauth/token`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'authorization_code',
+          code,
+          redirect_uri: getRedirectUri(),
+          client_id: clientId,
+          code_verifier: codeVerifier,
+        }),
+      });
+    } catch (networkErr) {
+      // Network-level rejection — no HTTP response, success or failure,
+      // ever arrived. Unlike a deterministic server rejection (handled
+      // below via response.ok), we genuinely do NOT know whether the OAuth
+      // Server processed this single-use code before the response was
+      // lost — see {@link BusinessSuiteOAuthExchangeUncertainError}. We do
+      // not touch this flow's PKCE verifier, state, nonce, or map entry
+      // (a caller may still choose to retry), and we release ONLY our own
+      // per-code inflight guard (never a newer transaction's, per
+      // {@link releaseInflightCode}) so that choice is not blocked forever
+      // by a request that will never resolve. We do NOT promise the retry
+      // will succeed — that depends on whether the server already
+      // committed the original request.
+      releaseInflightCode(code, claimOwner);
+      const reason = networkErr instanceof Error ? networkErr.message : String(networkErr);
+      throw new BusinessSuiteOAuthExchangeUncertainError(
+        `Token exchange response unknown — the network request failed before any server response arrived, so this authorization code's consumption state cannot be determined. Do not assume it is safe to retry with the same code; the recommended recovery is a fresh sign-in. (${reason})`,
+        networkErr
+      );
+    }
+
+    // The server gave a definitive answer (success or rejection), so this
+    // transaction is settled. Release our own inflight claim unconditionally
+    // (it can only ever be ours by the time we reach here), but clear the
+    // legacy flat PKCE keys and this flow's map entry ONLY if they are still
+    // confirmed to belong to THIS transaction at this exact moment:
+    //   - Legacy keys: re-check `bs_oauth_state === state` fresh, right
+    //     before clearing. A concurrent flow (e.g. a second sign-in started
+    //     while this fetch was in flight) may have since overwritten the
+    //     flat keys with ITS OWN data — unconditionally wiping them here,
+    //     as this code previously did, would erase that unrelated flow's
+    //     PKCE state out from under it.
+    //   - Flow-map entry: re-read the map fresh (not the `flowMapAtStart`
+    //     snapshot captured before the `await` above) right before deleting
+    //     THIS transaction's own entry — a concurrent flow may have added
+    //     or removed entries in the meantime, and writing back the stale
+    //     snapshot would silently erase those changes.
+    if (localStorage.getItem('bs_oauth_state') === state) {
+      localStorage.removeItem('bs_oauth_code_verifier');
+      localStorage.removeItem('bs_oauth_state');
+      localStorage.removeItem('bs_oauth_nonce');
+      localStorage.removeItem('bs_oauth_started_at');
+    }
+    releaseInflightCode(code, claimOwner);
     if (usingFlowMap) {
-      delete flowMap[state];
-      writeFlowMap(flowMap);
+      const freshFlowMap = pruneFlowMap(readFlowMap());
+      delete freshFlowMap[state];
+      writeFlowMap(freshFlowMap);
     }
 
     if (!response.ok) {
@@ -613,7 +897,15 @@ export function createOAuthClient(clientId: string): OAuthClient {
       throw new Error(`Token exchange failed: ${response.status} ${errorBody}`);
     }
 
-    const tokens: BusinessSuiteTokens = await response.json();
+    let tokens: BusinessSuiteTokens;
+    try {
+      tokens = await response.json();
+    } catch (cause) {
+      throw new BusinessSuiteOAuthExchangeUncertainError(
+        'Token exchange response could not be read. Start a fresh sign-in; do not replay this authorization code.',
+        cause
+      );
+    }
     const user = await verifyAccessToken(tokens.access_token);
 
     // Verify id_token signature, audience, and nonce (OIDC Core §3.1.3.7 + §3.1.2.2).
@@ -684,7 +976,9 @@ export function createOAuthClient(clientId: string): OAuthClient {
     localStorage.removeItem('bs_oauth_state');
     localStorage.removeItem('bs_oauth_nonce');
     localStorage.removeItem('bs_oauth_started_at');
-    localStorage.removeItem('bs_oauth_inflight_code');
+    localStorage.removeItem(OAUTH_FLOWS_KEY);
+    localStorage.removeItem(INFLIGHT_CODES_KEY);
+    localStorage.removeItem(LEGACY_INFLIGHT_CODE_KEY); // defensive: pre-1.1 single-value key
     localStorage.removeItem('auth_return_path');
     // Also clear the redirect-loop sentinel. Without this, a user who
     // signs out and immediately clicks "Sign in" again (within 10s) would
@@ -714,6 +1008,14 @@ export function createOAuthClient(clientId: string): OAuthClient {
 
     try {
       const { tokens, user } = await refreshBusinessSuiteToken(refreshToken);
+      // Guard the SUCCESS write too, not just the failure cleanup below: the
+      // `await` above is a network round-trip, and in that window a
+      // concurrent success (another tab's re-login, or the 60s interval's
+      // next tick winning the race) may already have replaced
+      // `bs_refresh_token` with a newer session. This attempt's response is
+      // still valid on the wire, but writing it now would resurrect a
+      // superseded session over whatever currently owns the slot.
+      if (localStorage.getItem('bs_refresh_token') !== refreshToken) return;
       localStorage.setItem('bs_access_token', tokens.access_token);
       localStorage.setItem('bs_refresh_token', tokens.refresh_token);
       localStorage.setItem('bs_user', JSON.stringify(user));
@@ -721,6 +1023,24 @@ export function createOAuthClient(clientId: string): OAuthClient {
         localStorage.setItem('bs_id_token', tokens.id_token);
       }
     } catch (err) {
+      // Ownership check FIRST, before any side effect — including
+      // dispatchOAuthExpired. That event is not merely informational:
+      // consumer listeners treat it as authoritative and react
+      // destructively (Braden's listener signs the user out; R8's listener
+      // clears ALL of its own storage, not just BS OAuth keys). Firing it
+      // for a refresh token that has ALREADY been superseded by a newer,
+      // valid session — because a concurrent tab's re-login or the next
+      // interval tick won the race during this attempt's network
+      // round-trip — would be a false signal with real destructive
+      // consequences downstream, even though this package's own
+      // `clearBSTokens()` is correctly skipped in that case.
+      if (localStorage.getItem('bs_refresh_token') !== refreshToken) {
+        console.warn(
+          '[BS OAuth] Stale token refresh failed after being superseded by a newer session — ignoring',
+          err
+        );
+        return;
+      }
       const isAuthError = err instanceof Error && /^Token refresh failed: 4/.test(err.message);
       dispatchOAuthExpired(isAuthError ? 'refresh_rejected' : 'network_error');
       console.warn('[BS OAuth] Token refresh failed, clearing tokens:', err);
@@ -729,40 +1049,46 @@ export function createOAuthClient(clientId: string): OAuthClient {
   }
 
   /**
-   * Attempt a silent auth refresh before showing the explicit login UI.
+   * Attempt a silent auth refresh before showing the explicit login UI, and
+   * report which outcome occurred instead of collapsing
+   * them into a boolean.
    *
    * Strategy (in order):
    *
-   *   1. **Fast path — local access token still valid.** Returns `true`
-   *      immediately. No network call.
+   *   1. **Fast path — local access token still valid.** Returns
+   *      `{ status: 'authenticated' }` immediately. No network call. The
+   *      token must decode and have a still-future `exp` — a present-but-
+   *      expired or malformed value is treated the same as absent and falls
+   *      through, matching what `checkAndRefreshToken` already treats as
+   *      valid for the same storage key.
    *   2. **Fast path — refresh token present.** Exchanges it for a new
-   *      access token via the OAuth Server `/auth/v1/oauth/token` endpoint
-   *      and persists the rotated tokens.
+   *      access token via the OAuth Server `/auth/v1/oauth/token` endpoint,
+   *      persists the rotated tokens, and returns `{ status: 'authenticated' }`.
    *   3. **Slow path — OIDC silent re-auth via `prompt=none`.** Redirects
-   *      the browser to BSU `/auth/v1/oauth/authorize?…&prompt=none`. The
-   *      OAuth Server either:
+   *      the browser to BSU `/auth/v1/oauth/authorize?…&prompt=none` and
+   *      returns `{ status: 'redirecting' }`. The OAuth Server either:
    *        - issues an auth code without UI (BSU session exists), or
    *        - redirects back with `error=login_required` (no BSU session).
-   *      In the success case the browser navigates away before this Promise
-   *      resolves, so the function is intentionally treated as
-   *      "may not return". In the `login_required` case the consumer's
-   *      callback page must surface the error (e.g. clear stale tokens and
-   *      route to its own `/auth/login`) — see crm7's `/auth/callback`.
-   *
-   * The first two branches are best-effort and never throw — errors fall
-   * through to the redirect path so the user is never stranded on a stale
-   * page. The redirect itself may navigate before the Promise resolves;
-   * callers should treat this function as "render unauthenticated only if
-   * it returns `false`" and otherwise let the navigation proceed.
+   *      Navigation is scheduled asynchronously, so `'redirecting'` is the
+   *      correct outcome: the caller must NOT treat it as "silent auth
+   *      failed, fall back to interactive sign-in now". Doing so races an
+   *      interactive `signInWithBusinessSuite()` call against a navigation
+   *      that is already under way, which mints a second, redundant PKCE
+   *      flow entry and can trip the redirect-loop circuit breaker on the
+   *      follow-up interactive call. `'failed'` is reserved for the case
+   *      where the redirect itself could not be initiated at all (e.g.
+   *      `window.location` unwritable) — that is genuinely safe to treat as
+   *      "show the interactive login UI now".
    *
    * @see OIDC Core 1.0 §3.1.2.1 — Authentication Request (`prompt=none`)
    */
-  async function attemptSilentAuth(options?: SilentAuthOptions): Promise<boolean> {
-    // Fast path 1: existing local access token (still treats stored token as
-    // valid; the auto-refresh interval owns expiry checking).
+  async function attemptSilentAuthDetailed(options?: SilentAuthOptions): Promise<SilentAuthResult> {
+    // Fast path 1: existing local access token, but only if it is still
+    // usable — a present-but-expired or corrupted value must not be
+    // reported as authenticated (see isAccessTokenUsable doc comment).
     const existingToken = localStorage.getItem('bs_access_token');
-    if (existingToken) {
-      return true;
+    if (existingToken && isAccessTokenUsable(existingToken)) {
+      return { status: 'authenticated' };
     }
 
     // Fast path 2: refresh-token exchange.
@@ -770,15 +1096,32 @@ export function createOAuthClient(clientId: string): OAuthClient {
     if (refreshToken) {
       try {
         const { tokens, user } = await refreshBusinessSuiteToken(refreshToken);
-        localStorage.setItem('bs_access_token', tokens.access_token);
-        localStorage.setItem('bs_refresh_token', tokens.refresh_token);
-        localStorage.setItem('bs_user', JSON.stringify(user));
-        if (tokens.id_token) {
-          localStorage.setItem('bs_id_token', tokens.id_token);
+        // Guard the write: the `await` above is a network round-trip, and a
+        // concurrent flow (another tab's re-login, sign-out, or the 60s
+        // refresh interval winning the race) may already have replaced
+        // `bs_refresh_token` while this one was in flight. This response is
+        // still valid on the wire but stale locally — writing it now would
+        // resurrect a superseded session over whatever currently owns the
+        // slot. The ownership check below reports the replacement session
+        // or stops this superseded attempt without starting another flow.
+        if (localStorage.getItem('bs_refresh_token') === refreshToken) {
+          localStorage.setItem('bs_access_token', tokens.access_token);
+          localStorage.setItem('bs_refresh_token', tokens.refresh_token);
+          localStorage.setItem('bs_user', JSON.stringify(user));
+          if (tokens.id_token) {
+            localStorage.setItem('bs_id_token', tokens.id_token);
+          }
+          return { status: 'authenticated' };
         }
-        return true;
       } catch {
         // fall through to slow-path redirect
+      }
+
+      // A newer login or logout owns navigation now. This older refresh must
+      // neither overwrite it nor start another authorization flow.
+      if (localStorage.getItem('bs_refresh_token') !== refreshToken) {
+        const replacement = localStorage.getItem('bs_access_token');
+        return { status: replacement && isAccessTokenUsable(replacement) ? 'authenticated' : 'superseded' };
       }
     }
 
@@ -788,16 +1131,34 @@ export function createOAuthClient(clientId: string): OAuthClient {
         prompt: 'none',
         returnTo: options?.returnTo ?? window.location.href,
       });
-    } catch {
-      // If the redirect itself fails (extremely unlikely — only if
-      // window.location is unwritable), fall through to false so callers
-      // surface the interactive login UI.
-      return false;
+    } catch (err) {
+      // The redirect itself could not be initiated (extremely unlikely —
+      // only if window.location is unwritable, or the 10s redirect-loop
+      // breaker tripped). This is the one genuine failure case: no
+      // navigation is under way, so it is safe for the caller to fall back
+      // to the interactive login UI immediately.
+      return { status: 'failed', reason: err instanceof Error ? err.message : String(err) };
     }
 
-    // The browser is navigating; this return value is reached only when the
-    // navigation did not happen (e.g. JSDOM in tests or a blocked redirect).
-    return false;
+    // Location assignment schedules navigation; this return can execute in
+    // a real browser. Callers must stop rather than start a second flow.
+    return { status: 'redirecting' };
+  }
+
+  /**
+   * Boolean-returning convenience wrapper over {@link attemptSilentAuthDetailed}
+   * for existing callers. Preserves the original contract exactly:
+   * `true` only for `'authenticated'`; `false` for both `'redirecting'` and
+   * `'failed'`, since neither means "silently authenticated". Callers that
+   * need to avoid double-initiating an interactive sign-in while a silent
+   * `prompt=none` redirect is still in flight should adopt
+   * {@link attemptSilentAuthDetailed} directly and branch on `'redirecting'`
+   * vs `'failed'` instead of falling back to interactive sign-in on every
+   * `false`.
+   */
+  async function attemptSilentAuth(options?: SilentAuthOptions): Promise<boolean> {
+    const result = await attemptSilentAuthDetailed(options);
+    return result.status === 'authenticated';
   }
 
   /**
@@ -836,5 +1197,6 @@ export function createOAuthClient(clientId: string): OAuthClient {
     clearBSTokens,
     startBSTokenRefresh,
     attemptSilentAuth,
+    attemptSilentAuthDetailed,
   };
 }

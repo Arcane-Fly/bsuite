@@ -7,5 +7,17 @@
  * @see https://supabase.com/docs/guides/auth/oauth-server/getting-started
  */
 
-export { createOAuthClient } from './oauth-client.js';
-export type { BusinessSuiteTokens, OAuthClient, VerifiedUser } from './types.js';
+export {
+  BusinessSuiteOAuthExchangeUncertainError,
+  createOAuthClient,
+  hasPendingBusinessSuiteTransaction,
+} from './oauth-client.js';
+export type {
+  BusinessSuiteTokens,
+  OAuthClient,
+  SilentAuthOptions,
+  SilentAuthResult,
+  SilentAuthStatus,
+  SignInOptions,
+  VerifiedUser,
+} from './types.js';

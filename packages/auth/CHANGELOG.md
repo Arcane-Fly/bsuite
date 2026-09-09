@@ -2,6 +2,23 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.0.1-next.0 — 2026-09-09
+
+### Fixed
+
+- Keep concurrent PKCE transactions and per-code exchange claims isolated; late cleanup cannot release a replacement claim or erase another flow.
+- Reject malformed or expired transaction records and missing or mismatched requested ID-token nonces.
+- Ignore superseded refresh results before token writes, expiry events, or navigation.
+- Report an uncertain token exchange explicitly when transport or response-body reading fails; callers must start a fresh sign-in instead of replaying a potentially consumed code.
+- Clear pending flow maps on sign-out with the other OAuth transaction state.
+
+### Added
+
+- `attemptSilentAuthDetailed()` distinguishes authenticated, redirecting, failed, and superseded outcomes. The existing boolean API remains compatible; consumers must adopt the detailed result to avoid starting an interactive authorization while silent navigation is pending.
+- `hasPendingBusinessSuiteTransaction(state)` shares the validated pending-transaction predicate with callback adapters.
+
+Consumer adoption and deployed acceptance are required separately from this prerelease.
+
 ## 0.2.7 — 2026-07-06
 
 ### Fixed — concurrent OAuth flows no longer clobber each other's PKCE state
