@@ -7,6 +7,13 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.0.4-next.2] — 2026-09-09 — Superseded apply receipt + retry precision
+
+- Preserve `applyCells` failure receipts per invocation when a later call supersedes cells in that original attempt.
+- Return exact failed IDs/messages from overlap scenarios so toolbar and retry logic stays aligned with ownership.
+- Fix mounted coverage for `readonly` vs `linked` rejection message expectations in the common mutation pipeline.
+- Add regression coverage for superseded-attempt receipts, newer overlay dominance, and undo behavior.
+
 ## [3.0.4-next.1] — 2026-09-09 — Retry through the grid
 
 - Expose `applyCells` on the grid handle for typed retained drafts, preserving refusal clearing, save ownership and undo history.
