@@ -106,7 +106,11 @@ concurrency:
 
 env:
   SUPABASE_NO_ANALYTICS: '1'
-  # The high-water mark of crm7/supabase/migrations/baseline/20260807_prod_baseline_schema_dump.sql.
+  # The high-water mark of the production baseline dump under
+  # crm7/supabase/migrations/baseline/ (resolved by rehearsal-bootstrap.sh —
+  # newest *_prod_baseline_schema_dump.sql by name; crm7 has already renamed
+  # this file once, 20260807 -> 20260907 in crm7#2533, with no forwarding path,
+  # so this value is NOT the filename and must not be read as one).
   # That dump is a dump of the SHARED public schema — 364 tables, including
   # conduit's r7_candidates and the platform's user_tenants — so it is the
   # estate's baseline, not crm7's. Everything at or below this version is
