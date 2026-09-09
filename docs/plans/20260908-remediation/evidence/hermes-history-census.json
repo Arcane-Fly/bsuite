@@ -1,0 +1,1253 @@
+[
+  {
+    "id": "20260903_081217_21629f",
+    "title": "Reply with exactly: OK-HERMES",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/84a7363f-5eeb-4500-a081-4df9f9c4e157/scratchpad",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788394338.243964,
+    "in_window_messages": 2
+  },
+  {
+    "id": "20260903_081921_56403d",
+    "title": "Research BSuite best practices audit September 2026",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/84a7363f-5eeb-4500-a081-4df9f9c4e157/scratchpad/lanes/work-L8",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788394762.1924753,
+    "in_window_messages": 57
+  },
+  {
+    "id": "20260903_085233_bbe09b",
+    "title": "You are an independent red-team reviewer of an\u2026",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/84a7363f-5eeb-4500-a081-4df9f9c4e157/scratchpad/lanes/work-L10-grok",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788396754.154575,
+    "in_window_messages": 49
+  },
+  {
+    "id": "20260903_094045_5bf099",
+    "title": "Run the shell command: echo OK-TOOL-$((6*7))\u2026",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/84a7363f-5eeb-4500-a081-4df9f9c4e157/scratchpad",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788399645.9977226,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_094214_5133f6",
+    "title": "Run the shell command: echo OK-TOOL-$((6*7))\u2026 #2",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/84a7363f-5eeb-4500-a081-4df9f9c4e157/scratchpad",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788399736.752632,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_094240_9ae84a",
+    "title": "Run the shell command: echo OK-TOOL-$((6*7))\u2026 #3",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/84a7363f-5eeb-4500-a081-4df9f9c4e157/scratchpad",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788399761.2697506,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_094307_bfcbb1",
+    "title": "Run the shell command: echo OK-TOOL-$((6*7))\u2026 #4",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/84a7363f-5eeb-4500-a081-4df9f9c4e157/scratchpad",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788399788.3773043,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_094332_6ccfd5",
+    "title": "Run echo command and print output",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788399812.653947,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_094356_fa7bc8",
+    "title": "Run echo OK-TOOL-$((6*7)) command",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788399837.700384,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_094439_3f36c4",
+    "title": "Run echo OK-TOOL-$((6*7)) command #2",
+    "cwd": "/tmp/claude-1000/-home-braden-Desktop-Dev-bsuite",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788399880.6534193,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_094551_f6e45c",
+    "title": "Run echo OK-HERMES-DEFAULT command",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788399953.0203097,
+    "in_window_messages": 4
+  },
+  {
+    "id": "20260903_100225_4eba0e",
+    "title": "Audit lane L12 newest notes export verification",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-notes7-20260903",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788400946.4929862,
+    "in_window_messages": 292
+  },
+  {
+    "id": "20260903_113316_0686b4",
+    "title": "Spec-compliance review of bsuite#2969 gitlink PRs",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-gitlink",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788406397.4967399,
+    "in_window_messages": 49
+  },
+  {
+    "id": "20260903_120340_e3c3c7",
+    "title": "Verify and fix nav-core banner tests against PI rulings",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-d160",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788408221.5365324,
+    "in_window_messages": 220
+  },
+  {
+    "id": "20260903_120343_78ec98",
+    "title": "Review PR 2971 spec compliance",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-j7",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788408224.2813494,
+    "in_window_messages": 52
+  },
+  {
+    "id": "20260903_120959_ce2866",
+    "title": "Review gitlink advancement compliance in BSuite PR 2969",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-gitlink",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788408600.7651365,
+    "in_window_messages": 39
+  },
+  {
+    "id": "20260903_121604_19cd60",
+    "title": "Review PR 2970 spec compliance",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c2",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788408965.610043,
+    "in_window_messages": 68
+  },
+  {
+    "id": "20260903_121828_9fef45",
+    "title": "Continue BSuite C10 corrective run",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c10",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788409109.2790954,
+    "in_window_messages": 160
+  },
+  {
+    "id": "20260903_122728_fd3fe4",
+    "title": "Review PR 2968 spec compliance for doc links and supersession gates",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c1",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788409649.0926464,
+    "in_window_messages": 56
+  },
+  {
+    "id": "20260903_122903_46b74a",
+    "title": "Fix BSuite PR 2970 review failures",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c2",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788409746.1830192,
+    "in_window_messages": 116
+  },
+  {
+    "id": "20260903_124225_c95137",
+    "title": "Fix BSuite PR 2968 docs gates HIG issues",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c1",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788410548.7614155,
+    "in_window_messages": 56
+  },
+  {
+    "id": "20260903_124558_b26d88",
+    "title": "Implement D-160 step 2 smoke script and mount gate",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-d160b",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788410759.1626582,
+    "in_window_messages": 130
+  },
+  {
+    "id": "20260903_124640_14e5f3",
+    "title": "Review PR 2975 SPEC compliance",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c10",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788410801.4347928,
+    "in_window_messages": 58
+  },
+  {
+    "id": "20260903_145803_77eaf1",
+    "title": "Merge origin/development into bsuite#2970 pi/phase1-c2",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c2",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788418684.8474581,
+    "in_window_messages": 45
+  },
+  {
+    "id": "20260903_145806_66e54b",
+    "title": "Fix-forward BSuite PR #2975 emitted-CSS-class gate",
+    "cwd": "/home/braden/Desktop/Dev/bsuite-pi-c10",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788418687.787293,
+    "in_window_messages": 215
+  },
+  {
+    "id": "20260903_154257_aca641",
+    "title": "Spec-compliance review of braden#581 and bsuite#2984",
+    "cwd": "/home/braden/Desktop/Dev",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788421379.1274576,
+    "in_window_messages": 52
+  },
+  {
+    "id": "20260903_162519_d2fe59",
+    "title": "Spec-compliance review of bsuite PR 2988 required checks",
+    "cwd": "/home/braden/Desktop/Dev",
+    "git_repo_root": null,
+    "source": "cli",
+    "started_at": 1788423919.8438928,
+    "in_window_messages": 36
+  },
+  {
+    "id": "20260903_234217_ed92d3",
+    "title": "Read-only audit. Do not edit files, run builds\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788450140.137038,
+    "in_window_messages": 31
+  },
+  {
+    "id": "20260905_173626_0b2523",
+    "title": "Validate BSuite ledger rows 3 42 43 46 56 58 79",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788600988.7618115,
+    "in_window_messages": 65
+  },
+  {
+    "id": "20260905_174831_b54361",
+    "title": "List the three most important configuration\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788601714.1428373,
+    "in_window_messages": 11
+  },
+  {
+    "id": "20260905_175008_756dfa",
+    "title": "Audit BSuite morning ledger claims 20260826",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788601811.0101705,
+    "in_window_messages": 45
+  },
+  {
+    "id": "20260908_081434_8c46b0",
+    "title": "Triage BSuite open issues classify wired",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "desktop",
+    "started_at": 1788826486.5339425,
+    "in_window_messages": 17
+  },
+  {
+    "id": "20260908_082008_2ef66f",
+    "title": "Perform written-not-wired triage for BSuite",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "desktop",
+    "started_at": 1788826819.66465,
+    "in_window_messages": 18
+  },
+  {
+    "id": "20260908_082703_74ab5b",
+    "title": "READ-ONLY classification. Do not commit\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827242.4862897,
+    "in_window_messages": 33
+  },
+  {
+    "id": "20260908_082703_be7cab",
+    "title": "READ-ONLY diagnosis. Do not edit code, commit\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827235.0781395,
+    "in_window_messages": 78
+  },
+  {
+    "id": "20260908_082819_2852a3",
+    "title": null,
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827320.8988442,
+    "in_window_messages": 1
+  },
+  {
+    "id": "20260908_082819_45c3e2",
+    "title": "READ-ONLY written-not-wired classification\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827310.9341254,
+    "in_window_messages": 1
+  },
+  {
+    "id": "20260908_082819_4c6ab5",
+    "title": null,
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827317.541415,
+    "in_window_messages": 1
+  },
+  {
+    "id": "20260908_082906_0ee1d4",
+    "title": "READ-ONLY written-not-wired classification\u2026 #2",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827365.1876032,
+    "in_window_messages": 165
+  },
+  {
+    "id": "20260908_082906_8c8485",
+    "title": "READ-ONLY written-not-wired classification\u2026 #4",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827358.997098,
+    "in_window_messages": 168
+  },
+  {
+    "id": "20260908_082907_00afa1",
+    "title": "READ-ONLY written-not-wired classification\u2026 #3",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827368.1776893,
+    "in_window_messages": 36
+  },
+  {
+    "id": "20260908_082926_587a8d",
+    "title": "Salvage classification of Aug-25 git bundles\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827380.4474137,
+    "in_window_messages": 62
+  },
+  {
+    "id": "20260908_083059_0ae74c",
+    "title": "READ-ONLY code investigation. No edits, no\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "source": "cli",
+    "started_at": 1788827471.4270277,
+    "in_window_messages": 58
+  },
+  {
+    "id": "20260908_083850_9cd00d",
+    "title": "READ-ONLY code investigation. No edits\u2026",
+    "cwd": "/home/braden/Desktop/Dev/bsuite",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite",
+    "source": "cli",
+    "started_at": 1788827945.29926,
+    "in_window_messages": 69
+  },
+  {
+    "id": "20260908_085009_50237e",
+    "title": "IMPLEMENT a fix in the git worktree\u2026",
+    "cwd": "/home/braden/Desktop/Dev/worktrees/crm7-vet-units-pagination",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "source": "cli",
+    "started_at": 1788828621.4573328,
+    "in_window_messages": 112
+  },
+  {
+    "id": "20260908_090623_267ba2",
+    "title": "IMPLEMENT the minimal fix for crm7 PR #2533 in\u2026",
+    "cwd": "/home/braden/Desktop/Dev/worktrees/crm7-2533-baseline",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "source": "cli",
+    "started_at": 1788829596.925945,
+    "in_window_messages": 110
+  },
+  {
+    "id": "20260908_091427_c2ab7e",
+    "title": "IMPLEMENT in git worktree\u2026",
+    "cwd": "/home/braden/Desktop/Dev/_agent_lanes/crm7-placement-r8",
+    "git_repo_root": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "source": "cli",
+    "started_at": 1788830085.5571988,
+    "in_window_messages": 35
+  },
+  {
+    "id": "cron_244730daeac5_20260907_183359",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 18:36",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788777257.9916427,
+    "in_window_messages": 4
+  },
+  {
+    "id": "cron_244730daeac5_20260907_184608",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 18:52",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788777970.5556314,
+    "in_window_messages": 14
+  },
+  {
+    "id": "cron_244730daeac5_20260907_190259",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 19:05",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788778996.3923018,
+    "in_window_messages": 10
+  },
+  {
+    "id": "cron_244730daeac5_20260907_191559",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 19:17",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788779779.3923914,
+    "in_window_messages": 8
+  },
+  {
+    "id": "cron_244730daeac5_20260907_192759",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 19:29",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788780497.6867645,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_244730daeac5_20260907_193959",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 19:46",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788781220.0600815,
+    "in_window_messages": 6
+  },
+  {
+    "id": "cron_244730daeac5_20260907_195659",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 20:00",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788782238.9804857,
+    "in_window_messages": 8
+  },
+  {
+    "id": "cron_244730daeac5_20260907_201059",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 20:12",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788783078.1999779,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_244730daeac5_20260907_202300",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 20:28",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788783800.259927,
+    "in_window_messages": 16
+  },
+  {
+    "id": "cron_244730daeac5_20260907_203900",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 20:46",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788784760.1673486,
+    "in_window_messages": 22
+  },
+  {
+    "id": "cron_244730daeac5_20260907_205700",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 21:09",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788785839.339427,
+    "in_window_messages": 56
+  },
+  {
+    "id": "cron_244730daeac5_20260907_212000",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 21:39",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788787218.1858184,
+    "in_window_messages": 82
+  },
+  {
+    "id": "cron_244730daeac5_20260907_215000",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 21:52",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788789017.642903,
+    "in_window_messages": 22
+  },
+  {
+    "id": "cron_244730daeac5_20260907_220301",
+    "title": "bsuite-cc-closeout-backup \u00b7 Sep 07 22:23",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788789807.7440176,
+    "in_window_messages": 58
+  },
+  {
+    "id": "cron_244730daeac5_20260907_234402",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 07 23:55",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788795860.0936472,
+    "in_window_messages": 28
+  },
+  {
+    "id": "cron_244730daeac5_20260908_000602",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 00:40",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788797181.2497435,
+    "in_window_messages": 19
+  },
+  {
+    "id": "cron_244730daeac5_20260908_005024",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 01:16",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788799825.5490007,
+    "in_window_messages": 32
+  },
+  {
+    "id": "cron_244730daeac5_20260908_012703",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 01:30",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788802042.435334,
+    "in_window_messages": 8
+  },
+  {
+    "id": "cron_244730daeac5_20260908_014026",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 01:59",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788802828.2111912,
+    "in_window_messages": 30
+  },
+  {
+    "id": "cron_244730daeac5_20260908_021003",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 02:14",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788804621.0882437,
+    "in_window_messages": 18
+  },
+  {
+    "id": "cron_244730daeac5_20260908_022503",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 02:41",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788805520.5509958,
+    "in_window_messages": 22
+  },
+  {
+    "id": "cron_244730daeac5_20260908_025129",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 02:58",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788807090.9101896,
+    "in_window_messages": 26
+  },
+  {
+    "id": "cron_244730daeac5_20260908_030904",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 03:29",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788808164.890479,
+    "in_window_messages": 66
+  },
+  {
+    "id": "cron_244730daeac5_20260908_033931",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 04:03",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788809973.1241777,
+    "in_window_messages": 92
+  },
+  {
+    "id": "cron_244730daeac5_20260908_041406",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 04:33",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788812064.902393,
+    "in_window_messages": 52
+  },
+  {
+    "id": "cron_244730daeac5_20260908_044333",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 04:50",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788813815.0274534,
+    "in_window_messages": 20
+  },
+  {
+    "id": "cron_244730daeac5_20260908_050034",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 05:25",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788814835.2001839,
+    "in_window_messages": 98
+  },
+  {
+    "id": "cron_244730daeac5_20260908_053506",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 05:51",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788816923.0084302,
+    "in_window_messages": 30
+  },
+  {
+    "id": "cron_244730daeac5_20260908_060106",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 06:08",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788818483.4628744,
+    "in_window_messages": 14
+  },
+  {
+    "id": "cron_244730daeac5_20260908_062904",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 06:32",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788820161.9064925,
+    "in_window_messages": 8
+  },
+  {
+    "id": "cron_244730daeac5_20260908_064306",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 06:58",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788821003.2099018,
+    "in_window_messages": 123
+  },
+  {
+    "id": "cron_244730daeac5_20260908_070909",
+    "title": "bsuite-cc-overnight-ecc-backup \u00b7 Sep 08 07:28",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788822566.1209037,
+    "in_window_messages": 123
+  },
+  {
+    "id": "cron_244730daeac5_20260908_083509",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 08:50",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788827711.900446,
+    "in_window_messages": 40
+  },
+  {
+    "id": "cron_244730daeac5_20260908_091021",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 09:21",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788829840.9404037,
+    "in_window_messages": 42
+  },
+  {
+    "id": "cron_244730daeac5_20260908_094211",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 09:43",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788831732.563818,
+    "in_window_messages": 9
+  },
+  {
+    "id": "cron_244730daeac5_20260908_100311",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 10:03",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788832993.7817135,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_244730daeac5_20260908_102412",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 10:25",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788834254.1288044,
+    "in_window_messages": 13
+  },
+  {
+    "id": "cron_244730daeac5_20260908_104613",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 10:47",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788835575.0484617,
+    "in_window_messages": 13
+  },
+  {
+    "id": "cron_244730daeac5_20260908_110714",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 11:08",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788836835.3943646,
+    "in_window_messages": 16
+  },
+  {
+    "id": "cron_244730daeac5_20260908_112915",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 11:30",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788838156.450081,
+    "in_window_messages": 15
+  },
+  {
+    "id": "cron_244730daeac5_20260908_115120",
+    "title": "bsuite-takeover-backup \u00b7 Sep 08 11:52",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788839482.8659933,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_183059",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 18:58",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788777080.2634654,
+    "in_window_messages": 2
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_190559",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 19:10",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788779179.7691357,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_191800",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 19:24",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788779902.1503406,
+    "in_window_messages": 16
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_193200",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 19:40",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788780742.9349174,
+    "in_window_messages": 28
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_194800",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 19:52",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788781699.9147744,
+    "in_window_messages": 8
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_200000",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 20:04",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788782423.8527784,
+    "in_window_messages": 16
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_201200",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 20:33",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788783139.9563088,
+    "in_window_messages": 46
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_204014",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 20:51",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788784817.1823394,
+    "in_window_messages": 24
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_205901",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 21:05",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788785967.5329628,
+    "in_window_messages": 28
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_211301",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 21:18",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788786801.3843591,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_212601",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 21:36",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788787581.1182575,
+    "in_window_messages": 18
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_214401",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 21:48",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788788667.3823938,
+    "in_window_messages": 44
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_215601",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 21:59",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788789383.3834417,
+    "in_window_messages": 18
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_220702",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 22:12",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788790051.512749,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_222002",
+    "title": "bsuite-cc-closeout-nudge \u00b7 Sep 07 22:48",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788790832.1302938,
+    "in_window_messages": 72
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_225420",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 07 23:20",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788792865.426832,
+    "in_window_messages": 114
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_232602",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 07 23:46",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788794782.0740626,
+    "in_window_messages": 74
+  },
+  {
+    "id": "cron_854ef8e194ea_20260907_235122",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 00:19",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788796286.3169217,
+    "in_window_messages": 82
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_002503",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 00:44",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788798323.4265928,
+    "in_window_messages": 42
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_005003",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 01:03",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788799823.8783529,
+    "in_window_messages": 33
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_010903",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 01:32",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788800964.1169522,
+    "in_window_messages": 40
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_013727",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 02:04",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788802651.9916267,
+    "in_window_messages": 48
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_020928",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 02:30",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788804571.7711248,
+    "in_window_messages": 54
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_023529",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 03:05",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788806132.758626,
+    "in_window_messages": 105
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_031104",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 03:28",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788808282.4197989,
+    "in_window_messages": 62
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_033331",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 03:57",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788809615.5149627,
+    "in_window_messages": 84
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_040232",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 04:19",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788811356.4937482,
+    "in_window_messages": 114
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_042433",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 04:39",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788812677.1387835,
+    "in_window_messages": 44
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_044507",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 04:51",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788813926.7968702,
+    "in_window_messages": 20
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_045707",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 05:05",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788814649.5817907,
+    "in_window_messages": 26
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_051035",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 05:18",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788815438.6410778,
+    "in_window_messages": 18
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_052407",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 05:43",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788816267.4986684,
+    "in_window_messages": 119
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_054907",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 05:52",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788817766.8252208,
+    "in_window_messages": 6
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_055807",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 06:11",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788818309.923174,
+    "in_window_messages": 36
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_062805",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 06:44",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788820103.940236,
+    "in_window_messages": 38
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_065007",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 07:00",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788821426.6198902,
+    "in_window_messages": 72
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_070609",
+    "title": "bsuite-cc-overnight-ecc \u00b7 Sep 08 07:27",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788822387.8986359,
+    "in_window_messages": 80
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_082421",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 09:10",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788827082.9794867,
+    "in_window_messages": 124
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_092112",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 09:24",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788830476.9468315,
+    "in_window_messages": 26
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_093412",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 09:38",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788831256.0734873,
+    "in_window_messages": 26
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_094912",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 09:57",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788832156.1142707,
+    "in_window_messages": 64
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_100813",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 10:10",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788833297.830484,
+    "in_window_messages": 24
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_102114",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 10:21",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788834085.5454552,
+    "in_window_messages": 12
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_103213",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 10:36",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788834737.8388007,
+    "in_window_messages": 31
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_104714",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 10:51",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788835638.6365542,
+    "in_window_messages": 33
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_110115",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 11:03",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788836480.177948,
+    "in_window_messages": 25
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_111416",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 11:17",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788837261.6007528,
+    "in_window_messages": 30
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_112816",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 11:30",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788838101.6973612,
+    "in_window_messages": 23
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_114116",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 11:43",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788838880.6714163,
+    "in_window_messages": 25
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_115418",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 11:58",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788839662.2973976,
+    "in_window_messages": 33
+  },
+  {
+    "id": "cron_854ef8e194ea_20260908_120919",
+    "title": "bsuite-takeover-two-branch \u00b7 Sep 08 12:35",
+    "cwd": null,
+    "git_repo_root": null,
+    "source": "cron",
+    "started_at": 1788840564.3261745,
+    "in_window_messages": 123
+  }
+]

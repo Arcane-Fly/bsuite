@@ -1,0 +1,47 @@
+{
+  "crm7": [
+    {
+      "headRefName": "fix/placements-list-clear-person-filter",
+      "mergeStateStatus": "BLOCKED",
+      "mergeable": "MERGEABLE",
+      "number": 2585,
+      "title": "fix(placements): clear sticky personId so tenant list is not empty"
+    }
+  ],
+  "business-suite-unified": [
+    {
+      "headRefName": "fix/1198-org-roster-rpc-missing-fallback",
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 1208,
+      "title": "fix(bsu): org roster falls back to descendants_of + user_tenants when the RPC is not applied (BSU#1198)"
+    },
+    {
+      "headRefName": "chore/resync-dev-with-main-20260908",
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 1200,
+      "title": "chore: re-sync development with main promotion merges"
+    }
+  ],
+  "throughput": [
+    {
+      "headRefName": "chore/resync-dev-with-main-20260908",
+      "mergeStateStatus": "CLEAN",
+      "mergeable": "MERGEABLE",
+      "number": 492,
+      "title": "chore: re-sync development with main promotion merges"
+    }
+  ],
+  "braden": [],
+  "R80.4": [
+    {
+      "headRefName": "fix/rate-scope-partials-schedules-20260811",
+      "mergeStateStatus": "DIRTY",
+      "mergeable": "CONFLICTING",
+      "number": 323,
+      "title": "salvage(ma000017): 2026-08-11 allowances draft with capped-allowance application \u2014 reconcile onto the rewrite"
+    }
+  ],
+  "conduit": []
+}

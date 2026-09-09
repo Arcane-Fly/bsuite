@@ -1,0 +1,12 @@
+{
+  "version": 2,
+  "prompt_count": 333,
+  "errors": {},
+  "negative_controls": {
+    "production_phase_removed": true,
+    "ops_closeout_removed": true,
+    "contract_absent": true,
+    "valid_prompt_passes": true
+  },
+  "scope": "Instruction presence/integrity and skill paths only; actual runtime evidence is required by existing DoD gates."
+}
