@@ -10,7 +10,27 @@ export type {
   WorkflowInspectorProps,
   WorkflowPaletteProps,
   WorkflowToolbarProps,
+  WorkflowAssigneeOption,
+  WorkflowEmailTemplateOption,
 } from './components/index.js';
+
+// Step action vocabulary — the inspector's picker, and the availability
+// contract a consumer wires `WorkflowInspector`'s `actionContext` prop from.
+export {
+  WORKFLOW_ACTION_KINDS,
+  WORKFLOW_ACTION_VOCABULARY,
+  TASK_PRIORITY_OPTIONS,
+  actionVocabularyEntry,
+  unmetActionRequirement,
+  describeUnmetRequirement,
+} from './actionVocabulary.js';
+export type {
+  WorkflowActionKind,
+  WorkflowActionVocabularyEntry,
+  WorkflowActionContext,
+  WorkflowActionRequirement,
+  TaskPriorityOption,
+} from './actionVocabulary.js';
 
 // Node types — the registry is the point of this package. See nodes/registry.ts.
 export {
