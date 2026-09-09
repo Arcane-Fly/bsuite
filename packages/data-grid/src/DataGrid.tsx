@@ -920,6 +920,12 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
     const key = overlayKey(rowIdentity(edit.row, edit.rowIndex), edit.columnId);
     const owner = Symbol('link mutation');
     cellOwners.current.set(key, owner);
+    setRefusals((prev) => {
+      if (cellOwners.current.get(key) !== owner) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
     setOverlay((prev) => {
       const next = new Map(prev);
       next.set(key, { value: edit.refId, owner, pending: true });
@@ -943,6 +949,12 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
       setOverlay((prev) => {
         const next = new Map(prev);
         if (next.get(key)?.owner === owner) next.delete(key);
+        return next;
+      });
+      setRefusals((prev) => {
+        if (cellOwners.current.get(key) !== owner) return prev;
+        const next = new Map(prev);
+        next.set(key, err instanceof Error ? err.message : String(err));
         return next;
       });
       onError({

@@ -298,4 +298,33 @@ describe('per-cell persistence outcomes', () => {
     expect(ref.current!.canUndo()).toBe(false);
   });
 
+  it('recovers from a refused linked value through the record picker', async () => {
+    const ref = createRef<DataGridHandle>(), save = vi.fn(), onError = vi.fn(), link = vi.fn().mockResolvedValue(undefined);
+    const linked: DataGridColumn<Row>[] = [{...columns[0], link: {entity: 'person', refId: row => row.id},
+      renderEditor: ({onCommit}) => <button onClick={() => onCommit('new-person')}>Choose person</button>}];
+    render(<DataGrid ref={ref} columns={linked} data={initial} getRowId={getRowId} onCellsEdited={save} onLinkEdit={link} onError={onError} />);
+    await act(async () => ref.current!.applyCells([{rowId: 'a', columnId: 'name', value: 'Unsafe label'}]));
+    expect(cell('a')).toHaveAttribute('aria-invalid', 'true');
+    fireEvent.doubleClick(cell('a'));
+    fireEvent.click(screen.getByRole('button', {name: 'Choose person'}));
+    await waitFor(() => expect(link).toHaveBeenCalledOnce());
+    expect(cell('a')).not.toHaveAttribute('aria-invalid');
+    expect(cell('a')).toHaveTextContent('new-person');
+    expect(save).not.toHaveBeenCalled();
+  });
+  it('does not let an older picker failure replace a newer refusal', async () => {
+    const old = deferred(), ref = createRef<DataGridHandle>(), onError = vi.fn();
+    let choice = 0;
+    const linked: DataGridColumn<Row>[] = [{...columns[0], link: {entity: 'person', refId: row => row.id},
+      renderEditor: ({onCommit}) => <button onClick={() => onCommit(`person-${++choice}`)}>Choose person</button>}];
+    const link = vi.fn().mockReturnValueOnce(old.promise).mockRejectedValueOnce(new Error('Current refusal'));
+    render(<DataGrid ref={ref} columns={linked} data={initial} getRowId={getRowId} onCellsEdited={() => {}} onLinkEdit={link} onError={onError} />);
+    fireEvent.doubleClick(cell('a')); fireEvent.click(screen.getByRole('button', {name: 'Choose person'}));
+    fireEvent.doubleClick(cell('a')); fireEvent.click(screen.getByRole('button', {name: 'Choose person'}));
+    await waitFor(() => expect(onError).toHaveBeenCalledOnce());
+    await act(async () => old.reject(new Error('Old refusal')));
+    expect(cell('a')).toHaveAttribute('title', 'Current refusal');
+    expect(onError).toHaveBeenCalledOnce();
+  });
+
 });
