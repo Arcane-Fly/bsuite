@@ -17,10 +17,19 @@
 #   tree. auth.uid(), storage, vault and the extensions schema must be genuine
 #   or the gate cries wolf, and a gate that cries wolf is one people mute.
 #
-#   On top of that: the 20260807 production baseline dump. It lives in crm7 but
-#   it is a dump of the SHARED public schema — 364 tables including conduit's
+#   On top of that: the production baseline dump. It lives in crm7 but it is a
+#   dump of the SHARED public schema — 364 tables including conduit's
 #   r7_candidates and the platform's user_tenants (verified 2026-08-12). It is
 #   the estate's baseline, not crm7's, and is used here as such.
+#
+#   crm7 renames this file as it re-cuts the baseline (20260807 -> 20260907,
+#   crm7#2533, commit 6abcca41e) with no forwarding path, so a hardcoded
+#   filename here goes stale the next time crm7 does. It is resolved below by
+#   pattern instead: newest `*_prod_baseline_schema_dump.sql` by name (the
+#   14-digit YYYYMMDD prefix sorts lexicographically = chronologically).
+#   Exactly one candidate is required — zero means the rename broke us again,
+#   more than one means a stale dump was left behind and this script refuses
+#   to silently guess which is production's.
 #
 # WHAT IT DELIBERATELY DOES NOT DO
 #
@@ -37,12 +46,24 @@ set -euo pipefail
 DB_URL="${1:?usage: rehearsal-bootstrap.sh <db-url> <repo-root>}"
 ROOT="${2:?usage: rehearsal-bootstrap.sh <db-url> <repo-root>}"
 
-BASELINE="$ROOT/crm7/supabase/migrations/baseline/20260807_prod_baseline_schema_dump.sql"
+BASELINE_DIR="$ROOT/crm7/supabase/migrations/baseline"
+mapfile -t BASELINE_CANDIDATES < <(find "$BASELINE_DIR" -maxdepth 1 -name '*_prod_baseline_schema_dump.sql' 2>/dev/null | sort)
 
-if [ ! -f "$BASELINE" ]; then
-  echo "::error::baseline dump missing at $BASELINE — cannot build a rehearsal substrate"
-  exit 1
-fi
+case "${#BASELINE_CANDIDATES[@]}" in
+  0)
+    echo "::error::no *_prod_baseline_schema_dump.sql found under $BASELINE_DIR — cannot build a rehearsal substrate"
+    exit 1
+    ;;
+  1)
+    BASELINE="${BASELINE_CANDIDATES[0]}"
+    ;;
+  *)
+    echo "::error::${#BASELINE_CANDIDATES[@]} baseline dumps found under $BASELINE_DIR — refusing to guess which is production's:"
+    printf '  %s\n' "${BASELINE_CANDIDATES[@]}"
+    echo "Remove the stale one(s) or resolve the collision before rehearsing."
+    exit 1
+    ;;
+esac
 
 echo "Baseline: $(wc -c < "$BASELINE") bytes, $(grep -c -F 'CREATE TABLE ' "$BASELINE") CREATE TABLE statements"
 
