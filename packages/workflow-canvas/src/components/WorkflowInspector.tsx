@@ -54,6 +54,7 @@ import type { WorkflowActionContext } from '../actionVocabulary.js';
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
 import { terminatorRole } from '../nodes/TerminatorNode.js';
 import type { TerminatorRole, WorkflowNode } from '../types.js';
+import { WORKFLOW_INSPECTOR_SURFACE, joinClassNames } from './chromeClasses.js';
 
 export interface WorkflowAssigneeOption {
   id: string;
@@ -331,11 +332,9 @@ export function WorkflowInspector({
 
   return (
     <aside
-      className={
-        className ??
-        'pointer-events-auto absolute bottom-3 right-3 z-10 w-72 rounded-xl border border-border bg-card p-3 shadow-md dark:shadow-[var(--glow-card,none)]'
-      }
+      className={joinClassNames(WORKFLOW_INSPECTOR_SURFACE, className)}
       data-testid="workflow-inspector"
+      data-workflow-region="inspector"
       aria-label="Selected step"
     >
       <p className="pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -676,3 +675,5 @@ export function WorkflowInspector({
     </aside>
   );
 }
+
+WorkflowInspector.workflowRegion = 'inspector' as const;

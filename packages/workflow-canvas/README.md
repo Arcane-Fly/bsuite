@@ -125,9 +125,13 @@ function WorkflowPage({ id }: { id: string }) {
 }
 ```
 
-The three chrome components are children of the canvas, positioned over it. Each renders nothing
+The three chrome components are children of the canvas. The canvas sorts them into reserved
+regions (toolbar / palette / diagram / inspector) so they do not paint over the flow pane —
+Fit View and edge clicks see the remaining box. Each chrome component still renders nothing
 when it has nothing to do — no selection, or a workflow the session cannot edit — so a consumer
-never has to gate them itself.
+never has to gate them itself. Do not pass placement-only `className`s; surface classes are
+always applied and extras compose rather than replace. Below ~800px of *canvas* width the
+palette becomes a chip row; the inspector column is reserved when a step is selected.
 
 Lazy-load the route. `@xyflow/react` must never reach the entry chunk — Phase C.2 of the May plan
 made that a hard rule with a bundle-analyser proof.

@@ -18,6 +18,9 @@
  *    load-bearing: React Flow v12 spreads its own wrapper style over whatever
  *    `style` prop it is given and silently discards width/height/position/
  *    overflow/zIndex. The canvas can only be given a box from OUTSIDE it.
+ *    Until 0.3.0-rc.3 that box was the whole wrapper and chrome was painted
+ *    over it; Fit View and edge clicks then saw a pane the palette covered.
+ *    The box is now the diagram *cell*. Chrome lives in sibling regions.
  *
  * NOT BORROWED, DELIBERATELY: `RelationshipCanvas`'s cycle rejection. See
  * `validation/connection.ts` — the process this canvas draws requires loops.
@@ -33,14 +36,24 @@ import {
 } from '@xyflow/react';
 import type { Viewport } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
 import type { WorkflowNode } from '../types.js';
+import {
+  WorkflowCanvasLayoutContext,
+  layoutFromWidth,
+  partitionWorkflowChrome,
+  type WorkflowCanvasLayout,
+} from './canvasRegions.js';
+import { joinClassNames } from './chromeClasses.js';
 
 export interface WorkflowCanvasProps {
   controller: WorkflowController;
-  /** Rendered over the canvas — palette, toolbar, properties panel. */
+  /**
+   * Palette, toolbar, inspector, and any diagram-cell child (FocusNodeBridge).
+   * Chrome is sorted into reserved regions; it is not painted over the flow pane.
+   */
   children?: React.ReactNode;
   /** Turn the drag/connect affordances off without a second component. */
   readOnly?: boolean;
@@ -113,48 +126,127 @@ function WorkflowCanvasInner({
 
   const renderNodes = useMemo(() => withRenderDimensions(controller.nodes), [controller.nodes]);
 
+  const { toolbar, palette, inspector, rest } = useMemo(
+    () => partitionWorkflowChrome(children),
+    [children],
+  );
+
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [layout, setLayout] = useState<WorkflowCanvasLayout>('regions');
+
+  useLayoutEffect(() => {
+    const el = rootRef.current;
+    if (!el) return;
+    const apply = (width: number) => {
+      setLayout(layoutFromWidth(width));
+    };
+    apply(el.getBoundingClientRect().width);
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width;
+      if (typeof width === 'number') apply(width);
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+
+  const hasToolbar = toolbar.length > 0;
+  const hasPalette = palette.length > 0;
+  const hasInspector = inspector.length > 0;
+  const compact = layout === 'compact';
+
   return (
-    <div
-      className={
-        className ?? 'relative h-full min-h-[420px] w-full flex-1 bg-background'
-      }
-      data-testid="bsuite-workflow-canvas"
-    >
-      {/* See the header: React Flow overwrites sizing keys passed through its
-          own `style` prop, so the box has to come from a div we own. */}
-      <div className="absolute inset-0">
-        <ReactFlow
-          nodes={renderNodes}
-          edges={controller.edges}
-          nodeTypes={controller.registry.nodeTypes}
-          onNodesChange={readOnly ? undefined : controller.onNodesChange}
-          onEdgesChange={readOnly ? undefined : controller.onEdgesChange}
-          onConnect={readOnly ? undefined : controller.onConnect}
-          isValidConnection={controller.isValidConnection}
-          onMoveEnd={onMoveEnd}
-          nodesDraggable={!readOnly}
-          nodesConnectable={!readOnly}
-          elementsSelectable
-          fitView
-          fitViewOptions={OPENING_FIT}
-          minZoom={0.05}
-          maxZoom={2}
-          nodeDragThreshold={8}
-          // Default is Backspace ONLY, so the Delete key silently does nothing —
-          // the same omission the schema canvas shipped with.
-          deleteKeyCode={readOnly ? null : ['Delete', 'Backspace']}
-          colorMode={colorMode}
-          aria-label={ariaLabel}
-          proOptions={{ hideAttribution: true }}
-          style={XY_TOKEN_BINDINGS}
-        >
-          <Background gap={16} />
-          <Controls showInteractive={false} />
-          {showMiniMap ? <MiniMap pannable zoomable /> : null}
-        </ReactFlow>
+    <WorkflowCanvasLayoutContext.Provider value={layout}>
+      <div
+        ref={rootRef}
+        className={joinClassNames(
+          'relative flex h-full min-h-[420px] w-full flex-1 flex-col bg-background',
+          className,
+        )}
+        data-testid="bsuite-workflow-canvas"
+        data-layout={layout}
+      >
+        {hasToolbar ? (
+          <div
+            data-testid="workflow-region-toolbar"
+            className="relative shrink-0 p-2 empty:hidden"
+          >
+            {toolbar}
+          </div>
+        ) : null}
+
+        {compact && hasPalette ? (
+          <div
+            data-testid="workflow-region-palette"
+            className="relative shrink-0 px-2 pb-2 empty:hidden"
+          >
+            {palette}
+          </div>
+        ) : null}
+
+        <div className="flex min-h-0 min-w-0 flex-1">
+          {!compact && hasPalette ? (
+            <div
+              data-testid="workflow-region-palette"
+              className="relative min-h-0 w-56 shrink-0 overflow-y-auto p-2 empty:hidden"
+            >
+              {palette}
+            </div>
+          ) : null}
+
+          {/* See the header: React Flow overwrites sizing keys passed through its
+              own `style` prop, so the box has to come from a div we own. That box
+              is now THIS cell, not the whole canvas — Fit View and hit-testing
+              see the remaining diagram, not the chrome. */}
+          <div
+            data-testid="workflow-region-diagram"
+            className="relative min-h-0 min-w-0 flex-1"
+          >
+            <div className="absolute inset-0">
+              <ReactFlow
+                nodes={renderNodes}
+                edges={controller.edges}
+                nodeTypes={controller.registry.nodeTypes}
+                onNodesChange={readOnly ? undefined : controller.onNodesChange}
+                onEdgesChange={readOnly ? undefined : controller.onEdgesChange}
+                onConnect={readOnly ? undefined : controller.onConnect}
+                isValidConnection={controller.isValidConnection}
+                onMoveEnd={onMoveEnd}
+                nodesDraggable={!readOnly}
+                nodesConnectable={!readOnly}
+                elementsSelectable
+                fitView
+                fitViewOptions={OPENING_FIT}
+                minZoom={0.05}
+                maxZoom={2}
+                nodeDragThreshold={8}
+                // Default is Backspace ONLY, so the Delete key silently does nothing —
+                // the same omission the schema canvas shipped with.
+                deleteKeyCode={readOnly ? null : ['Delete', 'Backspace']}
+                colorMode={colorMode}
+                aria-label={ariaLabel}
+                proOptions={{ hideAttribution: true }}
+                style={XY_TOKEN_BINDINGS}
+              >
+                <Background gap={16} />
+                <Controls showInteractive={false} />
+                {showMiniMap ? <MiniMap pannable zoomable /> : null}
+              </ReactFlow>
+            </div>
+            {rest}
+          </div>
+
+          {hasInspector ? (
+            <div
+              data-testid="workflow-region-inspector"
+              className="relative min-h-0 w-72 shrink-0 overflow-y-auto p-2 empty:hidden"
+            >
+              {inspector}
+            </div>
+          ) : null}
+        </div>
       </div>
-      {children}
-    </div>
+    </WorkflowCanvasLayoutContext.Provider>
   );
 }
 

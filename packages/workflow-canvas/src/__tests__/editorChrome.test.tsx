@@ -663,6 +663,45 @@ describe('WorkflowInspector', () => {
   });
 });
 
+describe('chrome surface is not optional (crm7#2604)', () => {
+  const PLACEMENT_ONLY = 'absolute left-2 top-2 z-10';
+
+  it('keeps the palette card surface and w-56 when a consumer passes placement-only classes', () => {
+    renderInFlow(
+      <WorkflowPalette controller={makeController()} className={PLACEMENT_ONLY} />,
+    );
+    const el = screen.getByTestId('workflow-palette');
+    expect(el.className).toContain('bg-card');
+    expect(el.className).toContain('border-border');
+    expect(el.className).toContain('w-56');
+    expect(el.className).toContain('pointer-events-auto');
+    expect(el.className).toContain('absolute');
+  });
+
+  it('keeps the toolbar flex surface when a consumer passes placement-only classes', () => {
+    render(<WorkflowToolbar controller={makeController()} className={PLACEMENT_ONLY} />);
+    const el = screen.getByTestId('workflow-toolbar');
+    expect(el.className).toContain('bg-card');
+    expect(el.className).toContain('flex');
+    expect(el.className).toContain('flex-wrap');
+    expect(el.className).toContain('pointer-events-auto');
+  });
+
+  it('keeps the inspector card surface and w-72 when a consumer passes placement-only classes', () => {
+    render(
+      <WorkflowInspector
+        controller={makeController()}
+        selectedNodeId="step-1"
+        className={`${PLACEMENT_ONLY} w-72`}
+      />,
+    );
+    const el = screen.getByTestId('workflow-inspector');
+    expect(el.className).toContain('bg-card');
+    expect(el.className).toContain('w-72');
+    expect(el.className).toContain('overflow-y-auto');
+  });
+});
+
 describe('WorkflowToolbar', () => {
   const draft = {
     id: 'ver-1',

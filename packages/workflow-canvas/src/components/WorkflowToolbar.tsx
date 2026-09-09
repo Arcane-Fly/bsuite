@@ -27,6 +27,7 @@
 import { useCallback } from 'react';
 
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
+import { WORKFLOW_TOOLBAR_SURFACE, joinClassNames } from './chromeClasses.js';
 
 export interface WorkflowToolbarProps {
   controller: WorkflowController;
@@ -59,11 +60,9 @@ export function WorkflowToolbar({ controller, className, onDuplicated }: Workflo
 
   return (
     <div
-      className={
-        className ??
-        'pointer-events-auto absolute right-3 top-3 z-10 flex flex-wrap items-center gap-2 rounded-xl border border-border bg-card p-2 shadow-md dark:shadow-[var(--glow-card,none)]'
-      }
+      className={joinClassNames(WORKFLOW_TOOLBAR_SURFACE, className)}
       data-testid="workflow-toolbar"
+      data-workflow-region="toolbar"
     >
       <span
         className="px-1 text-xs text-muted-foreground"
@@ -141,6 +140,8 @@ export function WorkflowToolbar({ controller, className, onDuplicated }: Workflo
     </div>
   );
 }
+
+WorkflowToolbar.workflowRegion = 'toolbar' as const;
 
 const buttonClass =
   'rounded-lg border border-border-interactive bg-background px-2.5 py-1 text-xs font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring';
