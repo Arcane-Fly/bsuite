@@ -1,8 +1,8 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 182,
-  "unusedSharedComponents": 155,
+  "sharedComponents": 185,
+  "unusedSharedComponents": 158,
   "localComponentFiles": {
     "crm7": 451,
     "business-suite-unified": 119,
@@ -1232,6 +1232,13 @@
       "consumingApps": 0
     },
     {
+      "name": "TASK_PRIORITY_OPTIONS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "TERMINATOR_DEFAULT_SIZE",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
@@ -1268,6 +1275,20 @@
     },
     {
       "name": "ViewportSchema",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_ACTION_KINDS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_ACTION_VOCABULARY",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
       "consumerFiles": 0,

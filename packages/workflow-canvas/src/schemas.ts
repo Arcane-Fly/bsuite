@@ -65,6 +65,13 @@ const CommonNodeDataFields = {
 export const StepNodeDataSchema = z.looseObject({
   ...CommonNodeDataFields,
   actionKey: z.string().min(1).max(120).optional(),
+  /**
+   * Free-form (see `types.ts` `StepNodeData.action`) — validated only as an
+   * object, not against a per-kind shape, because the vocabulary is owned by
+   * the processor and this package must round-trip a kind it has never heard
+   * of rather than reject it.
+   */
+  action: z.record(z.string(), z.unknown()).optional(),
 });
 
 export const DecisionNodeDataSchema = z.looseObject({
