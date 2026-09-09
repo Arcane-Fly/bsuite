@@ -141,6 +141,47 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('createOAuthClient', () => {
+  it('binds persisted state synchronously before the authorization navigation', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    let bound = ''
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite({
+      beforeRedirect(state) {
+        expect(localMock.getItem('bs_oauth_state')).toBe(state)
+        expect(localMock.getItem('bs_oauth_code_verifier')).toBeTruthy()
+        expect(localMock.getItem('bs_oauth_nonce')).toBeTruthy()
+        expect(window.location.href).toBe('')
+        bound = state
+        return undefined
+      },
+    })
+    expect(new URL(window.location.href).searchParams.get('state')).toBe(bound)
+  })
+
+  it('failed binding does not navigate or erase an unrelated pending flow', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const earlier = localMock.getItem('bs_oauth_state')!
+    const earlierFlow = JSON.parse(localMock.getItem('bs_oauth_flows')!)[earlier]
+    window.location.href = ''
+    let failedState = ''
+    await expect(client.signInWithBusinessSuite({
+      beforeRedirect(state) { failedState = state; throw new Error('binding denied') },
+    })).rejects.toThrow('binding denied')
+    expect(window.location.href).toBe('')
+    expect(JSON.parse(localMock.getItem('bs_oauth_flows')!)[earlier]).toEqual(earlierFlow)
+    expect(JSON.parse(localMock.getItem('bs_oauth_flows')!)[failedState]).toBeUndefined()
+    expect(localMock.getItem('bs_oauth_state')).toBeNull()
+    expect(localMock.getItem('bs_oauth_last_redirect_at')).toBeNull()
+  })
+
+  it('passes ownership binding to the silent redirect path', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const beforeRedirect = vi.fn(() => undefined)
+    expect(await createOAuthClient(CLIENT_ID).attemptSilentAuthDetailed({ beforeRedirect }))
+      .toEqual({ status: 'redirecting' })
+    expect(beforeRedirect).toHaveBeenCalledWith(localMock.getItem('bs_oauth_state'))
+  })
   it('returns all nine expected methods', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     const client = createOAuthClient(CLIENT_ID)

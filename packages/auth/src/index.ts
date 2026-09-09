@@ -21,3 +21,16 @@ export type {
   SignInOptions,
   VerifiedUser,
 } from './types.js';
+export {
+  AuthCoordinationUnavailableError,
+  AuthOwnershipSupersededError,
+  createAuthSessionCoordinator,
+} from './session-ownership.js';
+export type {
+  AuthOwnershipSnapshot,
+  AuthOwnershipEnvironment,
+  AuthSessionLock,
+  AuthCommitScope,
+  AuthSessionAdapter,
+  AuthSessionCommit,
+} from './session-ownership.js';
