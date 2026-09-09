@@ -78,7 +78,7 @@ const SOURCE_EXT = '(?:tsx|jsx|ts|js|mjs|cjs|py|sql|json|ya?ml|md|sh|toml|css|ht
  * and avoid matching `.tsx.bak` as `.ts` while still allowing line/column
  * suffixes and punctuation immediately after a citation.
  */
-const EXTEND = '(?::(\\d+)(?::(\\d+))?)?(?![A-Za-z0-9_./-])';
+const EXTEND = '(?::(\\d+)(?::(\\d+))?)?(?![A-Za-z0-9_/-]|\\.[A-Za-z0-9_-])';
 
 /**
  * A citation is a slash-bearing path ending in a known source extension,
@@ -286,7 +286,7 @@ function runFixtureReview(reviewFile, root) {
 }
 
 function selfTest() {
-  const testCount = 2;
+  const testCount = 3;
   const fixture = mkdtempSync(join(tmpdir(), 'check-review-citations-selftest-'));
   const reviewFile = join(fixture, 'review.md');
 
@@ -306,18 +306,18 @@ function selfTest() {
     write('crm7/src/components/common/DocumentEditor/index.tsx', '// exists');
     write('crm7/src/pages/documents/templates/editor.jsx', '// exists');
     write('crm7/src/services/builder.mjs', '// exists');
-    write('crm7/src/pages/bad.ts', '// sibling for truncation bait');
+    write('crm7/src/pages/truncation.ts', '// sibling for false-pass bait');
     write('review.md', [
-      '- `crm7/src/components/common/DocumentEditor/index.tsx:42:7`',
-      '- `crm7/src/pages/documents/templates/editor.jsx` (parentheses)',
-      '- `crm7/src/services/builder.mjs`',
-      '- `crm7/src/pages/bad.tsx.bak`',
+      'A valid sentence cites crm7/src/components/common/DocumentEditor/index.tsx.',
+      'A parenthesized one cites `crm7/src/pages/documents/templates/editor.jsx`',
+      'A file with line and punctuation cites crm7/src/services/builder.mjs:3:2.',
+      'A non-source extension should not be treated as a citation: crm7/src/pages/truncation.tsx.bak.',
     ].join('\n'));
 
     const clean = runFixtureReview(reviewFile, fixture);
     const cleanFound = clean.out.match(/citations found (\d+)\s+ resolved (\d+)\s+ unresolved (\d+)/);
     check(
-      'clean fixture passes with .tsx/.jsx/.mjs and ignores unsupported .tsx.bak',
+      'clean fixture passes with .tsx/.jsx/.mjs, sentence-period citation, and ignores unsupported .tsx.bak',
       clean.code === 0 &&
         cleanFound !== null &&
         Number(cleanFound[1]) === 3 &&
@@ -329,16 +329,16 @@ function selfTest() {
       '- `crm7/src/components/common/DocumentEditor/index.tsx`',
       '- `crm7/src/pages/documents/templates/editor.jsx`',
       '- `crm7/src/services/builder.mjs`',
-      '- `crm7/src/pages/missing.tsx`',
-      '- `crm7/src/pages/bad.tsx.bak`',
+      '- `crm7/src/pages/truncation.tsx`',
+      '- `crm7/src/pages/truncation.tsx.bak`',
     ].join('\n'));
 
     const fail = runFixtureReview(reviewFile, fixture);
     check(
-      'fixture with missing path exits non-zero',
+      'false-pass bite: .tsx cited while only .ts sibling exists',
       fail.code !== 0 &&
         fail.out.includes('FAIL: 1 of 4 cited path(s) do not exist in this repo.') &&
-        fail.out.includes('crm7/src/pages/missing.tsx'),
+        fail.out.includes('crm7/src/pages/truncation.tsx'),
     );
   } finally {
     rmSync(fixture, { recursive: true, force: true });
