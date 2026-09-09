@@ -286,7 +286,7 @@ function runFixtureReview(reviewFile, root) {
 }
 
 function selfTest() {
-  const testCount = 3;
+  let testCount = 0;
   const fixture = mkdtempSync(join(tmpdir(), 'check-review-citations-selftest-'));
   const reviewFile = join(fixture, 'review.md');
 
@@ -298,6 +298,7 @@ function selfTest() {
 
   let bad = 0;
   const check = (name, ok) => {
+    testCount += 1;
     console.log(`  ${ok ? 'ok  ' : 'FAIL'}  ${name}`);
     if (!ok) bad += 1;
   };
