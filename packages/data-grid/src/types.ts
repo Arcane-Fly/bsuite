@@ -127,11 +127,25 @@ export interface LinkEdit<TRow = unknown> {
 }
 
 export interface CellEdit<TRow = unknown> {
+  /** Always supplied by DataGrid; optional for backwards-compatible host-created edits. */
+  rowId?: string;
   rowIndex: number;
   columnId: string;
   previousValue: unknown;
   value: unknown;
   row: TRow;
+}
+
+export interface CellEditFailure {
+  rowId: string;
+  columnId: string;
+  status: 'failed';
+  message?: string;
+}
+
+/** Omitted cells succeeded. A void result preserves the original all-success contract. */
+export interface CellEditResult {
+  failures: readonly CellEditFailure[];
 }
 
 export type DataGridErrorPhase = 'edit' | 'paste' | 'fill' | 'clear' | 'undo' | 'redo' | 'clipboard';
@@ -183,7 +197,7 @@ export interface DataGridProps<TRow extends RowData = RowData> {
    * is a display, not a grid, and making it optional invites exactly the
    * "edited, nothing happened" gap this package exists to close.
    */
-  onCellsEdited: (edits: CellEdit<TRow>[]) => void | Promise<void>;
+  onCellsEdited: (edits: CellEdit<TRow>[]) => void | CellEditResult | Promise<void | CellEditResult>;
   /** REQUIRED — see DataGridError doc comment. */
   onError: (error: DataGridError<TRow>) => void;
   /** Freeze the first column (sticky left, excluded from reorder). Default true. */

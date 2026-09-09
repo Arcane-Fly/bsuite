@@ -7,6 +7,14 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [Unreleased] — Per-cell persistence outcomes
+
+- Add optional `CellEditResult` failures by stable row and column identity; void callbacks retain all-success behavior.
+- Remove refused optimistic values, release acknowledged successful values to host data, and retain only saved undo operations.
+- Preserve partial undo/redo retries and reconcile concurrent failures by attempt and history-entry identity.
+- Skip failed predecessor drafts during undo, including undo requested while a predecessor is still pending.
+- Consumer preview pinning and deployed UX acceptance remain pending; no package version changes in this source commit.
+
 ## [3.0.1] — 2026-08-31 — Ship a resolvable ESM import
 
 `3.0.0` shipped `import { gridFeatures } from './tableFeatures'` — no file
