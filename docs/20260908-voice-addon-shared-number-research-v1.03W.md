@@ -11,8 +11,8 @@ evidence:
 
 # Shared business number for a small client: 3CX, custom calling, or managed — research record
 
-**Status:** W (working) · **Version:** 1.02 · **Date:** 2026-09-08, updated 2026-09-09 11:45 AWST ·
-**Author:** Claude Code (bsuite lane) · **Supersedes:** v1.01W (merged in bsuite#3215)
+**Status:** W (working) · **Version:** 1.03 · **Date:** 2026-09-08, updated 2026-09-09 12:10 AWST ·
+**Author:** Claude Code (bsuite lane) · **Supersedes:** v1.01W (merged in bsuite#3215) and v1.02W (same PR)
 **Trigger:** enquiry from Rahawa Abraham, Service Coordinator, Life Purpose Australia (NDIS
 provider, Wembley WA), 08 Sep 2026, "Shared Business Phone & Messaging System"
 **Relates to:** `20260828-messaging-platform-design-v1.00W.md` (SMS on Mobile Message);
@@ -47,6 +47,7 @@ CRM7. Recommendation and conditions in §9.
 | C5 | "Twilio replies terminate on our sms-inbound webhook" stated as if working | `sms-inbound` is JSON-only, authenticated by a `?secret=` query parameter, keyed on `message_numbers.sender`; a Twilio form-encoded POST returns 400 (§6.1) | Any carrier-inbound path needs an adapter and evidence; none exists |
 | C6 | "Softphone becomes worthwhile above ~150 min/month" | Payback computed in §7.5: 3–5 years at this client's volumes; browser softphone is desk-only in practice | Not a lever for this client |
 | C7 | $450 setup, $146/month, 60 minutes, 25c overage, four weeks | Provisional assumptions; re-costed per architecture in §7 | Retail figures restated |
+| C9 | v1.02W §13: "Twilio stays the first-build voice provider" | Operator standing rule 2026-09-09 11:45: no Twilio; own the capability on wholesale carriage; think long term. Rented per-minute platforms are the comparison, never the default | §14 replaces the provider layer with an owned switch on reseller/wholesale carriage; Twilio removed from the build |
 | C8 | Inbound-SMS inbox gap treated as a lane risk | crm7#2594 is closed (dual-write + edge deploy 2026-09-08); bsuite#3204 remains the customization programme epic; it defines the canonical inbound contract | This record consumes that work and must not duplicate it |
 
 ## 1. Requirements and constraints
@@ -390,3 +391,149 @@ pre-agreement item, not a post-launch one.
 path). Maxo spike (trial account). Astra's handoff package location (operator). Voice
 Intelligence en-AU processing location and retention (provider documentation, legal). Whether
 the four-week target survives P0 (repository inspection after P0).
+
+## 14. Owned voice stack on wholesale carriage (standing rule, 2026-09-09)
+
+**Rule (operator, verbatim):** "i'm 100% not supporting twilo. i far prefer the option of
+having our own version at wholesale costs. think general standing rules. best long term
+solution." Recorded in agent memory and qig-memory
+(`bsuite_ruling_20260909_no_twilio_own_voice_stack_at_wholesale`). This section supersedes the
+provider layer in §9 and §13. Everything the client was promised (§12) still holds; what changes
+is who owns the switch, the per-minute economics, and the lead time.
+
+### 14.1 Architecture
+
+| Layer | Choice | Why | Evidence |
+|---|---|---|---|
+| Switch | **FreeSWITCH + FusionPBX**, one Sydney VM (2–4 vCPU, 4–8 GB; ap-southeast-2 / australiaeast / DO SYD1; UDP 16384–32768 RTP + SIP), multi-tenant by FreeSWITCH domain | MPL, no seat fees; ring groups, weekday time conditions, after-hours greeting, voicemail-to-email, recording, CDR are configuration; ESL gives live ringing/answered/ended/agent events; SIP-over-WSS / Verto for browser calling | Stack lane 2026-09-09: docs.fusionpbx.com |
+| Fallback switch | jambonz (open-source 0.9.x MIT; 10.x commercial licence) | Developer-native webhook model and CPaaS-style multi-tenant accounts, but no packaged mobile push SDK and a new licence uncertainty | jambonz.org, docs.jambonz.org |
+| Mobile ringing on a locked phone | **Bought, not built**: Groundwire (Acrobits) ~$12.99 one-off per user, or Acrobits Cloud Softphone per-active-user; Sangoma Talk only if Asterisk/FreePBX were chosen | PushKit/CallKit ringing via the vendor's push relay; the hardest requirement is solved by a $13 app | Stack lane; acrobits.net |
+| Desktop | Browser softphone embedded in crm7 later (SIP.js / JsSIP over WSS); FusionPBX web client or a desktop SIP app on day one | | |
+| Events → CRM | ESL consumer (Node worker on the same VM or Railway if UDP is not needed there) → BSU edge function with the durable command/event contract Astra specified (idempotency key, session id, leg id) → `call_log` rows in `/communications` with agent attribution and called-back state | Astra §5 adopted | |
+| Click-to-call | ESL `originate` from crm7: rings the staff extension (Groundwire app or WebRTC) then bridges to the client with the tenant's 04 as CLI. One PSTN leg, not two | FreeSWITCH originate | |
+| Voicemail transcription | Azure Speech `australiaeast` (in-region, AU English) called from the ESL worker on the recording; storage in the tenant's Supabase bucket; retention setting per tenant | Microsoft-aligned; Astra §9 requires location + legal review before enabling | learn.microsoft.com speech regions |
+| SMS | Mobile Message stays. Outbound from the 04 as a verified own number (proven for handsets); inbound replies must be delivered by the 04's carrier by webhook or email into `sms_inbound_persist` via a small adapter | §3.1, E2b | |
+| Numbers | Tenant 04 "virtual mobile number" from the carrier (SIPcity from ~$10, Maxo $14.95, Voxbone via API, unverified rates); client's 1300 stays at Telcoworks and forwards to the 04, or ports later by Porting Authority Form (2–20 business days) | Carriage lane | |
+| Billing | CDR from FreeSWITCH → `message_usage`-style `call_usage` with supplier leg seconds, retail conversation minutes, allowance, adjustments → existing invoice pipeline | Astra §5 | |
+
+Kamailio/OpenSIPS edge is deferred until tenant count and NAT registration volume need it.
+
+### 14.2 Carriage: two routes, staged
+
+| | Route A: white-label reseller under an SME CSP | Route B: direct wholesale with a carrier-tier CSP |
+|---|---|---|
+| Who | Maxo (explicit white-label, virtual mobile numbers, SMS API "planned"), Aatrox ("no minimum commitment", tiered wholesale rate card; but its mobile/SMS is via Twilio, so use it for voice/1300 only), CrazyTel wholesale API, Swoop white-label, Over the Wire / NetSIP wholesale self-service, VoIPLine (white-label partners must hold their own TIO membership) | Symbio (Number Manager + Connect API for numbers, porting, CDRs; mobile numbers), Vocus wholesale voice/UCaaS, Aussie Broadband Wholesale. Telstra SIP Connect requires 100 channels; Optus enterprise-only |
+| What we get | SIP trunk to our FreeSWITCH, DIDs, 04 VMNs, 1300 hosting, porting, under our brand; host CSP keeps IPND, 000 routing, and TCP Code programme in most models | The same at carrier rates, with a real provisioning API |
+| What we take on | CSP status (we supply carriage to the public under our brand) and therefore TIO membership (minimum ~$400/yr ex GST + per-complaint case fees), TCP Code compliance attestations; IPND and 000 via the host | Everything: TIO, IPND next-business-day uploads, 000 obligations, TCP Code, TIA Act 2-year data retention, credit checks, minimum commitments |
+| Lead time | 1–3 weeks (agreement, TIO application, trunk, number) | 4–8+ weeks, sales cycle and minimums |
+| When it wins | Now, at 3 seats | When monthly minutes are in the tens of thousands or dozens of trunks, so the carrier rate card beats the reseller markup by more than the compliance cost |
+
+**Staging:** Route A first, with the switch, apps, events and billing built once and carrier-neutral
+behind a SIP trunk. Route B becomes a swap of trunk and number ownership when volume justifies
+CSP registration in full. That is "our own version at wholesale cost" reached in two steps
+without building compliance we cannot yet amortise.
+
+Pending legislation: the Telecommunications Amendment (Enhancing Consumer Safeguards) Bill 2025
+creates a formal CSP register; status unverified as of 2026-09-09; check before signing.
+
+### 14.3 The one requirement that is still unproven
+
+One number for calls and texts, Mobile Message sending, means inbound SMS to the 04 must be
+delivered by the 04's carrier to us. VMN vendors advertise "two-way SMS" but no first-party
+page found describes the delivery mechanism (webhook, email, API pull) or whether it survives
+the number being used for voice on our trunk. This is RFQ question 1 to every shortlisted
+carrier and a bench test before the agreement. Interim fallback that keeps every client promise
+except "one number": Mobile Message dedicated number for texts.
+
+### 14.4 Cost, owned stack (AUD ex GST; carrier rates are reseller-tier estimates until the RFQ returns)
+
+| Item | Supplier cost | Note |
+|---|---|---|
+| Sydney VM for the switch | ~$60–120/mo | shared across all tenants |
+| 04 virtual mobile number | $7.50–14.95/mo per tenant | SIPcity/APC/Maxo published |
+| Outbound to AU mobile | ~5–12c/min, one leg | CrazyTel "from 5c", APC 10–12c, Aatrox 10c |
+| Outbound to AU landline | 8–10c per call untimed | APC |
+| Inbound to the 04 | not published; assume included or ~1–3c | RFQ |
+| Telcoworks 1300 leg | client's own plan, 10–22.5c/min | unchanged |
+| Groundwire | $13 one-off per user | 3 users = $39 |
+| Azure Speech transcription | ~USD 1/hour audio | negligible at her volume |
+| Mobile Message SMS | 2–4c out, replies free | |
+| TIO membership | ≥ $400/yr + case fees | estate cost, not per tenant |
+
+Client retail as drafted stays: $1,040 setup, $146/mo, 25c/min beyond the first hour, 7c–10c
+texts. Margin per bridged minute improves from ~2c (Twilio two-leg) to ~13–20c, and the
+overage can drop to 20c once the rate card is known. Medium scenario client total ≈ $146 +
+$46 calls + $21 SMS + $60 Telcoworks ≈ $273/mo (was $412 on the Twilio bridge).
+
+### 14.5 Timeline, honestly
+
+| Phase | Work | Elapsed |
+|---|---|---|
+| P0 | Pin refs, ownership map, writers/grants; carrier RFQs (inbound SMS on 04, rates, minimums, TIO responsibility); TIO application if Route A requires it | week 1–2 |
+| P1 | Sydney VM, FreeSWITCH + FusionPBX, tenant domain, trunk from the chosen CSP, 04 number, 1300 forwarded; Groundwire on three phones; ring group + weekday time conditions + after-hours + voicemail | week 2–4 |
+| P2 | ESL worker → BSU command/event contract → `call_log` in `/communications` with attribution and called-back state; click-to-call via originate | week 4–7 |
+| P3 | Mobile Message own-number verification on the 04; carrier inbound SMS adapter into `sms_inbound_persist`; comms-only tenant flags; ShiftCare CSV import | week 6–8 |
+| P4 | Transcription (location review first), CDR → usage → invoice line; acceptance tests §11 + Astra's scenarios; five business days observation | week 8–10 |
+
+Realistic go-live before red-team: 8–10 weeks. **After red-team (§14.7): about three months
+for phase 1**, gated by carrier onboarding and the week-1 SMS bench test, not by code. The
+client said she is not in a rush; the draft reply says "roughly three months".
+
+### 14.6 RFQ to shortlisted carriers (send to Maxo, Aatrox, CrazyTel, Swoop, Over the Wire; Symbio for Route B pricing)
+
+1. 04 virtual mobile number on a SIP trunk to our own FreeSWITCH: voice in/out with the 04 as CLI; **inbound SMS delivery mechanism** (webhook payload, email, API) and whether outbound SMS from a third party (Mobile Message own-number) on that number is permitted.
+2. Rate card: DID rental, per-minute to AU mobile/landline, inbound, 1300 hosting and inbound, 13/1300 outbound; billing increment; setup and minimums.
+3. Capacity: three concurrent calls per tenant minimum; channel pricing.
+4. Compliance split: who holds TIO membership, IPND, 000, TCP Code under the white-label agreement; whether we must register as a CSP.
+5. Porting: 1300 by PAF, lead time; 04 port-in/out.
+6. API: number provisioning, CDR pull, porting status; webhook events if any.
+7. White-label terms: branding, billing, support escalation, exit and number portability.
+
+### 14.7 Red-team outcome (2026-09-09 12:05 AWST) and the changes adopted
+
+Verdict on the §14 draft: NOT-READY on V1, V2, V3, V4, V6, V12. Every finding below is adopted
+into the plan; none is deferred.
+
+| ID | Finding | Change to the plan |
+|---|---|---|
+| V1 Critical | 000 emergency calling absent. An NDIS worker dialling 000 from an app during a crisis must not fail or present a Sydney location for a Perth caller | Define and bench-test 000 behaviour before P1; written carrier confirmation of 000 handling and location data on the 04; standard written notice to the client that the service is not a substitute for a mobile in an emergency. Phase 1 (below) keeps 000 on their own mobiles anyway |
+| V2 Critical | Internet-facing PBX: toll fraud and FusionPBX admin CVEs | Hardening baseline is a P1 deliverable: TLS 5061 + WSS only, SIP restricted to carrier IPs, admin UI behind VPN or IP allowlist, random 24-char secrets, international dialling denied by default, fail2ban, carrier-side channel and spend caps, hourly spend alarm |
+| V3 Critical | In Australia an 04 number's messaging is bound to one aggregator; "Mobile Message sends, the voice carrier receives" probably fails at that binding. Own-number verification proves outbound only | Moved from week 6–8 to **week 1** as a paid bench test on one carrier, with a null result expected. The client is told now, not in week 8: texts may need their own business number. Draft updated |
+| V4 Critical | One VM, no failover: maintenance or a panic takes the client's only number off the air | Carrier-side failover destination on trunk-unreachable to a nominated mobile, set at provisioning; documented rebuild; uptime probe with SMS alert |
+| V5 High | "Solved by a $13 app" is false: Acrobits push needs dialplan integration and wait-for-register logic; the relay is a third party on the ring path | Re-costed 5–10 days; proven on one handset before rollout; PSTN no-answer fallback to the staff mobile. And see the phase-1 shape below, which removes it from the critical path |
+| V6 High | Supplying carriage under our brand makes us a CSP on day one; TIO, TCP Code and complaints handling are ours regardless of the host's commercial allocation | P0 item: written legal opinion (operator is a lawyer) plus the host CSP's written attestation of the compliance split, before any client agreement |
+| V7 High | ESL is unauthenticated-by-default full call control; exposing it off-box is remote toll fraud plus call interception | ESL bound to loopback with ACL and rotated secret; the event worker lives on the VM; if ever remote, mTLS tunnel only |
+| V8 High | ESL is a live stream with no replay; a worker restart silently under-reports `call_log` and R5 is wrong with no error | Persist raw events locally before acknowledging; nightly CDR reconciliation is the source of truth; alert on event gap |
+| V9 High | Time conditions run on domain timezone; Sydney has DST, Perth does not | Tenant domain timezone Australia/Perth explicitly; NTP-locked VM; acceptance tests at 08:59 and 17:01 AWST either side of a DST boundary |
+| V10 High | "Carrier-neutral" is untested against CLI presentation rules and number ownership; a hosted VMN may not be portable, making the two-step to Symbio a one-way door | RFQ item 7 now asks who holds the allocation, whether the 04 ports to another CSP, terms and lead time; the answer goes into the client agreement |
+| V11 High | Four owners on the 1300 chain and no end-to-end monitoring: calls lost before the trunk appear nowhere, so R1 fails for exactly the class that matters | 15-minute synthetic canary call through the 1300; monthly reconciliation of the Telcoworks invoice against our call count |
+| V12 High | 8–10 weeks not credible: carrier agreement, credit check and TIO realistically 3–8 weeks; push integration +2–4; SMS re-scope +2; NAT/audio tail | Quoted to the client as roughly three months; internal plan 12–16 weeks for phase 1 in the shape below |
+| V13 Medium | FreeSWITCH domain separation is a convention; recordings and voicemail on one filesystem repeat the estate's cross-tenant leak class | Per-domain contexts with no shared default; recordings in per-tenant Supabase storage under RLS; a cross-domain dial attempt in the acceptance suite |
+| V14 Medium | Inbound SMS adapter authentication unspecified | HMAC, mTLS or IP allowlist is an RFQ pass/fail; adapter writes to `sms_inbound_persist` only behind signature and replay-window checks |
+| V15 Medium | Recording listed as configuration; WA Surveillance Devices Act 1998 all-party consent; NDIS call content is sensitive information under APP 11 | Recording off by default; consent announcement when enabled; per-tenant retention; encrypted per-tenant storage; access logged; Azure Speech data path confirmed before P4 |
+| V16 Medium | "Margin improves to 13–20c" only applies to overage minutes; the $146 bundles the first hour; the client's saving is the removed second leg, not wholesale | Stated plainly: tenant one is loss-making by design against 12–16 weeks of build; tenant two is not anchored to $146; no wholesale saving is claimed to the client |
+
+**Phase-1 shape adopted (the reviewer's "better way", within the rule).** Keep the owned
+FreeSWITCH switch and the wholesale trunk exactly as designed, but do not put the three mobiles
+on SIP in phase 1. The ring group forks to their existing mobile numbers over the trunk by the
+weekday roster; outbound is click-to-call by `originate` with the 04 as CLI, ringing the staff
+mobile first; voicemail, greeting, call log, attribution and the 1300 forward all work as
+specified. This removes the push relay, UDP/NAT registration on carrier mobile networks and the
+softphone attack surface from the critical path, keeps 000 on their own mobiles, and costs a
+second inbound leg of roughly $20–48/month at her volume at reseller rates. Groundwire or a
+WebRTC softphone becomes phase 2 once the switch has run clean for a month; desktop calling
+arrives with it. Every promise in the operator's sent email except "in-app dialling" is met in
+phase 1, and that was never promised.
+
+**Phase-1 plan, revised**
+
+| Phase | Work | Weeks |
+|---|---|---|
+| P0 | Pin refs, ownership, writers/grants; carrier RFQs (§14.6); legal opinion on CSP status + host attestation; TIO application; **week-1 SMS binding bench test on one carrier** | 1–3 |
+| P1 | Sydney VM, FreeSWITCH + FusionPBX hardened per V2, tenant domain (Australia/Perth), trunk, 04 number, carrier failover to a mobile, 1300 forwarded; ring group forked to mobiles by roster; after-hours greeting + voicemail; 000 behaviour confirmed; canary call | 3–6 |
+| P2 | ESL worker (loopback, persisted events) → BSU command/event contract → `call_log` in `/communications` with attribution and called-back state; click-to-call by originate; nightly CDR reconciliation | 6–9 |
+| P3 | SMS per the bench-test result: own-number on the 04 if it passed, otherwise Mobile Message dedicated number; comms-only tenant flags; ShiftCare CSV import | 8–10 |
+| P4 | Transcription (recording off by default; consent; location review), CDR → usage → invoice; acceptance §11 + Astra scenarios + V9/V13 cases; five business days observation | 10–13 |
+| Phase 2 | Groundwire / WebRTC softphone with PSTN fallback; desktop calling; Kamailio edge when tenant count needs it; Route B carriage when volume justifies full CSP compliance | after a clean month |
+
+Client-facing timing: roughly three months, date confirmed once the carrier is in place.
