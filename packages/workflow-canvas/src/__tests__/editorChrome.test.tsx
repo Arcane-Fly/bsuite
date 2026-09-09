@@ -27,12 +27,14 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { WORKFLOW_ACTION_VOCABULARY } from '../actionVocabulary.js';
 import { WorkflowInspector } from '../components/WorkflowInspector.js';
 import { WorkflowPalette } from '../components/WorkflowPalette.js';
 import { WorkflowToolbar } from '../components/WorkflowToolbar.js';
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
 import { workflowNodeTypeRegistry } from '../nodes/registry.js';
 import { StepNode, STEP_DEFAULT_SIZE } from '../nodes/StepNode.js';
+import { terminatorHandles } from '../nodes/TerminatorNode.js';
 import { StepNodeDataSchema } from '../schemas.js';
 import { SEQUENTIAL_HANDLES } from '../nodes/handles.js';
 import type { WorkflowNode } from '../types.js';
@@ -53,6 +55,30 @@ const STEP: WorkflowNode = {
   data: { label: 'Accept employment offer', description: '' },
 };
 
+const END_TERMINATOR: WorkflowNode = {
+  id: 'end-1',
+  type: 'terminator',
+  position: { x: 0, y: 0 },
+  data: { label: 'End', role: 'end' },
+};
+
+const NOTIFY_STEP: WorkflowNode = {
+  id: 'step-notify',
+  type: 'step',
+  position: { x: 0, y: 0 },
+  data: {
+    label: 'Tell the coordinator',
+    actionKey: 'notify_internal',
+    action: {
+      kind: 'notify_internal',
+      message: 'Inbound SMS received',
+      // An unfamiliar key this package has never heard of — every commit made
+      // through the inspector must round-trip it unchanged.
+      custom_marker: 'kept-through-edits',
+    },
+  },
+};
+
 function makeController(overrides: Partial<WorkflowController> = {}): WorkflowController {
   const graph = emptyWorkflowGraph();
   return {
@@ -60,7 +86,7 @@ function makeController(overrides: Partial<WorkflowController> = {}): WorkflowCo
     versions: [],
     draft: null,
     registry: workflowNodeTypeRegistry,
-    nodes: [LANE, STEP],
+    nodes: [LANE, STEP, END_TERMINATOR, NOTIFY_STEP],
     edges: graph.edges,
     viewport: graph.viewport,
     isLoading: false,
@@ -222,6 +248,162 @@ describe('WorkflowInspector', () => {
     const controller = makeController();
     render(<WorkflowInspector controller={controller} selectedNodeId={null} />);
     expect(screen.queryByTestId('workflow-inspector')).toBeNull();
+  });
+
+  describe('terminator role (crm7#2603)', () => {
+    it('offers Start and End, showing which is committed', () => {
+      const controller = makeController();
+      render(<WorkflowInspector controller={controller} selectedNodeId="end-1" />);
+
+      expect(screen.getByTestId('workflow-inspector-role-start')).toHaveAttribute(
+        'aria-checked',
+        'false',
+      );
+      expect(screen.getByTestId('workflow-inspector-role-end')).toHaveAttribute(
+        'aria-checked',
+        'true',
+      );
+    });
+
+    it('commits role: start in ONE undo step, which re-derives the handle set', () => {
+      const updateNodeData = vi.fn();
+      const controller = makeController({ updateNodeData });
+      render(<WorkflowInspector controller={controller} selectedNodeId="end-1" />);
+
+      fireEvent.click(screen.getByTestId('workflow-inspector-role-start'));
+
+      expect(updateNodeData).toHaveBeenCalledTimes(1);
+      expect(updateNodeData).toHaveBeenCalledWith('end-1', { role: 'start' });
+      // The handle set is a pure function of `data.role` (TerminatorNode.tsx) —
+      // committing the new role is what re-derives it, with no separate step.
+      expect(terminatorHandles({ role: 'start' })).not.toEqual(terminatorHandles({ role: 'end' }));
+    });
+
+    it('does not commit when clicking the already-committed role', () => {
+      const updateNodeData = vi.fn();
+      const controller = makeController({ updateNodeData });
+      render(<WorkflowInspector controller={controller} selectedNodeId="end-1" />);
+
+      fireEvent.click(screen.getByTestId('workflow-inspector-role-end'));
+      expect(updateNodeData).not.toHaveBeenCalled();
+    });
+
+    it('does not render a Role control for a step', () => {
+      const controller = makeController();
+      render(<WorkflowInspector controller={controller} selectedNodeId="step-1" />);
+      expect(screen.queryByTestId('workflow-inspector-role-start')).toBeNull();
+    });
+  });
+
+  describe('step action (crm7#2603)', () => {
+    it('lists exactly the processor-implemented vocabulary, one constant, no duplicated strings', () => {
+      const controller = makeController();
+      render(<WorkflowInspector controller={controller} selectedNodeId="step-1" />);
+
+      const select = screen.getByTestId('workflow-inspector-action-kind') as HTMLSelectElement;
+      const kinds = Array.from(select.options)
+        .map((o) => o.value)
+        .filter((v) => v !== '');
+      expect(kinds).toEqual(WORKFLOW_ACTION_VOCABULARY.map((entry) => entry.kind));
+    });
+
+    it('marks a skipped kind as not automated yet, with the processor own reason', () => {
+      // The kind picker is driven by COMMITTED data, not a local draft (unlike
+      // the text fields), so this needs a controller that actually applies a
+      // patch — a bare vi.fn() would leave the select's value unmoved and the
+      // assertion would pass for the wrong reason.
+      const node = { ...STEP, id: 'step-kind-swap', data: { label: 'Notify', actionKey: '' } };
+      const nodes = [node];
+      const controller = makeController({
+        nodes,
+        updateNodeData: (id, patch) => {
+          nodes[0] = { ...nodes[0], data: { ...nodes[0].data, ...patch } };
+        },
+      });
+      const { rerender } = render(
+        <WorkflowInspector controller={controller} selectedNodeId="step-kind-swap" />,
+      );
+
+      fireEvent.change(screen.getByTestId('workflow-inspector-action-kind'), {
+        target: { value: 'send_sms' },
+      });
+      rerender(<WorkflowInspector controller={controller} selectedNodeId="step-kind-swap" />);
+
+      expect(
+        screen.getByTestId('workflow-inspector-action-not-automated'),
+      ).toHaveTextContent('SMS provider not configured');
+    });
+
+    it('does not render an Action control for a terminator', () => {
+      const controller = makeController();
+      render(<WorkflowInspector controller={controller} selectedNodeId="end-1" />);
+      expect(screen.queryByTestId('workflow-inspector-action-kind')).toBeNull();
+    });
+
+    it('does NOT commit a message edit per keystroke, and preserves an unknown key on commit', () => {
+      const updateNodeData = vi.fn();
+      const controller = makeController({ updateNodeData });
+      render(<WorkflowInspector controller={controller} selectedNodeId="step-notify" />);
+
+      const field = screen.getByTestId('workflow-inspector-action-message');
+      fireEvent.change(field, { target: { value: 'Updated message' } });
+      expect(updateNodeData).not.toHaveBeenCalled();
+
+      fireEvent.blur(field);
+
+      expect(updateNodeData).toHaveBeenCalledTimes(1);
+      expect(updateNodeData).toHaveBeenCalledWith('step-notify', {
+        action: {
+          kind: 'notify_internal',
+          message: 'Updated message',
+          custom_marker: 'kept-through-edits',
+        },
+      });
+    });
+
+    it('sets kind AND action.kind together — the bridge reads action OR a built default, never a merge', () => {
+      const updateNodeData = vi.fn();
+      const controller = makeController({ updateNodeData });
+      render(<WorkflowInspector controller={controller} selectedNodeId="step-1" />);
+
+      fireEvent.change(screen.getByTestId('workflow-inspector-action-kind'), {
+        target: { value: 'notify_internal' },
+      });
+
+      expect(updateNodeData).toHaveBeenCalledWith('step-1', {
+        actionKey: 'notify_internal',
+        action: { kind: 'notify_internal' },
+      });
+    });
+
+    it('commits priority into the SAME action object as the message, not overwriting it', () => {
+      const updateNodeData = vi.fn();
+      let action: Record<string, unknown> = {
+        kind: 'notify_internal',
+        message: 'Inbound SMS received',
+      };
+      const nodes = [
+        { ...STEP, id: 'step-live', type: 'step', data: { label: 'Notify', actionKey: 'notify_internal', action } },
+      ];
+      const controller = makeController({
+        nodes,
+        updateNodeData: (id, patch) => {
+          updateNodeData(id, patch);
+          action = (patch as { action: Record<string, unknown> }).action;
+          nodes[0] = { ...nodes[0], data: { ...nodes[0].data, ...patch } };
+        },
+      });
+      const { rerender } = render(
+        <WorkflowInspector controller={controller} selectedNodeId="step-live" />,
+      );
+
+      fireEvent.change(screen.getByTestId('workflow-inspector-action-priority'), {
+        target: { value: 'urgent' },
+      });
+      rerender(<WorkflowInspector controller={controller} selectedNodeId="step-live" />);
+
+      expect(action).toEqual({ kind: 'notify_internal', message: 'Inbound SMS received', priority: 'urgent' });
+    });
   });
 });
 
