@@ -5,6 +5,53 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [2.7.1-next.0] — 2026-09-10 — Edit-mode label and hide sit in a measured strip, not on the card
+
+A prerelease, not a release. The in-force standard
+`docs/20260824-preview-canary-publishing-standard-v1.00A.md` publishes releases from `main` only;
+a package fix landing on `development` must carry a `-next.N` or
+`scripts/select-prerelease-publishes.mjs` skips it entirely — "nothing publishes from
+development" — and the change reaches no `d.*` preview host and no visual gate. This version was
+derived from the registry by `node scripts/next-prerelease-version.mjs --package
+@bsuite/page-builder --write`, not typed by hand, and it ships in the same commit as the change
+because `check-published-matches-source.mjs` compares the tarball against source at the version
+the source declares.
+
+**The overlap fix.** GridItem painted the widget name `absolute top-2 left-2` and hide
+`absolute top-2 right-2` over unchanged card content. The strip is now in-flow
+(`data-slot="grid-item-editor-chrome"`). AutoHeight includes it in the unconstrained measure
+wrapper so the slot grows; leaving edit mode unmounts it and the observer restores content-only
+height. Fixed-height cards keep the strip above the scroll body. Drag handle, resize handle, and
+hide stay callable. The label is not removed.
+
+**The narrow-card fix that came with it.** The strip's label span had no `min-w-0` and no wrap
+control, so its automatic minimum size was its min-content — one long unbroken widget name — and
+the `ml-auto` hide button was pushed outside the card box. The label now carries `min-w-0
+truncate` with a `title` holding the full name, so it clips with an ellipsis and loses nothing.
+
+**What was measured, and what was not.** `scripts/editor-chrome-geometry.mjs` was rewritten to
+loop viewports, to assert `window.innerWidth` inside the same `page.evaluate` that returns the
+rects, to measure the editor banner in both states and say which, and to read the colour scheme
+from the DOM rather than force one. Receipt: `editor-chrome-geometry-390.json`. Three cells
+(1440x900, 768x1024, 390x844) each asserted their own `innerWidth`; no cell scrolled horizontally
+in any banner state. A positive control removes `truncate`/`min-w-0` at run time and reproduces
+the defect at 1440 (hide 43.9px outside the card box) and at 768 (155.9px), so the pass is not
+vacuous.
+
+No claim is made that this was ever measured at 390 before. It was not, and the 390 case is a
+different fact from the one the earlier draft implied: `buildResponsiveLayouts` stacks every card
+to full width below a 480px container, so at 390 there is no narrow card to push the control out
+of, and the 390 cell cannot reproduce the class at all. The geometry that reproduces it is a
+narrow CARD in a container wide enough to keep columns — a laptop with the sidebar open.
+
+**Consumers.** Every `PageGridLayout` mount (crm7, BSU, conduit, braden, throughput; R80.4 has no
+page-builder). **A caret range will not resolve a prerelease** — npm excludes prerelease versions
+from `^2.7.0` and `^2.6.1` unless the range itself names one. To take this on a preview host, each
+app pins the exact `2.7.1-next.0` in its own `package.json` on its own `development` branch and
+regenerates its lockfile outside the bsuite tree (`bsuite-pnpm-monorepo`). No Candidates-only CSS.
+
+---
+
 ## [1.0.7] — 2026-08-25 — Only a pointer gesture may commit a layout
 
 The fix. 1.0.4, 1.0.5 and 1.0.6 each tried to classify the grid's emission by
