@@ -183,3 +183,86 @@ steps without asking for routine permission; report a genuine blocker with its r
 Exclude Get Muscles and the separate Xero/GST task. Maintain visual/code customization
 parity, disciplinary Record of Discussion semantics, and executable workflow linkage.
 ```
+
+
+## 9 September — documentation validation and two-stage archival
+
+Operator requirement: validate docs/ and docs/plans/ across the parent and all six apps;
+consolidate relevant overlapping guidance, preserve unimplemented requirements, and organize
+BSuite's existing archive. This work is outstanding, not validated by the earlier intake.
+Use agent-skl-find, check-documentation, check-docs-vs-code, check-documentation's paired
+completion-enforcer, and general-iso27001-docs. Keep the existing bsuite#3198 coverage lane
+and bsuite#3204 programme rather than creating another competing plan.
+
+Acceptance:
+- Inventory active documentation and plans plus BSuite archive holdings. Exclude generated
+  dependencies, agent worktrees and unrelated projects; reconcile docs links, tracked files
+  and actual directory listings. Preserve original path/repo, document purpose and version.
+- Classify each document VALIDATED, OUTSTANDING, PARTIAL, STALE, ARCHIVE or UNVERIFIABLE
+  with evidence, canonical replacement where applicable, and linked implementation issue.
+  Validate claims against source and live behavior/schema where relevant. A completed label,
+  file age, or migration file on disk is not proof. Do not discard unmet requirements.
+- Consolidate current guidance into the existing canonical document; carry unique valid
+  content forward, fix inbound links/indexes/skill references, and preserve historical
+  reports as dated evidence. An old R80.3 reference in a historical report is not itself rot.
+- Interim archive: each repository's docs/archive/. Permanent archive:
+  /home/braden/Desktop/Dev/archived-repos-docs. Inventory the external structure before
+  choosing BSuite-specific destinations, grouped coherently by project/repo and topic/date.
+  Do not reorganize QIG, personal or other unrelated archive holdings under this task.
+- Every move retains a manifest with original path, destination, reason, replacement,
+  date and content hash. Verify the destination hash before removing the source; retain
+  redirect/index entries where needed. No bulk delete, overwrite or duplicate archive trees.
+  Transfer to permanent storage only after classification, links and integrity checks pass.
+- Validate links and counts after consolidation/moves; reconcile every inventoried document's
+  disposition. Report unresolved documents honestly and obtain independent review. Document
+  cleanup does not establish that the associated product feature is complete.
+
+Handover update: the Codex automation was verified PAUSED after the operator paused it.
+Claude may claim supervision after proving local access and recording its identity in the
+existing queue; do not restart the old schedule. Pausing that schedule does not stop Hermes
+or an already running CLI worker. Inspect and collect them before issuing new work.
+Last supervisor checkpoint found trigger_config metadata loss in the visual trigger editor;
+re-read current review/HEAD because correction may have advanced. Preserve local uncommitted
+instruction/plan changes and arrange their own signed PRs rather than staging them into the
+SMS feature PR. Maintain the full release contract and criterion ledger.
+
+
+## 9 September — BSuite workspace recovery and disk cleanup
+
+Operator adds BSuite/submodule-related directories under `/home/braden/Desktop/Dev` and
+`/home/braden`, including redundant node_modules, to the existing cleanup/coverage lane.
+These roots overlap: inventory each physical location once. This is scoped to BSuite and
+its six apps, not permission to clean unrelated projects or the whole home directory.
+Use `agent-skl-find`, `check-cleanup-scope-safety`, `check-codebase-cleanup`,
+`bsuite-pnpm-monorepo` and `agent-definition-of-done`.
+
+Required sequence and acceptance:
+- Inventory related clones, worktrees, abandoned agent checkouts, lock-generation directories,
+  recovery/salvage copies, build outputs and dependency trees. Attribute ownership using Git
+  remotes, worktree registrations, package metadata and source content; names alone are clues.
+  Record canonical path, symlink target, size, owner, activity and proposed disposition.
+- Before removing anything, inspect dirty/untracked files, branches, stashes, reflogs,
+  unique commits, PR/merge ancestry and running processes/worker cwd. An old directory or
+  identical Git author does not prove abandonment. Never prune an active maker's worktree.
+- Recover unique useful work first: preserve a recoverable ref/patch including untracked
+  source, document provenance, compare with current implementation, and route needed work
+  through its owning issue and signed feature→development→production process. Do not blindly
+  replay stale code, resurrect obsolete features or call a backup equivalent to integration.
+- Classify KEEP_ACTIVE, RECOVER, CONSOLIDATE, ARCHIVE or REMOVE_REGENERABLE with evidence.
+  Preserve secrets locally without printing them or copying them into committed manifests.
+  Preserve the protected remediation queue/evidence and active agent configuration.
+- Remove node_modules/build caches only for confirmed inactive, redundant BSuite trees after
+  proving regeneration from the correct manifest, lockfile and package-manager version.
+  Inspect symlinks and pnpm store ownership; do not follow links into shared or unrelated
+  trees or indiscriminately remove global stores. Do not regenerate submodule lockfiles by
+  running pnpm install inside the parent workspace; use the documented isolated procedure.
+- Recover/archive irreplaceable source and evidence before removing redundant directories.
+  Use the two-stage archive policy above and integrity-checked move manifests. Verify each
+  destination before source removal; do not overwrite existing archive content.
+- Re-measure disk use, validate worktree registrations and canonical repo status, check
+  affected build/test commands and links, and report recovered work, retained paths,
+  removed regenerable data, reclaimed space and unresolved ownership. Uncertain candidates
+  remain untouched with a reason; no unsupported claim that the entire home is clean.
+
+This is added execution scope for Claude's handover. Inventory/recovery/cleanup itself has
+not yet been performed. The paused Codex schedule must remain paused.
