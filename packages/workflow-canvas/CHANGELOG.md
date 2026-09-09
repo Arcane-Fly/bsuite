@@ -6,6 +6,49 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [0.3.0] — 2026-09-09 — the inspector authors what the engine executes (crm7#2594 C6, crm7#2603)
+
+Promotes `0.3.0-rc.2` (dist-tag `next`, consumed and verified by crm7#2608 on d.crm.crm7.app)
+to `latest`. No code change from rc.2; this entry records what the two rc commits shipped.
+
+### Added — terminator role and step actions are visual, not SQL-only (a61e20041, rc.1)
+
+- `WorkflowInspector` authors a **terminator's role** (`start` / `end`) and a **step's action**
+  from a typed vocabulary (`WORKFLOW_ACTION_VOCABULARY`: `notify_internal`, `create_task`,
+  `send_email`, `send_sms`, `wait`, …) with per-kind fields (message, priority, assignee,
+  template, delay). What the inspector writes to `node.data.action` / `node.data.actionKey` is
+  exactly what `workflow_run_advance` enqueues onto `r7_automation_queue` — the visual and the
+  executable representation are one object. Closes the parity gap in crm7#2603.
+- `schemas.ts` / `types.ts` carry `action` and `role` on node data; `actionVocabulary.ts` is the
+  single vocabulary both the picker and consumers read.
+
+### Fixed — rc.2 (b6ec7769b)
+
+- **`commitActionPatch` no longer drops untouched fields.** Editing one action field (say the
+  priority) previously rebuilt the whole `action` object from the visible inputs and lost every
+  key the form did not render (`ext`, consumer-added metadata). The patch is now spread over the
+  existing object; unknown keys survive a round trip. (CODEX_ACCOUNTABILITY_20260909_INITIAL
+  correction 1.)
+- **Action availability is gated by subject context.** New `WorkflowActionContext`
+  (`subjectTable`, `hasCandidate`, `hasPipelineEntry`) and vocabulary `requires` entries;
+  `unmetActionRequirement()` / `describeUnmetRequirement()` disable and explain an action that
+  the run's subject cannot satisfy (a candidate-only action on an `sms.inbound` trigger). A
+  consumer that passes no `actionContext` gets the old ungated behaviour.
+- **Real selectors instead of free text.** `assigneeOptions` (`WorkflowAssigneeOption[]`) and
+  `emailTemplateOptions` (`WorkflowEmailTemplateOption[]`) props replace the free-text assignee
+  and template inputs, per the one-shot rule (§7: no free text where a canonical entity exists).
+
+### Consumer notes
+
+- crm7 wires `actionContext` from the trigger subject (`sms.*` → `communications`, `placement.*`
+  → `placements`; candidate/pipeline flags only for those subjects), `assigneeOptions` from tenant
+  users and `emailTemplateOptions` from the email service (crm7#2608).
+- Known, filed, not in this release: the inspector overlay collides with the palette and the
+  Full-screen control under ~760px canvas width and does not close on pane click (crm7#2604;
+  ledger `canvas-overlays-collide-narrow`) — a layout follow-up (rc.3 / 0.3.1).
+
+---
+
 ## [0.2.0] — 2026-09-01 — Phase 2: editable, versioned, and talking to the right columns
 
 Phase 2 of `docs/plans/20260901-workflow-canvas-implementation-v1.00A.md`.
