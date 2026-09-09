@@ -1,5 +1,10 @@
 # Estate remediation implementation plan
 
+> **9 September execution update:** use the [shared remediation rules](../../.agents/rules/remediation-execution.md)
+> and the Claude handover section below. The expanded protected queue contains 338 prompts;
+> the 332 counts below describe the original intake. Current completion is measured from
+> criterion evidence and GitHub, never inferred from those historical counts.
+
 > **Release contract v2, 8 September:** all 332 prompts now require development PR → verified d.* deployment → production PR → production verification → ops-ship-close-out and final DoD. They explicitly route ops-ship-all-apps for affected multi-app releases and require evidenced skill interoperability/evolution. [Read the mandatory contract](20260908-remediation/release-contract.md). Merely naming a skill or chains_with does not execute it.
 
 8 September 2026. Working execution specification for the published issues. Product implementation remains open. Current issue status lives on GitHub; this plan defines order and acceptance, not a parallel dashboard.
@@ -58,3 +63,123 @@ This session reviewed histories and targeted source/live schema, not every produ
 ## 8 September addition — inbound SMS
 
 crm7#2594 (https://github.com/GaryOcean428/crm7/issues/2594) is a P1 live defect independent of deal work: Mobile Message inbound capture → canonical conversation → inbox/record timeline → visually configured workflow. Includes full-content recovery, correlation, consent, unread/reply controls, tenant isolation and operational replay. See docs/plans/20260908-remediation/prompts/crm7-2594.md. Source audit found usage-only writes and a separate communications reader; deployed bridge/catalog verification remains required.
+
+## 9 September — durable learning and Claude Desktop handover
+
+This is an execution update to bsuite#3204, not a second backlog. Keep the current SMS worker
+running during preparation. Claude Desktop has not yet taken ownership merely because this
+handover exists. No additional supervising schedule may dispatch concurrently.
+
+### Instruction distribution
+
+The canonical rule is `.agents/rules/remediation-execution.md` in the BSuite parent.
+`scripts/sync-remediation-rules.py --write` generates identical, tracked local snapshots in
+all six apps and adds small loaders to their existing AGENTS.md and CLAUDE.md files.
+`--check` checks seven copies and fourteen entry points. Standalone clones do not need the
+parent checkout to load their copy. Existing app-specific rules are preserved.
+
+Hermes uses its actual home `SOUL.md` for identity, with a BSuite-scoped instruction to read
+the checkout rule. Repo-local SOUL.md copies would not be loaded. The shared skills
+`agent-cfg-instructions` and `bsuite-live-lane-closeout` now carry loader verification and
+current-roster/transport rules respectively. This static check does not force a model to
+obey; acceptance still requires real evidence and independent review.
+
+The existing app instruction files remain large. This change consolidates the new lessons;
+it does not claim all historic duplication is removed. Future extraction must preserve
+unique app rules and compare behavior before deleting text. Prefer path-scoped rules for
+specialized guidance and skills for procedures. Imports organize text but still load it.
+
+Primary sources checked 2026-09-09: [Claude memory and modular rules](https://code.claude.com/docs/en/memory),
+[Claude Desktop scheduling](https://code.claude.com/docs/en/desktop-scheduled-tasks), and
+[Hermes file loading](https://hermes-agent.nousresearch.com/docs/user-guide/which-file-does-what).
+Installed Hermes `agent/prompt_builder.py` also confirms the identity/project separation.
+Claude Code and Cowork are distinct execution environments: verify filesystem, CLI and
+browser access in the actual chosen mode. Do not assume a cloud schedule reaches this host.
+
+### Evidence behind the changes
+
+Only visible conversation text, model metadata and tool outcomes were inspected.
+Local logs are under `~/.claude/projects/`:
+
+| Observation | Source | Recurrence control |
+|---|---|---|
+| Repeated status-and-stop despite available work | `-home-braden-Desktop-Dev-bsuite/1dcc7459-f640-4486-8876-20d48662ba38.jsonl`, assistant lines 1769, 1871, 2357, 2389; recorded `claude-fable-5-1` | Restore the next unmet criterion, execute or collect a real result, and retain ownership. |
+| Repaired components without usable dependencies | `-home-braden-Desktop-Dev-bsuite/778b8745-6051-47ca-82ad-6862e77d5f1b.jsonl`, line 44149; SMS visual-trigger gap | Map and test complete user journey before accepting component repair. |
+| Incorrect predicate reconciled by explanation | Same mixed session, lines 44419, 45509 | Validate positive/negative controls and second enumeration axis; correct the probe. |
+| Irrelevant tests and invented schema mocks | Same mixed session, lines 45776, 45830 | Bind tests to production boundary and use relevant regression negative controls. |
+| Ungated merges | Same mixed session, line 45436; recorded `claude-opus-5` | Exact-SHA independent acceptance before merge; full-scope closure only. |
+| Brief errors propagated to SMS implementation | Existing `hermes-performance-review.md`; BSU Claude sessions `209a48fc-0c7d-4a40-864b-df24a3ecad38`, `8330f1bc-51ad-423b-8a9d-45659970bf91` | Preflight dispatch and specify outcomes/caller compatibility rather than unverified pseudocode. |
+
+Do not attribute the mixed-session Opus findings to Fable. This sample does not establish
+a fair comparative model ranking. Measure accepted criteria per run, rework, stalled
+handoffs and intervention count. Preserve improvements already accepted at an exact SHA.
+
+### Recommended ownership and budget
+
+Claude Desktop Fable 5.1 is the operator-reported available supervisor. Confirm its actual
+selection in that client; do not invent a CLI alias. Prefer a host-local Code task for CLI
+and repository work, with the user's browser-capable desktop mode for real UX as available.
+Claude Code handles most bounded implementation using an explicitly verified available
+model. Keep one maker and, where useful, one independent reviewer; no nested coordinator
+chain of Claude → Hermes → Claude → Astra. Hermes can remain the existing execution lane
+while Claude takes over supervision after a controlled handover.
+
+Use authorized Codex CLI `gpt-6-astra` for two failed corrections of one defect, disputed
+security/architecture or difficult independent pre-merge review. Brief the exact failing
+boundary and accepted baseline; do not spend Astra calls rereading the entire backlog.
+Verify the CLI accepts the model and preserve final output/exit receipts. Do not assume
+CLI use provides an independent quota or unlimited access. No silent fallback to exhausted
+Grok/Kimi or unselected Nemotron/Alibaba. Agent routing does not modify product AI settings.
+
+### Launch prompt for Claude Desktop
+
+```text
+Take over preparation for BSuite remediation supervision using the currently selected
+Fable 5.1 model. Work in /home/braden/Desktop/Dev/bsuite. Read AGENTS.md,
+.agents/rules/remediation-execution.md and this plan's 9 September handover section.
+Invoke agent-run-master and agent-skl-find, then load agent-mem-truth,
+bsuite-live-lane-closeout, bsuite-false-complete-gates, agent-definition-of-done and
+the task-specific skills from /home/braden/.agents. Read the skills before applying them.
+
+Protected execution root:
+/home/braden/.codex/visualizations/2026/09/08/01a07f58-73a6-71f2-a57d-5cf3b6b148dc/bsuite-remediation
+
+Read hermes-queue.json and docs/plans/20260908-remediation/{release-contract.md,
+hermes-queue-runbook.md,hermes-performance-review.md,sms-2594-goal-evidence.json} there.
+Run verify_sms_goal.py using its documented invocation; restore every C1–C12 criterion.
+Read the current crm7#2594 issue and live worker/PR state. The queue has 338 entries;
+do not equate pending metadata with a fresh verified GitHub count. Preserve existing work.
+
+First prove access to the actual host repo, authenticated browser and required CLI/tools.
+Read the current Hermes runtime/session IDs from the queue, not this prompt. Inspect its
+actual activity; do not create another Hermes session or interrupt a running maker.
+SMS backend code review at 6530b9c was accepted; PR BSU#1225 merged development at
+de6395d. Narrow live SMS catalog reconciliation was independently accepted, with duplicate
+migration-27 bookkeeping and small body differences explicitly noted. These are partial
+receipts, not full UX, provider delivery or release completion. Refresh current state.
+The last known next gap was the visual inbound-SMS trigger and executable workflow;
+collect the current worker's result before deciding what remains. Do not redo accepted work.
+
+Before dispatching, arrange a single-owner transfer: record your task ID/owner and current
+worker in the existing queue; coordinate pausing Codex automation
+bsuite-hermes-remediation-queue through the old supervisor's supported app tool, then
+verify it is paused. If you lack that tool, request this specific transition from the
+old supervisor; continue read-only preparation in parallel. Do not run two dispatchers.
+Only after transfer create one local recurring supervisor task if supported, with real
+host access. A scheduled prompt must restore state, collect results and advance an unmet
+criterion; remain quiet when unchanged. Verify a first run actually performs the action.
+
+Default implementation to Claude Code, one writer per worktree and at most two useful
+worker lanes. Escalate concrete failed validators/difficult independent review to authorized
+Codex CLI gpt-6-astra; verify availability, never silently substitute models. Preserve
+accepted reviews, signed feature→development→production PRs, exact deployed SHA and real
+UX evidence, ops-ship-all-apps, ops-ship-close-out and independent DoD including D8.
+Do not close crm7#2594 until all required criteria pass. Then take the next eligible prompt.
+
+Your takeover acceptance is a restored criterion ledger, verified sole ownership, and one
+bounded worker result collected and dispositioned with evidence—not “I am monitoring”.
+Update existing docs/queue rather than creating another programme plan. Finish executable
+steps without asking for routine permission; report a genuine blocker with its receipt.
+Exclude Get Muscles and the separate Xero/GST task. Maintain visual/code customization
+parity, disciplinary Record of Discussion semantics, and executable workflow linkage.
+```
