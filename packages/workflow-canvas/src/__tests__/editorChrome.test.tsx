@@ -757,4 +757,18 @@ describe('WorkflowToolbar', () => {
     expect(status).toHaveAttribute('aria-live', 'polite');
     expect(status).toHaveTextContent('Saving…');
   });
+
+  it('renders extra controls in the toolbar row, not as an overlay', () => {
+    const controller = makeController({ draft });
+    render(
+      <WorkflowToolbar controller={controller}>
+        <button type="button" data-testid="workflow-fullscreen">
+          Full screen
+        </button>
+      </WorkflowToolbar>,
+    );
+    const extra = screen.getByTestId('workflow-fullscreen');
+    expect(screen.getByTestId('workflow-toolbar').contains(extra)).toBe(true);
+    expect(screen.getByTestId('workflow-publish')).toBeInTheDocument();
+  });
 });

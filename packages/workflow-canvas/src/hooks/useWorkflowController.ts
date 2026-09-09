@@ -63,6 +63,7 @@ import { validateConnection } from '../validation/connection.js';
 import type { ConnectionVerdict } from '../validation/connection.js';
 import { computeSwimlaneLayout } from '../utils/autoLayout.js';
 import type { SwimlaneLayoutOptions } from '../utils/autoLayout.js';
+import { restoreDraftGraphCaches, writeDraftGraphCaches } from './draftCache.js';
 import {
   workflowDefinitionOptions,
   workflowDefinitionsOptions,
@@ -244,6 +245,8 @@ export function useWorkflowController({
   const definitionKey = workflowDefinitionOptions(supabase, definitionId).queryKey;
   const draftKey = workflowDraftOptions(supabase, definitionId).queryKey;
   const versionsKey = workflowVersionsOptions(supabase, definitionId).queryKey;
+  const lastSavedDraftRef = useRef<WorkflowDefinitionVersionRow | null>(null);
+  const lastSavedVersionsRef = useRef<WorkflowDefinitionVersionRow[] | undefined>(undefined);
   // The LIST key's first segment, for prefix invalidation after a duplicate.
   const definitionsKeyPrefix = [workflowDefinitionsOptions(supabase, tenantId).queryKey[0]];
 
@@ -270,7 +273,9 @@ export function useWorkflowController({
     resetGraph(seeded);
     // What we just read from the server is by definition already saved.
     lastScheduledRef.current = seeded;
-  }, [draftRow, resetGraph]);
+    lastSavedDraftRef.current = draftRow;
+    lastSavedVersionsRef.current = versionsQuery.data;
+  }, [draftRow, resetGraph, versionsQuery.data]);
 
   /*
    * No draft: show what is PUBLISHED rather than an empty canvas. Guarded by its
@@ -292,21 +297,34 @@ export function useWorkflowController({
       saveVersionGraph(supabase, versionId, next),
     onMutate: async ({ next }) => {
       await qc.cancelQueries({ queryKey: draftKey });
-      const prev = qc.getQueryData<WorkflowDefinitionVersionRow | null>(draftKey);
-      qc.setQueryData<WorkflowDefinitionVersionRow | null>(draftKey, (old) =>
-        old ? { ...old, graph: next } : old,
-      );
-      return { prev };
+      await qc.cancelQueries({ queryKey: versionsKey });
+      const prevDraft =
+        lastSavedDraftRef.current ??
+        qc.getQueryData<WorkflowDefinitionVersionRow | null>(draftKey);
+      const prevVersions =
+        lastSavedVersionsRef.current ??
+        qc.getQueryData<WorkflowDefinitionVersionRow[]>(versionsKey);
+      writeDraftGraphCaches(qc, draftKey, versionsKey, next);
+      return { prevDraft, prevVersions };
     },
     onError: (err, _vars, ctx) => {
-      if (ctx?.prev !== undefined) qc.setQueryData(draftKey, ctx.prev);
+      restoreDraftGraphCaches(
+        qc,
+        draftKey,
+        versionsKey,
+        ctx?.prevDraft,
+        ctx?.prevVersions,
+      );
       onError?.('Could not save the workflow', err);
       // Resync on FAILURE only — see the header.
       void qc.invalidateQueries({ queryKey: draftKey });
+      void qc.invalidateQueries({ queryKey: versionsKey });
     },
     onSuccess: (saved) => {
-      // Write the authoritative row rather than refetching for it.
+      lastSavedDraftRef.current = saved;
       qc.setQueryData<WorkflowDefinitionVersionRow | null>(draftKey, saved);
+      writeDraftGraphCaches(qc, draftKey, versionsKey, saved.graph);
+      lastSavedVersionsRef.current = qc.getQueryData<WorkflowDefinitionVersionRow[]>(versionsKey);
     },
   });
 
@@ -358,12 +376,17 @@ export function useWorkflowController({
       if (readOnly) return;
       pendingRef.current = next;
       setIsDirty(true);
+      // The step table (and any other reader of the draft/versions caches)
+      // follows this write. Waiting for the 900 ms debounce left the table
+      // on the last fetched versions row while the canvas already had the
+      // new node. Rollback of these caches is the mutation's onError.
+      writeDraftGraphCaches(qc, draftKey, versionsKey, next);
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = setTimeout(() => {
         void flush();
       }, saveDebounceMs);
     },
-    [flush, readOnly, saveDebounceMs],
+    [draftKey, flush, qc, readOnly, saveDebounceMs, versionsKey],
   );
 
   // A pending edit must not be lost because the user navigated away. Flushing

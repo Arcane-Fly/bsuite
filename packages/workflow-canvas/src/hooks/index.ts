@@ -20,3 +20,8 @@ export {
   workflowVersionOptions,
   workflowVersionsOptions,
 } from './queries.js';
+export {
+  patchDraftGraphInVersions,
+  restoreDraftGraphCaches,
+  writeDraftGraphCaches,
+} from './draftCache.js';

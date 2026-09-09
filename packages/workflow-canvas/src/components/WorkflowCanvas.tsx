@@ -113,6 +113,18 @@ function WorkflowCanvasInner({
     [controller],
   );
 
+  const onPaneClick = useCallback(() => {
+    if (readOnly) return;
+    if (!controller.nodes.some((n) => n.selected)) return;
+    controller.onNodesChange(
+      controller.nodes.map((n) => ({
+        type: 'select' as const,
+        id: n.id,
+        selected: false,
+      })),
+    );
+  }, [controller, readOnly]);
+
   // Undo/redo on the keyboard. Bound on the document rather than the canvas
   // because the user's focus is usually on a node, and a handler on the wrapper
   // would miss the keystroke whenever anything inside it had focus.
@@ -221,6 +233,7 @@ function WorkflowCanvasInner({
                 onConnect={readOnly ? undefined : controller.onConnect}
                 isValidConnection={controller.isValidConnection}
                 onMoveEnd={onMoveEnd}
+                onPaneClick={readOnly ? undefined : onPaneClick}
                 nodesDraggable={!readOnly}
                 nodesConnectable={!readOnly}
                 elementsSelectable

@@ -24,7 +24,7 @@
  * the tenant already owns is two ways to do one thing.
  */
 
-import { useCallback } from 'react';
+import { useCallback, type ReactNode } from 'react';
 
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
 import { WORKFLOW_TOOLBAR_SURFACE, joinClassNames } from './chromeClasses.js';
@@ -34,6 +34,8 @@ export interface WorkflowToolbarProps {
   className?: string;
   /** Called after a successful duplicate, with the new definition's id. */
   onDuplicated?: (definitionId: string) => void;
+  /** Extra controls in the reserved toolbar row (fullscreen). Not an overlay. */
+  children?: ReactNode;
 }
 
 function saveStateLabel(controller: WorkflowController): string {
@@ -42,7 +44,12 @@ function saveStateLabel(controller: WorkflowController): string {
   return 'All changes saved';
 }
 
-export function WorkflowToolbar({ controller, className, onDuplicated }: WorkflowToolbarProps) {
+export function WorkflowToolbar({
+  controller,
+  className,
+  onDuplicated,
+  children,
+}: WorkflowToolbarProps) {
   const { draft, definition, isPlatformTemplate, isReadOnly } = controller;
 
   const publish = useCallback(() => {
@@ -137,6 +144,9 @@ export function WorkflowToolbar({ controller, className, onDuplicated }: Workflo
           {draft ? `Publish version ${draft.version}` : 'Publish'}
         </button>
       )}
+      {children ? (
+        <div className="ml-auto flex flex-wrap items-center gap-2">{children}</div>
+      ) : null}
     </div>
   );
 }

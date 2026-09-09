@@ -22,10 +22,14 @@ vi.mock('@xyflow/react', async () => {
   const actual = await vi.importActual<Record<string, unknown>>('@xyflow/react');
   return {
     ...actual,
-    ReactFlow: (props: { nodes: unknown[]; children?: ReactNode }) => {
+    ReactFlow: (props: {
+      nodes: unknown[];
+      children?: ReactNode;
+      onPaneClick?: () => void;
+    }) => {
       captured.push({ nodes: props.nodes });
       return (
-        <div className="react-flow" data-testid="rf">
+        <div className="react-flow" data-testid="rf" onClick={props.onPaneClick}>
           {props.children as never}
         </div>
       );
@@ -278,5 +282,42 @@ describe('WorkflowCanvas reserved regions', () => {
     expect(inspector.className).toMatch(/\bw-full\b/);
     expect(inspector.className).not.toMatch(/\bw-72\b/);
     expect(inspector.className).toContain('bg-card');
+  });
+
+  it('collapses the inspector slot when nothing is selected', () => {
+    render(
+      <WorkflowCanvas controller={controllerStub()}>
+        <WorkflowInspector controller={controllerStub()} selectedNodeId={null} />
+      </WorkflowCanvas>,
+    );
+    expect(screen.queryByTestId('workflow-inspector')).toBeNull();
+    expect(screen.getByTestId('workflow-region-inspector').className).toContain('empty:hidden');
+  });
+
+  it('clears selection on pane click so the inspector can unmount', () => {
+    const onNodesChange = vi.fn();
+    render(
+      <WorkflowCanvas
+        controller={
+          {
+            nodes: [{ ...STEP, selected: true }],
+            edges: [],
+            viewport: { x: 0, y: 0, zoom: 1 },
+            registry: { nodeTypes: {}, palette: [], get: () => undefined },
+            isValidConnection: () => true,
+            onNodesChange,
+            onEdgesChange: vi.fn(),
+            onConnect: vi.fn(),
+            onViewportChange: vi.fn(),
+            undo: vi.fn(),
+            redo: vi.fn(),
+          } as never
+        }
+      />,
+    );
+    screen.getByTestId('rf').click();
+    expect(onNodesChange).toHaveBeenCalledWith([
+      { type: 'select', id: 'step-1', selected: false },
+    ]);
   });
 });
