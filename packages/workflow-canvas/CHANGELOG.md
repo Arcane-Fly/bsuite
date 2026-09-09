@@ -17,6 +17,7 @@ Layout follow-up named from 0.3.0's known gap (`canvas-overlays-collide-narrow`)
 - **Surface is not optional.** `WorkflowToolbar` / `WorkflowPalette` / `WorkflowInspector` always apply `bg-card`, `border-border`, padding, flex/width. `className` is extras only. `className ?? fullDefault` discarded the card when crm7 passed placement-only `absolute left-2 top-2`.
 - **Regions, not overlay.** `WorkflowCanvas` lays out `toolbar` / `palette` / `diagram` / `inspector` as reserved cells. `<ReactFlow>` (Background, Controls, MiniMap) lives only in the diagram cell, so Fit View and edge hits see the remaining box. MiniMap stays `bottom-right` of *that* pane. Inspector column collapses when the inspector returns null (`empty:hidden`).
 - **Container width, not viewport.** Compact chip-row palette below 800px of *canvas* (1024 viewport + expanded nav). Three columns at 1220/1440 expanded (~884px / ~1184px canvas). Tokens stay `--role-*` / `bg-card`; Braden does not pick up D2C glow (`dark:shadow-[var(--glow-card,none)]` already no-ops there).
+- **Nested width (SEND_BACK on b92517dff).** Region `w-56 p-2` wrapping palette `w-56` (and inspector `w-72` in `w-72 p-2`) overflowed 16px (measured 224/240 and 288/304). The region now owns the column width with no padding; slotted chrome is `w-full min-w-0` and keeps `bg-card` padding on the card. Standalone chrome still uses `w-56`/`w-72`.
 
 ### Not chosen
 

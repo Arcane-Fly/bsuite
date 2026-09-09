@@ -25,7 +25,7 @@ import { useReactFlow } from '@xyflow/react';
 import { useCallback, useContext } from 'react';
 
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
-import { WorkflowCanvasLayoutContext } from './canvasRegions.js';
+import { WorkflowCanvasLayoutContext, WorkflowChromeSlottedContext } from './canvasRegions.js';
 import { WORKFLOW_CHROME_SURFACE, WORKFLOW_PALETTE_WIDTH, joinClassNames } from './chromeClasses.js';
 
 export interface WorkflowPaletteProps {
@@ -45,7 +45,9 @@ export function WorkflowPalette({
 }: WorkflowPaletteProps) {
   const flow = useReactFlow();
   const layout = useContext(WorkflowCanvasLayoutContext);
+  const slotted = useContext(WorkflowChromeSlottedContext);
   const compact = layout === 'compact';
+  const fillSlot = compact || slotted;
 
   const place = useCallback(
     (kind: string) => {
@@ -82,8 +84,8 @@ export function WorkflowPalette({
     <div
       className={joinClassNames(
         WORKFLOW_CHROME_SURFACE,
-        'p-2',
-        compact ? 'w-full' : WORKFLOW_PALETTE_WIDTH,
+        'min-w-0 p-2',
+        fillSlot ? 'w-full' : WORKFLOW_PALETTE_WIDTH,
         className,
       )}
       data-testid="workflow-palette"

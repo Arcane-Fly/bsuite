@@ -36,17 +36,32 @@ import {
 } from '@xyflow/react';
 import type { Viewport } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
 import type { WorkflowNode } from '../types.js';
 import {
   WorkflowCanvasLayoutContext,
+  WorkflowChromeSlottedContext,
   layoutFromWidth,
   partitionWorkflowChrome,
   type WorkflowCanvasLayout,
 } from './canvasRegions.js';
-import { joinClassNames } from './chromeClasses.js';
+import {
+  WORKFLOW_REGION_INSPECTOR,
+  WORKFLOW_REGION_PALETTE,
+  WORKFLOW_REGION_PALETTE_COMPACT,
+  WORKFLOW_REGION_TOOLBAR,
+  joinClassNames,
+} from './chromeClasses.js';
 
 export interface WorkflowCanvasProps {
   controller: WorkflowController;
@@ -167,31 +182,25 @@ function WorkflowCanvasInner({
         data-layout={layout}
       >
         {hasToolbar ? (
-          <div
-            data-testid="workflow-region-toolbar"
-            className="relative shrink-0 p-2 empty:hidden"
-          >
+          <ChromeRegion testId="workflow-region-toolbar" className={WORKFLOW_REGION_TOOLBAR}>
             {toolbar}
-          </div>
+          </ChromeRegion>
         ) : null}
 
         {compact && hasPalette ? (
-          <div
-            data-testid="workflow-region-palette"
-            className="relative shrink-0 px-2 pb-2 empty:hidden"
+          <ChromeRegion
+            testId="workflow-region-palette"
+            className={WORKFLOW_REGION_PALETTE_COMPACT}
           >
             {palette}
-          </div>
+          </ChromeRegion>
         ) : null}
 
         <div className="flex min-h-0 min-w-0 flex-1">
           {!compact && hasPalette ? (
-            <div
-              data-testid="workflow-region-palette"
-              className="relative min-h-0 w-56 shrink-0 overflow-y-auto p-2 empty:hidden"
-            >
+            <ChromeRegion testId="workflow-region-palette" className={WORKFLOW_REGION_PALETTE}>
               {palette}
-            </div>
+            </ChromeRegion>
           ) : null}
 
           {/* See the header: React Flow overwrites sizing keys passed through its
@@ -237,16 +246,31 @@ function WorkflowCanvasInner({
           </div>
 
           {hasInspector ? (
-            <div
-              data-testid="workflow-region-inspector"
-              className="relative min-h-0 w-72 shrink-0 overflow-y-auto p-2 empty:hidden"
-            >
+            <ChromeRegion testId="workflow-region-inspector" className={WORKFLOW_REGION_INSPECTOR}>
               {inspector}
-            </div>
+            </ChromeRegion>
           ) : null}
         </div>
       </div>
     </WorkflowCanvasLayoutContext.Provider>
+  );
+}
+
+function ChromeRegion({
+  testId,
+  className,
+  children,
+}: {
+  testId: string;
+  className: string;
+  children: ReactNode;
+}) {
+  return (
+    <WorkflowChromeSlottedContext.Provider value={true}>
+      <div data-testid={testId} className={className}>
+        {children}
+      </div>
+    </WorkflowChromeSlottedContext.Provider>
   );
 }
 

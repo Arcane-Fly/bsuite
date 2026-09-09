@@ -206,7 +206,9 @@ describe('WorkflowCanvas reserved regions', () => {
     expect(diagram.contains(inspectorRegion)).toBe(false);
     expect(canvas.getAttribute('data-layout')).toBe('regions');
     expect(paletteRegion.className).toContain('w-56');
+    expect(paletteRegion.className).not.toMatch(/\bp-2\b/);
     expect(inspectorRegion.className).toContain('w-72');
+    expect(inspectorRegion.className).not.toMatch(/\bp-2\b/);
   });
 
   it('contracts to a chip-row palette at a 1024-expanded canvas width (~700px)', () => {
@@ -235,17 +237,46 @@ describe('WorkflowCanvas reserved regions', () => {
         <WorkflowInspector
           controller={controllerStub()}
           selectedNodeId="step-1"
-          className="absolute right-2 top-2 z-10 w-72"
+          className="absolute right-2 top-2 z-10"
         />
       </WorkflowCanvas>,
     );
 
     expect(screen.getByTestId('workflow-palette').className).toContain('bg-card');
-    expect(screen.getByTestId('workflow-palette').className).toContain('w-56');
+    expect(screen.getByTestId('workflow-palette').className).toContain('w-full');
+    expect(screen.getByTestId('workflow-palette').className).not.toMatch(/\bw-56\b/);
     expect(screen.getByTestId('workflow-toolbar').className).toContain('flex');
     expect(screen.getByTestId('workflow-inspector').className).toContain('bg-card');
     expect(screen.getByTestId('workflow-region-diagram').contains(screen.getByTestId('workflow-palette'))).toBe(
       false,
     );
+  });
+
+  it('does not nest the same fixed width inside a padded region (crm7#2604 SEND_BACK)', () => {
+    render(
+      <WorkflowCanvas controller={controllerStub()}>
+        <WorkflowToolbar controller={controllerStub()} />
+        <WorkflowPalette controller={controllerStub()} />
+        <WorkflowInspector controller={controllerStub()} selectedNodeId="step-1" />
+      </WorkflowCanvas>,
+    );
+
+    const paletteRegion = screen.getByTestId('workflow-region-palette');
+    const palette = screen.getByTestId('workflow-palette');
+    const inspectorRegion = screen.getByTestId('workflow-region-inspector');
+    const inspector = screen.getByTestId('workflow-inspector');
+
+    expect(paletteRegion.className).toMatch(/\bw-56\b/);
+    expect(paletteRegion.className).not.toMatch(/\bp-2\b/);
+    expect(palette.className).toMatch(/\bw-full\b/);
+    expect(palette.className).not.toMatch(/\bw-56\b/);
+    expect(palette.className).toContain('bg-card');
+    expect(palette.className).toContain('p-2');
+
+    expect(inspectorRegion.className).toMatch(/\bw-72\b/);
+    expect(inspectorRegion.className).not.toMatch(/\bp-2\b/);
+    expect(inspector.className).toMatch(/\bw-full\b/);
+    expect(inspector.className).not.toMatch(/\bw-72\b/);
+    expect(inspector.className).toContain('bg-card');
   });
 });

@@ -41,6 +41,13 @@ export type WorkflowCanvasLayout = 'compact' | 'regions';
 /** Default `regions` so chrome rendered outside the canvas (unit tests, README) stays a rail. */
 export const WorkflowCanvasLayoutContext = createContext<WorkflowCanvasLayout>('regions');
 
+/**
+ * True when chrome is mounted in a canvas region. Slotted chrome is `w-full
+ * min-w-0` so it fills the reserved column instead of repeating `w-56`/`w-72`
+ * inside it. Standalone (tests, README) keeps the fixed width.
+ */
+export const WorkflowChromeSlottedContext = createContext(false);
+
 export interface PartitionedChrome {
   toolbar: ReactNode[];
   palette: ReactNode[];

@@ -27,6 +27,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { nestedFixedWidthOverflows } from '../components/chromeClasses.js';
 import { WORKFLOW_ACTION_VOCABULARY } from '../actionVocabulary.js';
 import { WorkflowInspector } from '../components/WorkflowInspector.js';
 import { WorkflowPalette } from '../components/WorkflowPalette.js';
@@ -660,6 +661,16 @@ describe('WorkflowInspector', () => {
 
       expect(action).toEqual({ kind: 'notify_internal', message: 'Inbound SMS received', priority: 'urgent' });
     });
+  });
+});
+
+describe('nested fixed-width overflow (crm7#2604 SEND_BACK)', () => {
+  it('is the padded-region + same-width-child case the parent measured (224/240, 288/304)', () => {
+    expect(nestedFixedWidthOverflows(224, 16, 224)).toBe(true);
+    expect(nestedFixedWidthOverflows(288, 16, 288)).toBe(true);
+    expect(nestedFixedWidthOverflows(224, 0, 224)).toBe(false);
+    expect(nestedFixedWidthOverflows(288, 0, 288)).toBe(false);
+    expect(nestedFixedWidthOverflows(224, 16, 208)).toBe(false);
   });
 });
 
