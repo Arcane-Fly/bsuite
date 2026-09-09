@@ -141,7 +141,7 @@ afterEach(() => {
 // ---------------------------------------------------------------------------
 
 describe('createOAuthClient', () => {
-  it('returns all eight expected methods', async () => {
+  it('returns all nine expected methods', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     const client = createOAuthClient(CLIENT_ID)
     expect(typeof client.signInWithBusinessSuite).toBe('function')
@@ -152,6 +152,7 @@ describe('createOAuthClient', () => {
     expect(typeof client.clearBSTokens).toBe('function')
     expect(typeof client.startBSTokenRefresh).toBe('function')
     expect(typeof client.attemptSilentAuth).toBe('function')
+    expect(typeof client.attemptSilentAuthDetailed).toBe('function')
   })
 
   it('two clients for different app IDs have independent bindings', async () => {
@@ -450,6 +451,16 @@ function tokensFixture(): BusinessSuiteTokens {
   }
 }
 
+// A decodable (unverified — only `attemptSilentAuth`'s fast path reads this
+// without JWKS verification) access token with a controllable `exp`.
+function makeAccessToken(expiresInSeconds: number): string {
+  const header = btoa(JSON.stringify({ alg: 'none', typ: 'JWT' }))
+  const payload = btoa(
+    JSON.stringify({ sub: 'user-1', exp: Math.floor(Date.now() / 1000) + expiresInSeconds }),
+  )
+  return `${header}.${payload}.signature`
+}
+
 describe('exchangeCodeForTokens', () => {
   it('rejects when state does not match stored state (CSRF guard)', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
@@ -564,32 +575,65 @@ describe('exchangeCodeForTokens', () => {
   it('rejects when verifier is older than 10 minutes (TTL guard)', async () => {
     // Stage-3: PKCE state more than 10min old must be rejected
     const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
     const elevenMinutesAgo = Date.now() - 11 * 60 * 1000
     seedPkceState('s', 'v', 'n', elevenMinutesAgo)
     await expect(
-      createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
+      client.exchangeCodeForTokens('code', 's'),
     ).rejects.toThrow(/PKCE state expired/i)
     // Cleanup: all PKCE keys should be wiped after TTL expiry
     expect(localMock.getItem('bs_oauth_state')).toBeNull()
     expect(localMock.getItem('bs_oauth_code_verifier')).toBeNull()
     expect(localMock.getItem('bs_oauth_started_at')).toBeNull()
-    expect(localMock.getItem('bs_oauth_inflight_code')).toBeNull()
+    // The per-code inflight claim must also have been released — a second
+    // attempt with the same code must fail on ITS OWN merits (no PKCE data
+    // left to redeem), never on "already in progress".
+    await expect(client.exchangeCodeForTokens('code', 's')).rejects.not.toThrow(
+      /already in progress/i,
+    )
   })
 
-  it('is idempotent for the same code — second call throws InflightInProgress', async () => {
-    // Stage-3: inflight-code sentinel prevents duplicate exchange of a single-use code
+  it('rejects a future-dated (tampered/corrupted) started_at as expired rather than trusting it', async () => {
+    // Regression: elapsed = Date.now() - Number(startedAt) is NEGATIVE for a
+    // future timestamp, which is NOT > PKCE_TTL_MS, so the naive TTL check
+    // would treat a corrupted future timestamp as fresh forever.
     const { createOAuthClient } = await import('../oauth-client.js')
-    // Seed the inflight sentinel directly (simulates a second call after the first already started)
-    localMock.setItem('bs_oauth_inflight_code', 'authcode')
-    seedPkceState('s', 'v', 'n')
+    const oneHourFromNow = Date.now() + 60 * 60 * 1000
+    seedPkceState('s', 'v', 'n', oneHourFromNow)
     await expect(
-      createOAuthClient(CLIENT_ID).exchangeCodeForTokens('authcode', 's'),
+      createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
+    ).rejects.toThrow(/PKCE state expired/i)
+  })
+
+  it('is idempotent for the same code — a duplicate submission while the first is still in flight throws, without firing a second network request', async () => {
+    // Stage-3+: the per-code inflight claim (not a single flat sentinel)
+    // prevents duplicate exchange of a single-use code.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    seedPkceState('s', 'v', 'n')
+
+    let releaseFetch!: () => void
+    fetchMock.mockReturnValue(
+      new Promise((_resolve, reject) => {
+        releaseFetch = () => reject(new TypeError('network down'))
+      }),
+    )
+
+    const firstCall = client.exchangeCodeForTokens('authcode', 's')
+    // The first call has synchronously claimed the guard and is now
+    // suspended awaiting the (never-yet-resolved) fetch above.
+    await expect(
+      client.exchangeCodeForTokens('authcode', 's'),
     ).rejects.toThrow(/Code exchange already in progress/i)
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+
+    releaseFetch()
+    await expect(firstCall).rejects.toThrow(/response unknown/i)
   })
 
   it('raises with server body when token endpoint returns non-OK', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
-    seedPkceState('s', 'v')
+    seedPkceState('s', 'v', 'n')
     fetchMock.mockResolvedValue({
       ok: false,
       status: 400,
@@ -615,6 +659,14 @@ describe('exchangeCodeForTokens', () => {
     await expect(
       createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's'),
     ).rejects.toThrow(/nonce mismatch/i)
+  })
+
+  it('rejects an ID token that omits the requested nonce', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    seedPkceState('s', 'v', 'requested-nonce')
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => tokensFixture() })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u', client_id: CLIENT_ID } })
+    await expect(createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 's')).rejects.toThrow('id_token nonce mismatch')
   })
 
   // 0.2.3: ID token aud must be the CLIENT_ID, NOT 'authenticated'.
@@ -663,6 +715,8 @@ describe('exchangeCodeForTokens', () => {
 // possible CSRF attack" even though the slower flow was never compromised.
 // See the OAUTH_FLOWS_KEY doc comment in oauth-client.ts for the design.
 
+// These orchestration cases use access-token-only responses; the OIDC tests
+// above independently require a matching nonce and reject omission/replay.
 describe('concurrent OAuth flows (bs_oauth_flows map)', () => {
   function readFlowMap(): Record<string, { verifier: string; nonce: string; startedAt: number }> {
     const raw = localMock.getItem('bs_oauth_flows')
@@ -673,7 +727,7 @@ describe('concurrent OAuth flows (bs_oauth_flows map)', () => {
     fetchMock.mockResolvedValue({
       ok: true,
       status: 200,
-      json: async () => tokensFixture(),
+      json: async () => ({ ...tokensFixture(), id_token: undefined }),
       text: async () => '',
     })
     mockJwtVerify.mockResolvedValue({ payload: { sub, client_id: CLIENT_ID } })
@@ -807,6 +861,411 @@ describe('concurrent OAuth flows (bs_oauth_flows map)', () => {
 })
 
 // ---------------------------------------------------------------------------
+// exchangeCodeForTokens — per-code inflight guard (duplicate protection)
+// ---------------------------------------------------------------------------
+// Regression: a single flat bs_oauth_inflight_code slot cannot guard
+// concurrent transactions. Flow A claims the slot for its code; flow B (a
+// DIFFERENT code) immediately overwrites it with its own code; a duplicate
+// submission of A's original code no longer sees a match and is NOT
+// blocked — three network requests fire (A, B, and the unguarded A
+// duplicate) where at most two should. The fix keys the guard by code in a
+// bounded, JSON-map storage slot instead of one flat value.
+
+describe('exchangeCodeForTokens — per-code inflight guard', () => {
+  function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+    let resolve!: (value: T) => void
+    const promise = new Promise<T>((res) => {
+      resolve = res
+    })
+    return { promise, resolve }
+  }
+
+  function okResponse() {
+    return { ok: true, status: 200, json: async () => ({ ...tokensFixture(), id_token: undefined }), text: async () => '' }
+  }
+
+  it('A, B (different codes), and a duplicate of A while A is pending: exactly two network requests fire, not three', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateA = localMock.getItem('bs_oauth_state')!
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateB = localMock.getItem('bs_oauth_state')!
+
+    const defA = deferred<unknown>()
+    const defB = deferred<unknown>()
+    fetchMock.mockImplementation((_url: string, init: { body: string }) => {
+      const code = new URLSearchParams(init.body).get('code')
+      return code === 'code-a' ? defA.promise : defB.promise
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u', client_id: CLIENT_ID } })
+
+    const exchangeA = client.exchangeCodeForTokens('code-a', stateA)
+    const exchangeB = client.exchangeCodeForTokens('code-b', stateB)
+    // B claiming its OWN code's guard must not clobber A's — both are still
+    // genuinely in flight, independently.
+    await expect(client.exchangeCodeForTokens('code-a', stateA)).rejects.toThrow(
+      /Code exchange already in progress/i,
+    )
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+
+    defA.resolve(okResponse())
+    defB.resolve(okResponse())
+    const [resultA, resultB] = await Promise.all([exchangeA, exchangeB])
+    expect(resultA.user.sub).toBe('u')
+    expect(resultB.user.sub).toBe('u')
+    // Still exactly two — the blocked duplicate never reached fetch.
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('the guard is bounded: a claim older than the PKCE TTL is treated as abandoned, not a live duplicate', async () => {
+    // Defense-in-depth for a release that never ran (e.g. a crashed tab
+    // mid-fetch) — the guard must not block that code forever.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    seedPkceState('s', 'v', 'n')
+    const elevenMinutesAgo = Date.now() - 11 * 60 * 1000
+    localMock.setItem(
+      'bs_oauth_inflight_codes',
+      JSON.stringify({ authcode: { startedAt: elevenMinutesAgo } }),
+    )
+    fetchMock.mockResolvedValueOnce(okResponse())
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u', client_id: CLIENT_ID } })
+    const result = await client.exchangeCodeForTokens('authcode', 's')
+    expect(result.user.sub).toBe('u')
+  })
+
+  it.each(['success', 'failure'])('late %s cannot release a replacement claim for the same code', async (outcome) => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    const now = Date.now()
+    const clock = vi.spyOn(Date, 'now').mockReturnValue(now)
+    let finishA!: (value: unknown) => void
+    let rejectA!: (cause: unknown) => void
+    const a = new Promise((resolve, reject) => { finishA = resolve; rejectA = reject })
+    const b = deferred<unknown>()
+    fetchMock.mockReturnValueOnce(a).mockReturnValueOnce(b.promise)
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u', client_id: CLIENT_ID, nonce: 'n' } })
+    try {
+      seedPkceState('state-a', 'verifier-a', 'n')
+      const first = client.exchangeCodeForTokens('same-code', 'state-a')
+      const firstOutcome = first.catch(error => error)
+      clock.mockReturnValue(now + 11 * 60 * 1000)
+      seedPkceState('state-b', 'verifier-b', 'n')
+      const second = client.exchangeCodeForTokens('same-code', 'state-b')
+      if (outcome === 'success') finishA(okResponse())
+      else rejectA(new TypeError('old response lost'))
+      await firstOutcome
+      await expect(client.exchangeCodeForTokens('same-code', 'state-b')).rejects.toThrow('Code exchange already in progress')
+      expect(fetchMock).toHaveBeenCalledTimes(2)
+      b.resolve(okResponse())
+      await second
+      expect(JSON.parse(localMock.getItem('bs_oauth_inflight_codes') || '{}')['same-code']).toBeUndefined()
+    } finally { clock.mockRestore() }
+  })
+})
+
+// ---------------------------------------------------------------------------
+// exchangeCodeForTokens — network failure: structured uncertain-outcome error
+// ---------------------------------------------------------------------------
+// A network-level fetch rejection means no HTTP response — success or
+// failure — ever arrived. This is NOT the same as a deterministic server
+// rejection: OAuth codes are single-use, so if the server DID process the
+// request before the response was lost, the code is already consumed and a
+// blind retry with the same code will simply fail. The package must not
+// imply "safe to retry" and must expose a structured, distinguishable error
+// so a caller can route to a fresh sign-in instead.
+
+describe('exchangeCodeForTokens — network failure exposes a structured, non-blind-replay error', () => {
+  it('throws BusinessSuiteOAuthExchangeUncertainError (recovery: "fresh-sign-in"), distinct from a deterministic HTTP rejection', async () => {
+    const { createOAuthClient, BusinessSuiteOAuthExchangeUncertainError } = await import(
+      '../oauth-client.js'
+    )
+    const client = createOAuthClient(CLIENT_ID)
+    seedPkceState('s', 'v', 'n')
+
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    let caught: unknown
+    try {
+      await client.exchangeCodeForTokens('authcode', 's')
+    } catch (err) {
+      caught = err
+    }
+    expect(caught).toBeInstanceOf(BusinessSuiteOAuthExchangeUncertainError)
+    expect((caught as InstanceType<typeof BusinessSuiteOAuthExchangeUncertainError>).recovery).toBe(
+      'fresh-sign-in',
+    )
+    expect((caught as Error).message).toMatch(/do not assume it is safe to retry/i)
+
+    // A DETERMINISTIC server rejection (a real HTTP response, even an error
+    // one) is a settled outcome and must remain a plain Error, not this
+    // uncertain-outcome type — the two must stay distinguishable.
+    seedPkceState('s2', 'v2', 'n2')
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status: 400,
+      json: async () => ({}),
+      text: async () => 'invalid_grant',
+    })
+    let deterministicCaught: unknown
+    try {
+      await client.exchangeCodeForTokens('code2', 's2')
+    } catch (err) {
+      deterministicCaught = err
+    }
+    expect(deterministicCaught).not.toBeInstanceOf(BusinessSuiteOAuthExchangeUncertainError)
+    expect((deterministicCaught as Error).message).toMatch(/Token exchange failed: 400/)
+  })
+
+  it('regression: the server may have already consumed the code before the response was lost — a blind retry with the same code fails deterministically, and the recommended fresh-sign-in recovery succeeds', async () => {
+    const { createOAuthClient, BusinessSuiteOAuthExchangeUncertainError } = await import(
+      '../oauth-client.js'
+    )
+    const client = createOAuthClient(CLIENT_ID)
+    seedPkceState('s', 'v', 'n')
+
+    // The original request actually reached the server and the server DID
+    // consume 'authcode' — but the client never saw the response (the
+    // connection dropped), so from the client's perspective this is a
+    // network rejection.
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await expect(client.exchangeCodeForTokens('authcode', 's')).rejects.toBeInstanceOf(
+      BusinessSuiteOAuthExchangeUncertainError,
+    )
+
+    // Demonstrate the regression this guards against: because the server
+    // DID consume 'authcode' in this scenario, a NAIVE blind retry with the
+    // same code fails deterministically (never silently "succeeds twice").
+    fetchMock.mockResolvedValueOnce({
+      ok: false, status: 400,
+      json: async () => ({}),
+      text: async () => 'invalid_grant: code already used',
+    })
+    await expect(client.exchangeCodeForTokens('authcode', 's')).rejects.toThrow(
+      /Token exchange failed: 400/,
+    )
+
+    // The recommended recovery — a fresh sign-in mints a new code/state the
+    // server has never seen — succeeds normally with no special handling,
+    // and other (unrelated) transactions are never touched by any of this.
+    await client.signInWithBusinessSuite()
+    const freshState = localMock.getItem('bs_oauth_state')!
+    fetchMock.mockResolvedValueOnce({
+      ok: true, status: 200,
+      json: async () => ({ ...tokensFixture(), id_token: undefined }),
+      text: async () => '',
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'user-fresh', client_id: CLIENT_ID } })
+    const result = await client.exchangeCodeForTokens('fresh-code', freshState)
+    expect(result.user.sub).toBe('user-fresh')
+  })
+
+  it('preserves this transaction\'s own PKCE state on a network rejection (a caller MAY still choose to retry)', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    seedPkceState('s', 'v', 'n')
+
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await expect(client.exchangeCodeForTokens('authcode', 's')).rejects.toThrow(/response unknown/i)
+
+    expect(localMock.getItem('bs_oauth_code_verifier')).toBe('v')
+    expect(localMock.getItem('bs_oauth_state')).toBe('s')
+  })
+
+  it("a network-rejected exchange does not disturb a DIFFERENT, unrelated transaction's PKCE state or guard", async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateA = localMock.getItem('bs_oauth_state')!
+
+    // Flow B starts after A and owns the legacy flat slot now.
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateB = localMock.getItem('bs_oauth_state')!
+    const verifierB = localMock.getItem('bs_oauth_code_verifier')!
+
+    fetchMock.mockRejectedValueOnce(new TypeError('Failed to fetch'))
+    await expect(client.exchangeCodeForTokens('code-a', stateA)).rejects.toThrow(/response unknown/i)
+
+    // B's own legacy PKCE data must be completely untouched by A's failure.
+    expect(localMock.getItem('bs_oauth_state')).toBe(stateB)
+    expect(localMock.getItem('bs_oauth_code_verifier')).toBe(verifierB)
+
+    fetchMock.mockResolvedValueOnce({
+      ok: true, status: 200,
+      json: async () => ({ ...tokensFixture(), id_token: undefined }),
+      text: async () => '',
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'user-b', client_id: CLIENT_ID } })
+    const result = await client.exchangeCodeForTokens('code-b', stateB)
+    expect(result.user.sub).toBe('user-b')
+  })
+})
+
+describe('exchangeCodeForTokens — flow-map resurrection hardening (both completion orders)', () => {
+  function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
+    let resolve!: (value: T) => void
+    const promise = new Promise<T>((res) => {
+      resolve = res
+    })
+    return { promise, resolve }
+  }
+
+  function okResponse() {
+    return { ok: true, status: 200, json: async () => ({ ...tokensFixture(), id_token: undefined }), text: async () => '' }
+  }
+
+  async function startTwoFlows(client: Awaited<ReturnType<typeof importClient>>) {
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateA = localMock.getItem('bs_oauth_state')!
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateB = localMock.getItem('bs_oauth_state')!
+    return { stateA, stateB }
+  }
+
+  async function importClient() {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    return createOAuthClient(CLIENT_ID)
+  }
+
+  it('preserves a newly-started flow C when A resolves before B', async () => {
+    const client = await importClient()
+    const { stateA, stateB } = await startTwoFlows(client)
+
+    const defA = deferred<unknown>()
+    const defB = deferred<unknown>()
+    fetchMock.mockImplementation((_url: string, init: { body: string }) => {
+      const code = new URLSearchParams(init.body).get('code')
+      return code === 'code-a' ? defA.promise : defB.promise
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u', client_id: CLIENT_ID } })
+
+    const exchangeA = client.exchangeCodeForTokens('code-a', stateA)
+    const exchangeB = client.exchangeCodeForTokens('code-b', stateB)
+
+    // Flow C starts while both A and B are still in flight.
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateC = localMock.getItem('bs_oauth_state')!
+
+    defA.resolve(okResponse())
+    await exchangeA
+    defB.resolve(okResponse())
+    await exchangeB
+
+    const raw = localMock.getItem('bs_oauth_flows')
+    const flows: Record<string, unknown> = raw ? JSON.parse(raw) : {}
+    expect(flows[stateC]).toBeDefined()
+    expect(flows[stateA]).toBeUndefined()
+    expect(flows[stateB]).toBeUndefined()
+  })
+
+  it('preserves a newly-started flow C when B resolves before A', async () => {
+    const client = await importClient()
+    const { stateA, stateB } = await startTwoFlows(client)
+
+    const defA = deferred<unknown>()
+    const defB = deferred<unknown>()
+    fetchMock.mockImplementation((_url: string, init: { body: string }) => {
+      const code = new URLSearchParams(init.body).get('code')
+      return code === 'code-a' ? defA.promise : defB.promise
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u', client_id: CLIENT_ID } })
+
+    const exchangeA = client.exchangeCodeForTokens('code-a', stateA)
+    const exchangeB = client.exchangeCodeForTokens('code-b', stateB)
+
+    await client.signInWithBusinessSuite({ prompt: 'none' })
+    const stateC = localMock.getItem('bs_oauth_state')!
+
+    // Reversed completion order from the sibling test above.
+    defB.resolve(okResponse())
+    await exchangeB
+    defA.resolve(okResponse())
+    await exchangeA
+
+    const raw = localMock.getItem('bs_oauth_flows')
+    const flows: Record<string, unknown> = raw ? JSON.parse(raw) : {}
+    expect(flows[stateC]).toBeDefined()
+    expect(flows[stateA]).toBeUndefined()
+    expect(flows[stateB]).toBeUndefined()
+  })
+})
+
+// ---------------------------------------------------------------------------
+// hasPendingBusinessSuiteTransaction — read-only callback-dispatch predicate
+// ---------------------------------------------------------------------------
+
+describe('hasPendingBusinessSuiteTransaction', () => {
+  it.each(['bs_oauth_nonce', 'bs_oauth_started_at', 'bs_oauth_code_verifier'])(
+    'rejects incomplete legacy state consistently when %s is missing', async (key) => {
+      const { createOAuthClient, hasPendingBusinessSuiteTransaction } = await import('../oauth-client.js')
+      seedPkceState('legacy', 'verifier', 'nonce')
+      localMock.removeItem(key)
+      expect(hasPendingBusinessSuiteTransaction('legacy')).toBe(false)
+      await expect(createOAuthClient(CLIENT_ID).exchangeCodeForTokens('code', 'legacy')).rejects.toThrow()
+      expect(fetchMock).not.toHaveBeenCalled()
+    },
+  )
+
+  it('classifies body-stream failure after successful headers as a fresh-sign-in recovery', async () => {
+    const { createOAuthClient, BusinessSuiteOAuthExchangeUncertainError } = await import('../oauth-client.js')
+    seedPkceState('legacy', 'verifier', 'nonce')
+    fetchMock.mockResolvedValue({ ok: true, status: 200, json: async () => { throw new TypeError('stream lost') } })
+    const result = createOAuthClient(CLIENT_ID).exchangeCodeForTokens('consumed-code', 'legacy')
+    await expect(result).rejects.toBeInstanceOf(BusinessSuiteOAuthExchangeUncertainError)
+    await expect(result).rejects.toMatchObject({ recovery: 'fresh-sign-in' })
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+  it('returns false for an empty state', async () => {
+    const { hasPendingBusinessSuiteTransaction } = await import('../oauth-client.js')
+    expect(hasPendingBusinessSuiteTransaction('')).toBe(false)
+  })
+
+  it('returns true for a state present in the concurrent-flow map', async () => {
+    const { createOAuthClient, hasPendingBusinessSuiteTransaction } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    const state = localMock.getItem('bs_oauth_state')!
+    expect(hasPendingBusinessSuiteTransaction(state)).toBe(true)
+  })
+
+  it('returns true for a fresh state matching only the legacy single-flow key', async () => {
+    const { hasPendingBusinessSuiteTransaction } = await import('../oauth-client.js')
+    seedPkceState('legacy-state', 'legacy-verifier', 'legacy-nonce')
+    expect(hasPendingBusinessSuiteTransaction('legacy-state')).toBe(true)
+  })
+
+  it('returns false for a legacy state older than the PKCE TTL', async () => {
+    const { hasPendingBusinessSuiteTransaction } = await import('../oauth-client.js')
+    localMock.setItem('bs_oauth_state', 'legacy-state')
+    localMock.setItem('bs_oauth_started_at', String(Date.now() - 11 * 60 * 1000))
+    expect(hasPendingBusinessSuiteTransaction('legacy-state')).toBe(false)
+  })
+
+  it('returns false for a state nobody minted (CSRF-safety parity with exchangeCodeForTokens)', async () => {
+    const { createOAuthClient, hasPendingBusinessSuiteTransaction } = await import('../oauth-client.js')
+    await createOAuthClient(CLIENT_ID).signInWithBusinessSuite()
+    expect(hasPendingBusinessSuiteTransaction('state-nobody-minted')).toBe(false)
+  })
+
+  it('is read-only — checking it (even twice) does not consume the transaction', async () => {
+    const { createOAuthClient, hasPendingBusinessSuiteTransaction } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    await client.signInWithBusinessSuite()
+    const state = localMock.getItem('bs_oauth_state')!
+
+    expect(hasPendingBusinessSuiteTransaction(state)).toBe(true)
+    expect(hasPendingBusinessSuiteTransaction(state)).toBe(true)
+
+    fetchMock.mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => ({ ...tokensFixture(), id_token: undefined }),
+      text: async () => '',
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u', client_id: CLIENT_ID } })
+    const result = await client.exchangeCodeForTokens('code', state)
+    expect(result.user.sub).toBe('u')
+  })
+})
+
+// ---------------------------------------------------------------------------
 // refreshBusinessSuiteToken
 // ---------------------------------------------------------------------------
 
@@ -924,7 +1383,7 @@ describe('getUserInfo', () => {
 // ---------------------------------------------------------------------------
 
 describe('clearBSTokens', () => {
-  it('removes all four bs_* keys from localStorage', async () => {
+  it('removes token and pending transaction keys while preserving unrelated storage', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     localMock.setItem('bs_access_token', 'a')
     localMock.setItem('bs_refresh_token', 'r')
@@ -935,6 +1394,8 @@ describe('clearBSTokens', () => {
     localMock.setItem('bs_oauth_nonce', 'nonce')
     localMock.setItem('bs_oauth_started_at', String(Date.now()))
     localMock.setItem('bs_oauth_inflight_code', 'code')
+    localMock.setItem('bs_oauth_flows', JSON.stringify({ state: { verifier: 'verifier', nonce: 'nonce', startedAt: Date.now() } }))
+    localMock.setItem('bs_oauth_inflight_codes', JSON.stringify({ code: { startedAt: Date.now(), owner: 'owner' } }))
     localMock.setItem('auth_return_path', '/dashboard')
     localMock.setItem('unrelated', 'keep')
     createOAuthClient(CLIENT_ID).clearBSTokens()
@@ -948,6 +1409,8 @@ describe('clearBSTokens', () => {
     expect(localMock.getItem('bs_oauth_started_at')).toBeNull()
     expect(localMock.getItem('bs_oauth_inflight_code')).toBeNull()
     expect(localMock.getItem('auth_return_path')).toBeNull()
+    expect(localMock.getItem('bs_oauth_flows')).toBeNull()
+    expect(localMock.getItem('bs_oauth_inflight_codes')).toBeNull()
     expect(localMock.getItem('unrelated')).toBe('keep')
   })
 
@@ -978,14 +1441,41 @@ describe('attemptSilentAuth', () => {
     localMock.removeItem('bs_oauth_last_redirect_at')
   })
 
-  it('returns true immediately when an access token is already stored', async () => {
+  it('returns true immediately when a still-valid access token is already stored', async () => {
     const { createOAuthClient } = await import('../oauth-client.js')
-    localMock.setItem('bs_access_token', 'existing')
+    localMock.setItem('bs_access_token', makeAccessToken(3600))
     const result = await createOAuthClient(CLIENT_ID).attemptSilentAuth()
     expect(result).toBe(true)
     expect(fetchMock).not.toHaveBeenCalled()
     // Should NOT redirect — fast path wins.
     expect(window.location.href).toBe('')
+  })
+
+  it('does not trust an expired access token — falls through to the refresh-token path', async () => {
+    // Regression: the fast path previously trusted ANY truthy value under
+    // bs_access_token, including one past its exp claim.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    localMock.setItem('bs_access_token', makeAccessToken(-60))
+    localMock.setItem('bs_refresh_token', 'rt-good')
+    fetchMock.mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => tokensFixture(),
+      text: async () => '',
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u1' } })
+    const result = await createOAuthClient(CLIENT_ID).attemptSilentAuth()
+    expect(result).toBe(true)
+    // Proves the fast path did NOT short-circuit on the expired token —
+    // authentication came from the network refresh instead.
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+  })
+
+  it('does not trust a malformed access token string — falls through to prompt=none redirect', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    localMock.setItem('bs_access_token', 'not-a-jwt')
+    const result = await createOAuthClient(CLIENT_ID).attemptSilentAuth()
+    expect(result).toBe(false)
+    expect(window.location.href).toContain('prompt=none')
   })
 
   it('redirects to /oauth/authorize?prompt=none when no tokens are stored', async () => {
@@ -1054,6 +1544,111 @@ describe('attemptSilentAuth', () => {
     const { createOAuthClient } = await import('../oauth-client.js')
     await createOAuthClient(CLIENT_ID).attemptSilentAuth({ returnTo: '/projects/42' })
     expect(localMock.getItem('auth_return_path')).toBe('/projects/42')
+  })
+})
+
+// ---------------------------------------------------------------------------
+// attemptSilentAuthDetailed — the additive explicit-outcome contract
+// ---------------------------------------------------------------------------
+// attemptSilentAuth() collapses 'redirecting' and 'failed' into the same
+// `false`, which cannot tell a consumer "a prompt=none navigation is under
+// way, do nothing else" apart from "silent auth is genuinely over, show the
+// interactive login UI now". attemptSilentAuthDetailed() is the additive,
+// backward-compatible sibling that reports which one actually happened.
+
+describe('attemptSilentAuthDetailed', () => {
+  it.each([
+    ['success', 'new-session'], ['failure', 'new-session'],
+    ['success', 'logout'], ['failure', 'logout'],
+  ])('does not navigate after a superseded refresh %s following %s', async (outcome, replacement) => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    localMock.setItem('bs_refresh_token', 'old-refresh')
+    let finish!: (value: unknown) => void
+    fetchMock.mockReturnValue(new Promise(resolve => { finish = resolve }))
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'old-user' } })
+    const pending = createOAuthClient(CLIENT_ID).attemptSilentAuthDetailed()
+    expect(fetchMock).toHaveBeenCalledTimes(1)
+    if (replacement === 'new-session') {
+      localMock.setItem('bs_refresh_token', 'new-refresh')
+      localMock.setItem('bs_access_token', makeAccessToken(3600))
+    } else {
+      localMock.removeItem('bs_refresh_token')
+      localMock.removeItem('bs_access_token')
+    }
+    finish({ ok: outcome === 'success', status: outcome === 'success' ? 200 : 401, json: async () => tokensFixture(), text: async () => 'invalid_grant' })
+    await expect(pending).resolves.toEqual({ status: replacement === 'new-session' ? 'authenticated' : 'superseded' })
+    expect(window.location.href).toBe('')
+    expect(localMock.getItem('bs_oauth_flows')).toBeNull()
+    expect(localMock.getItem('bs_refresh_token')).toBe(replacement === 'new-session' ? 'new-refresh' : null)
+  })
+  beforeEach(() => {
+    localMock.removeItem('bs_oauth_last_redirect_at')
+  })
+
+  it('returns status "authenticated" when a valid access token is already stored', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    localMock.setItem('bs_access_token', makeAccessToken(3600))
+    const result = await createOAuthClient(CLIENT_ID).attemptSilentAuthDetailed()
+    expect(result).toEqual({ status: 'authenticated' })
+  })
+
+  it('returns status "authenticated" after a successful refresh-token exchange', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    localMock.setItem('bs_refresh_token', 'rt-good')
+    fetchMock.mockResolvedValue({
+      ok: true, status: 200,
+      json: async () => tokensFixture(),
+      text: async () => '',
+    })
+    mockJwtVerify.mockResolvedValue({ payload: { sub: 'u1' } })
+    const result = await createOAuthClient(CLIENT_ID).attemptSilentAuthDetailed()
+    expect(result).toEqual({ status: 'authenticated' })
+  })
+
+  it('returns status "redirecting" — not "failed" — when a prompt=none redirect is initiated', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const result = await createOAuthClient(CLIENT_ID).attemptSilentAuthDetailed()
+    expect(result).toEqual({ status: 'redirecting' })
+    const href = window.location.href
+    expect(href).toContain('/auth/v1/oauth/authorize?')
+    expect(href).toContain('prompt=none')
+  })
+
+  it('returns status "failed" with a reason when the redirect itself cannot be initiated', async () => {
+    // The redirect-loop breaker is deliberately EXEMPT for prompt=none (see
+    // signInWithBusinessSuite's isInteractive guard), so it can never be the
+    // cause of a slow-path failure here. The one real trigger is the
+    // navigation assignment itself throwing (e.g. window.location
+    // unwritable) — simulate that directly.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    Object.defineProperty(window, 'location', {
+      configurable: true,
+      value: {
+        origin: 'https://crm.crm7.app',
+        get href() {
+          return ''
+        },
+        set href(_value: string) {
+          throw new Error('window.location is unwritable in this context')
+        },
+      },
+    })
+    const result = await client.attemptSilentAuthDetailed()
+    expect(result.status).toBe('failed')
+    expect(result.reason).toMatch(/unwritable/i)
+  })
+
+  it('attemptSilentAuth is a thin boolean wrapper: true only for "authenticated"', async () => {
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const client = createOAuthClient(CLIENT_ID)
+    const redirecting = await client.attemptSilentAuthDetailed()
+    expect(redirecting.status).toBe('redirecting')
+
+    localMock.removeItem('bs_oauth_last_redirect_at')
+    window.location.href = ''
+    const boolResult = await client.attemptSilentAuth()
+    expect(boolResult).toBe(false)
   })
 })
 
@@ -1146,5 +1741,43 @@ describe('startBSTokenRefresh', () => {
     expect(localMock.getItem('bs_access_token')).toBeNull()
     expect(localMock.getItem('bs_refresh_token')).toBeNull()
     expect(events.map((event) => event.detail.reason)).toContain('refresh_rejected')
+  })
+
+  it('does not erase a newer session written by a concurrent tab while a stale refresh attempt is failing', async () => {
+    // Regression: checkAndRefreshToken read bs_refresh_token, awaited the
+    // network round-trip, and on failure cleared BS tokens unconditionally.
+    // If another tab completed a fresh sign-in during that await, this
+    // wiped out the newer, valid session on the strength of the stale
+    // attempt's failure alone.
+    const { createOAuthClient } = await import('../oauth-client.js')
+    const expiredPayload = btoa(JSON.stringify({ exp: Math.floor(Date.now() / 1000) - 60 }))
+    localMock.setItem('bs_access_token', `header.${expiredPayload}.signature`)
+    localMock.setItem('bs_refresh_token', 'refresh-old')
+    fetchMock.mockResolvedValue({
+      ok: false,
+      status: 401,
+      json: async () => ({}),
+      text: async () => 'invalid_grant',
+    })
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    try {
+      const stop = createOAuthClient(CLIENT_ID).startBSTokenRefresh()
+      // The immediate check has already called fetch synchronously (see the
+      // sibling test above) and is now suspended awaiting its resolution.
+      // Simulate a concurrent tab completing a fresh sign-in in that window,
+      // before the stale attempt's rejection is handled.
+      expect(fetchMock).toHaveBeenCalledTimes(1)
+      localMock.setItem('bs_refresh_token', 'refresh-new-from-other-tab')
+      localMock.setItem('bs_access_token', 'access-new-from-other-tab')
+
+      await vi.runOnlyPendingTimersAsync()
+      stop()
+    } finally {
+      warnSpy.mockRestore()
+    }
+
+    expect(localMock.getItem('bs_refresh_token')).toBe('refresh-new-from-other-tab')
+    expect(localMock.getItem('bs_access_token')).toBe('access-new-from-other-tab')
   })
 })
