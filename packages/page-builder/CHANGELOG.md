@@ -5,6 +5,80 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [2.7.1-next.0] — 2026-09-10 — Edit-mode label and hide sit in a measured strip, not on the card
+
+A prerelease, not a release. The in-force standard
+`docs/20260824-preview-canary-publishing-standard-v1.00A.md` publishes releases from `main` only;
+a package fix landing on `development` must carry a `-next.N` or
+`scripts/select-prerelease-publishes.mjs` skips it entirely — "nothing publishes from
+development" — and the change reaches no `d.*` preview host and no visual gate. This version was
+derived from the registry by `node scripts/next-prerelease-version.mjs --package
+@bsuite/page-builder --write`, not typed by hand, and it ships in the same commit as the change
+because `check-published-matches-source.mjs` compares the tarball against source at the version
+the source declares.
+
+**The overlap fix.** GridItem painted the widget name `absolute top-2 left-2` and hide
+`absolute top-2 right-2` over unchanged card content. The strip is now in-flow
+(`data-slot="grid-item-editor-chrome"`). AutoHeight includes it in the unconstrained measure
+wrapper so the slot grows; leaving edit mode unmounts it and the observer restores content-only
+height. Fixed-height cards keep the strip above the scroll body. Drag handle, resize handle, and
+hide stay callable. The label is not removed.
+
+**The narrow-card fix that came with it.** The strip's label span had no `min-w-0` and no wrap
+control, so its automatic minimum size was its min-content — one long unbroken widget name — and
+the `ml-auto` hide button was pushed outside the card box. The label now carries `min-w-0
+truncate` with a `title` holding the full name, so it clips with an ellipsis and loses nothing.
+
+**What was measured, and what was not.** `scripts/editor-chrome-geometry.mjs` was rewritten to
+loop viewports, to assert `window.innerWidth` inside the same `page.evaluate` that returns the
+rects, to measure the editor banner in both states and say which, and to read the colour scheme
+from the DOM rather than force one. Receipt: `editor-chrome-geometry-390.json`. Three cells
+(1440x900, 768x1024 laptop-narrow-container, 390x844) each asserted their own `innerWidth`. A
+positive control removes `truncate`/`min-w-0` at run time and reproduces the defect at 1440 (hide
+43.9px outside the card box) and at 768 (155.9px), so the pass is not vacuous.
+
+**The overflow check, and the gate that was green by construction.** The first version of that
+rewrite routed an expanded-banner overflow through
+`unmodelledClasses.length ? instrumentFailures : failures`. `unmodelledClasses` counts the whole
+document and was never zero, so the product branch could not be taken — a failing branch nothing
+could reach. It also never looked at the banner BODY: its only expanded check was page-level, and
+at 390 that read 390 == 390 while the body itself sat at `scrollWidth` 353 vs `clientWidth` 322.
+Both are fixed. The body's own box is checked; an overflow is ATTRIBUTED to the outermost elements
+that cause it; and blame is gathered PER OFFENDER over that element, its subtree and its ancestors
+up to and including the overflow container, so one offender with a fully modelled scope is a
+PRODUCT verdict. Classes above the container are excluded deliberately and listed in
+`aboveContainerUnmodelledClasses` so the exclusion is auditable. A second positive control appends
+a class-free, inline-width div wider than the banner body and requires the verdict PRODUCT back:
+it bites in all three cells (`cellsWhereTheBannerOverflowControlBit`), which is what makes the
+first branch demonstrably reachable rather than merely written.
+
+Run against that check, the 353/322 residual attributed itself to `div.basis-full…` — the Layers
+panel — and named `basis-full` as unmodelled by the harness stylesheet. `basis-full` is
+`flex-basis:100%`; without it the panel is content-sized instead of claiming its own row, so those
+31px were the MODEL's geometry. `harness.css` now models it and the other tokens that blame chain
+named, and the same cell reads 322 vs 322. The residual was the instrument, and the instrument is
+what established that — not prose about it. Unmodelled tokens per cell fell 59 → 27; no cell now
+scrolls horizontally in any banner state, and no banner body overflows its own box.
+
+**Measured, reported, NOT fixed here: the fixed-height card loses content area in edit mode.**
+On a fixed-height (non-`autoHeight`) card the strip is a sibling above the `overflow-auto` body
+inside a grid slot that does not grow, so opening the editor takes the strip's height out of the
+visible content. Measured at all three viewports: body `clientHeight` 222px → 190px, exactly the
+32px strip; content hidden at any one scroll position rises by the same 32px (desktop 187 → 219,
+768 561 → 593, 390 319 → 351). The body computes `overflow-y: auto` and scrolls, so nothing
+becomes UNREACHABLE — the cost is a smaller window and more scrolling while arranging, not lost
+access. This ships as-is: it is carried in `summary.observationsNotGating`, printed as OBSERVE,
+and deliberately does not fail the run. Whether to reclaim those 32px is the owner's call, and
+recording it here is how that call gets made rather than forgotten.
+
+**Consumers.** Every `PageGridLayout` mount (crm7, BSU, conduit, braden, throughput; R80.4 has no
+page-builder). **A caret range will not resolve a prerelease** — npm excludes prerelease versions
+from `^2.7.0` and `^2.6.1` unless the range itself names one. To take this on a preview host, each
+app pins the exact `2.7.1-next.0` in its own `package.json` on its own `development` branch and
+regenerates its lockfile outside the bsuite tree (`bsuite-pnpm-monorepo`). No Candidates-only CSS.
+
+---
+
 ## [1.0.7] — 2026-08-25 — Only a pointer gesture may commit a layout
 
 The fix. 1.0.4, 1.0.5 and 1.0.6 each tried to classify the grid's emission by

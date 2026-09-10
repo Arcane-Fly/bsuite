@@ -202,6 +202,73 @@ type GridItemProps = {
  * the silent case audible in development and leaves production untouched, which
  * is the same trade @bsuite/theme 1.3.0 made for its missing-provider warning.
  */
+/**
+ * Edit-mode label + hide. These used to be `absolute top-2 left-2` /
+ * `top-2 right-2` overlays on the card (PageGridLayout GridItem, historically
+ * around the 407/415 marks). That painted the widget name and the hide control
+ * on top of the card heading — measured on the Candidates card at 1440.
+ *
+ * An earlier draft of this comment also claimed 390. Withdrawn: the instrument
+ * that produced that number never asserted its own `innerWidth`, and the cell
+ * labelled "390" reported 1560. What 390 actually looks like is now measured
+ * and recorded in `editor-chrome-geometry-390.json` — and it is a different
+ * fact: below a 480px container `buildResponsiveLayouts` stacks every card to
+ * full width, so 390 has no narrow card at all.
+ *
+ * In-flow, measured: the strip is a flex-none row. AutoHeight includes it in
+ * the unconstrained measure wrapper so the grid grows rather than overlapping.
+ * Fixed-height cards keep it *above* the overflow-auto body so hide cannot
+ * scroll away. Drag still starts from the strip (outer `.drag-handle`); hide
+ * is a `button` + `data-no-drag` so the existing cancel selector ignores it.
+ */
+function GridItemEditorChrome({
+  id,
+  label,
+  onHide,
+}: {
+  id: string;
+  label: string;
+  onHide: (id: string) => void;
+}) {
+  return (
+    <div
+      data-slot="grid-item-editor-chrome"
+      className="flex min-w-0 flex-none items-center gap-1 px-2 py-1 bg-muted text-muted-foreground"
+    >
+      {/*
+       * `min-w-0` + `truncate` are the narrow-width contract, not decoration.
+       * The label is a flex item whose automatic minimum size is its MIN-CONTENT
+       * — one long unbroken widget name ("Reconciliation" on a 3-column card at
+       * 390) is wider than the row, the row cannot shrink to fit, and `ml-auto`
+       * then pushes the hide button past the card's right edge. `truncate`
+       * (overflow:hidden) makes that automatic minimum resolve to 0, so the name
+       * clips with an ellipsis and hide stays inside the box. `title` keeps the
+       * full name reachable, so clipping costs nothing.
+       */}
+      <span
+        className="min-w-0 truncate text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+        title={label}
+      >
+        {label}
+      </span>
+      <button
+        type="button"
+        className="ml-auto h-6 w-6 shrink-0 rounded-full flex items-center justify-center bg-destructive hover:bg-destructive text-destructive-foreground shadow transition-colors"
+        data-no-drag
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          onHide(id);
+        }}
+        title={`Hide ${label}`}
+        aria-label={`Hide ${label}`}
+      >
+        <EyeOff className="h-3 w-3" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 let warnedAboutCollapsedContent = false;
 function warnOnceAboutCollapsedContent(el: HTMLElement): void {
   if (warnedAboutCollapsedContent) return;
@@ -343,7 +410,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       latestContentPxRef.current = contentPx;
       if (contentPx > 0) reportRows(contentPx);
       else warnOnceAboutCollapsedContent(el);
-    }, [autoHeight, onAutoHeightChange, reportRows]);
+      // Re-measure when edit chrome mounts/unmounts so the strip is in the
+      // row count in edit mode and gone again on lossless return.
+    }, [autoHeight, onAutoHeightChange, reportRows, isEditing]);
 
     useEffect(() => {
       if (!autoHeight || !onAutoHeightChange) return;
@@ -402,28 +471,6 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
         <div className="h-full w-full relative">
           {isEditing && (
             <div className="absolute inset-0 z-10 pointer-events-none rounded-3xl border-2 border-transparent group-hover:border-primary/50 transition-colors bg-primary/5" />
-          )}
-          {isEditing && (
-            <div className="absolute top-2 left-2 z-30 flex items-center gap-1 pointer-events-none">
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md opacity-80 font-medium bg-muted text-muted-foreground">
-                {label}
-              </span>
-            </div>
-          )}
-          {isEditing && (
-            <button
-              className="absolute top-2 right-2 z-30 h-6 w-6 rounded-full flex items-center justify-center bg-destructive/80 hover:bg-destructive text-destructive-foreground shadow transition-colors"
-              data-no-drag
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onHide(id);
-              }}
-              title={`Hide ${label}`}
-              aria-label={`Hide ${label}`}
-            >
-              <EyeOff className="h-3 w-3" aria-hidden="true" />
-            </button>
           )}
           <div
             data-slot="grid-item-surface"
@@ -597,39 +644,48 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * re-creates the very gap the `h-fit` above removes — the surface would hug
              * the wrapper, and the wrapper would stretch to the over-allocated height.
              * So autoHeight uses `flex-none` and the wrapper is content-sized.
+             *
+             * Editor chrome is IN FLOW. On autoHeight it sits inside the unconstrained
+             * measure wrapper so ResizeObserver grows the slot. On a fixed-height card
+             * it sits above the overflow-auto body so hide/label cannot scroll away.
              */}
-            <div
-              className={cn(
-                'min-h-0',
-                autoHeight ? 'flex-none overflow-visible' : 'flex-1 overflow-auto',
-              )}
-            >
-              {/*
-               * `flow-root` is load-bearing, not cosmetic. This wrapper had no
-               * padding, border or formatting context of its own, and its parent
-               * is `overflow-visible` under autoHeight — so a last child's
-               * `margin-bottom` COLLAPSED THROUGH both and never reached
-               * `contentRect.height`. The observer then under-reported the
-               * content by exactly that margin, the grid allocated that many
-               * pixels too few, and the card rendered taller than its slot: the
-               * card's bottom border sat outside the item box. Measured on
-               * production /payroll/timesheets 2026-08-28 — a single `mb-8` on
-               * the card's only child put the surface 32px past its own border,
-               * which is 2rem, exactly the margin. 70 call sites across 45 files
-               * in crm7 alone start a CanvasCard with a margin-bearing child, so
-               * this is fixed HERE, in the measurement, rather than by deleting
-               * a margin on each page. `flow-root` establishes a block
-               * formatting context, which is the minimal thing that stops the
-               * collapse while changing nothing about how the content lays out.
-               */}
-              {autoHeight ? (
+            {autoHeight ? (
+              <div data-slot="grid-item-body" className="min-h-0 flex-none overflow-visible">
+                {/*
+                 * `flow-root` is load-bearing, not cosmetic. This wrapper had no
+                 * padding, border or formatting context of its own, and its parent
+                 * is `overflow-visible` under autoHeight — so a last child's
+                 * `margin-bottom` COLLAPSED THROUGH both and never reached
+                 * `contentRect.height`. The observer then under-reported the
+                 * content by exactly that margin, the grid allocated that many
+                 * pixels too few, and the card rendered taller than its slot: the
+                 * card's bottom border sat outside the item box. Measured on
+                 * production /payroll/timesheets 2026-08-28 — a single `mb-8` on
+                 * the card's only child put the surface 32px past its own border,
+                 * which is 2rem, exactly the margin. 70 call sites across 45 files
+                 * in crm7 alone start a CanvasCard with a margin-bearing child, so
+                 * this is fixed HERE, in the measurement, rather than by deleting
+                 * a margin on each page. `flow-root` establishes a block
+                 * formatting context, which is the minimal thing that stops the
+                 * collapse while changing nothing about how the content lays out.
+                 */}
                 <div ref={measureRef} className="flow-root">
+                  {isEditing ? (
+                    <GridItemEditorChrome id={id} label={label} onHide={onHide} />
+                  ) : null}
                   {scopedContent}
                 </div>
-              ) : (
-                scopedContent
-              )}
-            </div>
+              </div>
+            ) : (
+              <>
+                {isEditing ? (
+                  <GridItemEditorChrome id={id} label={label} onHide={onHide} />
+                ) : null}
+                <div data-slot="grid-item-body" className="min-h-0 flex-1 overflow-auto">
+                  {scopedContent}
+                </div>
+              </>
+            )}
           </div>
         </div>
         {/*
