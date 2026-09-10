@@ -74,13 +74,18 @@ export class WorkflowSourceMissingError extends Error {
   }
 }
 
+/** A readable message from anything a Supabase call can reject or resolve-error with. */
+function describeError(err: unknown): string {
+  if (err instanceof Error) return err.message;
+  if (typeof err === 'object' && err !== null && 'message' in err) {
+    return String((err as { message: unknown }).message);
+  }
+  return String(err);
+}
+
 function assertNoError<T>(res: { data: unknown; error: unknown }): T {
   if (res.error) {
-    const message =
-      typeof res.error === 'object' && res.error !== null && 'message' in res.error
-        ? String((res.error as { message: unknown }).message)
-        : String(res.error);
-    throw new WorkflowServiceError(errorCode(res.error) ?? 'unknown', message);
+    throw new WorkflowServiceError(errorCode(res.error) ?? 'unknown', describeError(res.error));
   }
   return res.data as T;
 }
@@ -314,7 +319,12 @@ export async function createDraftVersion(
     tenant_id: args.tenantId,
     status: 'draft' as const,
     graph: serialiseGraph(args.graph),
-    ai_context: args.aiContext ?? null,
+    // `workflow_definition_versions.ai_context` is `NOT NULL DEFAULT
+    // '{}'::jsonb`. A column default only fires when the insert OMITS the
+    // key; an explicit `null` in the payload overrides it and violates the
+    // constraint instead of falling through to it (bsuite-3205). Every
+    // caller that supplies nothing must produce `{}`, never a literal null.
+    ai_context: args.aiContext ?? {},
   };
 
   let attempt = 0;
@@ -453,6 +463,11 @@ export async function publishVersion(
  * that to the user is surfacing a constraint name they cannot act on, so the
  * suffix is bumped and the insert retried. Bounded at five: past that it is a
  * naming problem, not contention, and it should be reported rather than spun on.
+ *
+ * THE DEFINITION INSERT IS CLEANED UP IF THE DRAFT INSERT FAILS. Both are
+ * ordinary supabase-js REST calls — no RPC, no cross-table transaction — so a
+ * failure between them used to leave a permanently orphaned definition row
+ * with zero versions. See the try/catch below for the compensating delete.
  */
 export interface DuplicateWorkflowDefinitionArgs {
   sourceDefinitionId: string;
@@ -507,17 +522,52 @@ export async function duplicateWorkflowDefinition(
     return assertNoError<never>({ data: null, error: lastError });
   }
 
-  const draft = await createDraftVersion(client, {
-    definitionId: definition.id,
-    tenantId: args.tenantId,
-    graph,
-    // The rationale notes travel with the graph. A copied process without the
-    // reasons behind its branches is a shape nobody can maintain.
-    aiContext: sourceVersion?.ai_context ?? null,
-    version: 1,
-  });
-
-  return { definition, draft };
+  // ATOMIC FROM THE CALLER'S POINT OF VIEW, THOUGH NOT FROM POSTGRES'S. There
+  // is no cross-table transaction available to a client-side caller — this
+  // is two separate supabase-js REST calls, not an RPC — so a failed draft
+  // insert below must not leave the definition row just created above behind
+  // as an orphan nobody asked for and nothing points back to. The
+  // compensating delete is best-effort and wrapped on its own: a refused
+  // delete (RLS, network) is folded into the thrown error rather than
+  // silently replacing it, so the caller always learns why the draft insert
+  // failed, and — when cleanup also failed — which definition id was left
+  // behind to find and remove by hand.
+  try {
+    const draft = await createDraftVersion(client, {
+      definitionId: definition.id,
+      tenantId: args.tenantId,
+      graph,
+      // The rationale notes travel with the graph. A copied process without
+      // the reasons behind its branches is a shape nobody can maintain.
+      // `?? {}`, never `?? null` — see the NOT NULL note in
+      // `createDraftVersion` (bsuite-3205); explicit here too so the intent
+      // reads without having to trace into the callee.
+      aiContext: sourceVersion?.ai_context ?? {},
+      version: 1,
+    });
+    return { definition, draft };
+  } catch (err) {
+    const orphanId = definition.id;
+    let cleanupMessage: string | null = null;
+    try {
+      const delRes = await client.from(DEFINITIONS).delete().eq('id', orphanId);
+      if (delRes?.error) cleanupMessage = describeError(delRes.error);
+    } catch (cleanupErr) {
+      cleanupMessage = describeError(cleanupErr);
+    }
+    if (cleanupMessage) {
+      // `{ cause }` as a constructor argument needs an ES2022 lib target;
+      // this package builds at ES2020, so the cause is attached as a plain
+      // property instead — Node has honoured `Error.prototype.cause` this
+      // way since 16.9, independent of the caller's TS `target`.
+      const wrapped = new Error(
+        `duplicateWorkflowDefinition: draft insert failed (${describeError(err)}); cleanup failed (${cleanupMessage}); orphan definition ${orphanId} left`,
+      ) as Error & { cause?: unknown };
+      wrapped.cause = err;
+      throw wrapped;
+    }
+    throw err;
+  }
 }
 
 export async function deleteWorkflowVersion(
