@@ -6,6 +6,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [0.3.0-rc.3] — 2026-09-09 — reserved chrome regions (crm7#2604)
+
+Layout follow-up named from 0.3.0's known gap (`canvas-overlays-collide-narrow`).
+
+**Version choice.** Registry at this commit: `latest` = `0.2.3`, `next` = `0.3.0-rc.2`. Local source already carried an unreleased `0.3.0` promotion of rc.2 with **no layout change**. This is `0.3.0-rc.3` on `next` so crm7 can pin it without claiming a `0.3.0` latest that is not on the registry, and without rewriting that 0.3.0 promotion entry. Semver: rc.3 < 0.3.0; when 0.3.0 latest does publish it must include these src changes or skip to 0.3.1.
+
+### Fixed
+
+- **Surface is not optional.** `WorkflowToolbar` / `WorkflowPalette` / `WorkflowInspector` always apply `bg-card`, `border-border`, padding, flex/width. `className` is extras only. `className ?? fullDefault` discarded the card when crm7 passed placement-only `absolute left-2 top-2`.
+- **Regions, not overlay.** `WorkflowCanvas` lays out `toolbar` / `palette` / `diagram` / `inspector` as reserved cells. `<ReactFlow>` (Background, Controls, MiniMap) lives only in the diagram cell, so Fit View and edge hits see the remaining box. MiniMap stays `bottom-right` of *that* pane. Inspector column collapses when the inspector returns null (`empty:hidden`).
+- **Container width, not viewport.** Compact chip-row palette below 800px of *canvas* (1024 viewport + expanded nav). Three columns at 1220/1440 expanded (~884px / ~1184px canvas). Tokens stay `--role-*` / `bg-card`; Braden does not pick up D2C glow (`dark:shadow-[var(--glow-card,none)]` already no-ops there).
+- **Nested width (SEND_BACK on b92517dff).** Region `w-56 p-2` wrapping palette `w-56` (and inspector `w-72` in `w-72 p-2`) overflowed 16px (measured 224/240 and 288/304). The region now owns the column width with no padding; slotted chrome is `w-full min-w-0` and keeps `bg-card` padding on the card. Standalone chrome still uses `w-56`/`w-72`.
+- **Draft cache is the live graph owner.** `scheduleSave` / `saveMutation` write the same graph to `workflow-draft` AND the draft row in `workflow-versions`, and roll both back on save error. Published rows in the list are not touched. Pane click clears selection so the inspector slot can collapse. Toolbar accepts `children` for host controls (fullscreen) in the reserved row.
+- **Same-tick add+select** no longer `replaceGraph`s the pre-add list: `commit` updates `graphRef` immediately and `addNode` selects the new node.
+- **Overlapped saves:** an older in-flight `onSuccess`/`onError` does not overwrite a newer `scheduleSave` cache write; saves are chained so server order is A then B.
+
+### Not chosen
+
+- `cn()` / `tailwind-merge` — restores surface, still an overlay, still steals START→END, still Fit View on the full box. Package `dependencies` stay `{}`.
+- xyflow `<Panel>` — documented as overlay in screen space; does not reserve space.
+- Raising `z-index` — the missing layout is a grid, not a stacking context.
+
+### Consumer notes
+
+- Stop passing positioning-only `className`s. Chrome no longer self-positions.
+- Children API is unchanged: tagged chrome is sorted into slots (Fragments flattened); `FocusNodeBridge` stays in the diagram cell. A post-publish banner can set `data-workflow-region="toolbar"`.
+- Backward compatible: omitting `className` still renders a card; extras compose rather than replace.
+
+---
+
 ## [0.3.0] — 2026-09-09 — the inspector authors what the engine executes (crm7#2594 C6, crm7#2603)
 
 Promotes `0.3.0-rc.2` (dist-tag `next`, consumed and verified by crm7#2608 on d.crm.crm7.app)

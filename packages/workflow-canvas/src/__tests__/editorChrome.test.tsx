@@ -27,6 +27,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { ReactFlowProvider } from '@xyflow/react';
 import { describe, expect, it, vi } from 'vitest';
 
+import { nestedFixedWidthOverflows } from '../components/chromeClasses.js';
 import { WORKFLOW_ACTION_VOCABULARY } from '../actionVocabulary.js';
 import { WorkflowInspector } from '../components/WorkflowInspector.js';
 import { WorkflowPalette } from '../components/WorkflowPalette.js';
@@ -663,6 +664,55 @@ describe('WorkflowInspector', () => {
   });
 });
 
+describe('nested fixed-width overflow (crm7#2604 SEND_BACK)', () => {
+  it('is the padded-region + same-width-child case the parent measured (224/240, 288/304)', () => {
+    expect(nestedFixedWidthOverflows(224, 16, 224)).toBe(true);
+    expect(nestedFixedWidthOverflows(288, 16, 288)).toBe(true);
+    expect(nestedFixedWidthOverflows(224, 0, 224)).toBe(false);
+    expect(nestedFixedWidthOverflows(288, 0, 288)).toBe(false);
+    expect(nestedFixedWidthOverflows(224, 16, 208)).toBe(false);
+  });
+});
+
+describe('chrome surface is not optional (crm7#2604)', () => {
+  const PLACEMENT_ONLY = 'absolute left-2 top-2 z-10';
+
+  it('keeps the palette card surface and w-56 when a consumer passes placement-only classes', () => {
+    renderInFlow(
+      <WorkflowPalette controller={makeController()} className={PLACEMENT_ONLY} />,
+    );
+    const el = screen.getByTestId('workflow-palette');
+    expect(el.className).toContain('bg-card');
+    expect(el.className).toContain('border-border');
+    expect(el.className).toContain('w-56');
+    expect(el.className).toContain('pointer-events-auto');
+    expect(el.className).toContain('absolute');
+  });
+
+  it('keeps the toolbar flex surface when a consumer passes placement-only classes', () => {
+    render(<WorkflowToolbar controller={makeController()} className={PLACEMENT_ONLY} />);
+    const el = screen.getByTestId('workflow-toolbar');
+    expect(el.className).toContain('bg-card');
+    expect(el.className).toContain('flex');
+    expect(el.className).toContain('flex-wrap');
+    expect(el.className).toContain('pointer-events-auto');
+  });
+
+  it('keeps the inspector card surface and w-72 when a consumer passes placement-only classes', () => {
+    render(
+      <WorkflowInspector
+        controller={makeController()}
+        selectedNodeId="step-1"
+        className={`${PLACEMENT_ONLY} w-72`}
+      />,
+    );
+    const el = screen.getByTestId('workflow-inspector');
+    expect(el.className).toContain('bg-card');
+    expect(el.className).toContain('w-72');
+    expect(el.className).toContain('overflow-y-auto');
+  });
+});
+
 describe('WorkflowToolbar', () => {
   const draft = {
     id: 'ver-1',
@@ -706,5 +756,19 @@ describe('WorkflowToolbar', () => {
     const status = screen.getByTestId('workflow-save-state');
     expect(status).toHaveAttribute('aria-live', 'polite');
     expect(status).toHaveTextContent('Saving…');
+  });
+
+  it('renders extra controls in the toolbar row, not as an overlay', () => {
+    const controller = makeController({ draft });
+    render(
+      <WorkflowToolbar controller={controller}>
+        <button type="button" data-testid="workflow-fullscreen">
+          Full screen
+        </button>
+      </WorkflowToolbar>,
+    );
+    const extra = screen.getByTestId('workflow-fullscreen');
+    expect(screen.getByTestId('workflow-toolbar').contains(extra)).toBe(true);
+    expect(screen.getByTestId('workflow-publish')).toBeInTheDocument();
   });
 });

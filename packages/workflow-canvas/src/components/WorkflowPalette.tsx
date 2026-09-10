@@ -22,9 +22,11 @@
  */
 
 import { useReactFlow } from '@xyflow/react';
-import { useCallback } from 'react';
+import { useCallback, useContext } from 'react';
 
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
+import { WorkflowCanvasLayoutContext, WorkflowChromeSlottedContext } from './canvasRegions.js';
+import { WORKFLOW_CHROME_SURFACE, WORKFLOW_PALETTE_WIDTH, joinClassNames } from './chromeClasses.js';
 
 export interface WorkflowPaletteProps {
   controller: WorkflowController;
@@ -42,6 +44,10 @@ export function WorkflowPalette({
   onNodeAdded,
 }: WorkflowPaletteProps) {
   const flow = useReactFlow();
+  const layout = useContext(WorkflowCanvasLayoutContext);
+  const slotted = useContext(WorkflowChromeSlottedContext);
+  const compact = layout === 'compact';
+  const fillSlot = compact || slotted;
 
   const place = useCallback(
     (kind: string) => {
@@ -76,31 +82,47 @@ export function WorkflowPalette({
 
   return (
     <div
-      className={
-        className ??
-        'pointer-events-auto absolute left-3 top-3 z-10 w-56 rounded-xl border border-border bg-card p-2 shadow-md dark:shadow-[var(--glow-card,none)]'
-      }
+      className={joinClassNames(
+        WORKFLOW_CHROME_SURFACE,
+        'min-w-0 p-2',
+        fillSlot ? 'w-full' : WORKFLOW_PALETTE_WIDTH,
+        className,
+      )}
       data-testid="workflow-palette"
+      data-workflow-region="palette"
+      data-layout={layout}
     >
-      <p className="px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+      <p
+        className={
+          compact
+            ? 'sr-only'
+            : 'px-1 pb-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground'
+        }
+      >
         Add to this workflow
       </p>
-      <ul className="space-y-1">
+      <ul className={compact ? 'flex flex-wrap gap-1' : 'space-y-1'}>
         {controller.registry.palette.map((descriptor) => (
           <li key={descriptor.kind}>
             <button
               type="button"
               onClick={() => place(descriptor.kind)}
-              className="w-full rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+              className={
+                compact
+                  ? 'rounded-lg border border-border-interactive bg-background px-2 py-1 text-left text-sm font-medium text-foreground transition-colors hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+                  : 'w-full rounded-lg border border-transparent px-2 py-1.5 text-left transition-colors hover:border-border-interactive hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring'
+              }
               data-testid={`workflow-palette-add-${descriptor.kind}`}
               data-node-kind={descriptor.kind}
             >
               <span className="block text-sm font-medium text-foreground">
                 {descriptor.label}
               </span>
-              <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
-                {descriptor.description}
-              </span>
+              {compact ? null : (
+                <span className="mt-0.5 block text-xs leading-snug text-muted-foreground">
+                  {descriptor.description}
+                </span>
+              )}
             </button>
           </li>
         ))}
@@ -108,3 +130,5 @@ export function WorkflowPalette({
     </div>
   );
 }
+
+WorkflowPalette.workflowRegion = 'palette' as const;
