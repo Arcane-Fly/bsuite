@@ -264,9 +264,30 @@ export function useWorkflowController({
     invalidateDraft: false,
   });
 
-  const definitionKey = workflowDefinitionOptions(supabase, definitionId).queryKey;
-  const draftKey = workflowDraftOptions(supabase, definitionId).queryKey;
-  const versionsKey = workflowVersionsOptions(supabase, definitionId).queryKey;
+  // MEMOISED so the identities are stable across renders, which is what lets the
+  // definition-switch effect below list them honestly instead of suppressing
+  // exhaustive-deps. Each `*Options()` call allocates a FRESH `queryKey` tuple
+  // (`queries.ts` builds `['workflow-draft', definitionId] as const` inline), so
+  // the unmemoised values changed identity every render and any effect that
+  // named them re-fired every render.
+  //
+  // `[supabase, definitionId]` is the honest dependency list, not a narrowing:
+  // `supabase` is read inside the factory, and every one of these three keys is
+  // a pure function of `definitionId` alone — the client reaches `queryFn`, never
+  // `queryKey`. So a churning client cannot change a key's VALUE, only its
+  // identity, and the effect below is guarded by a definitionId comparison anyway.
+  const definitionKey = useMemo(
+    () => workflowDefinitionOptions(supabase, definitionId).queryKey,
+    [supabase, definitionId],
+  );
+  const draftKey = useMemo(
+    () => workflowDraftOptions(supabase, definitionId).queryKey,
+    [supabase, definitionId],
+  );
+  const versionsKey = useMemo(
+    () => workflowVersionsOptions(supabase, definitionId).queryKey,
+    [supabase, definitionId],
+  );
   const lastSavedDraftRef = useRef<WorkflowDefinitionVersionRow | null>(null);
   const lastSavedVersionsRef = useRef<WorkflowDefinitionVersionRow[] | undefined>(undefined);
   /** Bumps on every `scheduleSave`. Stale in-flight saves must not write caches. */
@@ -538,10 +559,7 @@ export function useWorkflowController({
     draftKeyRef.current = draftKey;
     versionsKeyRef.current = versionsKey;
     setIsDirty(false);
-    // Keys are derived from definitionId; listing them would re-fire every
-    // render because queryOptions allocates a new queryKey tuple.
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- see above
-  }, [definitionId]);
+  }, [definitionId, draftKey, versionsKey]);
 
   // A pending edit must not be lost because the user navigated away. Flushing
   // in the cleanup is the difference between "saved a moment later" and
