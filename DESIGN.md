@@ -223,14 +223,19 @@ per-card layout are **required behaviour**, not a nice-to-have; never simplify t
 **Why:** the operator's standing ask — "anything presented in a table should be in the Airtable
 style" — does not need a new component. `@bsuite/data-grid` already is one: virtualised, cell
 range selection, keyboard navigation, TSV clipboard round-trip, fill handle, undo/redo, and
-`editable: false` per column makes a read-only listing expressible. It had **1** render site
-against **215** hand-rolled tables. Same for drag-and-drop canvases (React Flow, 35 import
+`editable: false` per column makes a read-only listing expressible. Adoption is a DATED
+MEASUREMENT, never a present-tense fact: **1** render site against **215** hand-rolled tables
+when this was ruled (2026-08-29); **23** against **191** on 2026-09-10. Re-run the ratchet
+before quoting either number. Same for drag-and-drop canvases (React Flow, 35 import
 sites) and the card canvas. A second mechanism beside any of these is the documented failure
 this project keeps repeating.
 **Where:** ratcheted by `scripts/check-airtable-grid-adoption.mjs` against
 `scripts/airtable-grid-adoption-baseline.json` — it fails on a rise *and* on an unbanked fall.
-It counts hand-rolled tables, not non-Airtable *surfaces*: 40 pages sharing one
-`EnhancedDataTable` are invisible to it.
+It counts RENDER SITES, not surfaces, so three blind spots do not appear in its green:
+**33** crm7 page files share one `EnhancedDataTable` wrapper and count as one site; card/div row
+lists (152 routes on 2026-09-10) are not counted at all though D-139 puts them in scope; and
+`check-airtable-grid-adoption.mjs` omits R80.4 from `APPS`, so its 9 render sites are unmeasured
+rather than clean. A passing ratchet means nothing got worse, never that a surface complies.
 
 ### Everything on the page is editable, in place. 2026-09-02
 
