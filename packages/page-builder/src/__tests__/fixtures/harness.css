@@ -2,20 +2,17 @@
  * Layout-critical utilities used by GridItem editor chrome + card content.
  * Discriminating: if the strip is put back to `.absolute.top-2.left-2`, these
  * rules apply and the geometry script reports overlap.
- * Colours are role tokens with non-endpoint OKLCH fallbacks (not L=0 / L=1).
+ *
+ * COLOURS COME FROM THE CONTRACT, NOT FROM THIS FILE. The first draft declared
+ * its own :root block of hand-picked neutrals, which the packages/ palette gate
+ * correctly failed: ten oklch literals that exist in no source-of-truth
+ * document are new drift, and a harness is not exempt from that just because it
+ * only measures geometry. Importing @bsuite/theme's vars.css removes all ten
+ * AND makes the measurement more faithful, because the harness now paints with
+ * the same role tokens the product does rather than approximations of them.
+ * vars.css is self-contained — it defines the --role-* layer it maps onto.
  */
-
-:root {
-  --muted: oklch(0.92 0.012 260);
-  --muted-foreground: oklch(0.42 0.03 260);
-  --destructive: oklch(0.580 0.230 25);
-  --destructive-foreground: oklch(0.982 0.002 248);
-  --primary: oklch(0.546 0.215 262.9);
-  --card: oklch(0.97 0.01 260);
-  --border: oklch(0.82 0.02 260);
-  --foreground: oklch(0.28 0.03 260);
-  --background: oklch(0.96 0.01 260);
-}
+@import '@bsuite/theme/vars.css';
 
 html,
 body {
@@ -75,7 +72,7 @@ body {
 .bg-primary\/5 { background: color-mix(in oklch, var(--primary) 5%, transparent); }
 .border-transparent { border-color: transparent; }
 .border-2 { border-width: 2px; border-style: solid; }
-.shadow { box-shadow: 0 1px 2px oklch(0.28 0.03 260 / 0.18); }
+.shadow { box-shadow: 0 1px 2px var(--shadow-ink-soft); }
 
 [data-slot='card-heading'] {
   margin: 0;
@@ -125,11 +122,15 @@ body {
   display: none !important;
 }
 
+/*
+ * --primary-foreground, --accent and --ring already come from the contract via
+ * the vars.css import at the top; re-declaring them here shadowed the real
+ * values with approximations. Only --border-interactive needs a bridge, because
+ * the contract publishes it one layer down as --role-border-interactive and the
+ * markup under test asks for the shorter name.
+ */
 :root {
-  --primary-foreground: oklch(0.985 0.002 248);
-  --border-interactive: oklch(0.72 0.03 260);
-  --ring: oklch(0.546 0.215 262.9);
-  --accent: oklch(0.90 0.02 260);
+  --border-interactive: var(--role-border-interactive);
 }
 
 /* the class under test in this lane */
@@ -184,7 +185,7 @@ body {
 .max-h-\[60vh\] { max-height: 60vh; }
 .min-h-\[200px\] { min-height: 200px; }
 .overflow-y-auto { overflow-y: auto; }
-.shadow-lg { box-shadow: 0 10px 15px -3px oklch(0.28 0.03 260 / 0.18); }
+.shadow-lg { box-shadow: 0 10px 15px -3px var(--shadow-ink); }
 .backdrop-blur { backdrop-filter: blur(8px); }
 .animate-pulse { /* motion only — no layout contribution */ }
 .cursor-pointer { cursor: pointer; }
@@ -251,7 +252,7 @@ body {
   transition-duration: 150ms;
 }
 .transition-all { transition-property: all; transition-duration: 150ms; }
-.shadow-sm { box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05); }
+.shadow-sm { box-shadow: 0 1px 2px 0 var(--shadow-ink-faint); }
 
 /*
  * `lucide` and `lucide-*` are emitted by lucide-react as identifier hooks. They
