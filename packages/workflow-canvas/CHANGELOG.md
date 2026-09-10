@@ -6,6 +6,42 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [0.3.0-rc.4] — 2026-09-10 — ai_context NOT NULL, orphan-safe duplicate (bsuite-3205)
+
+**Version choice.** Bugfix on top of `0.3.0-rc.3`. Not published to npm as part of
+this change — crm7 still pins `0.3.0-rc.2`; repinning consumers is the separate,
+later step `docs/20260824-preview-canary-publishing-standard-v1.00A.md` governs.
+
+### Fixed
+
+- **`createDraftVersion` sent an explicit `ai_context: null`.**
+  `workflow_definition_versions.ai_context` is `jsonb NOT NULL DEFAULT
+  '{}'::jsonb`; a column default only fires when the insert OMITS the key,
+  and `args.aiContext ?? null` turned "the caller supplied nothing" into
+  exactly the explicit `null` that overrides it. Reachable from the shipped
+  canvas: `useWorkflowController.ts`'s `createDraftMutation` calls this with
+  no `aiContext` on every "Create draft" click from `WorkflowCanvasInner.tsx`
+  (`editable && publishedLock`). Now `args.aiContext ?? {}`.
+- **`duplicateWorkflowDefinition` had the same `?? null` and no cleanup at
+  all.** Its `aiContext: sourceVersion?.ai_context ?? null` carried the same
+  defect (latent — `duplicateToTenant`/this function has no crm7 caller
+  today) and, unlike `createDraftVersion`, a failed draft insert left the
+  just-created definition row permanently orphaned: two separate
+  supabase-js REST calls, no RPC, no transaction. The draft insert is now
+  wrapped in try/catch with a compensating delete of the definition on
+  failure; if the delete itself also fails, the thrown error names the
+  orphaned definition id explicitly instead of hiding it. Ported from
+  crm7#2602/#2605's `createWorkflowWithDraft`, the proven-correct reference
+  for this exact shape.
+
+### Consumer notes
+
+- No API change. `createDraftVersion` and `duplicateWorkflowDefinition` keep
+  their existing signatures; only the value written to `ai_context` and the
+  duplicate path's failure behaviour changed.
+
+---
+
 ## [0.3.0-rc.3] — 2026-09-09 — reserved chrome regions (crm7#2604)
 
 Layout follow-up named from 0.3.0's known gap (`canvas-overlays-collide-narrow`).
