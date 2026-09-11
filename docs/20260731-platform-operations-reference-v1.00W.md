@@ -179,6 +179,11 @@ All projects use `.env.example` → `.env.local` pattern. Key conventions:
   - R80.4: prod `https://r8.crm7.app`, dev `https://d.r8.crm7.app`
   - Throughput: prod `https://ideas.crm7.app`, dev `https://d.ideas.crm7.app`
   - Braden: prod `https://www.braden.com.au`, dev `https://d.braden.com.au`
+    - Canonical host: `https://www.braden.com.au` (braden development `9dd2fdd`, braden#616; production pending promotion).
+    - braden's `SEOHead` `BASE_URL` is `BSUITE_PROD_URLS.braden` from `@bsuite/nav-core` and must never be env-derived: the preview bundle inlines `d.braden.com.au`, which would make the crawlable preview self-canonical.
+    - braden's `public/sitemap.xml`, `robots.txt`, `llms.txt` and `llms-full.txt` use `www` URLs only, guarded by `braden/src/__tests__/canonical-host.test.ts`.
+    - The preview host canonicalises to `www`; the apex 307-redirects to `www` at Vercel's domain layer.
+    - Search Console intake and braden#607 status: [20260908-search-console-feedback-v1.00W.md](20260908-search-console-feedback-v1.00W.md).
 - **Development prefix:** all development deploys use the `d.*` prefix on the production hostname.
 - **Domain/repo mapping:** `ideas.crm7.app` is the production hostname for the `throughput` repo/app.
 - **Favicon convention:** `braden` uses `braden/public/favicon.ico` as its canonical favicon; every app served on the `crm7.app` domain uses `crm7/public/favicon.ico`.
