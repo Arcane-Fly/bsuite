@@ -330,7 +330,7 @@ SQL
     assert_case 0 "clean — a blanket GRANT ON ALL TABLES IN SCHEMA public" "$tmp/blanket.sql"
     assert_case 0 "out of scope — a table in a non-public schema" "$tmp/other_schema.sql"
     assert_case 0 "out of scope — a migration that creates no table" "$tmp/no_tables.sql"
-    assert_case 0 "clean — a `--` comment that merely mentions CREATE TABLE is not a create" "$tmp/comment_only.sql"
+    assert_case 0 'clean — a `--` comment that merely mentions CREATE TABLE is not a create' "$tmp/comment_only.sql"
 
     # ── The RANGE logic, exercised through the whole script on real repos ─────
     #
