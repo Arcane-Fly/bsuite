@@ -32,7 +32,7 @@ The operator subsequently clarified that all six BSuite landing sites require co
 
 ## braden#607 status — 11 September 2026
 
-**Done on braden development, not in production.** [GaryOcean428/braden#616](https://github.com/GaryOcean428/braden/pull/616) merged to braden `development` as merge commit `9dd2fdd98177f41db4824b1a2585f2aefc67ce44` (parents `f8f189e` and `bfb8460`). Measured on the preview host `https://d.braden.com.au` at 2026-09-11T03:00:01.314Z:
+**Done on braden development, not in production.** [GaryOcean428/braden#616](https://github.com/GaryOcean428/braden/pull/616) merged to braden `development` as merge commit `9dd2fdd98177f41db4824b1a2585f2aefc67ce44` (parents `f8f189e` and `bfb8460`). Measured at 2026-09-11T03:00:01.314Z on the preview host `https://d.braden.com.au`, except where a bullet names `www`:
 
 - `version.json` reports commit `9dd2fdd` (built 2026-09-11T02:59:19.854Z), the merge commit.
 - `robots.txt`, `sitemap.xml`, `llms.txt` and `llms-full.txt` are served with www URLs only (www/apex counts: 2/0, 9/0, 13/0 and 18/0).
@@ -40,7 +40,7 @@ The operator subsequently clarified that all six BSuite landing sites require co
 - 12 public routes each render exactly one self canonical on `https://www.braden.com.au`, with a matching `og:url`: `/`, `/apprenticeships`, `/traineeships`, `/recruitment`, `/products`, `/contact`, `/privacy`, `/terms`, `/services/compliance`, `/services/mentoring`, `/services/technology` and `/services/future-services`.
 - The heal URL `/?nocache=1&heal=js` canonicalises to the clean root, `https://www.braden.com.au/`.
 - A not-found path (`/no-such-page-devverify`) renders `noindex` with no canonical.
-- The 12 www canonical targets each answer 200 with no redirect.
+- The 12 canonical targets, requested on `https://www.braden.com.au` itself, each answer 200 with no redirect.
 
 Method, as recorded: curl GETs, plus Chrome 153 driven by Playwright (channel `chrome`, service workers blocked). Evidence record: `~/.agents/state/braden-607-development-verified.json`, kept on the operator's machine and not in this repository. The canonical-host rules themselves are recorded in the [platform operations reference](20260731-platform-operations-reference-v1.00W.md).
 
