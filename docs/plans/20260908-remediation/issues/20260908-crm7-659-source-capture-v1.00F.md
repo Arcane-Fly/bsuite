@@ -1,0 +1,63 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# feat(people): wizard form state — react-hook-form + draft autosave + inline supervisor create
+
+https://github.com/GaryOcean428/crm7/issues/659
+
+Snapshot updatedAt: 2026-05-12T03:30:30Z. Open at capture; re-read live.
+
+## Scope
+
+The `/people/new` apprentice wizard at `src/pages/people/new.tsx` uses `useState<Record<string, unknown>>` with no FormProvider, no draft persistence, and no route-based steps. Closing the tab mid-flow = total data loss. Operators routinely need to add a supervisor contact mid-flow but `ContactSelector` does not pass `onQuickAdd` even though the primitive exists, so they must leave the wizard, lose state, and start over.
+
+This is the foundation for issues #2 through #10 — every subsequent wizard improvement depends on having a real form state container with draft persistence.
+
+## Regulatory + operational anchors
+
+- **the reference GTO operator T&C** requires both a **Primary Timesheet Approver** and **Secondary Timesheet Approver** to be nominated per host (Host Handbook §Timesheet Approval). These are `contacts` rows with `is_supervisor = true` and `contact_role IN ('primary_approver','secondary_approver')`.
+- **AEP Recruitment Agreement** captures 12+ fields across 6 sections (host details, work type, licences, experience, screening, advertising) — minimum bar for "do not lose state mid-flow" (AEP Host Employer Induction Manual p.5-6).
+- **GTO National Standards 2017, Standard 1** (recruitment & induction): documented assessment must be captured at intake. Lost state = audit risk.
+
+## Acceptance criteria
+
+1. `src/pages/people/new.tsx` migrated to `react-hook-form` with `FormProvider` + Zod schema (`apprenticeIntakeSchema`).
+2. Draft autosave to `localStorage` keyed by `tenant_id + user_id + draft_id` every 5s and on field blur. Restore prompt on remount.
+3. Optional Supabase-backed `apprentice_intake_drafts` table for multi-device draft sync (RLS: `auth.uid() = created_by` AND `tenant_id = current_tenant_id()`).
+4. `ContactSelector` accepts `onQuickAdd` prop AND a `roleFilter` prop. The wizard passes both: `roleFilter=['supervisor','primary_approver','secondary_approver']` so the dropdown only shows supervisor-shaped contacts.
+5. New `QuickCreateContactDialog.tsx` (modal, not route-change) creates a `contacts` row with `is_supervisor=true` and chosen `contact_role`, returns the new contact, and re-selects it in the parent form without losing other wizard state.
+6. Wizard supports forward/back navigation between steps via URL hash (`#step=basics`, `#step=host`, `#step=training`, `#step=schedule`, `#step=review`) — refresh-safe.
+7. Submission validates the full Zod schema before insert; partial submission rejected with field-level errors surfaced inline.
+8. Playwright test: open wizard → fill 3 fields → reload → values restored → add inline supervisor → submit → row exists in DB.
+9. Unit tests for `apprenticeIntakeSchema` cover required/optional/conditional fields (e.g. host site required only if multi-site host).
+
+## Files touched (estimate)
+
+- `src/pages/people/new.tsx` (rewrite form state)
+- `src/components/entity/selectors/ContactSelector.tsx` (add `onQuickAdd`, `roleFilter`)
+- `src/components/entity/selectors/QuickCreateContactDialog.tsx` (new)
+- `src/schemas/apprenticeIntakeSchema.ts` (new)
+- `supabase/migrations/2026XXXX_apprentice_intake_drafts.sql` (new, optional but preferred)
+- `tests/e2e/apprentice-intake.spec.ts` (new)
+
+## Brand system clause (MANDATORY)
+
+All UI changes MUST use **oklch + semantic tokens only** per the `bsuite-brand-system` skill. CRM7 is on the D2C Neon Electric brand. **No inline hex codes. No hardcoded colours.** Use `text-foreground`, `bg-card`, `border-input`, `bg-primary text-primary-foreground`, etc. Reject any PR diff that introduces hex/rgb values in className or style. Run `pnpm lint:tokens` (or equivalent) before merge.
+
+## Branch policy (MANDATORY)
+
+Target branch for your PR MUST be `development`, not `main`. Per the `ship-all-apps` workflow, all feature work merges to `development` first; `development → main` promotion happens via a separate parent-monorepo PR.
+
+## Deps / blockers
+
+- None. This is the foundation for issues #2-#10.
+
+## References (file:line where known)
+
+- `src/pages/people/new.tsx:64` — `useState<Record<string, unknown>>({})` baseline
+- `src/pages/people/new.tsx:120` — `setFormData((prev) => ({ ...prev, ...data }))` step merge
+- `src/components/entity/selectors/ContactSelector.tsx` — has `quickAdd` prop pattern but wizard doesn't pass it
+- Inventory: the audit inventory notes §1 + §2

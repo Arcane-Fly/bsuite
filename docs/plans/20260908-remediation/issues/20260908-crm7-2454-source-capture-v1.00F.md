@@ -1,0 +1,36 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# Two components register the same dnd-kit droppable id, so one silently wins
+
+https://github.com/GaryOcean428/crm7/issues/2454
+
+Snapshot updatedAt: 2026-09-05T13:57:42Z. Open at capture; re-read live.
+
+Found incidentally while fixing #2447. Not caused by that work, and deliberately left alone there so the fix stayed one change.
+
+## The collision
+
+Two components register a droppable under the same id in [FormLayoutBuilder.tsx](crm7/src/components/ui-customization/FormLayoutBuilder.tsx):
+
+- `SortableSection` via `useSortable({ id: \`section-${section.id}\` })`
+- `SectionDropZone` via `useDroppable({ id: \`section-${sectionId}\` })`
+
+dnd-kit keeps droppables in a map keyed by id. Two registrations under one key means exactly one survives, and which one survives is a React effect-ordering detail rather than anything the code states.
+
+## Why it has not bitten yet
+
+It has not caused a visible bug because, after #2447, both registrations carry an identical data payload, so the drag handler behaves the same whichever one wins. That was a deliberate choice in that fix: make the handler indifferent rather than gamble on the ordering.
+
+That is a mitigation, not a resolution. It holds only as long as the two payloads stay identical, and nothing enforces that. The next person who adds a field to one payload, or changes a mount order, or wraps one of the two in a conditional, gets a behaviour change with no obvious cause and no failing test.
+
+## What to do
+
+Give the two registrations distinct ids, so the drop zone and the sortable section are separately addressable, and let the handler tell them apart by their payload `type` as it already does elsewhere. Then the map has one entry per registration and the effect ordering stops mattering.
+
+## Acceptance
+
+A test that both registrations are simultaneously present and independently resolvable, so reintroducing a shared key fails. Asserting only that drag still works would pass today, with the collision intact, which is exactly why this is worth its own guard rather than relying on the existing drag tests.

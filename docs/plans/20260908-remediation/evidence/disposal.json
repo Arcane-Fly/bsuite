@@ -1,0 +1,30 @@
+{
+  "disposed": [
+    "/tmp/bsuite-audit-20260908",
+    "/tmp/bsuite-history-audit-evidence.json",
+    "/tmp/bsuite-week-history-audit.md",
+    "/tmp/bsuite-notes-cycle-audit.json",
+    "/tmp/bsuite-open-audit.json",
+    "/tmp/bsuite-open-audit-current.json",
+    "/tmp/bsuite-open-audit-final.json",
+    "/tmp/crm7-open-audit.json",
+    "/tmp/crm7-open-audit-current.json",
+    "/tmp/crm7-open-audit-final.json",
+    "/tmp/business-suite-unified-open-audit.json",
+    "/tmp/business-suite-unified-open-audit-current.json",
+    "/tmp/business-suite-unified-open-audit-final.json",
+    "/tmp/conduit-open-audit.json",
+    "/tmp/conduit-open-audit-current.json",
+    "/tmp/conduit-open-audit-final.json",
+    "/tmp/braden-open-audit.json",
+    "/tmp/braden-open-audit-current.json",
+    "/tmp/braden-open-audit-final.json",
+    "/tmp/R80.4-open-audit.json",
+    "/tmp/R80.4-open-audit-current.json",
+    "/tmp/R80.4-open-audit-final.json",
+    "/tmp/throughput-open-audit.json",
+    "/tmp/throughput-open-audit-current.json",
+    "/tmp/throughput-open-audit-final.json"
+  ],
+  "method": "Python shutil.rmtree for /tmp/bsuite-audit-20260908 and Path.unlink for the explicit task-owned inventory/history files; assertions confirm absence. Pre-existing source histories and repository files untouched."
+}

@@ -1,0 +1,29 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# Styling audit: grid-cols-2 without responsive breakpoints (109 occurrences, systemic)
+
+https://github.com/GaryOcean428/crm7/issues/1271
+
+Snapshot updatedAt: 2026-08-24T03:28:46Z. Open at capture; re-read live.
+
+## Source
+Platform-wide styling audit 2026-07-28 (deleg_827f7678), MEDIUM severity.
+
+## Finding
+109 occurrences of `grid grid-cols-2 gap-4` across 45 files in src/pages/ — all are form-field layouts (Label+Input pairs) that render side-by-side on mobile with no responsive collapse.
+
+## Fix
+Add `grid-cols-1 sm:grid-cols-2` (or `md:grid-cols-2`) to each instance. Mechanical find-replace but touches 45 files — recommend a scripted pass with visual spot-check.
+
+## Also in this issue (MEDIUM, same category)
+- TabsList grid-cols-3/4 without responsive collapse: settings/role-overrides.tsx:472, gto-compliance/risk-management.tsx:653, records-management.tsx:377, integrations.tsx:763
+- min-h-[NNNpx] on textareas: billing/reconciliation.tsx (6×), awards/create.tsx:295, compliance/create.tsx:340, awards/[id]/edit.tsx:277, claims/new.tsx:910, apprentices/[id]/aass-registrations.tsx:292, communications/index.tsx:376
+- ScrollArea h-[560px]: settings/picklists.tsx:80, form-layouts.tsx:67; h-[300px]: vet/qualifications/[id]/structure.tsx:469
+- lg:h-[520px] chat panel: leads/[id].tsx:469
+
+## Standing rules
+NO hardcoded px heights in shell/layout (operator 2026-07-21). Proportional units only.

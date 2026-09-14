@@ -1,0 +1,31 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# Imported TGA providers should become full Organisations with contacts, detail, and per-apprentice training/resource/equipment cost tracking
+
+https://github.com/GaryOcean428/crm7/issues/1698
+
+Snapshot updatedAt: 2026-08-26T12:22:21Z. Open at capture; re-read live.
+
+Operator observed: Imported providers should become Organisations with additional contacts and detail beyond the TGA payload, and should track training costs per registered apprentice plus resource and equipment costs.
+
+**Route/surface:** training-provider import → Organisation record
+
+Directive: D-80 (2026-08-13)
+
+## Acceptance criteria
+- Importing a TGA provider creates/links a proper Organisation record (the same entity type used elsewhere for organisations), not a standalone TGA-only record.
+- The Organisation record supports additional contacts and detail fields beyond what TGA supplies (e.g. account manager, phone, notes).
+- The Organisation record tracks training costs per registered apprentice, plus resource and equipment costs, as first-class fields (not free text).
+
+## Mandatory before merge
+- **Validation loop:** §9.1 output-equivalence — an imported provider's Organisation record must be usable everywhere Organisations are used (contacts, cost tracking), not a special-cased type.
+- **Equivalence target:** An imported-provider Organisation is indistinguishable in structure from an Organisation created any other way, plus the additional cost-tracking fields this item requires.
+- **Cross red-team:** bsuite-platform
+- **Skills to load:** general-dry-one-shot-architecture, biz-au-apprenticeship
+
+---
+*Filed under operator directive D-80 (2026-08-13). Filing is not addressing (D-59) — no fix is implied or claimed by this issue.*

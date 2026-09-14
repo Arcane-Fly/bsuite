@@ -1,0 +1,19 @@
+{
+  "window_utc": [
+    "2026-08-31T16:00:00+00:00",
+    "2026-09-08T05:11:53.379120+00:00"
+  ],
+  "hermes_sessions": 139,
+  "hermes_messages": 6477,
+  "hermes_sources": {
+    "cli": 45,
+    "desktop": 2,
+    "cron": 92
+  },
+  "claude_sessions": 25,
+  "claude_user_text_envelopes": 1842,
+  "claude_project_dirs": 11,
+  "claude_malformed_lines": 0,
+  "vscode_matching_workspaces": 3,
+  "vscode_chat_files": 474
+}

@@ -1,0 +1,51 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# four sites bind the secondary action FILL to text colour (--role-secondary used as ink)
+
+https://github.com/GaryOcean428/crm7/issues/2503
+
+Snapshot updatedAt: 2026-09-06T12:19:15Z. Open at capture; re-read live.
+
+`text-secondary` resolves `--color-secondary` -> `--role-secondary`, which is
+`oklch(0.380 0.140 270)` — the secondary **action fill**, not an ink. The
+readable secondary ink is a different token whose name differs only by word
+order: `--role-text-secondary`.
+
+Measured on `suite.crm7.app` `9292b84` (BSU, same shared theme): the same class
+used as a heading colour rendered **1.86:1** against the composited dark card
+ground, and **1.35:1** once an ancestor `opacity-60` was folded in. Fixed there
+in business-suite-unified#1175, which also landed
+`src/__tests__/ink-token-contract.test.ts` to stop it coming back.
+
+**Estate sibling count: 5 sites.** Method: grep for `text-secondary` under each
+app's own `src` tree across all six apps, minus the `-text`, `text-text-` and
+CSS-var spellings. 1 in business-suite-unified (fixed), **4 in crm7**, 0 in
+conduit, braden, throughput, R80.4.
+
+The crm7 four:
+
+| file | line | use |
+|---|---|---|
+| `src/components/dashboard/quick-access.tsx` | 14 | `<Building className="text-secondary text-xl mb-1" />` |
+| `src/components/dashboard/quick-access.tsx` | 17 | `color: 'text-secondary'` |
+| `src/components/dashboard/recent-activity.tsx` | 66 | `bg: 'bg-secondary-100 text-secondary'` |
+| `src/components/common/Loader/index.tsx` | 16 | `secondary: 'text-secondary'` |
+
+**Lower severity than the BSU one, deliberately**: these are icon and spinner
+colours, not body text, and WCAG 1.4.11 for a non-text graphic is 3:1 rather than
+4.5:1. They should still be measured on the deployed dark host rather than
+assumed — a 1.86:1 fill on a dark card fails 3:1 too, and `recent-activity.tsx`
+pairs it with `bg-secondary-100`, which is a *palette* class, not a role, so it
+needs checking against tenant white-labelling as well.
+
+crm7 serialises colour as `lab()` rather than `oklch()`, so any probe used here
+must not key on the string `oklch(` — normalise through a canvas or
+`getComputedStyle` and let the browser do it.
+
+Filed from the maker lane on bsuite#3119. Not fixed there: different repo,
+outside that change's scope, and the class deserves its own measured pass rather
+than a drive-by swap.
