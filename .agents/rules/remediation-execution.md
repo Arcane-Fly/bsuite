@@ -1,6 +1,7 @@
 # BSuite remediation execution contract
 
-Owner: bsuite#3204. Revised 2026-09-09 from observed Claude/Hermes/SMS failures.
+Owner: bsuite#3204. Revised 2026-09-14 from observed Claude/Hermes/SMS failures
+and the 2026-09-11 Codex/Astra supervisor-reserve ruling.
 Canonical source: BSuite parent `.agents/rules/remediation-execution.md`.
 Submodule copies are generated for standalone checkouts; edit the parent and run
 `python3 scripts/sync-remediation-rules.py --write`, then `--check`.
@@ -25,9 +26,11 @@ Submodule copies are generated for standalone checkouts; edit the parent and run
   negative/retry cases, applicable skills/tools and required receipts. Suggested pseudocode
   is a hypothesis, not authority. Read source/schema before prescribing its implementation.
 - Verify model identifier and availability in the executing client. Respect the operator's
-  selected model and usage exclusions; no silent fallback. BSuite remediation explicitly
-  permits Codex CLI Astra escalation; this supersedes older blanket Codex-dispatch bans.
-  Agent model routing does not change the product's AI model configuration.
+  selected model and usage exclusions; no silent fallback. Codex/Astra belongs to the
+  supervising Codex/Astra agent: workers and automatic fallback routes must not dispatch
+  Codex CLI or spend that reserve. A current operator-scoped native Codex team may use its
+  assigned native team lanes; this does not authorize worker CLI dispatch or change the
+  product's AI model configuration.
 - Preflight prompt file, cwd, ownership and command; retain session/PID, log, exit status,
   final output and resulting SHA. A queued instruction, running label or echoed prompt is
   not execution proof. Use the actual client API/UI; never assume inbox delivery wakes it.
