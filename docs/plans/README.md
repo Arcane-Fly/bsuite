@@ -15,6 +15,8 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 
 ## Canonical Cross-Links
 
+- [Codex IDE closeout kickoff, 2026-09-14](20260914-codex-ide-closeout-refined-v1.00W.md) — operator-requested next-run prompt; independently audit the preceding task before continuing the existing execution ledger. This is not a replacement backlog or completion certificate.
+
 > **Repaired 2026-08-17.** Three of the five links here pointed at documents archived out of the
 > repository, including the one labelled "Active phase-ordered queue". An agent opening this index
 > to find the queue found nothing.
