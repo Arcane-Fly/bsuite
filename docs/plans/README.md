@@ -21,7 +21,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 > repository, including the one labelled "Active phase-ordered queue". An agent opening this index
 > to find the queue found nothing.
 
-- [`../20260814-estate-remaining-work-register-v2.00F.md`](../20260814-estate-remaining-work-register-v2.00F.md) — **Canonical remaining-work register.** Start here; it supersedes the finish-line roadmap and the merged execution backlog.
+- Archived August remaining-work register (`/home/braden/Desktop/Dev/archived-repos-docs/20260831-bsuite-docs-archive-pass/docs/20260814-estate-remaining-work-register-v2.00F.md`) — **Historical August remaining-work register.** Preserve its acceptance and evidence; current dispatch/status authority is the [370-row pack](20260908-remediation/README.md) and live issue evidence.
 - [`../20260504-bsuite-documentation-hub-v1.00W.md`](../20260504-bsuite-documentation-hub-v1.00W.md) — Cross-submodule documentation hub (top-level index)
 - [`../../AGENTS.md`](../../AGENTS.md) — Stack floor and the ten tripwires (replaces the archived tech-stack-alignment doc)
 - [`../20260731-platform-operations-reference-v1.00W.md`](../20260731-platform-operations-reference-v1.00W.md) — Shared `@bsuite/*` package matrix, env vars, lockfile rules
@@ -114,3 +114,5 @@ Four of these name **R80.3** or a pre-2026-08-06 app set; R80.3 left the submodu
 | File | Description |
 |------|-------------|
 | `CRM7_entity_inventory_v2.xlsx` | CRM7 entity inventory spreadsheet (v2) |
+
+- [Reconciled 370-row remediation execution pack](20260908-remediation/README.md) — current Codex IDE routing and historical acceptance evidence.
