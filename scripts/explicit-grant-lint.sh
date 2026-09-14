@@ -216,19 +216,30 @@ BEGIN {
 }
 
 {
-    name = extract_table_name($0);
+    # Strip a SQL line comment before detection. A comment that merely TALKS
+    # about a table (`-- CREATE TABLE is now to_regclass-guarded ...`, the
+    # crm7#2572 rehearsal note in 20261103000000) is not a CREATE TABLE, and
+    # feeding it to the extractor reported `public.is` as a table with no
+    # grant (bsuite#3240, 2026-09-09). DDL in this estate never carries `--`
+    # inside a string literal on the same line as CREATE/GRANT, so the plain
+    # cut is safe; a `/* ... */` block comment is not handled and never has
+    # been.
+    line = $0;
+    sub(/--.*$/, "", line);
+
+    name = extract_table_name(line);
     if (name != "") {
         creates_count++;
         creates[creates_count] = name;
     }
 
-    name = extract_grant_target($0);
+    name = extract_grant_target(line);
     if (name != "") {
         grants_count++;
         grants[grants_count] = name;
     }
 
-    if (is_blanket_grant($0)) {
+    if (is_blanket_grant(line)) {
         blanket_grant = 1;
     }
 }
@@ -309,12 +320,17 @@ SQL
     cat >"$tmp/no_tables.sql" <<'SQL'
 alter table public.existing add column note text;
 SQL
+    cat >"$tmp/comment_only.sql" <<'SQL'
+-- CREATE TABLE is now to_regclass-guarded (crm7#2572): IF NOT EXISTS still 23505s.
+alter table public.existing add column note text; -- create table nothing here either
+SQL
 
     assert_case 1 "planted violation — CREATE TABLE public.x with no GRANT" "$tmp/violation.sql"
     assert_case 0 "clean — the same table WITH a grant" "$tmp/granted.sql"
     assert_case 0 "clean — a blanket GRANT ON ALL TABLES IN SCHEMA public" "$tmp/blanket.sql"
     assert_case 0 "out of scope — a table in a non-public schema" "$tmp/other_schema.sql"
     assert_case 0 "out of scope — a migration that creates no table" "$tmp/no_tables.sql"
+    assert_case 0 'clean — a `--` comment that merely mentions CREATE TABLE is not a create' "$tmp/comment_only.sql"
 
     # ── The RANGE logic, exercised through the whole script on real repos ─────
     #
@@ -408,10 +424,10 @@ SQL
     assert_range_case 0 "non-empty range owning no migration is clean" unrelated base
 
     if [ "$failed" -gt 0 ]; then
-        echo "[grant-lint --self-test] $failed of 10 case(s) FAILED — the detector is broken, so its verdicts mean nothing." >&2
+        echo "[grant-lint --self-test] $failed of 11 case(s) FAILED — the detector is broken, so its verdicts mean nothing." >&2
         exit 1
     fi
-    echo "[grant-lint --self-test] 10 of 10 case(s) passed (2 planted violations caught, 1 unresolvable base refused, 6 clean, 1 denominator assertion)."
+    echo "[grant-lint --self-test] 11 of 11 case(s) passed (2 planted violations caught, 1 unresolvable base refused, 7 clean, 1 denominator assertion)."
     exit 0
 fi
 
