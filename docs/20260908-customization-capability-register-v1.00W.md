@@ -48,6 +48,21 @@ The implementer updates the applicable existing specification and this register 
 
 For customization, complete the literal test: **can the operator make the same change visually, then use it through the connected workflow without code, JSON, SQL or an agent doing a hidden step?** Also ask: **does finishing this task require leaving the page?** Prefer inline creation; any necessary departure returns automatically to the same state with the new detail applied.
 
+**Acceptance correction, 14 September 2026:** E2E, 360-degree review and DoD already
+require the complete customization chain. Checking default theme consistency or
+page editing alone misses C08; the operator must not need to restate platform,
+Developer Portal, app, enterprise tenant and sub-organisation inheritance. For
+each changed capability, trace its actual authoring entry, precedence and
+permission scope through save, publish where applicable, the affected consumers,
+reload, explicit override and reset to inherited values. Include page/widget and
+personal overrides, denied writes, tenant/app isolation and preserved drafts.
+Verify the current implementation rather than assuming every layer exists or
+works. Braden Corporate remains separate from enterprise white-label overrides.
+Canonical owners remain [bsuite#3204](https://github.com/GaryOcean428/bsuite/issues/3204),
+[bsuite#3104](https://github.com/GaryOcean428/bsuite/issues/3104) and
+[BSU#1160](https://github.com/GaryOcean428/business-suite-unified/issues/1160).
+These checks are open until their linked deployed evidence passes.
+
 ## Specifications to read and improve
 
 - [WYSIWYG and schema master plan](plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md): Core visual edit mode, inspector, relationships, defaults and persistence. September 2 checkbox reconciliation is dated evidence, not present-day acceptance.

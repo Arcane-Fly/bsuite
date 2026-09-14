@@ -32,13 +32,10 @@ export const DEFAULT_EDITOR_EVENT_NAMES = [
 ] as const;
 
 /**
- * Event name broadcast on `window` whenever any PageGridLayout transitions
- * its `isEditing` state. Launcher widgets (e.g. floating "Edit Page" FABs)
- * subscribe to this so they can hide themselves while the canvas editor is
- * already active — prevents the redundant-affordance UX issue where a
- * "Edit Page" button sits in the corner while the editor banner is visible
- * at the top. `detail.editing` is the new state; `detail.pageKey` lets
- * launchers scope by page if they handle multiple grids on one screen.
+ * Broadcast after a PageGridLayout commits an editing-state change. Header
+ * launchers use this to synchronize their label and restore keyboard focus
+ * after canvas controls disappear. Initial state and abandoned transitions do
+ * not publish an event. `detail.pageKey` identifies the changed canvas.
  */
 export const PAGE_GRID_EDITING_EVENT = 'bsuite-page-grid-editing';
 
@@ -172,24 +169,17 @@ export function usePageGridLayout({
   const effectiveLayoutVersion = layoutVersion + PACKAGE_LAYOUT_EPOCH;
   const containerRef = useRef<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [isEditing, setIsEditingState] = useState(false);
-  const setIsEditing = useCallback(
-    (next: boolean | ((previous: boolean) => boolean)) => {
-      setIsEditingState((previous) => {
-        const resolved = typeof next === 'function' ? next(previous) : next;
-        if (resolved !== previous && typeof window !== 'undefined') {
-          // Broadcast to FAB launchers so they can hide while the editor is open.
-          window.dispatchEvent(
-            new CustomEvent<PageGridEditingEventDetail>(PAGE_GRID_EDITING_EVENT, {
-              detail: { pageKey, editing: resolved },
-            }),
-          );
-        }
-        return resolved;
-      });
-    },
-    [pageKey],
-  );
+  const [isEditing, setIsEditing] = useState(false);
+  const publishedEditing = useRef(false);
+  useEffect(() => {
+    if (publishedEditing.current === isEditing) return;
+    publishedEditing.current = isEditing;
+    window.dispatchEvent(
+      new CustomEvent<PageGridEditingEventDetail>(PAGE_GRID_EDITING_EVENT, {
+        detail: { pageKey, editing: isEditing },
+      }),
+    );
+  }, [isEditing, pageKey]);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   useLayoutEffect(() => {
