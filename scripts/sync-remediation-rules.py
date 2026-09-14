@@ -16,7 +16,24 @@ def entry(name):
 def sync(root, write=False):
     source = (root / RULE).read_bytes()
     errors = []
-    for repo in (root, *(root / app for app in APPS)):
+    repos = (root, *(root / app for app in APPS))
+    # Validate every checkout and loader before creating any generated file.
+    # Empty gitlink directories are not populated submodule checkouts.
+    for repo in repos:
+        for name in ('AGENTS.md', 'CLAUDE.md'):
+            path = repo / name
+            if not path.is_file():
+                errors.append(f'{path}: missing existing entry point; populate the checkout first')
+                continue
+            text = path.read_text()
+            starts, ends = text.count(START), text.count(END)
+            if (starts, ends) not in ((0, 0), (1, 1)) or (
+                starts == 1 and text.index(START) > text.index(END)
+            ):
+                errors.append(f'{path}: malformed or duplicate loader markers')
+    if errors:
+        return errors
+    for repo in repos:
         target = repo / RULE
         if write and repo != root:
             target.parent.mkdir(parents=True, exist_ok=True)
