@@ -24,11 +24,30 @@ name: Pending encryption watch
 # `user_tenants.role IN ('owner','admin')` FOR THAT TENANT. There is no
 # service-role path, deliberately — service_role is excluded from this action by
 # design. Minting a user session with the service key to drive it anyway would
-# be defeating that control, not satisfying it. So this workflow REPORTS and
-# NAMES WHO CAN ACT; the run stays with the tenant's owners.
+# be defeating that control, not satisfying it. So this workflow REPORTS, and
+# says HOW MANY people in each tenant can act; the run stays with the tenant's
+# owners.
 #
 # That distinction is load-bearing for the FutureBuild Academy rows: they belong
 # to a real client's tenant, and no operator account is a member of it.
+#
+# WHY IT REPORTS COUNTS AND TENANT IDS, NEVER PEOPLE (bsuite#2664, F6)
+#
+# Until 2026-09-11 the summary listed every tenant's active owner/admin EMAIL
+# addresses, a paying client's owner among them, in a CI run summary kept with
+# the run. What makes a row actionable is whether anyone can run the pass (a
+# count, where 0 means nobody can) and which tenant it is (its id). Neither
+# needs a person's email or name, and a tenant's own name can be a person's
+# name, so this prints neither.
+#
+# WHY IT COUNTS TWO THINGS (bsuite#2664, F2)
+#
+# The pass commits the ciphertext first and deletes the plaintext original
+# last, so a failed delete never loses data. The document leaves
+# `documents_pending_encryption` at the commit, though, so a failed or
+# interrupted delete left an unencrypted copy that the view no longer shows.
+# `scripts/sql/pending-encryption-leftover-plaintext.sql` counts those. The
+# issue stays open, and cannot auto-close, until BOTH counts are 0.
 
 on:
   schedule:
@@ -141,7 +160,82 @@ jobs:
             exit 1
           fi
 
-      - name: Count what is pending, and name who can action it
+      - name: Self-test — prove the leftover-plaintext detector can fire
+        env:
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PROJECT_ID: ${{ vars.SUPABASE_PROJECT_ID }}
+          DB_HOST: ${{ steps.pooler.outputs.db_host }}
+        run: |
+          set -euo pipefail
+          # The same proof as the step above, for the second measure, and just
+          # as strict. Four synthetic documents go in inside a transaction that
+          # ALWAYS rolls back, one per state the detector must tell apart:
+          #
+          #   a  event cleanup_pending                              -> counts
+          #   b  event processing, metadata already on ciphertext   -> counts
+          #   c  event processing, metadata still on the original   -> must NOT
+          #   d  event succeeded                                    -> must NOT
+          #
+          # The delta must be EXACTLY 2. Below 2 it misses an unencrypted copy
+          # that is still stored; above 2 it reports copies that are gone, and
+          # the issue could never close. Either way its count means nothing, so
+          # the job fails. It reads the same temp view the count step reads.
+          DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
+          DELTA_RAW=$(psql "$DB_URL" -v ON_ERROR_STOP=1 -tA <<'SQL'
+          BEGIN;
+          \i scripts/sql/pending-encryption-leftover-plaintext.sql
+          CREATE TEMP TABLE _lb AS
+            SELECT count(DISTINCT document_id) AS n FROM encryption_leftover_plaintext;
+          WITH run AS (
+                 INSERT INTO public.document_encryption_runs (tenant_id, document_category, status)
+                 SELECT t.id, '__watch_selftest__', 'completed_with_failures'
+                   FROM public.tenants t LIMIT 1
+                 RETURNING id, tenant_id),
+               probe (tag, event_status, on_ciphertext) AS (VALUES
+                 ('a', 'cleanup_pending', true),
+                 ('b', 'processing',      true),
+                 ('c', 'processing',      false),
+                 ('d', 'succeeded',       true)),
+               doc AS (
+                 INSERT INTO public.document_metadata
+                   (tenant_id, storage_bucket, storage_path, file_name, file_size, mime_type,
+                    document_category, document_type, is_encrypted)
+                 SELECT run.tenant_id, 'apprentice-documents',
+                        'selftest/leftover-' || p.tag || '.pdf'
+                          || CASE WHEN p.on_ciphertext THEN '.encrypted-probe' ELSE '' END,
+                        'leftover-' || p.tag || '.pdf', 1, 'application/pdf',
+                        '__watch_selftest__', 'other', p.on_ciphertext
+                   FROM run CROSS JOIN probe p
+                 RETURNING id, tenant_id, file_name)
+          INSERT INTO public.document_encryption_events
+            (run_id, tenant_id, document_id, status, original_storage_path, encrypted_storage_path)
+          SELECT run.id, doc.tenant_id, doc.id, p.event_status,
+                 'selftest/leftover-' || p.tag || '.pdf',
+                 'selftest/leftover-' || p.tag || '.pdf.encrypted-probe'
+            FROM run CROSS JOIN doc
+            JOIN probe p ON doc.file_name = 'leftover-' || p.tag || '.pdf';
+          SELECT 'leftover_delta='
+                 || ((SELECT count(DISTINCT document_id) FROM encryption_leftover_plaintext)
+                     - (SELECT n FROM _lb));
+          ROLLBACK;
+          SQL
+          )
+          # Labelled, so no psql command tag (BEGIN, CREATE VIEW, INSERT 0 4)
+          # can be mistaken for the number. See the step above for why that
+          # matters here.
+          DELTA=$(printf '%s\n' "$DELTA_RAW" | sed -n 's/^leftover_delta=\(-\{0,1\}[0-9]\{1,\}\)$/\1/p' | tail -1)
+          echo "leftover self-test delta: ${DELTA}"
+          if [ -z "$DELTA" ]; then
+            echo "::error::The leftover self-test produced no leftover_delta line, so the detector was never exercised. That is an ABSENT result, not a clean one. Raw psql output follows:"
+            printf '%s\n' "$DELTA_RAW"
+            exit 1
+          fi
+          if [ "$DELTA" != "2" ]; then
+            echo "::error::Leftover self-test delta was '${DELTA}', expected 2. The leftover-plaintext query does not tell a stored unencrypted original apart from a finished document, so any count from it would be meaningless and this job fails rather than reporting one."
+            exit 1
+          fi
+
+      - name: Count what is outstanding, and how many can action it
         id: count
         env:
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
@@ -151,68 +245,114 @@ jobs:
           set -euo pipefail
           DB_URL="postgresql://postgres.${PROJECT_ID}:${PGPASSWORD}@${DB_HOST}:5432/postgres"
 
-          # The actionable unit is (tenant, category) — that is exactly the pair
-          # the UI pass takes — plus WHO holds owner/admin there, because the
-          # edge function admits nobody else.
-          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -F'|' <<'SQL' > pending.txt
-          SELECT t.name,
-                 d.document_category,
-                 count(*),
-                 coalesce((
-                   SELECT string_agg(DISTINCT p.email, ', ')
-                     FROM public.user_tenants ut
-                     JOIN public.profiles p ON p.id = ut.user_id
-                    WHERE ut.tenant_id = d.tenant_id
-                      AND ut.status = 'active'
-                      AND ut.role IN ('owner','admin')
-                 ), '(NOBODY — no active owner/admin in this tenant)')
-            FROM public.documents_pending_encryption d
-            JOIN public.tenants t ON t.id = d.tenant_id
-           GROUP BY t.name, d.document_category, d.tenant_id
-           ORDER BY count(*) DESC;
+          # The actionable unit is (tenant, category), exactly the pair the UI
+          # pass takes, plus HOW MANY active owners/admins that tenant has,
+          # because the edge function admits nobody else. 0 means nobody can
+          # run it. Ids and counts only: never an email, never a name (F6).
+          #
+          # ROW lines carry the breakdown. The final TOTAL line is a completion
+          # marker computed in SQL: without it this step cannot tell a clean
+          # estate from a query that was cut off, so it fails instead.
+          psql "$DB_URL" -v ON_ERROR_STOP=1 -tA -F'|' <<'SQL' > outstanding.txt
+          \i scripts/sql/pending-encryption-leftover-plaintext.sql
+          WITH pending AS (
+                 SELECT d.tenant_id, d.document_category, count(*) AS n
+                   FROM public.documents_pending_encryption d
+                  GROUP BY d.tenant_id, d.document_category),
+               leftover AS (
+                 SELECT tenant_id, document_category, count(DISTINCT document_id) AS n
+                   FROM encryption_leftover_plaintext
+                  GROUP BY tenant_id, document_category),
+               cell AS (
+                 SELECT coalesce(p.tenant_id, l.tenant_id) AS tenant_id,
+                        coalesce(p.document_category, l.document_category) AS document_category,
+                        coalesce(p.n, 0) AS pending,
+                        coalesce(l.n, 0) AS leftover
+                   FROM pending p
+                   FULL JOIN leftover l
+                     ON l.tenant_id = p.tenant_id AND l.document_category = p.document_category)
+          SELECT 'ROW', c.tenant_id, c.document_category, c.pending, c.leftover,
+                 (SELECT count(*)
+                    FROM public.user_tenants ut
+                   WHERE ut.tenant_id = c.tenant_id
+                     AND ut.status = 'active'
+                     AND ut.role IN ('owner','admin'))
+            FROM cell c
+           ORDER BY c.pending + c.leftover DESC, c.tenant_id, c.document_category;
+          SELECT 'TOTAL',
+                 (SELECT count(*) FROM public.documents_pending_encryption),
+                 (SELECT count(DISTINCT document_id) FROM encryption_leftover_plaintext);
           SQL
 
-          TOTAL=$(awk -F'|' '{s+=$3} END {print s+0}' pending.txt)
-          echo "total=$TOTAL" >> "$GITHUB_OUTPUT"
+          TOTAL_LINE=$(grep -E '^TOTAL\|[0-9]+\|[0-9]+$' outstanding.txt | tail -1 || true)
+          if [ -z "$TOTAL_LINE" ]; then
+            echo "::error::The count produced no TOTAL line, so it was never completed. That is an ABSENT result, not a clean one, and this job refuses to report it as either. Raw psql output follows:"
+            cat outstanding.txt
+            exit 1
+          fi
+          PENDING=$(printf '%s' "$TOTAL_LINE" | cut -d'|' -f2)
+          LEFTOVER=$(printf '%s' "$TOTAL_LINE" | cut -d'|' -f3)
+          TOTAL=$((PENDING + LEFTOVER))
+          {
+            echo "pending=$PENDING"
+            echo "leftover=$LEFTOVER"
+            echo "total=$TOTAL"
+          } >> "$GITHUB_OUTPUT"
 
           {
-            echo "## Documents pending encryption: **${TOTAL}**"
+            echo "## Encryption at rest outstanding: **${TOTAL}**"
+            echo
+            echo "- Documents still stored unencrypted in an \`encrypt_at_rest\` category: **${PENDING}**"
+            echo "- Encrypted documents whose unencrypted original is still stored: **${LEFTOVER}**"
             echo
             if [ "$TOTAL" = "0" ]; then
-              echo "Nothing pending. Every document in an \`encrypt_at_rest\` category is encrypted."
+              echo "Nothing outstanding. Every document in an \`encrypt_at_rest\` category is encrypted,"
+              echo "and the pass has left no unencrypted original behind."
             else
               echo "Each row is one run of the pass at **Settings → Document Categories**, which"
-              echo "only that tenant's owners/admins can start — \`document-encryption\` admits no"
-              echo "service-role caller for this action."
+              echo "only that tenant's owners/admins can start. \`document-encryption\` admits no"
+              echo "service-role caller for this action. An unencrypted original still stored means"
+              echo "the ciphertext is in place but removing the original failed or never ran, so both"
+              echo "copies exist. Never delete it by hand or with the service role."
               echo
-              echo "| tenant | category | pending | who can run it |"
-              echo "|---|---|---:|---|"
-              awk -F'|' '{printf "| %s | `%s` | %s | %s |\n", $1,$2,$3,$4}' pending.txt
+              echo "| tenant id | category | not yet encrypted | unencrypted original still stored | active owners/admins |"
+              echo "|---|---|---:|---:|---:|"
+              grep -E '^ROW\|' outstanding.txt | awk -F'|' '{
+                who = ($6 == "0") ? "0 (nobody can run it)" : $6
+                printf "| `%s` | `%s` | %s | %s | %s |\n", $2, $3, $4, $5, who
+              }'
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
-          echo "pending: ${TOTAL}"
+          echo "pending: ${PENDING}, leftover: ${LEFTOVER}, total: ${TOTAL}"
 
       - name: Open or update the tracking issue
         if: steps.count.outputs.total != '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TOTAL: ${{ steps.count.outputs.total }}
+          PENDING: ${{ steps.count.outputs.pending }}
+          LEFTOVER: ${{ steps.count.outputs.leftover }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           TITLE="Documents pending encryption at rest"
           BODY=$(printf '%s\n' \
-            "**${TOTAL}** document(s) sit unencrypted in categories whose \`encrypt_at_rest\` says they must not." \
+            "**${TOTAL}** outstanding:" \
             "" \
-            "Per-tenant breakdown, and who can action each, is in the [latest run summary](${RUN_URL})." \
+            "- **${PENDING}** document(s) sit unencrypted in categories whose \`encrypt_at_rest\` says they must not." \
+            "- **${LEFTOVER}** encrypted document(s) still have their unencrypted original stored." \
+            "" \
+            "Per-tenant counts, by tenant id with how many active owners/admins can run each, are in the" \
+            "[latest run summary](${RUN_URL}). It names no one: no emails, no names." \
             "" \
             "Run the pass at **Settings → Document Categories** in crm7. It is audited and resumable:" \
             "it writes the encrypted object to a new path, commits metadata, and only then removes the" \
-            "plaintext — a failed cleanup lands as \`cleanup_pending\`, never as a silent success." \
+            "plaintext. A failed cleanup lands as \`cleanup_pending\`, never as a silent success, and is" \
+            "counted above, so this issue cannot close while an unencrypted copy remains." \
             "" \
             "This issue is opened and closed automatically by \`pending-encryption-watch.yml\`." \
-            "It closes itself when the count reaches zero. Do not close it by hand — a hand-closed" \
+            "It closes itself when both counts reach zero. Do not close it by hand — a hand-closed" \
             "issue on a still-nonzero count is how this went unnoticed in the first place.")
 
           NUM=$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "$TITLE in:title" \
@@ -235,7 +375,7 @@ jobs:
                   --json number,title --jq ".[] | select(.title==\"$TITLE\") | .number" | head -1)
           if [ -n "$NUM" ]; then
             gh issue close "$NUM" --repo "$GITHUB_REPOSITORY" \
-              --comment "Count reached 0 — every document in an \`encrypt_at_rest\` category is now encrypted. Closed automatically by pending-encryption-watch.yml."
+              --comment "Both counts reached 0 — every document in an \`encrypt_at_rest\` category is now encrypted, and the pass has left no unencrypted original behind. Closed automatically by pending-encryption-watch.yml."
             echo "closed issue #${NUM}"
           else
             echo "clean, and no open tracking issue — nothing to do."

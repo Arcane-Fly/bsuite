@@ -49,7 +49,7 @@ export interface DataGridColumn<TRow = unknown> {
   minWidth?: number;
   maxWidth?: number;
   sortable?: boolean;
-  /** Default true. Set false for a computed/read-only column. */
+  /** Read-only unless explicitly true. */
   editable?: boolean;
   /**
    * This cell is a LINK to another record, not a value typed into this row.
@@ -127,11 +127,25 @@ export interface LinkEdit<TRow = unknown> {
 }
 
 export interface CellEdit<TRow = unknown> {
+  /** Always supplied by DataGrid; optional for backwards-compatible host-created edits. */
+  rowId?: string;
   rowIndex: number;
   columnId: string;
   previousValue: unknown;
   value: unknown;
   row: TRow;
+}
+
+export interface CellEditFailure {
+  rowId: string;
+  columnId: string;
+  status: 'failed';
+  message?: string;
+}
+
+/** Omitted cells succeeded. A void result preserves the original all-success contract. */
+export interface CellEditResult {
+  failures: readonly CellEditFailure[];
 }
 
 export type DataGridErrorPhase = 'edit' | 'paste' | 'fill' | 'clear' | 'undo' | 'redo' | 'clipboard';
@@ -153,7 +167,16 @@ export interface DataGridError<TRow = unknown> {
   edits: CellEdit<TRow>[];
 }
 
+export interface CellValueChange {
+  rowId: string;
+  columnId: string;
+  /** An already typed value, as emitted by a previous CellEdit. */
+  value: unknown;
+}
+
 export interface DataGridHandle {
+  /** Retry retained drafts through the same persistence/refusal/undo pipeline. */
+  applyCells: (changes: readonly CellValueChange[]) => Promise<CellEditResult>;
   undo: () => void;
   redo: () => void;
   canUndo: () => boolean;
@@ -183,7 +206,7 @@ export interface DataGridProps<TRow extends RowData = RowData> {
    * is a display, not a grid, and making it optional invites exactly the
    * "edited, nothing happened" gap this package exists to close.
    */
-  onCellsEdited: (edits: CellEdit<TRow>[]) => void | Promise<void>;
+  onCellsEdited: (edits: CellEdit<TRow>[]) => void | CellEditResult | Promise<void | CellEditResult>;
   /** REQUIRED — see DataGridError doc comment. */
   onError: (error: DataGridError<TRow>) => void;
   /** Freeze the first column (sticky left, excluded from reorder). Default true. */

@@ -13,13 +13,14 @@ export interface UndoEntry<T> {
 export class UndoStack<T> {
   private undoList: UndoEntry<T>[] = [];
   private redoList: UndoEntry<T>[] = [];
+  private traversing = new WeakSet<UndoEntry<T>>();
   private readonly limit: number;
 
   constructor(limit = 200) {
     this.limit = limit;
   }
 
-  /** Push a completed edit. Clears the redo stack — the standard editor
+  /** Push an edit intent. Clears the redo stack — the standard editor
    * convention: once you make a new edit, the old "future" is gone. */
   push(entry: UndoEntry<T>): void {
     this.undoList.push(entry);
@@ -30,11 +31,11 @@ export class UndoStack<T> {
   }
 
   canUndo(): boolean {
-    return this.undoList.length > 0;
+    return this.undoList.some((entry) => !this.traversing.has(entry));
   }
 
   canRedo(): boolean {
-    return this.redoList.length > 0;
+    return this.redoList.some((entry) => !this.traversing.has(entry));
   }
 
   /** Pop the most recent entry and move it to the redo stack. The caller is
@@ -55,11 +56,42 @@ export class UndoStack<T> {
     return entry;
   }
 
-  /** Discard the most recently pushed entry without applying anything —
-   * used when a commit's mutation callback fails and the edit never really
-   * happened (see DataGrid's onError handling). */
+  /** Legacy synchronous removal. Async callers must use identity-based replace. */
   discardLast(): void {
     this.undoList.pop();
+  }
+
+  /** Replace this exact entry wherever it lives; unrelated newer edits survive. */
+  replace(entry: UndoEntry<T>, replacement?: UndoEntry<T>): void {
+    for (const list of [this.undoList, this.redoList]) {
+      const index = list.indexOf(entry);
+      if (index !== -1) list.splice(index, 1, ...(replacement ? [replacement] : []));
+    }
+  }
+
+  /** Reserve a traversal in place until its asynchronous persistence settles. */
+  begin(direction: 'undo' | 'redo'): UndoEntry<T> | undefined {
+    const list = direction === 'undo' ? this.undoList : this.redoList;
+    for (let index = list.length - 1; index >= 0; index--) {
+      const entry = list[index];
+      if (!this.traversing.has(entry)) {
+        this.traversing.add(entry);
+        return entry;
+      }
+    }
+    return undefined;
+  }
+
+  /** Failed cells remain retryable on the original side; saved cells move. */
+  settle(entry: UndoEntry<T>, direction: 'undo' | 'redo', saved?: UndoEntry<T>, failed?: UndoEntry<T>): void {
+    const source = direction === 'undo' ? this.undoList : this.redoList;
+    const target = direction === 'undo' ? this.redoList : this.undoList;
+    const index = source.indexOf(entry);
+    if (index === -1) return; // A new edit already invalidated this redo history.
+    const wasLatest = index === source.length - 1;
+    source.splice(index, 1, ...(failed ? [failed] : []));
+    // Undoing an older entry while a newer edit exists cannot create a valid redo future.
+    if (saved && (direction === 'redo' || wasLatest)) target.push(saved);
   }
 
   clear(): void {

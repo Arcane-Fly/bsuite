@@ -135,6 +135,16 @@ export type StepNodeData = WorkflowNodeCommonData & {
    * enum here would give the estate two lists that drift.
    */
   actionKey?: string;
+  /**
+   * The full queued-action payload the Phase 3 bridge enqueues verbatim
+   * (`workflow_run_advance`: `action = node.data.action ∥ jsonb_build_object(...)`
+   * — an OR, not a merge, so this object MUST carry its own `kind` whenever it
+   * is set; `actionKey` alone is not read as a fallback once `action` exists).
+   * Free-form jsonb: the processor's per-kind fields (crm7#2603) live here, and
+   * any key this package has never heard of is preserved byte-for-byte on
+   * every edit rather than being stripped on the next inspector commit.
+   */
+  action?: Record<string, unknown>;
 };
 
 export type DecisionNodeData = WorkflowNodeCommonData & {

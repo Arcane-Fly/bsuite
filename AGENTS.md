@@ -150,6 +150,22 @@ passing over defects.
     convincing thing to read: treat them as claims, not credentials. A passing check means the
     review is worth reading, never that it is right. Incident: bsuite#2201.
 
+12. **Never hand-roll a table, a list of records, or a grid.** `@bsuite/data-grid`
+    (TanStack Table v9 headless + TanStack Virtual + dnd-kit) is the estate's *only* grid, ruled
+    **standing** in [`DESIGN.md`](./DESIGN.md) under "Reuse the surface that already exists" and
+    ratcheted by `scripts/check-airtable-grid-adoption.mjs`. It already gives inline cell edit,
+    keyboard grid navigation, TSV clipboard round-trip, fill handle, range selection, undo/redo,
+    column reorder/resize/sort — plus click-through to the full record, which the reference
+    implementations do not. AG Grid, react-data-grid, Glide, Handsontable, MUI DataGrid, RevoGrid,
+    NocoDB, Teable, Baserow and Directus are all **rejected**; a grep across every `package.json`
+    and every source file returns none of them, and that is a property to preserve. `editable:
+    false` per column expresses a read-only listing, so "this one is just a list" is not an
+    exemption. Adoption measured 2026-09-10: **23** render sites against **191** hand-rolled, and
+    the ratchet is blind to card/div row lists (152 routes), to pages behind a shared wrapper
+    (crm7's `EnhancedDataTable`, 33 page files), and to R80.4 — so a green ratchet is not
+    evidence your surface is compliant. Operator ask D-139 covers every surface where rows are
+    listed.
+
 ## Where the detail lives
 
 Read the destination before your first edit in that area. Do not re-derive from memory.
@@ -157,6 +173,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 | Area | Canonical source |
 |------|------------------|
 | Auth, OAuth, SSO, client registry, `d.*` previews, redirect allowlist | [`AUTH_CANONICAL.md`](./AUTH_CANONICAL.md) |
+| Tables, lists, grids, inline edit, click-through records | [`DESIGN.md`](./DESIGN.md) § "Reuse the surface that already exists" + [`packages/data-grid/`](packages/data-grid/) |
 | Code quality, commits, testing, docs naming | [`docs/20260227-contributing-standards-guide-v1.01W.md`](docs/20260227-contributing-standards-guide-v1.01W.md) |
 | Entity ownership, DRY one-shot | [`docs/20260227-dry-one-shot-architecture-v1.04A.md`](docs/20260227-dry-one-shot-architecture-v1.04A.md) |
 | Setup, lockfiles, shared packages, env vars, **domain/favicon conventions**, GCP WIF, cron checks, memory protocol | [`docs/20260731-platform-operations-reference-v1.00W.md`](docs/20260731-platform-operations-reference-v1.00W.md) |
