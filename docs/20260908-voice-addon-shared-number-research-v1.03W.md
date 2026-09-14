@@ -11,6 +11,11 @@ evidence:
 
 # Shared business number for a small client: 3CX, custom calling, or managed — research record
 
+> **Reading order:** section 14 records the latest operator decision: an owned voice
+> stack on wholesale carriage, with no Twilio. Earlier recommendations and prices
+> remain dated research for provenance. They are not current procurement authority;
+> unresolved provider, legal, cost, and implementation claims require fresh evidence.
+
 **Status:** W (working) · **Version:** 1.03 · **Date:** 2026-09-08, updated 2026-09-09 12:10 AWST ·
 **Author:** Claude Code (bsuite lane) · **Supersedes:** v1.01W (merged in bsuite#3215) and v1.02W (same PR)
 **Trigger:** enquiry from Rahawa Abraham, Service Coordinator, Life Purpose Australia (NDIS
