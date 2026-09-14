@@ -98,6 +98,9 @@ export {
   workflowDraftOptions,
   workflowVersionOptions,
   workflowVersionsOptions,
+  patchDraftGraphInVersions,
+  restoreDraftGraphCaches,
+  writeDraftGraphCaches,
 } from './hooks/index.js';
 export type {
   UseWorkflowControllerOptions,

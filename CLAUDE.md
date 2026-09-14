@@ -1,3 +1,10 @@
+<!-- bsuite-remediation-rules:start -->
+## Remediation execution rules (2026-09-09)
+
+@.agents/rules/remediation-execution.md
+This current contract governs remediation execution where older workflow defaults conflict.
+<!-- bsuite-remediation-rules:end -->
+
 # BSuite
 
 **[`AGENTS.md`](./AGENTS.md) is the rulebook — read it before your first edit.** It carries the

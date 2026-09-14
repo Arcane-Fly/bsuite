@@ -7,6 +7,28 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.0.4-next.2] — 2026-09-09 — Superseded apply receipt + retry precision
+
+- Preserve `applyCells` failure receipts per invocation when a later call supersedes cells in that original attempt.
+- Return exact failed IDs/messages from overlap scenarios so toolbar and retry logic stays aligned with ownership.
+- Fix mounted coverage for `readonly` vs `linked` rejection message expectations in the common mutation pipeline.
+- Add regression coverage for superseded-attempt receipts, newer overlay dominance, and undo behavior.
+
+## [3.0.4-next.1] — 2026-09-09 — Retry through the grid
+
+- Expose `applyCells` on the grid handle for typed retained drafts, preserving refusal clearing, save ownership and undo history.
+- Enforce readonly and linked-record value guards in the common mutation path; raw paste/fill cannot bypass the record picker.
+- Reject missing or duplicate retry identities before any persistence call.
+
+## [3.0.4-next.0] — 2026-09-09 — Per-cell persistence outcomes
+
+- Add optional `CellEditResult` failures by stable row and column identity; void callbacks retain all-success behavior.
+- Remove refused optimistic values, release acknowledged successful values to host data, and retain only saved undo operations.
+- Preserve partial undo/redo retries and reconcile concurrent failures by attempt and history-entry identity.
+- Skip failed predecessor drafts during undo, including undo requested while a predecessor is still pending.
+- Serialize rapid undo/redo intentions without losing successful redo history; a newer edit cancels queued older history requests.
+- Consumer preview pinning and deployed UX acceptance remain pending.
+
 ## [3.0.1] — 2026-08-31 — Ship a resolvable ESM import
 
 `3.0.0` shipped `import { gridFeatures } from './tableFeatures'` — no file

@@ -41,7 +41,7 @@
  * kind of quiet loss this estate keeps finding after the fact.
  */
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import {
   TASK_PRIORITY_OPTIONS,
@@ -54,6 +54,12 @@ import type { WorkflowActionContext } from '../actionVocabulary.js';
 import type { WorkflowController } from '../hooks/useWorkflowController.js';
 import { terminatorRole } from '../nodes/TerminatorNode.js';
 import type { TerminatorRole, WorkflowNode } from '../types.js';
+import { WorkflowChromeSlottedContext } from './canvasRegions.js';
+import {
+  WORKFLOW_INSPECTOR_SURFACE,
+  WORKFLOW_INSPECTOR_WIDTH,
+  joinClassNames,
+} from './chromeClasses.js';
 
 export interface WorkflowAssigneeOption {
   id: string;
@@ -149,6 +155,7 @@ export function WorkflowInspector({
   assigneeOptions,
   emailTemplateOptions,
 }: WorkflowInspectorProps) {
+  const slotted = useContext(WorkflowChromeSlottedContext);
   const node = controller.nodes.find((n) => n.id === selectedNodeId);
   const kind = node?.type ?? 'step';
   const readOnly = controller.isReadOnly;
@@ -331,11 +338,13 @@ export function WorkflowInspector({
 
   return (
     <aside
-      className={
-        className ??
-        'pointer-events-auto absolute bottom-3 right-3 z-10 w-72 rounded-xl border border-border bg-card p-3 shadow-md dark:shadow-[var(--glow-card,none)]'
-      }
+      className={joinClassNames(
+        WORKFLOW_INSPECTOR_SURFACE,
+        slotted ? 'w-full' : WORKFLOW_INSPECTOR_WIDTH,
+        className,
+      )}
       data-testid="workflow-inspector"
+      data-workflow-region="inspector"
       aria-label="Selected step"
     >
       <p className="pb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -676,3 +685,5 @@ export function WorkflowInspector({
     </aside>
   );
 }
+
+WorkflowInspector.workflowRegion = 'inspector' as const;
