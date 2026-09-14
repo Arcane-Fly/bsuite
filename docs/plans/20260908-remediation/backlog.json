@@ -21,7 +21,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-2594.md",
+      "prompt": "prompts/20260908-crm7-2594-remediation-prompt-v1.00W.md",
       "id": "crm7-2594",
       "status": "pending",
       "queue_reconciliation": {}
@@ -44,7 +44,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-3205.md",
+      "prompt": "prompts/20260908-bsuite-3205-remediation-prompt-v1.00W.md",
       "id": "bsuite-3205",
       "status": "pending",
       "queue_reconciliation": {},
@@ -85,7 +85,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3206.md",
+      "prompt": "prompts/20260908-bsuite-3206-remediation-prompt-v1.00W.md",
       "id": "bsuite-3206",
       "status": "pending",
       "queue_reconciliation": {}
@@ -109,7 +109,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3207.md",
+      "prompt": "prompts/20260908-bsuite-3207-remediation-prompt-v1.00W.md",
       "id": "bsuite-3207",
       "status": "pending",
       "queue_reconciliation": {}
@@ -146,7 +146,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2063.md",
+      "prompt": "prompts/20260908-crm7-2063-remediation-prompt-v1.00W.md",
       "id": "crm7-2063",
       "status": "pending",
       "queue_reconciliation": {}
@@ -170,7 +170,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2581.md",
+      "prompt": "prompts/20260908-crm7-2581-remediation-prompt-v1.00W.md",
       "id": "crm7-2581",
       "status": "pending",
       "queue_reconciliation": {}
@@ -194,7 +194,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3209.md",
+      "prompt": "prompts/20260908-bsuite-3209-remediation-prompt-v1.00W.md",
       "id": "bsuite-3209",
       "status": "pending",
       "queue_reconciliation": {},
@@ -236,7 +236,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-2586.md",
+      "prompt": "prompts/20260908-crm7-2586-remediation-prompt-v1.00W.md",
       "id": "crm7-2586",
       "status": "pending",
       "queue_reconciliation": {}
@@ -259,7 +259,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-3208.md",
+      "prompt": "prompts/20260908-bsuite-3208-remediation-prompt-v1.00W.md",
       "id": "bsuite-3208",
       "status": "pending",
       "queue_reconciliation": {}
@@ -283,7 +283,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2587.md",
+      "prompt": "prompts/20260908-crm7-2587-remediation-prompt-v1.00W.md",
       "id": "crm7-2587",
       "status": "pending",
       "queue_reconciliation": {}
@@ -307,7 +307,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3210.md",
+      "prompt": "prompts/20260908-bsuite-3210-remediation-prompt-v1.00W.md",
       "id": "bsuite-3210",
       "status": "pending",
       "queue_reconciliation": {}
@@ -331,7 +331,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3211.md",
+      "prompt": "prompts/20260908-bsuite-3211-remediation-prompt-v1.00W.md",
       "id": "bsuite-3211",
       "status": "pending",
       "queue_reconciliation": {}
@@ -355,7 +355,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3212.md",
+      "prompt": "prompts/20260908-bsuite-3212-remediation-prompt-v1.00W.md",
       "id": "bsuite-3212",
       "status": "pending",
       "queue_reconciliation": {}
@@ -379,7 +379,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3199.md",
+      "prompt": "prompts/20260908-bsuite-3199-remediation-prompt-v1.00W.md",
       "id": "bsuite-3199",
       "status": "pending",
       "queue_reconciliation": {}
@@ -403,7 +403,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3198.md",
+      "prompt": "prompts/20260908-bsuite-3198-remediation-prompt-v1.00W.md",
       "id": "bsuite-3198",
       "status": "pending",
       "queue_reconciliation": {}
@@ -426,7 +426,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-3171.md",
+      "prompt": "prompts/20260908-bsuite-3171-remediation-prompt-v1.00W.md",
       "id": "bsuite-3171",
       "status": "pending",
       "queue_reconciliation": {}
@@ -449,7 +449,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3165.md",
+      "prompt": "prompts/20260908-bsuite-3165-remediation-prompt-v1.00W.md",
       "id": "bsuite-3165",
       "status": "pending",
       "queue_reconciliation": {}
@@ -479,7 +479,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-3161.md",
+      "prompt": "prompts/20260908-bsuite-3161-remediation-prompt-v1.00W.md",
       "id": "bsuite-3161",
       "status": "pending",
       "queue_reconciliation": {}
@@ -503,7 +503,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3155.md",
+      "prompt": "prompts/20260908-bsuite-3155-remediation-prompt-v1.00W.md",
       "id": "bsuite-3155",
       "status": "pending",
       "queue_reconciliation": {}
@@ -526,7 +526,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-3151.md",
+      "prompt": "prompts/20260908-bsuite-3151-remediation-prompt-v1.00W.md",
       "id": "bsuite-3151",
       "status": "pending",
       "queue_reconciliation": {}
@@ -550,7 +550,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3150.md",
+      "prompt": "prompts/20260908-bsuite-3150-remediation-prompt-v1.00W.md",
       "id": "bsuite-3150",
       "status": "pending",
       "queue_reconciliation": {}
@@ -573,7 +573,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-3147.md",
+      "prompt": "prompts/20260908-bsuite-3147-remediation-prompt-v1.00W.md",
       "id": "bsuite-3147",
       "status": "pending",
       "queue_reconciliation": {}
@@ -597,7 +597,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3144.md",
+      "prompt": "prompts/20260908-bsuite-3144-remediation-prompt-v1.00W.md",
       "id": "bsuite-3144",
       "status": "pending",
       "queue_reconciliation": {}
@@ -621,7 +621,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3141.md",
+      "prompt": "prompts/20260908-bsuite-3141-remediation-prompt-v1.00W.md",
       "id": "bsuite-3141",
       "status": "pending",
       "queue_reconciliation": {}
@@ -645,7 +645,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3139.md",
+      "prompt": "prompts/20260908-bsuite-3139-remediation-prompt-v1.00W.md",
       "id": "bsuite-3139",
       "status": "pending",
       "queue_reconciliation": {}
@@ -669,7 +669,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3138.md",
+      "prompt": "prompts/20260908-bsuite-3138-remediation-prompt-v1.00W.md",
       "id": "bsuite-3138",
       "status": "pending",
       "queue_reconciliation": {}
@@ -692,7 +692,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-3136.md",
+      "prompt": "prompts/20260908-bsuite-3136-remediation-prompt-v1.00W.md",
       "id": "bsuite-3136",
       "status": "pending",
       "queue_reconciliation": {}
@@ -716,7 +716,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3133.md",
+      "prompt": "prompts/20260908-bsuite-3133-remediation-prompt-v1.00W.md",
       "id": "bsuite-3133",
       "status": "pending",
       "queue_reconciliation": {}
@@ -740,7 +740,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3130.md",
+      "prompt": "prompts/20260908-bsuite-3130-remediation-prompt-v1.00W.md",
       "id": "bsuite-3130",
       "status": "pending",
       "queue_reconciliation": {}
@@ -764,7 +764,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3127.md",
+      "prompt": "prompts/20260908-bsuite-3127-remediation-prompt-v1.00W.md",
       "id": "bsuite-3127",
       "status": "pending",
       "queue_reconciliation": {}
@@ -787,7 +787,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-3126.md",
+      "prompt": "prompts/20260908-bsuite-3126-remediation-prompt-v1.00W.md",
       "id": "bsuite-3126",
       "status": "pending",
       "queue_reconciliation": {}
@@ -810,7 +810,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3125.md",
+      "prompt": "prompts/20260908-bsuite-3125-remediation-prompt-v1.00W.md",
       "id": "bsuite-3125",
       "status": "pending",
       "queue_reconciliation": {}
@@ -840,7 +840,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3124.md",
+      "prompt": "prompts/20260908-bsuite-3124-remediation-prompt-v1.00W.md",
       "id": "bsuite-3124",
       "status": "pending",
       "queue_reconciliation": {}
@@ -864,7 +864,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3118.md",
+      "prompt": "prompts/20260908-bsuite-3118-remediation-prompt-v1.00W.md",
       "id": "bsuite-3118",
       "status": "pending",
       "queue_reconciliation": {},
@@ -904,7 +904,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3111.md",
+      "prompt": "prompts/20260908-bsuite-3111-remediation-prompt-v1.00W.md",
       "id": "bsuite-3111",
       "status": "pending",
       "queue_reconciliation": {}
@@ -941,7 +941,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3110.md",
+      "prompt": "prompts/20260908-bsuite-3110-remediation-prompt-v1.00W.md",
       "id": "bsuite-3110",
       "status": "pending",
       "queue_reconciliation": {}
@@ -978,7 +978,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3104.md",
+      "prompt": "prompts/20260908-bsuite-3104-remediation-prompt-v1.00W.md",
       "id": "bsuite-3104",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1002,7 +1002,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3100.md",
+      "prompt": "prompts/20260908-bsuite-3100-remediation-prompt-v1.00W.md",
       "id": "bsuite-3100",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1026,7 +1026,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3096.md",
+      "prompt": "prompts/20260908-bsuite-3096-remediation-prompt-v1.00W.md",
       "id": "bsuite-3096",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1050,7 +1050,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3095.md",
+      "prompt": "prompts/20260908-bsuite-3095-remediation-prompt-v1.00W.md",
       "id": "bsuite-3095",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1081,7 +1081,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3031.md",
+      "prompt": "prompts/20260908-bsuite-3031-remediation-prompt-v1.00W.md",
       "id": "bsuite-3031",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1105,7 +1105,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-3015.md",
+      "prompt": "prompts/20260908-bsuite-3015-remediation-prompt-v1.00W.md",
       "id": "bsuite-3015",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1128,7 +1128,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2664.md",
+      "prompt": "prompts/20260908-bsuite-2664-remediation-prompt-v1.00W.md",
       "id": "bsuite-2664",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1159,7 +1159,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2621.md",
+      "prompt": "prompts/20260908-bsuite-2621-remediation-prompt-v1.00W.md",
       "id": "bsuite-2621",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1189,7 +1189,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-2620.md",
+      "prompt": "prompts/20260908-bsuite-2620-remediation-prompt-v1.00W.md",
       "id": "bsuite-2620",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1219,7 +1219,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2619.md",
+      "prompt": "prompts/20260908-bsuite-2619-remediation-prompt-v1.00W.md",
       "id": "bsuite-2619",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1250,7 +1250,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-2613.md",
+      "prompt": "prompts/20260908-bsuite-2613-remediation-prompt-v1.00W.md",
       "id": "bsuite-2613",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1280,7 +1280,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2611.md",
+      "prompt": "prompts/20260908-bsuite-2611-remediation-prompt-v1.00W.md",
       "id": "bsuite-2611",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1310,7 +1310,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-2581.md",
+      "prompt": "prompts/20260908-bsuite-2581-remediation-prompt-v1.00W.md",
       "id": "bsuite-2581",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1346,7 +1346,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2580.md",
+      "prompt": "prompts/20260908-bsuite-2580-remediation-prompt-v1.00W.md",
       "id": "bsuite-2580",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1377,7 +1377,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-2578.md",
+      "prompt": "prompts/20260908-bsuite-2578-remediation-prompt-v1.00W.md",
       "id": "bsuite-2578",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1407,7 +1407,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2560.md",
+      "prompt": "prompts/20260908-bsuite-2560-remediation-prompt-v1.00W.md",
       "id": "bsuite-2560",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1437,7 +1437,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-2550.md",
+      "prompt": "prompts/20260908-bsuite-2550-remediation-prompt-v1.00W.md",
       "id": "bsuite-2550",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1467,7 +1467,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2542.md",
+      "prompt": "prompts/20260908-bsuite-2542-remediation-prompt-v1.00W.md",
       "id": "bsuite-2542",
       "status": "in_progress",
       "queue_reconciliation": {}
@@ -1503,7 +1503,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2541.md",
+      "prompt": "prompts/20260908-bsuite-2541-remediation-prompt-v1.00W.md",
       "id": "bsuite-2541",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1533,7 +1533,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-2411.md",
+      "prompt": "prompts/20260908-bsuite-2411-remediation-prompt-v1.00W.md",
       "id": "bsuite-2411",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1564,7 +1564,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2367.md",
+      "prompt": "prompts/20260908-bsuite-2367-remediation-prompt-v1.00W.md",
       "id": "bsuite-2367",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1595,7 +1595,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2354.md",
+      "prompt": "prompts/20260908-bsuite-2354-remediation-prompt-v1.00W.md",
       "id": "bsuite-2354",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1632,13 +1632,13 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2334.md",
+      "prompt": "prompts/20260908-bsuite-2334-remediation-prompt-v1.00W.md",
       "id": "bsuite-2334",
       "status": "pending",
       "queue_reconciliation": {}
     },
     {
-      "body": "Weekly automation-liveness sweep (Datum). **Report only \u2014 no writes, no merges, no workflow edits performed.**\n\nWindow: 2026-08-16T23:00Z \u2192 2026-08-23T23:00Z. Examined: 124 registered workflows / 121 workflow files across all seven repos, 395 scheduled runs, 62 registered guards, 8 scheduled tasks, 22 live pg_cron jobs.\n\n---\n\n## P1 \u2014 `advance-submodule-pointers.yml`: 132/132 scheduled failures, and the failure is a fail-safe holding\n\nFailed **every scheduled run since inception** (created 2026-08-18, hourly `17 * * * *`). The 2026-08-21 audit recorded 20/20; it is now 132/132 over five days. Nothing changed in between.\n\nRoot cause, from run [32670447063](https://github.com/GaryOcean428/bsuite/actions/runs/32670447063):\n\n```\nFailed to clone 'R80.4' a second time, aborting\nadvance-submodule-pointers: 6 submodule(s) examined; 0 already current; 0 to advance; 6 refused.\n##[error]REFUSED crm7 \u2014 176fba0c is NOT a descendant of the recorded 740c7615...\n##[error]REFUSED business-suite-unified \u2014 176fba0c is NOT a descendant of the recorded 9f8904e6...\n##[error]REFUSED conduit \u2014 176fba0c is NOT a descendant of the recorded 9d27ea0a...\n##[error]REFUSED R80.4 / braden / throughput \u2014 same 176fba0c\n```\n\n**All six submodules report the identical candidate head `176fba0c`.** That SHA is not in any submodule \u2014 it is a **bsuite parent** commit: `Merge pull request #2303 ... advance the crm7 and R80.4 gitlinks` (2026-08-22T16:33Z). The submodule clone fails, and the script does not distinguish \"clone failed\" from \"read head\": it falls through to the parent repo's own HEAD and offers it as the new pointer for all six apps.\n\nThe descendant check is the only thing standing between that and **six gitlinks rewritten to a parent-repo SHA**. It refused, correctly, 132 times. The guard is working; the plumbing underneath it is not. Fix the clone (private-submodule credentials / PAT scope), and separately make a failed clone an explicit hard error rather than a silent fallback to `HEAD`.\n\n**Correction to the premise this sweep was chartered on.** Measured, not assumed: the gitlinks are **not stale**. All six equal their repo's current `development` HEAD, 0 commits behind, recorded 2026-08-22.\n\n| repo | gitlink | recorded | `development` HEAD | behind |\n|---|---|---|---|---|\n| crm7 | `740c761` | 2026-08-22T16:23Z | `740c761` | 0 |\n| business-suite-unified | `9f8904e` | 2026-08-22T11:13Z | `9f8904e` | 0 |\n| conduit | `9d27ea0` | 2026-08-22T15:29Z | `9d27ea0` | 0 |\n| R80.4 | `cf854d0` | 2026-08-22T16:13Z | `cf854d0` | 0 |\n| braden | `f5bcd6e` | 2026-08-22T11:13Z | `f5bcd6e` | 0 |\n| throughput | `0fbb6e2` | 2026-08-22T11:13Z | `0fbb6e2` | 0 |\n\nSo the harm \u2014 stale pointers making the six reader workflows report confident nonsense under an app's name \u2014 **has not materialised**. Manual promote PRs are keeping the pointers fresh. The automation is dead and a human is unknowingly compensating for it. That is the real exposure: the day the manual merges pause, staleness starts with nothing watching.\n\n## P2 \u2014 pg_cron health audit fails on a wrong assertion, and is masking two compliance jobs that have never succeeded\n\n`cron-job-health-audit.yml` \u2014 22 failures / 26 runs. Run [32658840614](https://github.com/GaryOcean428/bsuite/actions/runs/32658840614), step *\"Self-test \u2014 prove the detector can fire\"*:\n\n```\nFIRED=3\nCLEAN=19\n##[error]cron_job_health() did NOT report the synthetic failed run.\n          The detector is broken and any clean sweep below is meaningless.\n```\n\nThe detector is **not** broken. The self-test asserts `FIRED=1` exactly, expecting only its synthetic probe. It saw 3 because **two real pg_cron jobs are already failing**. The assertion aborts the run before the sweep reports them. A guard written to prove it can fire is being tripped by the very thing it exists to catch.\n\nVerified live against `tuybltdrdefjblnplpqo`:\n\n| job | schedule | runs | failed | **succeeded \u2014 ever** | first fire |\n|---|---|---|---|---|---|\n| `document-retention-sweep-daily` | `30 4 * * *` | 5 | 5 | **0** | 2026-08-19 |\n| `sync-award-rates-weekly` | `20 2 * * 0` | 1 | 1 | **0** | 2026-08-23 |\n\nBoth fail safe, with good refusals:\n\n- `document-retention-sweep-daily`: `vault entry missing \u2014 seed document_retention_sweep_url and document_retention_sweep_secret ... See 20260822080000 m\u2026`\n- `sync-award-rates-weekly`: `vault entry missing \u2014 seed sync_award_rates_url and sync_award_rates_token ... Refusing to POST to a null endpoint and report success.`\n\nNeither has ever run. Document retention is a compliance obligation; `sync-award-rates` feeds R80.4 wage rates, which are legally compliance-critical. The two Vault secrets were never seeded after migration `20260822080000`.\n\nFix is a comparison operator \u2014 assert the synthetic run is *among* the fired set, not that it is the only member \u2014 plus seeding the four Vault entries. The remaining 19 jobs are clean; `publish-scheduled-pages` and `r7-automation-processor` are at 1440/1440.\n\n## P3 \u2014 `pending-encryption-watch.yml`: 7/7 failures, never succeeded\n\nDaily `0 4 * * *`, created 2026-08-17, has never once passed. Not yet root-caused in this sweep.\n\n## P4 \u2014 Two registered guards pass vacuously\n\n`guard-self-reporting.yml` catches guards that exit 0 without reporting a count. It does not catch a guard whose **scope** is empty. Two are in that state now.\n\n**`parent-check-supabase-client-init` \u2014 VACUOUS.** Enforces the cookie-auth tripwire over a hardcoded five-path list. Its production gate `build-and-test.yml` uses `actions/checkout@v5` with **no `submodules:` key**, so all five paths resolve to nothing and it prints `Result: 0/0 apps passed (5 skipped)` and exits 0. The registry's recorded evidence `Result: 5/5 apps passed` was measured under LANE-WATCHER, which *does* set `submodules: recursive` \u2014 **the watcher certifies a shape the merge-blocking gate never runs.** Two further gaps: **conduit is absent from the candidate list entirely** \u2014 the one app that legitimately manages auth cookies \u2014 and `mobile/lib/supabase.ts` (a real, non-gitlink path in this repo) declares `auth: { storage: ExpoSecureStoreAdapter, ... }` with **no `flowType: 'pkce'`**, a live violation of AGENTS.md Critical Auth Rule 2, sitting undetected today.\n\n**`parent-audit-palette-whitelist` \u2014 VACUOUS.** Walks `packages/` only. Its clean-pass line prints `Permitted palette: 222 oklch + 27 hex` \u2014 that is the size of the allowlist parsed out of the two source-of-truth HTML docs, **not a count of anything scanned**. The output is byte-identical whether it walked 583 files or zero. `theme-conformance.yml` pays for a full `submodules: recursive` checkout with a cross-repo PAT and this guard then reads none of it. Live undetected violation: `mobile/lib/constants.ts` declares 16 raw OKLCH literals under a \"D2C Neon Electric\" header, including `warning: 'oklch(0.868 0.125 81.4)'` against the declared `--role-warning` of `oklch(0.728 0.168 22.5)`. Also `.mjs` is outside `SCAN_SUFFIX`, so `packages/theme-codemod/migrate.mjs` \u2014 a colour codemod \u2014 is exempt from the colour gate.\n\n**`parent-drift-scan` \u2014 PARTIAL.** Nine signals genuinely armed, but the registered invocation is the bare diff-scoped form with no `diffScoped: true` marker, and on `main` the diff is empty. Its clean line's only number is the constant `SIGNALS.length = 9`, which would print `9` having examined zero bytes. Its two most-cited tripwires (`workspace:*`, cookie-SSO) live in submodule files a parent diff structurally cannot contain.\n\n## P5 \u2014 `scripts/guard-registry.mjs` silently drops 3 of 62 guards\n\nThree `id:` keys are lost to duplicate-key object-literal merges (a missing `},\\n  {` boundary \u2014 the later key overwrites the earlier, silently, at parse time). 62 declared, **59 actually exported**:\n\n| lost id | swallowed by | script exists? |\n|---|---|---|\n| `parent-setup-node-pnpm-guard` (L108) | `parent-component-mounts` (L124) | yes |\n| `parent-recovered-doc-verdicts` (L443) | `parent-check-hook-suppression-ratchet` (L470) | yes |\n| `parent-audit-routes-inventory` (L529) | `parent-parse-closing-keywords-selftest` (L555) | yes |\n\nLANE-WATCHER never executes those three. The registry's own header promises that guards left out are \"named in the PR description, not silently dropped\".\n\nSeparately, eight scripts exist but are unregistered: `check-no-cookie-sso.mjs`, `check-node-pin-parity.mjs`, `check-lockfile-hygiene.mjs`, `check-cross-tenant-references.mjs`, `check-phantom-migrations.mjs`, `check-oauth-boot-wiring.mjs`, `check-table-reach.mjs`, `check-tailwind-sources.mjs`.\n\n## P6 \u2014 Dead workflow registrations (files deleted, registration persists)\n\n| repo | workflow | last run of any event |\n|---|---|---|\n| bsuite | `pgtap.yml` | 2026-05-13, failure |\n| bsuite | `autonoma-adoption-audit.yml` | 2026-05-13, failure |\n| crm7 | `lint-rls-jwt-claims.yml` | 2026-05-11, failure |\n| throughput | `secret-scan.yml` | 2026-05-06, failure (ran once, ever) |\n\n## P7 \u2014 crm7's only cron was deleted rather than fixed\n\n`crm7/.github/workflows/prod-migration-history-audit.yml` (daily) failed **every scheduled run it ever had** \u2014 20+ consecutive, ~60 total \u2014 on `SUPABASE_DB_URL secret is required`, an unset repository secret. It never once read production migration history. The file was deleted from `main` and `development` around 2026-07-27 rather than the secret being set. bsuite's own copy of this audit is healthy (22 ok / 28).\n\n---\n\n## Check 2 result \u2014 silent workflows: NONE, but the estate is thinner than it looks\n\nZero schedule-declaring workflows had zero runs in the window. No workflow anywhere is in `disabled_inactivity` or `disabled_manually` \u2014 the 60-day auto-disable mode is not present.\n\nThe structural finding is where the cron lives:\n\n| repo | workflows | declaring `schedule:` |\n|---|---|---|\n| bsuite | 79 | **16** |\n| crm7 | 18 | 0 |\n| business-suite-unified | 18 | 0 |\n| conduit | 14 | 0 |\n| throughput | 11 | 0 |\n| braden | 11 | 0 |\n| R80.4 | 5 | 0 |\n\n**All unattended automation in this estate is in the parent repo.** Every gate in all six app repos is `pull_request` / `push` / `workflow_dispatch` only \u2014 nothing in any app runs on a timer. Six repos cannot suffer a silent scheduled-workflow death because none of them have one.\n\n## Check 3 result \u2014 scheduled tasks\n\nFour Datum tasks enabled, all with future `next_run_at`. Four tasks remain **disabled with `next_run_at` frozen three months in the past** \u2014 unchanged since the 2026-08-21 audit, neither re-enabled nor deleted:\n\n| task | cron | next_run_at (stuck) |\n|---|---|---|\n| `crm7#772 pgTAP CI babysitter` | `0 * * * *` | 2026-05-14 |\n| `bsuite-claude-coordination-poller` | `20 * * * *` | 2026-05-25 |\n| `bsuite-vercel-monitor` | `0 0-14 * * 1-5` | 2026-05-25 |\n| `BSuite: Autonomous Iteration Loop` | `15 * * * *` | 2026-05-25 |\n\nThey are user-paused, so they cannot fire \u2014 but `BSuite: Autonomous Iteration Loop` is an autonomous prompt one toggle away from running against a worldview three months stale (pre-R80.4 rename, pre-cookie-SSO removal, pre-model-roster change). Recommend deletion rather than indefinite pause.\n\n**Stale prompt facts \u2014 including this sweep's own.** The automation-liveness task prompt states the estate has *\"63 workflows and 41 gate scripts\"*. Measured: **121 workflow files / 124 registered**, and **62 declared / 59 live guards**. It is scoped to roughly half the estate it is meant to watch. It also cites `advance-submodule-pointers` at \"20 of 20 for ~19 hours\" \u2014 now 132/132 over five days.\n\n**Caveat needing operator eyes:** none of the four enabled Datum tasks has a recorded `last_run`, including two dailies created 2026-08-21 that have had two fire windows since. That is either an artefact of how this task type records runs, or they are not firing. This sweep cannot distinguish the two from the API alone.\n\n---\n\n### Suggested order\n\n1. Fix the submodule clone in `advance-submodule-pointers.yml`; make a failed clone a hard error, never a fallback to parent `HEAD`. **(P1)**\n2. Change the pg_cron self-test to `synthetic \u2208 fired` rather than `count == 1`, and seed the four Vault secrets. **(P2)** \u2014 this is the one with live compliance exposure.\n3. Add `submodules: recursive` to `build-and-test.yml`, add conduit + `mobile/` to the client-init candidate list, and make `audit-palette-whitelist.py` print a scan denominator. **(P4)**\n4. Repair the three duplicate-key guard entries. **(P5)**\n5. Delete the four dead workflow registrations and the four stale scheduled tasks. **(P6, Check 3)**\n6. Re-scope this liveness routine's own prompt to the measured estate. **(Check 3)**\n\n<sub>Filed by Datum, weekly automation-liveness sweep. Report-only authority: no merges, promotions, force-pushes, deletions, or workflow edits were performed.</sub>",
+      "body": "Weekly automation-liveness sweep (Datum). **Report only \u2014 no writes, no merges, no workflow edits performed.**\n\nWindow: 2026-08-16T23:00Z \u2192 2026-08-23T23:00Z. Examined: 124 registered workflows / 121 workflow files across all seven repos, 395 scheduled runs, 62 registered guards, 8 scheduled tasks, 22 live pg_cron jobs.\n\n---\n\n## P1 \u2014 `advance-submodule-pointers.yml`: 132/132 scheduled failures, and the failure is a fail-safe holding\n\nFailed **every scheduled run since inception** (created 2026-08-18, hourly `17 * * * *`). The 2026-08-21 audit recorded 20/20; it is now 132/132 over five days. Nothing changed in between.\n\nRoot cause, from run [32670447063](https://github.com/GaryOcean428/bsuite/actions/runs/32670447063):\n\n```\nFailed to clone 'R80.4' a second time, aborting\nadvance-submodule-pointers: 6 submodule(s) examined; 0 already current; 0 to advance; 6 refused.\n##[error]REFUSED crm7 \u2014 176fba0c is NOT a descendant of the recorded 740c7615...\n##[error]REFUSED business-suite-unified \u2014 176fba0c is NOT a descendant of the recorded 9f8904e6...\n##[error]REFUSED conduit \u2014 176fba0c is NOT a descendant of the recorded 9d27ea0a...\n##[error]REFUSED R80.4 / braden / throughput \u2014 same 176fba0c\n```\n\n**All six submodules report the identical candidate head `176fba0c`.** That SHA is not in any submodule \u2014 it is a **bsuite parent** commit: `Merge pull request #2303 ... advance the crm7 and R80.4 gitlinks` (2026-08-22T16:33Z). The submodule clone fails, and the script does not distinguish \"clone failed\" from \"read head\": it falls through to the parent repo's own HEAD and offers it as the new pointer for all six apps.\n\nThe descendant check is the only thing standing between that and **six gitlinks rewritten to a parent-repo SHA**. It refused, correctly, 132 times. The guard is working; the plumbing underneath it is not. Fix the clone (private-submodule credentials / PAT scope), and separately make a failed clone an explicit hard error rather than a silent fallback to `HEAD`.\n\n**Correction to the premise this sweep was chartered on.** Measured, not assumed: the gitlinks are **not stale**. All six equal their repo's current `development` HEAD, 0 commits behind, recorded 2026-08-22.\n\n| repo | gitlink | recorded | `development` HEAD | behind |\n|---|---|---|---|---|\n| crm7 | `740c761` | 2026-08-22T16:23Z | `740c761` | 0 |\n| business-suite-unified | `9f8904e` | 2026-08-22T11:13Z | `9f8904e` | 0 |\n| conduit | `9d27ea0` | 2026-08-22T15:29Z | `9d27ea0` | 0 |\n| R80.4 | `cf854d0` | 2026-08-22T16:13Z | `cf854d0` | 0 |\n| braden | `f5bcd6e` | 2026-08-22T11:13Z | `f5bcd6e` | 0 |\n| throughput | `0fbb6e2` | 2026-08-22T11:13Z | `0fbb6e2` | 0 |\n\nSo the harm \u2014 stale pointers making the six reader workflows report confident nonsense under an app's name \u2014 **has not materialised**. Manual promote PRs are keeping the pointers fresh. The automation is dead and a human is unknowingly compensating for it. That is the real exposure: the day the manual merges pause, staleness starts with nothing watching.\n\n## P2 \u2014 pg_cron health audit fails on a wrong assertion, and is masking two compliance jobs that have never succeeded\n\n`cron-job-health-audit.yml` \u2014 22 failures / 26 runs. Run [32658840614](https://github.com/GaryOcean428/bsuite/actions/runs/32658840614), step *\"Self-test \u2014 prove the detector can fire\"*:\n\n```\nFIRED=3\nCLEAN=19\n##[error]cron_job_health() did NOT report the synthetic failed run.\n          The detector is broken and any clean sweep below is meaningless.\n```\n\nThe detector is **not** broken. The self-test asserts `FIRED=1` exactly, expecting only its synthetic probe. It saw 3 because **two real pg_cron jobs are already failing**. The assertion aborts the run before the sweep reports them. A guard written to prove it can fire is being tripped by the very thing it exists to catch.\n\nVerified live against `tuybltdrdefjblnplpqo`:\n\n| job | schedule | runs | failed | **succeeded \u2014 ever** | first fire |\n|---|---|---|---|---|---|\n| `document-retention-sweep-daily` | `30 4 * * *` | 5 | 5 | **0** | 2026-08-19 |\n| `sync-award-rates-weekly` | `20 2 * * 0` | 1 | 1 | **0** | 2026-08-23 |\n\nBoth fail safe, with good refusals:\n\n- `document-retention-sweep-daily`: `vault entry missing \u2014 seed document_retention_sweep_url and document_retention_sweep_secret ... See 20260822080000 m\u2026`\n- `sync-award-rates-weekly`: `vault entry missing \u2014 seed sync_award_rates_url and sync_award_rates_token ... Refusing to POST to a null endpoint and report success.`\n\nNeither has ever run. Document retention is a compliance obligation; `sync-award-rates` feeds R80.4 wage rates, which are legally compliance-critical. The two Vault secrets were never seeded after migration `20260822080000`.\n\nFix is a comparison operator \u2014 assert the synthetic run is *among* the fired set, not that it is the only member \u2014 plus seeding the four Vault entries. The remaining 19 jobs are clean; `publish-scheduled-pages` and `r7-automation-processor` are at 1440/1440.\n\n## P3 \u2014 `pending-encryption-watch.yml`: 7/7 failures, never succeeded\n\nDaily `0 4 * * *`, created 2026-08-17, has never once passed. Not yet root-caused in this sweep.\n\n## P4 \u2014 Two registered guards pass vacuously\n\n`guard-self-reporting.yml` catches guards that exit 0 without reporting a count. It does not catch a guard whose **scope** is empty. Two are in that state now.\n\n**`parent-check-supabase-client-init` \u2014 VACUOUS.** Enforces the cookie-auth tripwire over a hardcoded five-path list. Its production gate `build-and-test.yml` uses `actions/checkout@v5` with **no `submodules:` key**, so all five paths resolve to nothing and it prints `Result: 0/0 apps passed (5 skipped)` and exits 0. The registry's recorded evidence `Result: 5/5 apps passed` was measured under LANE-WATCHER, which *does* set `submodules: recursive` \u2014 **the watcher certifies a shape the merge-blocking gate never runs.** Two further gaps: **conduit is absent from the candidate list entirely** \u2014 the one app that legitimately manages auth cookies \u2014 and `mobile/lib/supabase.ts` (a real, non-gitlink path in this repo) declares `auth: { storage: ExpoSecureStoreAdapter, ... }` with **no `flowType: 'pkce'`**, a live violation of AGENTS.md Critical Auth Rule 2, sitting undetected today.\n\n**`parent-audit-palette-whitelist` \u2014 VACUOUS.** Walks `packages/` only. Its clean-pass line prints `Permitted palette: 222 oklch + 27 hex` \u2014 that is the size of the allowlist parsed out of the two source-of-truth HTML docs, **not a count of anything scanned**. The output is byte-identical whether it walked 583 files or zero. `theme-conformance.yml` pays for a full `submodules: recursive` checkout with a cross-repo PAT and this guard then reads none of it. Live undetected violation: `mobile/lib/constants.ts` declares 16 raw OKLCH literals under a \"D2C Neon Electric\" header, including `warning: 'oklch(0.868 0.125 81.4)'` against the declared `--role-warning` of `oklch(0.728 0.168 22.5)`. Also `.mjs` is outside `SCAN_SUFFIX`, so `packages/theme-codemod/migrate.mjs` \u2014 a colour codemod \u2014 is exempt from the colour gate.\n\n**`parent-drift-scan` \u2014 PARTIAL.** Nine signals genuinely armed, but the registered invocation is the bare diff-scoped form with no `diffScoped: true` marker, and on `main` the diff is empty. Its clean line's only number is the constant `SIGNALS.length = 9`, which would print `9` having examined zero bytes. Its two most-cited tripwires (`workspace:*`, browser-session SSO) live in submodule files a parent diff structurally cannot contain.\n\n## P5 \u2014 `scripts/guard-registry.mjs` silently drops 3 of 62 guards\n\nThree `id:` keys are lost to duplicate-key object-literal merges (a missing `},\\n  {` boundary \u2014 the later key overwrites the earlier, silently, at parse time). 62 declared, **59 actually exported**:\n\n| lost id | swallowed by | script exists? |\n|---|---|---|\n| `parent-setup-node-pnpm-guard` (L108) | `parent-component-mounts` (L124) | yes |\n| `parent-recovered-doc-verdicts` (L443) | `parent-check-hook-suppression-ratchet` (L470) | yes |\n| `parent-audit-routes-inventory` (L529) | `parent-parse-closing-keywords-selftest` (L555) | yes |\n\nLANE-WATCHER never executes those three. The registry's own header promises that guards left out are \"named in the PR description, not silently dropped\".\n\nSeparately, eight scripts exist but are unregistered: `check-no-cookie-sso.mjs`, `check-node-pin-parity.mjs`, `check-lockfile-hygiene.mjs`, `check-cross-tenant-references.mjs`, `check-phantom-migrations.mjs`, `check-oauth-boot-wiring.mjs`, `check-table-reach.mjs`, `check-tailwind-sources.mjs`.\n\n## P6 \u2014 Dead workflow registrations (files deleted, registration persists)\n\n| repo | workflow | last run of any event |\n|---|---|---|\n| bsuite | `pgtap.yml` | 2026-05-13, failure |\n| bsuite | `autonoma-adoption-audit.yml` | 2026-05-13, failure |\n| crm7 | `lint-rls-jwt-claims.yml` | 2026-05-11, failure |\n| throughput | `secret-scan.yml` | 2026-05-06, failure (ran once, ever) |\n\n## P7 \u2014 crm7's only cron was deleted rather than fixed\n\n`crm7/.github/workflows/prod-migration-history-audit.yml` (daily) failed **every scheduled run it ever had** \u2014 20+ consecutive, ~60 total \u2014 on `SUPABASE_DB_URL secret is required`, an unset repository secret. It never once read production migration history. The file was deleted from `main` and `development` around 2026-07-27 rather than the secret being set. bsuite's own copy of this audit is healthy (22 ok / 28).\n\n---\n\n## Check 2 result \u2014 silent workflows: NONE, but the estate is thinner than it looks\n\nZero schedule-declaring workflows had zero runs in the window. No workflow anywhere is in `disabled_inactivity` or `disabled_manually` \u2014 the 60-day auto-disable mode is not present.\n\nThe structural finding is where the cron lives:\n\n| repo | workflows | declaring `schedule:` |\n|---|---|---|\n| bsuite | 79 | **16** |\n| crm7 | 18 | 0 |\n| business-suite-unified | 18 | 0 |\n| conduit | 14 | 0 |\n| throughput | 11 | 0 |\n| braden | 11 | 0 |\n| R80.4 | 5 | 0 |\n\n**All unattended automation in this estate is in the parent repo.** Every gate in all six app repos is `pull_request` / `push` / `workflow_dispatch` only \u2014 nothing in any app runs on a timer. Six repos cannot suffer a silent scheduled-workflow death because none of them have one.\n\n## Check 3 result \u2014 scheduled tasks\n\nFour Datum tasks enabled, all with future `next_run_at`. Four tasks remain **disabled with `next_run_at` frozen three months in the past** \u2014 unchanged since the 2026-08-21 audit, neither re-enabled nor deleted:\n\n| task | cron | next_run_at (stuck) |\n|---|---|---|\n| `crm7#772 pgTAP CI babysitter` | `0 * * * *` | 2026-05-14 |\n| `bsuite-claude-coordination-poller` | `20 * * * *` | 2026-05-25 |\n| `bsuite-vercel-monitor` | `0 0-14 * * 1-5` | 2026-05-25 |\n| `BSuite: Autonomous Iteration Loop` | `15 * * * *` | 2026-05-25 |\n\nThey are user-paused, so they cannot fire \u2014 but `BSuite: Autonomous Iteration Loop` is an autonomous prompt one toggle away from running against a worldview three months stale (pre-R80.4 rename, pre-browser-session SSO removal, pre-model-roster change). Recommend deletion rather than indefinite pause.\n\n**Stale prompt facts \u2014 including this sweep's own.** The automation-liveness task prompt states the estate has *\"63 workflows and 41 gate scripts\"*. Measured: **121 workflow files / 124 registered**, and **62 declared / 59 live guards**. It is scoped to roughly half the estate it is meant to watch. It also cites `advance-submodule-pointers` at \"20 of 20 for ~19 hours\" \u2014 now 132/132 over five days.\n\n**Caveat needing operator eyes:** none of the four enabled Datum tasks has a recorded `last_run`, including two dailies created 2026-08-21 that have had two fire windows since. That is either an artefact of how this task type records runs, or they are not firing. This sweep cannot distinguish the two from the API alone.\n\n---\n\n### Suggested order\n\n1. Fix the submodule clone in `advance-submodule-pointers.yml`; make a failed clone a hard error, never a fallback to parent `HEAD`. **(P1)**\n2. Change the pg_cron self-test to `synthetic \u2208 fired` rather than `count == 1`, and seed the four Vault secrets. **(P2)** \u2014 this is the one with live compliance exposure.\n3. Add `submodules: recursive` to `build-and-test.yml`, add conduit + `mobile/` to the client-init candidate list, and make `audit-palette-whitelist.py` print a scan denominator. **(P4)**\n4. Repair the three duplicate-key guard entries. **(P5)**\n5. Delete the four dead workflow registrations and the four stale scheduled tasks. **(P6, Check 3)**\n6. Re-scope this liveness routine's own prompt to the measured estate. **(Check 3)**\n\n<sub>Filed by Datum, weekly automation-liveness sweep. Report-only authority: no merges, promotions, force-pushes, deletions, or workflow edits were performed.</sub>",
       "labels": [
         {
           "id": "LA_kwDORZN-FM8AAAACfPXYSw",
@@ -1681,13 +1681,13 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-2306.md",
+      "prompt": "prompts/20260908-bsuite-2306-remediation-prompt-v1.00W.md",
       "id": "bsuite-2306",
       "status": "pending",
       "queue_reconciliation": {}
     },
     {
-      "body": "## Standing thread for the weekly issue triage\n\nEach week's digest is posted as a **comment on this issue**, so the history sits in one place\nand week-over-week movement is readable by scrolling rather than by hunting.\n\n### What the run does\n\nAcross all seven repos (`bsuite`, `crm7`, `business-suite-unified`, `conduit`, `R80.4`,\n`braden`, `throughput`) it sorts every open issue into four buckets:\n\n1. **Already fixed** \u2014 the defect no longer reproduces, established **by measurement**: reading\n   current source, querying the live Supabase catalog, curling production, or reading live\n   Actions runs. Never from the issue text, and never from a migration file (AGENTS.md\n   tripwire 6).\n2. **Duplicates and clusters** \u2014 issues sharing one underlying cause, named once with the\n   ticket numbers listed under it.\n3. **Stale** \u2014 no activity in 60+ days *and* no longer matching current architecture\n   (R80.3 references, cookie SSO, superseded package versions, retired model names).\n4. **The five that matter** \u2014 ranked, with one line each on why it earns its place. A defect on\n   a production surface a person actually opens beats an internal cleanup every time.\n\n### Method: plant a positive\n\nBefore any \"this no longer reproduces\" verdict, the probe must be shown to still **detect that\nclass of defect somewhere** \u2014 a known-good case, a planted absent object, a sibling that still\ncarries the bug. A probe that has never caught the thing it looks for is not evidence, only a\nquery that returned nothing.\n\nThis is not ceremony. In the first run, **three issues read as live defects until the control\nwas run** and turned out to be fixed; separately, one probe's control surfaced a finding\nlarger than the issue it was checking (315 tables carrying `anon` DML).\n\n### Authority\n\n**Comment and label only.** This run does not close, merge, or delete anything \u2014 closing is\nBraden's call, and the recommendations are what he acts on. Every digest states its\nrecommended disposition; none of it is applied.\n\n### Reading a digest\n\nVerdicts are anchored to run logs, catalog rows, HTTP responses and file contents \u2014 not to\nissue text. Where an issue's stated root cause is contradicted by its own evidence, the digest\nsays so. Where a probe could not settle something (auth-gated surfaces, ledger rows without\nstatement text), it is marked inconclusive rather than guessed.\n",
+      "body": "## Standing thread for the weekly issue triage\n\nEach week's digest is posted as a **comment on this issue**, so the history sits in one place\nand week-over-week movement is readable by scrolling rather than by hunting.\n\n### What the run does\n\nAcross all seven repos (`bsuite`, `crm7`, `business-suite-unified`, `conduit`, `R80.4`,\n`braden`, `throughput`) it sorts every open issue into four buckets:\n\n1. **Already fixed** \u2014 the defect no longer reproduces, established **by measurement**: reading\n   current source, querying the live Supabase catalog, curling production, or reading live\n   Actions runs. Never from the issue text, and never from a migration file (AGENTS.md\n   tripwire 6).\n2. **Duplicates and clusters** \u2014 issues sharing one underlying cause, named once with the\n   ticket numbers listed under it.\n3. **Stale** \u2014 no activity in 60+ days *and* no longer matching current architecture\n   (R80.3 references, browser-session SSO, superseded package versions, retired model names).\n4. **The five that matter** \u2014 ranked, with one line each on why it earns its place. A defect on\n   a production surface a person actually opens beats an internal cleanup every time.\n\n### Method: plant a positive\n\nBefore any \"this no longer reproduces\" verdict, the probe must be shown to still **detect that\nclass of defect somewhere** \u2014 a known-good case, a planted absent object, a sibling that still\ncarries the bug. A probe that has never caught the thing it looks for is not evidence, only a\nquery that returned nothing.\n\nThis is not ceremony. In the first run, **three issues read as live defects until the control\nwas run** and turned out to be fixed; separately, one probe's control surfaced a finding\nlarger than the issue it was checking (315 tables carrying `anon` DML).\n\n### Authority\n\n**Comment and label only.** This run does not close, merge, or delete anything \u2014 closing is\nBraden's call, and the recommendations are what he acts on. Every digest states its\nrecommended disposition; none of it is applied.\n\n### Reading a digest\n\nVerdicts are anchored to run logs, catalog rows, HTTP responses and file contents \u2014 not to\nissue text. Where an issue's stated root cause is contradicted by its own evidence, the digest\nsays so. Where a probe could not settle something (auth-gated surfaces, ledger rows without\nstatement text), it is marked inconclusive rather than guessed.\n",
       "labels": [
         {
           "id": "LA_kwDORZN-FM8AAAACiFhyBg",
@@ -1711,7 +1711,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2269.md",
+      "prompt": "prompts/20260908-bsuite-2269-remediation-prompt-v1.00W.md",
       "id": "bsuite-2269",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1748,7 +1748,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-2201.md",
+      "prompt": "prompts/20260908-bsuite-2201-remediation-prompt-v1.00W.md",
       "id": "bsuite-2201",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1784,7 +1784,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-2113.md",
+      "prompt": "prompts/20260908-bsuite-2113-remediation-prompt-v1.00W.md",
       "id": "bsuite-2113",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1815,7 +1815,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2059.md",
+      "prompt": "prompts/20260908-bsuite-2059-remediation-prompt-v1.00W.md",
       "id": "bsuite-2059",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1870,7 +1870,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-2055.md",
+      "prompt": "prompts/20260908-bsuite-2055-remediation-prompt-v1.00W.md",
       "id": "bsuite-2055",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1901,7 +1901,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2054.md",
+      "prompt": "prompts/20260908-bsuite-2054-remediation-prompt-v1.00W.md",
       "id": "bsuite-2054",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1937,7 +1937,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-2013.md",
+      "prompt": "prompts/20260908-bsuite-2013-remediation-prompt-v1.00W.md",
       "id": "bsuite-2013",
       "status": "pending",
       "queue_reconciliation": {}
@@ -1974,7 +1974,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2001.md",
+      "prompt": "prompts/20260908-bsuite-2001-remediation-prompt-v1.00W.md",
       "id": "bsuite-2001",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2017,7 +2017,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-2000.md",
+      "prompt": "prompts/20260908-bsuite-2000-remediation-prompt-v1.00W.md",
       "id": "bsuite-2000",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2060,7 +2060,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1998.md",
+      "prompt": "prompts/20260908-bsuite-1998-remediation-prompt-v1.00W.md",
       "id": "bsuite-1998",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2103,7 +2103,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-1997.md",
+      "prompt": "prompts/20260908-bsuite-1997-remediation-prompt-v1.00W.md",
       "id": "bsuite-1997",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2176,7 +2176,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1996.md",
+      "prompt": "prompts/20260908-bsuite-1996-remediation-prompt-v1.00W.md",
       "id": "bsuite-1996",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2224,7 +2224,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1967.md",
+      "prompt": "prompts/20260908-bsuite-1967-remediation-prompt-v1.00W.md",
       "id": "bsuite-1967",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2285,7 +2285,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-1966.md",
+      "prompt": "prompts/20260908-bsuite-1966-remediation-prompt-v1.00W.md",
       "id": "bsuite-1966",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2345,7 +2345,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-1961.md",
+      "prompt": "prompts/20260908-bsuite-1961-remediation-prompt-v1.00W.md",
       "id": "bsuite-1961",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2417,7 +2417,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-1960.md",
+      "prompt": "prompts/20260908-bsuite-1960-remediation-prompt-v1.00W.md",
       "id": "bsuite-1960",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2448,7 +2448,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1958.md",
+      "prompt": "prompts/20260908-bsuite-1958-remediation-prompt-v1.00W.md",
       "id": "bsuite-1958",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2478,7 +2478,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1953.md",
+      "prompt": "prompts/20260908-bsuite-1953-remediation-prompt-v1.00W.md",
       "id": "bsuite-1953",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2508,7 +2508,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1897.md",
+      "prompt": "prompts/20260908-bsuite-1897-remediation-prompt-v1.00W.md",
       "id": "bsuite-1897",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2538,7 +2538,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-1892.md",
+      "prompt": "prompts/20260908-bsuite-1892-remediation-prompt-v1.00W.md",
       "id": "bsuite-1892",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2568,7 +2568,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1886.md",
+      "prompt": "prompts/20260908-bsuite-1886-remediation-prompt-v1.00W.md",
       "id": "bsuite-1886",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2599,7 +2599,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-1883.md",
+      "prompt": "prompts/20260908-bsuite-1883-remediation-prompt-v1.00W.md",
       "id": "bsuite-1883",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2630,7 +2630,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1882.md",
+      "prompt": "prompts/20260908-bsuite-1882-remediation-prompt-v1.00W.md",
       "id": "bsuite-1882",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2660,7 +2660,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-1866.md",
+      "prompt": "prompts/20260908-bsuite-1866-remediation-prompt-v1.00W.md",
       "id": "bsuite-1866",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2690,7 +2690,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1834.md",
+      "prompt": "prompts/20260908-bsuite-1834-remediation-prompt-v1.00W.md",
       "id": "bsuite-1834",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2720,7 +2720,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1830.md",
+      "prompt": "prompts/20260908-bsuite-1830-remediation-prompt-v1.00W.md",
       "id": "bsuite-1830",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2756,7 +2756,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-1684.md",
+      "prompt": "prompts/20260908-bsuite-1684-remediation-prompt-v1.00W.md",
       "id": "bsuite-1684",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2786,7 +2786,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/bsuite-1682.md",
+      "prompt": "prompts/20260908-bsuite-1682-remediation-prompt-v1.00W.md",
       "id": "bsuite-1682",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2810,7 +2810,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-1680.md",
+      "prompt": "prompts/20260908-bsuite-1680-remediation-prompt-v1.00W.md",
       "id": "bsuite-1680",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2841,7 +2841,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1542.md",
+      "prompt": "prompts/20260908-bsuite-1542-remediation-prompt-v1.00W.md",
       "id": "bsuite-1542",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2871,7 +2871,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1505.md",
+      "prompt": "prompts/20260908-bsuite-1505-remediation-prompt-v1.00W.md",
       "id": "bsuite-1505",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2938,7 +2938,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1322.md",
+      "prompt": "prompts/20260908-bsuite-1322-remediation-prompt-v1.00W.md",
       "id": "bsuite-1322",
       "status": "pending",
       "queue_reconciliation": {}
@@ -2974,7 +2974,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/bsuite-1315.md",
+      "prompt": "prompts/20260908-bsuite-1315-remediation-prompt-v1.00W.md",
       "id": "bsuite-1315",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3004,7 +3004,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-1139.md",
+      "prompt": "prompts/20260908-bsuite-1139-remediation-prompt-v1.00W.md",
       "id": "bsuite-1139",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3052,7 +3052,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-635.md",
+      "prompt": "prompts/20260908-bsuite-635-remediation-prompt-v1.00W.md",
       "id": "bsuite-635",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3124,7 +3124,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-572.md",
+      "prompt": "prompts/20260908-bsuite-572-remediation-prompt-v1.00W.md",
       "id": "bsuite-572",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3197,7 +3197,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-570.md",
+      "prompt": "prompts/20260908-bsuite-570-remediation-prompt-v1.00W.md",
       "id": "bsuite-570",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3275,7 +3275,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-557.md",
+      "prompt": "prompts/20260908-bsuite-557-remediation-prompt-v1.00W.md",
       "id": "bsuite-557",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3348,7 +3348,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-556.md",
+      "prompt": "prompts/20260908-bsuite-556-remediation-prompt-v1.00W.md",
       "id": "bsuite-556",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3420,7 +3420,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-555.md",
+      "prompt": "prompts/20260908-bsuite-555-remediation-prompt-v1.00W.md",
       "id": "bsuite-555",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3493,7 +3493,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-554.md",
+      "prompt": "prompts/20260908-bsuite-554-remediation-prompt-v1.00W.md",
       "id": "bsuite-554",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3560,7 +3560,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-550.md",
+      "prompt": "prompts/20260908-bsuite-550-remediation-prompt-v1.00W.md",
       "id": "bsuite-550",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3627,7 +3627,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-548.md",
+      "prompt": "prompts/20260908-bsuite-548-remediation-prompt-v1.00W.md",
       "id": "bsuite-548",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3693,7 +3693,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-547.md",
+      "prompt": "prompts/20260908-bsuite-547-remediation-prompt-v1.00W.md",
       "id": "bsuite-547",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3723,7 +3723,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-483.md",
+      "prompt": "prompts/20260908-bsuite-483-remediation-prompt-v1.00W.md",
       "id": "bsuite-483",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3754,7 +3754,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-479.md",
+      "prompt": "prompts/20260908-bsuite-479-remediation-prompt-v1.00W.md",
       "id": "bsuite-479",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3785,7 +3785,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/bsuite-464.md",
+      "prompt": "prompts/20260908-bsuite-464-remediation-prompt-v1.00W.md",
       "id": "bsuite-464",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3809,7 +3809,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2584.md",
+      "prompt": "prompts/20260908-crm7-2584-remediation-prompt-v1.00W.md",
       "id": "crm7-2584",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3833,7 +3833,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2573.md",
+      "prompt": "prompts/20260908-crm7-2573-remediation-prompt-v1.00W.md",
       "id": "crm7-2573",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3857,7 +3857,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2566.md",
+      "prompt": "prompts/20260908-crm7-2566-remediation-prompt-v1.00W.md",
       "id": "crm7-2566",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3881,7 +3881,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2562.md",
+      "prompt": "prompts/20260908-crm7-2562-remediation-prompt-v1.00W.md",
       "id": "crm7-2562",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3905,7 +3905,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-2560.md",
+      "prompt": "prompts/20260908-crm7-2560-remediation-prompt-v1.00W.md",
       "id": "crm7-2560",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3928,7 +3928,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2558.md",
+      "prompt": "prompts/20260908-crm7-2558-remediation-prompt-v1.00W.md",
       "id": "crm7-2558",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3951,7 +3951,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2557.md",
+      "prompt": "prompts/20260908-crm7-2557-remediation-prompt-v1.00W.md",
       "id": "crm7-2557",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3974,7 +3974,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2555.md",
+      "prompt": "prompts/20260908-crm7-2555-remediation-prompt-v1.00W.md",
       "id": "crm7-2555",
       "status": "pending",
       "queue_reconciliation": {}
@@ -3997,7 +3997,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2554.md",
+      "prompt": "prompts/20260908-crm7-2554-remediation-prompt-v1.00W.md",
       "id": "crm7-2554",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4020,7 +4020,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-2551.md",
+      "prompt": "prompts/20260908-crm7-2551-remediation-prompt-v1.00W.md",
       "id": "crm7-2551",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4043,7 +4043,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2547.md",
+      "prompt": "prompts/20260908-crm7-2547-remediation-prompt-v1.00W.md",
       "id": "crm7-2547",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4066,7 +4066,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2543.md",
+      "prompt": "prompts/20260908-crm7-2543-remediation-prompt-v1.00W.md",
       "id": "crm7-2543",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4090,7 +4090,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2540.md",
+      "prompt": "prompts/20260908-crm7-2540-remediation-prompt-v1.00W.md",
       "id": "crm7-2540",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4113,7 +4113,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-2539.md",
+      "prompt": "prompts/20260908-crm7-2539-remediation-prompt-v1.00W.md",
       "id": "crm7-2539",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4144,7 +4144,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2525.md",
+      "prompt": "prompts/20260908-crm7-2525-remediation-prompt-v1.00W.md",
       "id": "crm7-2525",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4167,7 +4167,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-2522.md",
+      "prompt": "prompts/20260908-crm7-2522-remediation-prompt-v1.00W.md",
       "id": "crm7-2522",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4190,7 +4190,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2521.md",
+      "prompt": "prompts/20260908-crm7-2521-remediation-prompt-v1.00W.md",
       "id": "crm7-2521",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4221,7 +4221,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-2514.md",
+      "prompt": "prompts/20260908-crm7-2514-remediation-prompt-v1.00W.md",
       "id": "crm7-2514",
       "status": "pending",
       "queue_reconciliation": {},
@@ -4269,7 +4269,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2512.md",
+      "prompt": "prompts/20260908-crm7-2512-remediation-prompt-v1.00W.md",
       "id": "crm7-2512",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4293,7 +4293,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2511.md",
+      "prompt": "prompts/20260908-crm7-2511-remediation-prompt-v1.00W.md",
       "id": "crm7-2511",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4317,7 +4317,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-2510.md",
+      "prompt": "prompts/20260908-crm7-2510-remediation-prompt-v1.00W.md",
       "id": "crm7-2510",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4340,7 +4340,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2509.md",
+      "prompt": "prompts/20260908-crm7-2509-remediation-prompt-v1.00W.md",
       "id": "crm7-2509",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4363,7 +4363,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-2508.md",
+      "prompt": "prompts/20260908-crm7-2508-remediation-prompt-v1.00W.md",
       "id": "crm7-2508",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4387,7 +4387,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2506.md",
+      "prompt": "prompts/20260908-crm7-2506-remediation-prompt-v1.00W.md",
       "id": "crm7-2506",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4411,7 +4411,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2503.md",
+      "prompt": "prompts/20260908-crm7-2503-remediation-prompt-v1.00W.md",
       "id": "crm7-2503",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4442,7 +4442,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-2502.md",
+      "prompt": "prompts/20260908-crm7-2502-remediation-prompt-v1.00W.md",
       "id": "crm7-2502",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4473,7 +4473,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2501.md",
+      "prompt": "prompts/20260908-crm7-2501-remediation-prompt-v1.00W.md",
       "id": "crm7-2501",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4504,7 +4504,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2500.md",
+      "prompt": "prompts/20260908-crm7-2500-remediation-prompt-v1.00W.md",
       "id": "crm7-2500",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4534,7 +4534,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-2499.md",
+      "prompt": "prompts/20260908-crm7-2499-remediation-prompt-v1.00W.md",
       "id": "crm7-2499",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4565,7 +4565,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-2498.md",
+      "prompt": "prompts/20260908-crm7-2498-remediation-prompt-v1.00W.md",
       "id": "crm7-2498",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4614,7 +4614,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2497.md",
+      "prompt": "prompts/20260908-crm7-2497-remediation-prompt-v1.00W.md",
       "id": "crm7-2497",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4644,7 +4644,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2495.md",
+      "prompt": "prompts/20260908-crm7-2495-remediation-prompt-v1.00W.md",
       "id": "crm7-2495",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4674,7 +4674,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2493.md",
+      "prompt": "prompts/20260908-crm7-2493-remediation-prompt-v1.00W.md",
       "id": "crm7-2493",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4697,7 +4697,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2491.md",
+      "prompt": "prompts/20260908-crm7-2491-remediation-prompt-v1.00W.md",
       "id": "crm7-2491",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4734,7 +4734,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2489.md",
+      "prompt": "prompts/20260908-crm7-2489-remediation-prompt-v1.00W.md",
       "id": "crm7-2489",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4770,7 +4770,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2488.md",
+      "prompt": "prompts/20260908-crm7-2488-remediation-prompt-v1.00W.md",
       "id": "crm7-2488",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4801,7 +4801,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2484.md",
+      "prompt": "prompts/20260908-crm7-2484-remediation-prompt-v1.00W.md",
       "id": "crm7-2484",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4837,7 +4837,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2483.md",
+      "prompt": "prompts/20260908-crm7-2483-remediation-prompt-v1.00W.md",
       "id": "crm7-2483",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4867,7 +4867,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2482.md",
+      "prompt": "prompts/20260908-crm7-2482-remediation-prompt-v1.00W.md",
       "id": "crm7-2482",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4897,7 +4897,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2481.md",
+      "prompt": "prompts/20260908-crm7-2481-remediation-prompt-v1.00W.md",
       "id": "crm7-2481",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4928,7 +4928,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2480.md",
+      "prompt": "prompts/20260908-crm7-2480-remediation-prompt-v1.00W.md",
       "id": "crm7-2480",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4958,7 +4958,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2479.md",
+      "prompt": "prompts/20260908-crm7-2479-remediation-prompt-v1.00W.md",
       "id": "crm7-2479",
       "status": "pending",
       "queue_reconciliation": {}
@@ -4995,7 +4995,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2478.md",
+      "prompt": "prompts/20260908-crm7-2478-remediation-prompt-v1.00W.md",
       "id": "crm7-2478",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5025,7 +5025,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2477.md",
+      "prompt": "prompts/20260908-crm7-2477-remediation-prompt-v1.00W.md",
       "id": "crm7-2477",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5055,7 +5055,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2476.md",
+      "prompt": "prompts/20260908-crm7-2476-remediation-prompt-v1.00W.md",
       "id": "crm7-2476",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5085,7 +5085,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2475.md",
+      "prompt": "prompts/20260908-crm7-2475-remediation-prompt-v1.00W.md",
       "id": "crm7-2475",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5122,7 +5122,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2474.md",
+      "prompt": "prompts/20260908-crm7-2474-remediation-prompt-v1.00W.md",
       "id": "crm7-2474",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5152,7 +5152,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2473.md",
+      "prompt": "prompts/20260908-crm7-2473-remediation-prompt-v1.00W.md",
       "id": "crm7-2473",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5183,7 +5183,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2472.md",
+      "prompt": "prompts/20260908-crm7-2472-remediation-prompt-v1.00W.md",
       "id": "crm7-2472",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5213,7 +5213,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2471.md",
+      "prompt": "prompts/20260908-crm7-2471-remediation-prompt-v1.00W.md",
       "id": "crm7-2471",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5236,7 +5236,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2469.md",
+      "prompt": "prompts/20260908-crm7-2469-remediation-prompt-v1.00W.md",
       "id": "crm7-2469",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5260,7 +5260,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2465.md",
+      "prompt": "prompts/20260908-crm7-2465-remediation-prompt-v1.00W.md",
       "id": "crm7-2465",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5283,7 +5283,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2462.md",
+      "prompt": "prompts/20260908-crm7-2462-remediation-prompt-v1.00W.md",
       "id": "crm7-2462",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5307,7 +5307,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2461.md",
+      "prompt": "prompts/20260908-crm7-2461-remediation-prompt-v1.00W.md",
       "id": "crm7-2461",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5330,7 +5330,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2460.md",
+      "prompt": "prompts/20260908-crm7-2460-remediation-prompt-v1.00W.md",
       "id": "crm7-2460",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5353,7 +5353,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2459.md",
+      "prompt": "prompts/20260908-crm7-2459-remediation-prompt-v1.00W.md",
       "id": "crm7-2459",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5376,7 +5376,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2458.md",
+      "prompt": "prompts/20260908-crm7-2458-remediation-prompt-v1.00W.md",
       "id": "crm7-2458",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5399,7 +5399,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2457.md",
+      "prompt": "prompts/20260908-crm7-2457-remediation-prompt-v1.00W.md",
       "id": "crm7-2457",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5422,7 +5422,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2456.md",
+      "prompt": "prompts/20260908-crm7-2456-remediation-prompt-v1.00W.md",
       "id": "crm7-2456",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5445,7 +5445,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2454.md",
+      "prompt": "prompts/20260908-crm7-2454-remediation-prompt-v1.00W.md",
       "id": "crm7-2454",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5469,7 +5469,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2451.md",
+      "prompt": "prompts/20260908-crm7-2451-remediation-prompt-v1.00W.md",
       "id": "crm7-2451",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5493,7 +5493,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2450.md",
+      "prompt": "prompts/20260908-crm7-2450-remediation-prompt-v1.00W.md",
       "id": "crm7-2450",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5517,7 +5517,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-2446.md",
+      "prompt": "prompts/20260908-crm7-2446-remediation-prompt-v1.00W.md",
       "id": "crm7-2446",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5541,7 +5541,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2445.md",
+      "prompt": "prompts/20260908-crm7-2445-remediation-prompt-v1.00W.md",
       "id": "crm7-2445",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5564,7 +5564,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2441.md",
+      "prompt": "prompts/20260908-crm7-2441-remediation-prompt-v1.00W.md",
       "id": "crm7-2441",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5587,7 +5587,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2440.md",
+      "prompt": "prompts/20260908-crm7-2440-remediation-prompt-v1.00W.md",
       "id": "crm7-2440",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5611,7 +5611,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2435.md",
+      "prompt": "prompts/20260908-crm7-2435-remediation-prompt-v1.00W.md",
       "id": "crm7-2435",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5634,7 +5634,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2429.md",
+      "prompt": "prompts/20260908-crm7-2429-remediation-prompt-v1.00W.md",
       "id": "crm7-2429",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5657,7 +5657,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2428.md",
+      "prompt": "prompts/20260908-crm7-2428-remediation-prompt-v1.00W.md",
       "id": "crm7-2428",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5680,7 +5680,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2427.md",
+      "prompt": "prompts/20260908-crm7-2427-remediation-prompt-v1.00W.md",
       "id": "crm7-2427",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5704,7 +5704,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2424.md",
+      "prompt": "prompts/20260908-crm7-2424-remediation-prompt-v1.00W.md",
       "id": "crm7-2424",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5728,7 +5728,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2423.md",
+      "prompt": "prompts/20260908-crm7-2423-remediation-prompt-v1.00W.md",
       "id": "crm7-2423",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5752,7 +5752,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2302.md",
+      "prompt": "prompts/20260908-crm7-2302-remediation-prompt-v1.00W.md",
       "id": "crm7-2302",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5782,7 +5782,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2113.md",
+      "prompt": "prompts/20260908-crm7-2113-remediation-prompt-v1.00W.md",
       "id": "crm7-2113",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5806,7 +5806,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2108.md",
+      "prompt": "prompts/20260908-crm7-2108-remediation-prompt-v1.00W.md",
       "id": "crm7-2108",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5837,7 +5837,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2107.md",
+      "prompt": "prompts/20260908-crm7-2107-remediation-prompt-v1.00W.md",
       "id": "crm7-2107",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5860,7 +5860,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2086.md",
+      "prompt": "prompts/20260908-crm7-2086-remediation-prompt-v1.00W.md",
       "id": "crm7-2086",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5884,7 +5884,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2084.md",
+      "prompt": "prompts/20260908-crm7-2084-remediation-prompt-v1.00W.md",
       "id": "crm7-2084",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5921,7 +5921,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2062.md",
+      "prompt": "prompts/20260908-crm7-2062-remediation-prompt-v1.00W.md",
       "id": "crm7-2062",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5957,7 +5957,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2061.md",
+      "prompt": "prompts/20260908-crm7-2061-remediation-prompt-v1.00W.md",
       "id": "crm7-2061",
       "status": "pending",
       "queue_reconciliation": {}
@@ -5994,7 +5994,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2059.md",
+      "prompt": "prompts/20260908-crm7-2059-remediation-prompt-v1.00W.md",
       "id": "crm7-2059",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6037,7 +6037,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2057.md",
+      "prompt": "prompts/20260908-crm7-2057-remediation-prompt-v1.00W.md",
       "id": "crm7-2057",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6073,7 +6073,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-2055.md",
+      "prompt": "prompts/20260908-crm7-2055-remediation-prompt-v1.00W.md",
       "id": "crm7-2055",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6110,7 +6110,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-2054.md",
+      "prompt": "prompts/20260908-crm7-2054-remediation-prompt-v1.00W.md",
       "id": "crm7-2054",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6159,7 +6159,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1784.md",
+      "prompt": "prompts/20260908-crm7-1784-remediation-prompt-v1.00W.md",
       "id": "crm7-1784",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6208,7 +6208,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1778.md",
+      "prompt": "prompts/20260908-crm7-1778-remediation-prompt-v1.00W.md",
       "id": "crm7-1778",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6244,7 +6244,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-1721.md",
+      "prompt": "prompts/20260908-crm7-1721-remediation-prompt-v1.00W.md",
       "id": "crm7-1721",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6281,7 +6281,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1705.md",
+      "prompt": "prompts/20260908-crm7-1705-remediation-prompt-v1.00W.md",
       "id": "crm7-1705",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6318,7 +6318,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1702.md",
+      "prompt": "prompts/20260908-crm7-1702-remediation-prompt-v1.00W.md",
       "id": "crm7-1702",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6360,7 +6360,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-1700.md",
+      "prompt": "prompts/20260908-crm7-1700-remediation-prompt-v1.00W.md",
       "id": "crm7-1700",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6403,7 +6403,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1698.md",
+      "prompt": "prompts/20260908-crm7-1698-remediation-prompt-v1.00W.md",
       "id": "crm7-1698",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6439,7 +6439,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1696.md",
+      "prompt": "prompts/20260908-crm7-1696-remediation-prompt-v1.00W.md",
       "id": "crm7-1696",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6476,7 +6476,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1694.md",
+      "prompt": "prompts/20260908-crm7-1694-remediation-prompt-v1.00W.md",
       "id": "crm7-1694",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6513,7 +6513,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1693.md",
+      "prompt": "prompts/20260908-crm7-1693-remediation-prompt-v1.00W.md",
       "id": "crm7-1693",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6549,7 +6549,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1692.md",
+      "prompt": "prompts/20260908-crm7-1692-remediation-prompt-v1.00W.md",
       "id": "crm7-1692",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6586,7 +6586,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1691.md",
+      "prompt": "prompts/20260908-crm7-1691-remediation-prompt-v1.00W.md",
       "id": "crm7-1691",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6622,7 +6622,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1690.md",
+      "prompt": "prompts/20260908-crm7-1690-remediation-prompt-v1.00W.md",
       "id": "crm7-1690",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6676,7 +6676,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1687.md",
+      "prompt": "prompts/20260908-crm7-1687-remediation-prompt-v1.00W.md",
       "id": "crm7-1687",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6725,7 +6725,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1686.md",
+      "prompt": "prompts/20260908-crm7-1686-remediation-prompt-v1.00W.md",
       "id": "crm7-1686",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6780,7 +6780,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1685.md",
+      "prompt": "prompts/20260908-crm7-1685-remediation-prompt-v1.00W.md",
       "id": "crm7-1685",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6817,7 +6817,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1684.md",
+      "prompt": "prompts/20260908-crm7-1684-remediation-prompt-v1.00W.md",
       "id": "crm7-1684",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6854,7 +6854,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1681.md",
+      "prompt": "prompts/20260908-crm7-1681-remediation-prompt-v1.00W.md",
       "id": "crm7-1681",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6890,7 +6890,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-1646.md",
+      "prompt": "prompts/20260908-crm7-1646-remediation-prompt-v1.00W.md",
       "id": "crm7-1646",
       "status": "pending",
       "queue_reconciliation": {}
@@ -6933,13 +6933,13 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1645.md",
+      "prompt": "prompts/20260908-crm7-1645-remediation-prompt-v1.00W.md",
       "id": "crm7-1645",
       "status": "pending",
       "queue_reconciliation": {}
     },
     {
-      "body": "**Source:** operator full-spectrum review, 2026-08-11 (Tier 5.1).\n\n## Finding\n\n**352 `localStorage` references across 79 files**, including auth tokens and offline caches.\n\n## The part that makes this more than tidiness\n\n`AUTH_CANONICAL.md` and `CLAUDE.md` carry a hard forbidden-pattern list for auth storage: no `cookieStorage`, no `domain=.crm7.app`, no `storageKey: 'business_suite_auth'`. Today that rule is enforced by **review and memory**. With 352 scattered call sites, nothing mechanically prevents the next one.\n\n**Centralising behind one typed module makes the auth rules lintable** \u2014 a single chokepoint can be asserted in a contract test, and a bare `localStorage.setItem` outside it becomes a lint error. That converts a doctrine into a gate, which is the same move that worked for colours and a11y.\n\n## Also solved by the same change\n\n- **Namespacing** \u2014 no collisions between features.\n- **Quota handling** \u2014 `localStorage` throws on quota exceeded and in Safari private mode. With 352 unguarded sites, at least some will be unhandled; that is an unhandled exception in a render path.\n- **Schema versioning for offline caches** \u2014 a cache written by an old build and read by a new one is a shape mismatch with no migration story. This codebase has just been bitten twice by a *type* that disagreed with its data (crm7#1595); a persisted cache is the same hazard with a longer memory.\n- **SSR/test safety** \u2014 one place to guard `typeof window === 'undefined'`.\n\n## Approach\n\n1. Inventory the 352 by purpose: auth, user preference, offline cache, UI state, one-off.\n2. Write the typed module with namespacing, quota handling, JSON safety, and a version tag per cache key.\n3. Migrate by category, auth first \u2014 it is the smallest group and the highest stakes.\n4. **Then add the lint rule**, and only then. A rule added before the migration is red on day one and gets switched off by day two.\n5. Keys already in use must be read at their existing names or users lose state on deploy. Plan the read-old/write-new window explicitly.\n\n## Note\n`crm7-has-completed-onboarding` is one of these keys and is load-bearing for e2e (seeded via `addInitScript` to suppress the onboarding wizard). Renaming keys will break test harnesses that seed them \u2014 grep the e2e suite before changing any name.\n\n## Mandatory before merge (FF-SELF-VALIDATION-20260507)\n- **Validation loop**: \u00a79.1 output-equivalence\n- **Equivalence target**: existing users keep their stored state across the deploy (read-old/write-new proven with a fixture), and a bare `localStorage` call outside the module fails lint\n- **Cross red-team**: copilot verifies the auth forbidden-pattern list is now mechanically enforced, not just documented\n- **Skills to load**: auth-supabase, code-quality-enforcement, web-zustand\n- **Self-report on divergence**: yes\n\n**Acceptance criteria:** one typed storage module, auth keys migrated first, quota and SSR guarded, no state lost on deploy, and the forbidden-pattern rules enforced by lint rather than by memory.\n",
+      "body": "**Source:** operator full-spectrum review, 2026-08-11 (Tier 5.1).\n\n## Finding\n\n**352 `localStorage` references across 79 files**, including auth tokens and offline caches.\n\n## The part that makes this more than tidiness\n\n`AUTH_CANONICAL.md` and `CLAUDE.md` carry a hard forbidden-pattern list for auth storage: no `cookie-backed storage`, no `the former cross-app cookie domain`, no `storageKey: 'legacy shared auth storage key'`. Today that rule is enforced by **review and memory**. With 352 scattered call sites, nothing mechanically prevents the next one.\n\n**Centralising behind one typed module makes the auth rules lintable** \u2014 a single chokepoint can be asserted in a contract test, and a bare `localStorage.setItem` outside it becomes a lint error. That converts a doctrine into a gate, which is the same move that worked for colours and a11y.\n\n## Also solved by the same change\n\n- **Namespacing** \u2014 no collisions between features.\n- **Quota handling** \u2014 `localStorage` throws on quota exceeded and in Safari private mode. With 352 unguarded sites, at least some will be unhandled; that is an unhandled exception in a render path.\n- **Schema versioning for offline caches** \u2014 a cache written by an old build and read by a new one is a shape mismatch with no migration story. This codebase has just been bitten twice by a *type* that disagreed with its data (crm7#1595); a persisted cache is the same hazard with a longer memory.\n- **SSR/test safety** \u2014 one place to guard `typeof window === 'undefined'`.\n\n## Approach\n\n1. Inventory the 352 by purpose: auth, user preference, offline cache, UI state, one-off.\n2. Write the typed module with namespacing, quota handling, JSON safety, and a version tag per cache key.\n3. Migrate by category, auth first \u2014 it is the smallest group and the highest stakes.\n4. **Then add the lint rule**, and only then. A rule added before the migration is red on day one and gets switched off by day two.\n5. Keys already in use must be read at their existing names or users lose state on deploy. Plan the read-old/write-new window explicitly.\n\n## Note\n`crm7-has-completed-onboarding` is one of these keys and is load-bearing for e2e (seeded via `addInitScript` to suppress the onboarding wizard). Renaming keys will break test harnesses that seed them \u2014 grep the e2e suite before changing any name.\n\n## Mandatory before merge (FF-SELF-VALIDATION-20260507)\n- **Validation loop**: \u00a79.1 output-equivalence\n- **Equivalence target**: existing users keep their stored state across the deploy (read-old/write-new proven with a fixture), and a bare `localStorage` call outside the module fails lint\n- **Cross red-team**: copilot verifies the auth forbidden-pattern list is now mechanically enforced, not just documented\n- **Skills to load**: auth-supabase, code-quality-enforcement, web-zustand\n- **Self-report on divergence**: yes\n\n**Acceptance criteria:** one typed storage module, auth keys migrated first, quota and SSR guarded, no state lost on deploy, and the forbidden-pattern rules enforced by lint rather than by memory.\n",
       "labels": [
         {
           "id": "LA_kwDOPheuO88AAAACe6Irrw",
@@ -6981,7 +6981,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-1644.md",
+      "prompt": "prompts/20260908-crm7-1644-remediation-prompt-v1.00W.md",
       "id": "crm7-1644",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7024,7 +7024,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1643.md",
+      "prompt": "prompts/20260908-crm7-1643-remediation-prompt-v1.00W.md",
       "id": "crm7-1643",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7072,7 +7072,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1642.md",
+      "prompt": "prompts/20260908-crm7-1642-remediation-prompt-v1.00W.md",
       "id": "crm7-1642",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7120,7 +7120,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1641.md",
+      "prompt": "prompts/20260908-crm7-1641-remediation-prompt-v1.00W.md",
       "id": "crm7-1641",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7169,7 +7169,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1635.md",
+      "prompt": "prompts/20260908-crm7-1635-remediation-prompt-v1.00W.md",
       "id": "crm7-1635",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7205,7 +7205,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1629.md",
+      "prompt": "prompts/20260908-crm7-1629-remediation-prompt-v1.00W.md",
       "id": "crm7-1629",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7248,7 +7248,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1626.md",
+      "prompt": "prompts/20260908-crm7-1626-remediation-prompt-v1.00W.md",
       "id": "crm7-1626",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7296,7 +7296,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-1625.md",
+      "prompt": "prompts/20260908-crm7-1625-remediation-prompt-v1.00W.md",
       "id": "crm7-1625",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7351,7 +7351,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1624.md",
+      "prompt": "prompts/20260908-crm7-1624-remediation-prompt-v1.00W.md",
       "id": "crm7-1624",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7393,7 +7393,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1621.md",
+      "prompt": "prompts/20260908-crm7-1621-remediation-prompt-v1.00W.md",
       "id": "crm7-1621",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7448,7 +7448,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1619.md",
+      "prompt": "prompts/20260908-crm7-1619-remediation-prompt-v1.00W.md",
       "id": "crm7-1619",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7503,7 +7503,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1618.md",
+      "prompt": "prompts/20260908-crm7-1618-remediation-prompt-v1.00W.md",
       "id": "crm7-1618",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7552,7 +7552,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1613.md",
+      "prompt": "prompts/20260908-crm7-1613-remediation-prompt-v1.00W.md",
       "id": "crm7-1613",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7583,7 +7583,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1605.md",
+      "prompt": "prompts/20260908-crm7-1605-remediation-prompt-v1.00W.md",
       "id": "crm7-1605",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7613,7 +7613,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-1525.md",
+      "prompt": "prompts/20260908-crm7-1525-remediation-prompt-v1.00W.md",
       "id": "crm7-1525",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7643,7 +7643,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-1506.md",
+      "prompt": "prompts/20260908-crm7-1506-remediation-prompt-v1.00W.md",
       "id": "crm7-1506",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7679,7 +7679,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1477.md",
+      "prompt": "prompts/20260908-crm7-1477-remediation-prompt-v1.00W.md",
       "id": "crm7-1477",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7702,7 +7702,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1475.md",
+      "prompt": "prompts/20260908-crm7-1475-remediation-prompt-v1.00W.md",
       "id": "crm7-1475",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7725,7 +7725,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1444.md",
+      "prompt": "prompts/20260908-crm7-1444-remediation-prompt-v1.00W.md",
       "id": "crm7-1444",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7755,7 +7755,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1403.md",
+      "prompt": "prompts/20260908-crm7-1403-remediation-prompt-v1.00W.md",
       "id": "crm7-1403",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7779,7 +7779,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1402.md",
+      "prompt": "prompts/20260908-crm7-1402-remediation-prompt-v1.00W.md",
       "id": "crm7-1402",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7809,7 +7809,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1385.md",
+      "prompt": "prompts/20260908-crm7-1385-remediation-prompt-v1.00W.md",
       "id": "crm7-1385",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7840,7 +7840,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1281.md",
+      "prompt": "prompts/20260908-crm7-1281-remediation-prompt-v1.00W.md",
       "id": "crm7-1281",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7877,7 +7877,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1272.md",
+      "prompt": "prompts/20260908-crm7-1272-remediation-prompt-v1.00W.md",
       "id": "crm7-1272",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7920,7 +7920,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1271.md",
+      "prompt": "prompts/20260908-crm7-1271-remediation-prompt-v1.00W.md",
       "id": "crm7-1271",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7943,7 +7943,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1270.md",
+      "prompt": "prompts/20260908-crm7-1270-remediation-prompt-v1.00W.md",
       "id": "crm7-1270",
       "status": "pending",
       "queue_reconciliation": {}
@@ -7967,7 +7967,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1173.md",
+      "prompt": "prompts/20260908-crm7-1173-remediation-prompt-v1.00W.md",
       "id": "crm7-1173",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8016,7 +8016,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1130.md",
+      "prompt": "prompts/20260908-crm7-1130-remediation-prompt-v1.00W.md",
       "id": "crm7-1130",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8065,7 +8065,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-1128.md",
+      "prompt": "prompts/20260908-crm7-1128-remediation-prompt-v1.00W.md",
       "id": "crm7-1128",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8107,7 +8107,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-1127.md",
+      "prompt": "prompts/20260908-crm7-1127-remediation-prompt-v1.00W.md",
       "id": "crm7-1127",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8144,7 +8144,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-734.md",
+      "prompt": "prompts/20260908-crm7-734-remediation-prompt-v1.00W.md",
       "id": "crm7-734",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8181,7 +8181,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-733.md",
+      "prompt": "prompts/20260908-crm7-733-remediation-prompt-v1.00W.md",
       "id": "crm7-733",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8217,7 +8217,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-732.md",
+      "prompt": "prompts/20260908-crm7-732-remediation-prompt-v1.00W.md",
       "id": "crm7-732",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8253,7 +8253,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-731.md",
+      "prompt": "prompts/20260908-crm7-731-remediation-prompt-v1.00W.md",
       "id": "crm7-731",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8289,7 +8289,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-730.md",
+      "prompt": "prompts/20260908-crm7-730-remediation-prompt-v1.00W.md",
       "id": "crm7-730",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8325,7 +8325,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-729.md",
+      "prompt": "prompts/20260908-crm7-729-remediation-prompt-v1.00W.md",
       "id": "crm7-729",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8361,7 +8361,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-728.md",
+      "prompt": "prompts/20260908-crm7-728-remediation-prompt-v1.00W.md",
       "id": "crm7-728",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8397,7 +8397,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-725.md",
+      "prompt": "prompts/20260908-crm7-725-remediation-prompt-v1.00W.md",
       "id": "crm7-725",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8439,7 +8439,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-723.md",
+      "prompt": "prompts/20260908-crm7-723-remediation-prompt-v1.00W.md",
       "id": "crm7-723",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8494,7 +8494,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-678.md",
+      "prompt": "prompts/20260908-crm7-678-remediation-prompt-v1.00W.md",
       "id": "crm7-678",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8548,7 +8548,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-660.md",
+      "prompt": "prompts/20260908-crm7-660-remediation-prompt-v1.00W.md",
       "id": "crm7-660",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8597,7 +8597,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-659.md",
+      "prompt": "prompts/20260908-crm7-659-remediation-prompt-v1.00W.md",
       "id": "crm7-659",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8652,7 +8652,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-619.md",
+      "prompt": "prompts/20260908-crm7-619-remediation-prompt-v1.00W.md",
       "id": "crm7-619",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8683,7 +8683,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-477.md",
+      "prompt": "prompts/20260908-crm7-477-remediation-prompt-v1.00W.md",
       "id": "crm7-477",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8725,7 +8725,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/crm7-469.md",
+      "prompt": "prompts/20260908-crm7-469-remediation-prompt-v1.00W.md",
       "id": "crm7-469",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8749,7 +8749,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/crm7-466.md",
+      "prompt": "prompts/20260908-crm7-466-remediation-prompt-v1.00W.md",
       "id": "crm7-466",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8772,7 +8772,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-465.md",
+      "prompt": "prompts/20260908-crm7-465-remediation-prompt-v1.00W.md",
       "id": "crm7-465",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8796,7 +8796,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-464.md",
+      "prompt": "prompts/20260908-crm7-464-remediation-prompt-v1.00W.md",
       "id": "crm7-464",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8820,7 +8820,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/crm7-459.md",
+      "prompt": "prompts/20260908-crm7-459-remediation-prompt-v1.00W.md",
       "id": "crm7-459",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8856,7 +8856,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/crm7-341.md",
+      "prompt": "prompts/20260908-crm7-341-remediation-prompt-v1.00W.md",
       "id": "crm7-341",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8879,7 +8879,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/business-suite-unified-1196.md",
+      "prompt": "prompts/20260908-business-suite-unified-1196-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1196",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8902,7 +8902,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/business-suite-unified-1193.md",
+      "prompt": "prompts/20260908-business-suite-unified-1193-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1193",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8926,7 +8926,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1182.md",
+      "prompt": "prompts/20260908-business-suite-unified-1182-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1182",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8949,7 +8949,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1180.md",
+      "prompt": "prompts/20260908-business-suite-unified-1180-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1180",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8972,7 +8972,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/business-suite-unified-1179.md",
+      "prompt": "prompts/20260908-business-suite-unified-1179-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1179",
       "status": "pending",
       "queue_reconciliation": {}
@@ -8996,7 +8996,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1178.md",
+      "prompt": "prompts/20260908-business-suite-unified-1178-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1178",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9019,7 +9019,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1177.md",
+      "prompt": "prompts/20260908-business-suite-unified-1177-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1177",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9042,7 +9042,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1176.md",
+      "prompt": "prompts/20260908-business-suite-unified-1176-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1176",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9066,7 +9066,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1174.md",
+      "prompt": "prompts/20260908-business-suite-unified-1174-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1174",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9097,7 +9097,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1173.md",
+      "prompt": "prompts/20260908-business-suite-unified-1173-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1173",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9134,7 +9134,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1167.md",
+      "prompt": "prompts/20260908-business-suite-unified-1167-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1167",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9177,7 +9177,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1165.md",
+      "prompt": "prompts/20260908-business-suite-unified-1165-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1165",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9213,7 +9213,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1164.md",
+      "prompt": "prompts/20260908-business-suite-unified-1164-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1164",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9250,7 +9250,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1163.md",
+      "prompt": "prompts/20260908-business-suite-unified-1163-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1163",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9281,7 +9281,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1162.md",
+      "prompt": "prompts/20260908-business-suite-unified-1162-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1162",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9317,7 +9317,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1161.md",
+      "prompt": "prompts/20260908-business-suite-unified-1161-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1161",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9353,7 +9353,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1160.md",
+      "prompt": "prompts/20260908-business-suite-unified-1160-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1160",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9389,7 +9389,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1158.md",
+      "prompt": "prompts/20260908-business-suite-unified-1158-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1158",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9419,7 +9419,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1157.md",
+      "prompt": "prompts/20260908-business-suite-unified-1157-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1157",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9449,7 +9449,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1156.md",
+      "prompt": "prompts/20260908-business-suite-unified-1156-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1156",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9480,7 +9480,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1112.md",
+      "prompt": "prompts/20260908-business-suite-unified-1112-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1112",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9504,7 +9504,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-1107.md",
+      "prompt": "prompts/20260908-business-suite-unified-1107-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-1107",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9527,7 +9527,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-916.md",
+      "prompt": "prompts/20260908-business-suite-unified-916-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-916",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9564,7 +9564,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-892.md",
+      "prompt": "prompts/20260908-business-suite-unified-892-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-892",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9601,7 +9601,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-891.md",
+      "prompt": "prompts/20260908-business-suite-unified-891-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-891",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9638,7 +9638,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-829.md",
+      "prompt": "prompts/20260908-business-suite-unified-829-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-829",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9687,7 +9687,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-712.md",
+      "prompt": "prompts/20260908-business-suite-unified-712-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-712",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9729,7 +9729,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-711.md",
+      "prompt": "prompts/20260908-business-suite-unified-711-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-711",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9778,7 +9778,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/business-suite-unified-707.md",
+      "prompt": "prompts/20260908-business-suite-unified-707-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-707",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9815,7 +9815,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-704.md",
+      "prompt": "prompts/20260908-business-suite-unified-704-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-704",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9851,7 +9851,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/business-suite-unified-675.md",
+      "prompt": "prompts/20260908-business-suite-unified-675-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-675",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9887,7 +9887,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-674.md",
+      "prompt": "prompts/20260908-business-suite-unified-674-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-674",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9923,7 +9923,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-667.md",
+      "prompt": "prompts/20260908-business-suite-unified-667-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-667",
       "status": "pending",
       "queue_reconciliation": {}
@@ -9966,7 +9966,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/business-suite-unified-666.md",
+      "prompt": "prompts/20260908-business-suite-unified-666-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-666",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10002,7 +10002,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/business-suite-unified-303.md",
+      "prompt": "prompts/20260908-business-suite-unified-303-remediation-prompt-v1.00W.md",
       "id": "business-suite-unified-303",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10026,7 +10026,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/conduit-698.md",
+      "prompt": "prompts/20260908-conduit-698-remediation-prompt-v1.00W.md",
       "id": "conduit-698",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10049,7 +10049,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/conduit-689.md",
+      "prompt": "prompts/20260908-conduit-689-remediation-prompt-v1.00W.md",
       "id": "conduit-689",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10092,7 +10092,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/conduit-577.md",
+      "prompt": "prompts/20260908-conduit-577-remediation-prompt-v1.00W.md",
       "id": "conduit-577",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10141,7 +10141,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/conduit-507.md",
+      "prompt": "prompts/20260908-conduit-507-remediation-prompt-v1.00W.md",
       "id": "conduit-507",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10177,7 +10177,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/conduit-435.md",
+      "prompt": "prompts/20260908-conduit-435-remediation-prompt-v1.00W.md",
       "id": "conduit-435",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10213,7 +10213,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/conduit-425.md",
+      "prompt": "prompts/20260908-conduit-425-remediation-prompt-v1.00W.md",
       "id": "conduit-425",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10243,7 +10243,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/conduit-405.md",
+      "prompt": "prompts/20260908-conduit-405-remediation-prompt-v1.00W.md",
       "id": "conduit-405",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10315,7 +10315,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/conduit-223.md",
+      "prompt": "prompts/20260908-conduit-223-remediation-prompt-v1.00W.md",
       "id": "conduit-223",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10346,7 +10346,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/braden-602.md",
+      "prompt": "prompts/20260908-braden-602-remediation-prompt-v1.00W.md",
       "id": "braden-602",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10370,7 +10370,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/braden-576.md",
+      "prompt": "prompts/20260908-braden-576-remediation-prompt-v1.00W.md",
       "id": "braden-576",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10401,7 +10401,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/braden-572.md",
+      "prompt": "prompts/20260908-braden-572-remediation-prompt-v1.00W.md",
       "id": "braden-572",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10438,7 +10438,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/braden-371.md",
+      "prompt": "prompts/20260908-braden-371-remediation-prompt-v1.00W.md",
       "id": "braden-371",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10474,7 +10474,7 @@
         "bsuite-platform",
         "bsuite-auth-guardian"
       ],
-      "prompt": "prompts/braden-358.md",
+      "prompt": "prompts/20260908-braden-358-remediation-prompt-v1.00W.md",
       "id": "braden-358",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10505,7 +10505,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/braden-266.md",
+      "prompt": "prompts/20260908-braden-266-remediation-prompt-v1.00W.md",
       "id": "braden-266",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10529,7 +10529,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-322.md",
+      "prompt": "prompts/20260908-r80.4-322-remediation-prompt-v1.00W.md",
       "id": "R80.4-322",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10552,7 +10552,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-321.md",
+      "prompt": "prompts/20260908-r80.4-321-remediation-prompt-v1.00W.md",
       "id": "R80.4-321",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10576,7 +10576,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-320.md",
+      "prompt": "prompts/20260908-r80.4-320-remediation-prompt-v1.00W.md",
       "id": "R80.4-320",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10606,7 +10606,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-316.md",
+      "prompt": "prompts/20260908-r80.4-316-remediation-prompt-v1.00W.md",
       "id": "R80.4-316",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10637,7 +10637,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-232.md",
+      "prompt": "prompts/20260908-r80.4-232-remediation-prompt-v1.00W.md",
       "id": "R80.4-232",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10668,7 +10668,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-231.md",
+      "prompt": "prompts/20260908-r80.4-231-remediation-prompt-v1.00W.md",
       "id": "R80.4-231",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10698,7 +10698,7 @@
         "bsuite-auth-guardian",
         "security-audit"
       ],
-      "prompt": "prompts/R80.4-230.md",
+      "prompt": "prompts/20260908-r80.4-230-remediation-prompt-v1.00W.md",
       "id": "R80.4-230",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10735,7 +10735,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-229.md",
+      "prompt": "prompts/20260908-r80.4-229-remediation-prompt-v1.00W.md",
       "id": "R80.4-229",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10765,7 +10765,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-202.md",
+      "prompt": "prompts/20260908-r80.4-202-remediation-prompt-v1.00W.md",
       "id": "R80.4-202",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10808,7 +10808,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-57.md",
+      "prompt": "prompts/20260908-r80.4-57-remediation-prompt-v1.00W.md",
       "id": "R80.4-57",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10845,7 +10845,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-46.md",
+      "prompt": "prompts/20260908-r80.4-46-remediation-prompt-v1.00W.md",
       "id": "R80.4-46",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10875,7 +10875,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-9.md",
+      "prompt": "prompts/20260908-r80.4-9-remediation-prompt-v1.00W.md",
       "id": "R80.4-9",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10906,7 +10906,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/R80.4-5.md",
+      "prompt": "prompts/20260908-r80.4-5-remediation-prompt-v1.00W.md",
       "id": "R80.4-5",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10930,7 +10930,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/throughput-488.md",
+      "prompt": "prompts/20260908-throughput-488-remediation-prompt-v1.00W.md",
       "id": "throughput-488",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10953,7 +10953,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/throughput-486.md",
+      "prompt": "prompts/20260908-throughput-486-remediation-prompt-v1.00W.md",
       "id": "throughput-486",
       "status": "pending",
       "queue_reconciliation": {}
@@ -10977,7 +10977,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/throughput-485.md",
+      "prompt": "prompts/20260908-throughput-485-remediation-prompt-v1.00W.md",
       "id": "throughput-485",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11000,7 +11000,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/throughput-484.md",
+      "prompt": "prompts/20260908-throughput-484-remediation-prompt-v1.00W.md",
       "id": "throughput-484",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11023,7 +11023,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/throughput-483.md",
+      "prompt": "prompts/20260908-throughput-483-remediation-prompt-v1.00W.md",
       "id": "throughput-483",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11047,7 +11047,7 @@
         "bsuite-design-sheriff",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/throughput-479.md",
+      "prompt": "prompts/20260908-throughput-479-remediation-prompt-v1.00W.md",
       "id": "throughput-479",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11070,7 +11070,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/throughput-478.md",
+      "prompt": "prompts/20260908-throughput-478-remediation-prompt-v1.00W.md",
       "id": "throughput-478",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11101,7 +11101,7 @@
         "bsuite-platform",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/throughput-354.md",
+      "prompt": "prompts/20260908-throughput-354-remediation-prompt-v1.00W.md",
       "id": "throughput-354",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11132,7 +11132,7 @@
         "bsuite-platform",
         "completion-enforcer"
       ],
-      "prompt": "prompts/throughput-291.md",
+      "prompt": "prompts/20260908-throughput-291-remediation-prompt-v1.00W.md",
       "id": "throughput-291",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11156,7 +11156,7 @@
         "forms-and-validation",
         "bsuite-user-advocate"
       ],
-      "prompt": "prompts/bsuite-3204.md",
+      "prompt": "prompts/20260908-bsuite-3204-remediation-prompt-v1.00W.md",
       "id": "bsuite-3204",
       "status": "pending",
       "queue_reconciliation": {},
@@ -11237,7 +11237,7 @@
         "bsuite-user-advocate",
         "bsuite-plans-keeper"
       ],
-      "prompt": "prompts/braden-607.md",
+      "prompt": "prompts/20260908-braden-607-remediation-prompt-v1.00W.md",
       "id": "braden-607",
       "status": "in_progress",
       "queue_reconciliation": {}
@@ -11269,7 +11269,7 @@
         "bsuite-user-advocate",
         "bsuite-plans-keeper"
       ],
-      "prompt": "prompts/braden-608.md",
+      "prompt": "prompts/20260908-braden-608-remediation-prompt-v1.00W.md",
       "id": "braden-608",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11301,13 +11301,13 @@
         "bsuite-user-advocate",
         "bsuite-plans-keeper"
       ],
-      "prompt": "prompts/braden-609.md",
+      "prompt": "prompts/20260908-braden-609-remediation-prompt-v1.00W.md",
       "id": "braden-609",
       "status": "pending",
       "queue_reconciliation": {}
     },
     {
-      "body": "## Operator requirement \u2014 8 September 2026\n\nBraden says yesterday\u2019s Claude Code task in VSCode covered Braden\u2019s website and every other BSuite app landing page having consistent interlinked navigation, reciprocal backlinks and the feeling of browsing one website. This is an explicit current requirement regardless of whether the historical task can be recovered. Recover and reconcile that task/PR before implementing; preserve existing work, do not declare it delivered without evidence.\n\n## Existing work to reuse, and why it is not completion evidence\n\npackages/nav-core/src/apps.ts contains shared six-app metadata and production URL mapping. braden/src/components/Navigation.tsx already mounts AppSwitcher; appList.ts consumes shared metadata. Public footer/header implementations still differ between braden, BSU and crm7 in the checked source. Braden Footer.tsx contains button-driven app links with a legacy /apps/r80-3 path; verify supported alias behavior before changing it. BSU MarketingHome has sibling links, and its marketingFooterCrossAppLinks.test.tsx checks signed-out versus OAuth signed-in behavior, but the domain predicate only enumerates crm/r8/conduit. None of this proves complete six-site reciprocal public navigation.\n\n## Acceptance criteria\n\n- [ ] Recover yesterday\u2019s task, related branches/PRs/commits and current active writer if available. Record precise provenance or the bounded search gap. Inspect current branch, origin/development and production before crediting any claimed change. Do not create a competing implementation.\n- [ ] Build a public-route and header/footer inventory for all six apps and canonical domains. Identify the public landing route for each; where root becomes a dashboard after login, provide a stable public product route. Missing landing pages must be delivered, not silently excluded from the denominator.\n- [ ] Implement one shared public-navigation definition and common header/footer interaction contract consumed by all six apps. Preserve each app\u2019s correct branding, product context and current-location indication while using consistent product names, ordering, labels, destinations and mobile behavior. Keep legitimate app-specific subnavigation.\n- [ ] Every landing provides clear reciprocal access to all other five public product landings and the corporate/suite context, using visible, meaningful crawlable anchor hrefs. Record a 6\u00d76 directed matrix (30 cross-app destinations) plus relevant inner landing pages. An AppSwitcher hidden behind login, a footer on only one app, or button-only JavaScript routes does not satisfy this.\n- [ ] Signed-out people can browse product-to-product without an auth wall. Public product links continue to mean public product pages when signed in; an explicit Open app/Sign in action preserves the established OAuth 2.1 PKCE session handoff. Do not weaken auth or adopt cookie SSO. Preserve browser Back, expected same-tab navigation, deep links, query/hash meaning and any form draft when a departure occurs.\n- [ ] Configure navigation labels, visibility, order and destinations visually through canonical customization/CMS ownership with inheritance and safe URL validation. Preview\u2192publish\u2192reload\u2192rollback must update all intended consumers through executable workflows, with actor/version/audit evidence and useful error/retry behavior. No six divergent hardcoded menus.\n- [ ] Exercise all 30 directed links on development and production; record intended and actual final URL, HTTP/rendered result, active nav and return path. Test signed-out and signed-in modes, mobile/desktop, keyboard/focus, dark/light and tenant-brand applicability. Prove no unexpected auth, dead end, new-tab sprawl, missing menu item or false empty renderer.\n- [ ] Align product/backlink destinations with canonical-host issue braden#607 and suite discovery work; remove only superseded code and keep auth, docs, privacy and legitimate external product references intact. Update docs and independently verify full release contract.\n\n## Dependencies and related work\n\n- braden#607/#609: canonical and public indexing evidence; these are dependencies on the relevant decision, not a reason to stop independent work.\n- braden#602: new GTO software landing joins the public route inventory.\n- bsuite#3204: visual customization/workflow requirement.\n- docs/plans/20260814-nav-route-remediation-v1.00D.md is existing navigation architecture; expand its public-landing coverage without conflating private app-shell work.\n- docs/audits/20260905-accountability-evidence-record-v1.00W.md records a 6 September platform-vision handoff mentioning interlinked landings, but does not establish yesterday\u2019s task identity.\n## Mandatory delivery scope\n\nParent programme: GaryOcean428/bsuite#3204. All six BSuite apps: business-suite-unified, crm7, conduit, braden, R80.4, throughput. Get Muscles is excluded. R80.3 is historical, not an active app. Public landing navigation and signed-in application switching have different purposes; maintain both.\n\nInvoke agent-run-master \u2192 agent-mem-truth \u2192 agent-skl-find \u2192 ops-open-run. Resolve the canonical shared skills from /home/braden/.agents (slash commands when exposed, otherwise named SKILL.md), including bsuite-fix-the-class-not-the-page, bsuite-shared-ui-rollouts, bsuite-brand-system, check-dry-one-shot, check-docs-vs-code, research-best-practice, browser-live-chrome, test-verify-before-completion. Pair bsuite-user-advocate, bsuite-design-sheriff and bsuite-plans-keeper as applicable; consult definitions and review independently.\n\nSigned isolated feature branches \u2192 development PRs \u2192 deployed d.* tests on exact SHAs \u2192 production PRs \u2192 actual production-SHA/browser checks across affected apps. Publish shared packages properly and verify installed consumer versions; no workspace/file links or monorepo-only success. ops-ship-all-apps scopes every affected standalone deployment, then ops-ship-close-out, agent-definition-of-done D1\u2013D7/D8 and bsuite-false-complete-gates. Record applied skill chains, real CLI model outcomes, corrections and warranted shared-skill improvements. No direct push main or closure on a static assertion/development merge alone.\n\nUse Claude Code Sonnet 5 for bounded work with verified model/CLI preflight; Astra CLI for architecture, two failed grounded fixes or difficult independent review. Preserve selected Hermes Gemini; agy Gemini is available subject to preflight. Do not auto-route into quota-exhausted Grok/Kimi. At most two lanes, one writer per repository/worktree, coordinated package owner.\n\nAll reusable navigation and SEO/content controls must be documented in docs/ and implementation plans in docs/plans/ with source, ownership, workflows, examples, evidence and supersession links. Existing user-visible builders/CMS are the required editing route: support preview, save, reload, publication and rollback under appropriate authority; no code-only configuration replacing an unfinished visual feature. Count consumers from real independent inventories. Keep missing proof and external indexing waits explicit and tracked.\n\n## Historical task reconciliation\n\nThe exact Claude Code task reportedly assigned on 7 September has not been recovered. Bounded read-only search covered visible user/assistant text in the BSuite Claude project sessions, nearby home/.claude project sessions (6\u20138 September), ~/.claude/history.jsonl and the BSuite VSCode workspace chat store. This is a provenance gap, not absence of the requirement. The operator restated it on 8 September. A separate 6 September platform-vision handoff explicitly mentions interlinked landings in docs/audits/20260905-accountability-evidence-record-v1.00W.md (ack58018e0d; tracker A34\u2013A36). It is corroboration, not the identity or completion of yesterday's Claude task. Preserve any implementation discovered during execution.\n\nPaired work: https://github.com/GaryOcean428/bsuite/issues/3225; Braden-specific Search Console repairs remain https://github.com/GaryOcean428/braden/issues/607, https://github.com/GaryOcean428/braden/issues/608, https://github.com/GaryOcean428/braden/issues/609.\n",
+      "body": "## Operator requirement \u2014 8 September 2026\n\nBraden says yesterday\u2019s Claude Code task in VSCode covered Braden\u2019s website and every other BSuite app landing page having consistent interlinked navigation, reciprocal backlinks and the feeling of browsing one website. This is an explicit current requirement regardless of whether the historical task can be recovered. Recover and reconcile that task/PR before implementing; preserve existing work, do not declare it delivered without evidence.\n\n## Existing work to reuse, and why it is not completion evidence\n\npackages/nav-core/src/apps.ts contains shared six-app metadata and production URL mapping. braden/src/components/Navigation.tsx already mounts AppSwitcher; appList.ts consumes shared metadata. Public footer/header implementations still differ between braden, BSU and crm7 in the checked source. Braden Footer.tsx contains button-driven app links with a legacy /apps/r80-3 path; verify supported alias behavior before changing it. BSU MarketingHome has sibling links, and its marketingFooterCrossAppLinks.test.tsx checks signed-out versus OAuth signed-in behavior, but the domain predicate only enumerates crm/r8/conduit. None of this proves complete six-site reciprocal public navigation.\n\n## Acceptance criteria\n\n- [ ] Recover yesterday\u2019s task, related branches/PRs/commits and current active writer if available. Record precise provenance or the bounded search gap. Inspect current branch, origin/development and production before crediting any claimed change. Do not create a competing implementation.\n- [ ] Build a public-route and header/footer inventory for all six apps and canonical domains. Identify the public landing route for each; where root becomes a dashboard after login, provide a stable public product route. Missing landing pages must be delivered, not silently excluded from the denominator.\n- [ ] Implement one shared public-navigation definition and common header/footer interaction contract consumed by all six apps. Preserve each app\u2019s correct branding, product context and current-location indication while using consistent product names, ordering, labels, destinations and mobile behavior. Keep legitimate app-specific subnavigation.\n- [ ] Every landing provides clear reciprocal access to all other five public product landings and the corporate/suite context, using visible, meaningful crawlable anchor hrefs. Record a 6\u00d76 directed matrix (30 cross-app destinations) plus relevant inner landing pages. An AppSwitcher hidden behind login, a footer on only one app, or button-only JavaScript routes does not satisfy this.\n- [ ] Signed-out people can browse product-to-product without an auth wall. Public product links continue to mean public product pages when signed in; an explicit Open app/Sign in action preserves the established OAuth 2.1 PKCE session handoff. Do not weaken auth or adopt browser-session SSO. Preserve browser Back, expected same-tab navigation, deep links, query/hash meaning and any form draft when a departure occurs.\n- [ ] Configure navigation labels, visibility, order and destinations visually through canonical customization/CMS ownership with inheritance and safe URL validation. Preview\u2192publish\u2192reload\u2192rollback must update all intended consumers through executable workflows, with actor/version/audit evidence and useful error/retry behavior. No six divergent hardcoded menus.\n- [ ] Exercise all 30 directed links on development and production; record intended and actual final URL, HTTP/rendered result, active nav and return path. Test signed-out and signed-in modes, mobile/desktop, keyboard/focus, dark/light and tenant-brand applicability. Prove no unexpected auth, dead end, new-tab sprawl, missing menu item or false empty renderer.\n- [ ] Align product/backlink destinations with canonical-host issue braden#607 and suite discovery work; remove only superseded code and keep auth, docs, privacy and legitimate external product references intact. Update docs and independently verify full release contract.\n\n## Dependencies and related work\n\n- braden#607/#609: canonical and public indexing evidence; these are dependencies on the relevant decision, not a reason to stop independent work.\n- braden#602: new GTO software landing joins the public route inventory.\n- bsuite#3204: visual customization/workflow requirement.\n- docs/plans/20260814-nav-route-remediation-v1.00D.md is existing navigation architecture; expand its public-landing coverage without conflating private app-shell work.\n- docs/audits/20260905-accountability-evidence-record-v1.00W.md records a 6 September platform-vision handoff mentioning interlinked landings, but does not establish yesterday\u2019s task identity.\n## Mandatory delivery scope\n\nParent programme: GaryOcean428/bsuite#3204. All six BSuite apps: business-suite-unified, crm7, conduit, braden, R80.4, throughput. Get Muscles is excluded. R80.3 is historical, not an active app. Public landing navigation and signed-in application switching have different purposes; maintain both.\n\nInvoke agent-run-master \u2192 agent-mem-truth \u2192 agent-skl-find \u2192 ops-open-run. Resolve the canonical shared skills from /home/braden/.agents (slash commands when exposed, otherwise named SKILL.md), including bsuite-fix-the-class-not-the-page, bsuite-shared-ui-rollouts, bsuite-brand-system, check-dry-one-shot, check-docs-vs-code, research-best-practice, browser-live-chrome, test-verify-before-completion. Pair bsuite-user-advocate, bsuite-design-sheriff and bsuite-plans-keeper as applicable; consult definitions and review independently.\n\nSigned isolated feature branches \u2192 development PRs \u2192 deployed d.* tests on exact SHAs \u2192 production PRs \u2192 actual production-SHA/browser checks across affected apps. Publish shared packages properly and verify installed consumer versions; no workspace/file links or monorepo-only success. ops-ship-all-apps scopes every affected standalone deployment, then ops-ship-close-out, agent-definition-of-done D1\u2013D7/D8 and bsuite-false-complete-gates. Record applied skill chains, real CLI model outcomes, corrections and warranted shared-skill improvements. No direct push main or closure on a static assertion/development merge alone.\n\nUse Claude Code Sonnet 5 for bounded work with verified model/CLI preflight; Astra CLI for architecture, two failed grounded fixes or difficult independent review. Preserve selected Hermes Gemini; agy Gemini is available subject to preflight. Do not auto-route into quota-exhausted Grok/Kimi. At most two lanes, one writer per repository/worktree, coordinated package owner.\n\nAll reusable navigation and SEO/content controls must be documented in docs/ and implementation plans in docs/plans/ with source, ownership, workflows, examples, evidence and supersession links. Existing user-visible builders/CMS are the required editing route: support preview, save, reload, publication and rollback under appropriate authority; no code-only configuration replacing an unfinished visual feature. Count consumers from real independent inventories. Keep missing proof and external indexing waits explicit and tracked.\n\n## Historical task reconciliation\n\nThe exact Claude Code task reportedly assigned on 7 September has not been recovered. Bounded read-only search covered visible user/assistant text in the BSuite Claude project sessions, nearby home/.claude project sessions (6\u20138 September), ~/.claude/history.jsonl and the BSuite VSCode workspace chat store. This is a provenance gap, not absence of the requirement. The operator restated it on 8 September. A separate 6 September platform-vision handoff explicitly mentions interlinked landings in docs/audits/20260905-accountability-evidence-record-v1.00W.md (ack58018e0d; tracker A34\u2013A36). It is corroboration, not the identity or completion of yesterday's Claude task. Preserve any implementation discovered during execution.\n\nPaired work: https://github.com/GaryOcean428/bsuite/issues/3225; Braden-specific Search Console repairs remain https://github.com/GaryOcean428/braden/issues/607, https://github.com/GaryOcean428/braden/issues/608, https://github.com/GaryOcean428/braden/issues/609.\n",
       "title": "[P1][public website] One consistent interlinked navigation across all six BSuite landing sites",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3224",
       "number": 3224,
@@ -11339,7 +11339,7 @@
         "bsuite-design-sheriff",
         "bsuite-plans-keeper"
       ],
-      "prompt": "prompts/bsuite-3224.md",
+      "prompt": "prompts/20260908-bsuite-3224-remediation-prompt-v1.00W.md",
       "id": "bsuite-3224",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11377,7 +11377,7 @@
         "bsuite-design-sheriff",
         "bsuite-plans-keeper"
       ],
-      "prompt": "prompts/bsuite-3225.md",
+      "prompt": "prompts/20260908-bsuite-3225-remediation-prompt-v1.00W.md",
       "id": "bsuite-3225",
       "status": "pending",
       "queue_reconciliation": {}
@@ -11386,7 +11386,7 @@
       "id": "conduit-705",
       "url": "https://github.com/GaryOcean428/conduit/issues/705",
       "title": "[P1][auth] Recurring sign-in failure: overlapping OAuth flows and callback routing race",
-      "prompt": "prompts/conduit-705.md",
+      "prompt": "prompts/20260908-conduit-705-remediation-prompt-v1.00W.md",
       "status": "in_progress",
       "queue_reconciliation": {}
     },
@@ -11394,7 +11394,7 @@
       "id": "bsuite-3241",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3241",
       "title": "Shared accessible theme scrollbars across six apps",
-      "prompt": "prompts/bsuite-3241.md",
+      "prompt": "prompts/20260908-bsuite-3241-remediation-prompt-v1.00W.md",
       "status": "in_progress",
       "queue_reconciliation": {}
     },
@@ -11402,7 +11402,7 @@
       "id": "bsuite-3231",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3231",
       "title": "[P1][UX] Collapsed left navigation is broken (labels clipped/wrapping in icon mode) across CRM7/BSU/braden sidebars; whole-page visual acceptance",
-      "prompt": "prompts/bsuite-3231.md",
+      "prompt": "prompts/20260908-bsuite-3231-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11431,7 +11431,7 @@
       "id": "bsuite-3232",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3232",
       "title": "Scheduled gitleaks full-history scan found secrets",
-      "prompt": "prompts/bsuite-3232.md",
+      "prompt": "prompts/20260908-bsuite-3232-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11459,7 +11459,7 @@
       "id": "bsuite-3257",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3257",
       "title": "Ratchet floor breached: doc classification",
-      "prompt": "prompts/bsuite-3257.md",
+      "prompt": "prompts/20260908-bsuite-3257-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11486,7 +11486,7 @@
       "id": "bsuite-3258",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3258",
       "title": "Ratchet floor breached: airtable grid adoption",
-      "prompt": "prompts/bsuite-3258.md",
+      "prompt": "prompts/20260908-bsuite-3258-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11515,7 +11515,7 @@
       "id": "bsuite-3260",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3260",
       "title": "migration collision scan across open PRs fails open: an unreadable scope reads as 0 migration files and exits 0",
-      "prompt": "prompts/bsuite-3260.md",
+      "prompt": "prompts/20260908-bsuite-3260-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11543,7 +11543,7 @@
       "id": "bsuite-3261",
       "url": "https://github.com/GaryOcean428/bsuite/issues/3261",
       "title": "workflow-canvas: compact layout keeps a fixed 288px inspector beside the diagram, leaving a phone canvas ~50\u201390px of diagram",
-      "prompt": "prompts/bsuite-3261.md",
+      "prompt": "prompts/20260908-bsuite-3261-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11574,7 +11574,7 @@
       "id": "crm7-2600",
       "url": "https://github.com/GaryOcean428/crm7/issues/2600",
       "title": "[P1][UX] /communications mail client panes overlap at narrow widths; KPI labels truncate; first-paint grid cascade (blocks crm7#2594 C4/D8)",
-      "prompt": "prompts/crm7-2600.md",
+      "prompt": "prompts/20260908-crm7-2600-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11605,7 +11605,7 @@
       "id": "crm7-2604",
       "url": "https://github.com/GaryOcean428/crm7/issues/2604",
       "title": "[P2][UX] /workflows/:id visual debt: inspector overlaps palette/toolbar (hides Publish), nodes stack on add, non-D2C buttons incl. 'Back to Workflows', oversized footer in condensed layouts",
-      "prompt": "prompts/crm7-2604.md",
+      "prompt": "prompts/20260908-crm7-2604-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11656,7 +11656,7 @@
       "id": "crm7-2609",
       "url": "https://github.com/GaryOcean428/crm7/issues/2609",
       "title": "[P2][Integrations] Storage tab is a read-only stub \u2014 extend Microsoft/Google connections, surface configured Supabase buckets, fix header split/duplicate actions/nested glow (CODEX_STORAGE_UX_REVIEW_20260909)",
-      "prompt": "prompts/crm7-2609.md",
+      "prompt": "prompts/20260908-crm7-2609-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11687,7 +11687,7 @@
       "id": "crm7-2615",
       "url": "https://github.com/GaryOcean428/crm7/issues/2615",
       "title": "[P1][security] Jodie carries the previous tenant's conversation into the next tenant's request after a tenant switch",
-      "prompt": "prompts/crm7-2615.md",
+      "prompt": "prompts/20260908-crm7-2615-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11749,7 +11749,7 @@
       "id": "crm7-2617",
       "url": "https://github.com/GaryOcean428/crm7/issues/2617",
       "title": "[security] api/ai/chat.ts rate limit runs after the refusal gates; server does not return the tenant it answered for",
-      "prompt": "prompts/crm7-2617.md",
+      "prompt": "prompts/20260908-crm7-2617-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11777,7 +11777,7 @@
       "id": "crm7-2621",
       "url": "https://github.com/GaryOcean428/crm7/issues/2621",
       "title": "communications.is_read has no default in crm7's migration chain (production's comes from BSU 20261127); crm7-only replays fail outbound inserts",
-      "prompt": "prompts/crm7-2621.md",
+      "prompt": "prompts/20260908-crm7-2621-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11806,7 +11806,7 @@
       "id": "crm7-2622",
       "url": "https://github.com/GaryOcean428/crm7/issues/2622",
       "title": "[P1][security] Jodie record_self_assessment looks up without a tenant filter and rewrites tenant_id: a developer acting as A can move tenant B's assessment into A",
-      "prompt": "prompts/crm7-2622.md",
+      "prompt": "prompts/20260908-crm7-2622-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11834,7 +11834,7 @@
       "id": "crm7-2624",
       "url": "https://github.com/GaryOcean428/crm7/issues/2624",
       "title": "[P1][Jodie] Every write through /api/db reports 500 after it has been saved (Prefer not forwarded, .json() on empty 201/204), so retries duplicate rows",
-      "prompt": "prompts/crm7-2624.md",
+      "prompt": "prompts/20260908-crm7-2624-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11862,7 +11862,7 @@
       "id": "crm7-2625",
       "url": "https://github.com/GaryOcean428/crm7/issues/2625",
       "title": "[Jodie] Inserts can reference another organisation's record ids; create_picklist_option offers platform picklists RLS then refuses",
-      "prompt": "prompts/crm7-2625.md",
+      "prompt": "prompts/20260908-crm7-2625-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11892,7 +11892,7 @@
       "id": "crm7-2626",
       "url": "https://github.com/GaryOcean428/crm7/issues/2626",
       "title": "test(crm7): diagnose seeded E2E when authenticated contact form cannot mount",
-      "prompt": "prompts/crm7-2626.md",
+      "prompt": "prompts/20260908-crm7-2626-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11922,7 +11922,7 @@
       "id": "crm7-2628",
       "url": "https://github.com/GaryOcean428/crm7/issues/2628",
       "title": "fix(ci): make Supabase branch provisioning restart-safe and consumer-safe",
-      "prompt": "prompts/crm7-2628.md",
+      "prompt": "prompts/20260908-crm7-2628-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11951,7 +11951,7 @@
       "id": "business-suite-unified-1235",
       "url": "https://github.com/GaryOcean428/business-suite-unified/issues/1235",
       "title": "Live-run uniqueness keys on the event and omits the tenant: manual and automatic runs of one definition can both be live",
-      "prompt": "prompts/business-suite-unified-1235.md",
+      "prompt": "prompts/20260908-business-suite-unified-1235-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -11980,7 +11980,7 @@
       "id": "business-suite-unified-1236",
       "url": "https://github.com/GaryOcean428/business-suite-unified/issues/1236",
       "title": "workflow_run_start lets host supervisors start runs on (and confirm) rows their SELECT policy hides",
-      "prompt": "prompts/business-suite-unified-1236.md",
+      "prompt": "prompts/20260908-business-suite-unified-1236-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12008,7 +12008,7 @@
       "id": "business-suite-unified-1237",
       "url": "https://github.com/GaryOcean428/business-suite-unified/issues/1237",
       "title": "No CI runs supabase/tests/database harnesses; two siblings bind all interfaces and use postgres:16",
-      "prompt": "prompts/business-suite-unified-1237.md",
+      "prompt": "prompts/20260908-business-suite-unified-1237-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12037,7 +12037,7 @@
       "id": "business-suite-unified-1239",
       "url": "https://github.com/GaryOcean428/business-suite-unified/issues/1239",
       "title": "[billing] email-dispatcher charges the tenant again when Mobile Message replays an idempotent SMS send",
-      "prompt": "prompts/business-suite-unified-1239.md",
+      "prompt": "prompts/20260908-business-suite-unified-1239-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12066,7 +12066,7 @@
       "id": "conduit-708",
       "url": "https://github.com/GaryOcean428/conduit/issues/708",
       "title": "Edit/Delete affordances are ungated across the record class \u2014 candidates/[id] was one of at least 15",
-      "prompt": "prompts/conduit-708.md",
+      "prompt": "prompts/20260908-conduit-708-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12096,7 +12096,7 @@
       "id": "conduit-709",
       "url": "https://github.com/GaryOcean428/conduit/issues/709",
       "title": "confirm_sta_email checks user_tenants.role while its own RLS checks portal_role \u2014 the two can disagree",
-      "prompt": "prompts/conduit-709.md",
+      "prompt": "prompts/20260908-conduit-709-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12124,7 +12124,7 @@
       "id": "conduit-711",
       "url": "https://github.com/GaryOcean428/conduit/issues/711",
       "title": "e2e: authenticated coverage needs a non-production database; the target is an operator decision (Supabase branching OFF by ruling)",
-      "prompt": "prompts/conduit-711.md",
+      "prompt": "prompts/20260908-conduit-711-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12153,7 +12153,7 @@
       "id": "conduit-713",
       "url": "https://github.com/GaryOcean428/conduit/issues/713",
       "title": "supabase/migrations/ does not describe live RLS on r7_candidates or r7_automation_queue \u2014 r7_current_tenant_id() doesn't exist in prod",
-      "prompt": "prompts/conduit-713.md",
+      "prompt": "prompts/20260908-conduit-713-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12178,7 +12178,7 @@
       "id": "conduit-714",
       "url": "https://github.com/GaryOcean428/conduit/issues/714",
       "title": "Browser-direct writes bypass every TypeScript permission gate \u2014 the #708 class needs a database-side role predicate",
-      "prompt": "prompts/conduit-714.md",
+      "prompt": "prompts/20260908-conduit-714-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12207,7 +12207,7 @@
       "id": "conduit-718",
       "url": "https://github.com/GaryOcean428/conduit/issues/718",
       "title": "AwardSelector: a failed lookup tells the user the stored award code does not exist, and a code change briefly shows the previous award's name",
-      "prompt": "prompts/conduit-718.md",
+      "prompt": "prompts/20260908-conduit-718-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12233,7 +12233,7 @@
       "id": "conduit-720",
       "url": "https://github.com/GaryOcean428/conduit/issues/720",
       "title": "r7_communications FOR ALL policy lets any member delete an SMS claim row mid-flight, re-opening the duplicate-send race",
-      "prompt": "prompts/conduit-720.md",
+      "prompt": "prompts/20260908-conduit-720-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12263,7 +12263,7 @@
       "id": "braden-610",
       "url": "https://github.com/GaryOcean428/braden/issues/610",
       "title": "[P1] Positioning drift: site still presents Braden as a GTO that employs/places apprentices \u2014 sweep routes, CMS+fallback, CTAs, metadata, JSON-LD, llms/robots (CODEX_BRADEN_POSITIONING_20260909)",
-      "prompt": "prompts/braden-610.md",
+      "prompt": "prompts/20260908-braden-610-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [
@@ -12294,7 +12294,7 @@
       "id": "braden-613",
       "url": "https://github.com/GaryOcean428/braden/issues/613",
       "title": "[P2][site] Homepage service cards link to slugified /services/<title> paths that Service.tsx does not define \u2014 four dead-end routes (pre-existing since bdc1fd8)",
-      "prompt": "prompts/braden-613.md",
+      "prompt": "prompts/20260908-braden-613-remediation-prompt-v1.00W.md",
       "status": "pending",
       "queue_reconciliation": {
         "acceptance": [

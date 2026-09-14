@@ -50,7 +50,7 @@ def main():
         text = (PACK / row["prompt"]).read_text()
         if not related_acceptance_matches(text, row["related_issues"]):
             errors.setdefault(row["prompt"], []).append("related issue acceptance differs from backlog")
-    canonical = (PACK / "release-contract.md").read_text().split(HEADER, 1)[1]
+    canonical = (PACK / "20260908-remediation-release-contract-v1.00W.md").read_text().split(HEADER, 1)[1]
     canonical = HEADER + canonical
     assert hashlib.sha256(canonical.encode()).hexdigest() == manifest["contract_sha256"]
     # Negative controls: dropping production or a required skill must fail.

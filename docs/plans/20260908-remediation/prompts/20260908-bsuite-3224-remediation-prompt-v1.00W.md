@@ -1,0 +1,117 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/check-plan-currency-markers.mjs
+  - scripts/check-doc-classification.mjs
+---
+
+> **Current as of 2026-09-14:** This is an active engineering plan. Refresh its live issue and evidence before execution; this marker does not assert implementation or release completion.
+
+# Kick off bsuite#3224: [P1][public website] One consistent interlinked navigation across all six BSuite landing sites
+
+Implement and independently verify https://github.com/GaryOcean428/bsuite/issues/3224. This commissions one bounded issue across its necessary consumers, not the whole programme. Re-read live issue/PR state and preserve prior or active Claude Code work. Repository /home/braden/Desktop/Dev/bsuite with six standalone submodule deployments. Use isolated feature worktrees based on current development, one writer per repository.
+
+## Context, skills and paired agents
+
+Read AGENTS.md, each affected app CONTRIBUTING.md, DESIGN.md, AUTH_CANONICAL.md, BSuite truth index and docs/plans/20260908-public-website-navigation-discoverability-v1.00W.md. Invoke agent-run-master first, then agent-skl-find; slash commands when exposed, otherwise name and read SKILL.md from /home/braden/.agents/skills. Resolve: agent-run-master, agent-skl-find, agent-mem-truth, bsuite-fix-the-class-not-the-page, bsuite-shared-ui-rollouts, bsuite-brand-system, check-dry-one-shot, check-docs-vs-code, research-best-practice, browser-live-chrome, test-verify-before-completion, ops-open-run, bsuite-ship-visual-promote, ops-ship-all-apps, ops-ship-close-out, agent-definition-of-done, bsuite-false-complete-gates. Pair bsuite-user-advocate, bsuite-design-sheriff and bsuite-plans-keeper from /home/braden/.agents/agents as applicable. Reviewers must inspect actual evidence, not approve the implementer's narrative.
+
+Tools: current repository/installed source and GitHub for exact work state; Context7 and research-best-practice before library edits; real browser/Playwright for development and production journeys; Vercel for each standalone deployed SHA; existing signed-in Search Console where authorized. Never require a fresh login/account setup without checking the available real browser.
+
+## Model routing and goal criteria
+
+Codex in the IDE coordinates this phase. Claude is unavailable. Do not dispatch external Codex CLI workers. Use deterministic scripts for mechanical tasks, low-tier models for bounded classification, standard-tier models for scoped implementation, and high/frontier only for justified hard planning or independent review. Verify actual Grok/Gemini/Qwen model IDs and access before dispatch; never silently fall back to paid API usage. Cap two active workers by default with one writer per worktree. Read the current [IDE kickoff](../../20260914-codex-ide-closeout-refined-v1.00W.md) and the parent remediation-execution rule before acting.
+
+Create a native goal with explicit criteria from every acceptance checkbox and release stage. Mark each only with dated evidence. Credit existing correct work; do not rebuild from scratch. All six apps remain in the denominator and Get Muscles is excluded. Public product browsing stays public; explicit Open app/Sign in actions retain OAuth. Any product navigation/content/SEO configuration supported in code must be available visually through the existing customization/CMS and executable publication workflows. Preview, revision, save/reload, permissions, rollback, failure/retry and consumer propagation are part of completion.
+
+The required standard is a coherent public website plus measurable discovery. Do not promise search rankings, AI citations or immediate indexing; distinguish deployed results, submission and third-party validation. Update canonical docs/ and docs/plans/ in the same delivery. Read the captured historical task caveat below; do not invent a session or claim yesterday's work finished.
+
+## Mandatory release, operational closeout and skill evolution — contract v2
+
+**The destination is production through development, then verified operational closeout.** Launching this implementation prompt carries Braden's direction to complete that sequence for this issue and its affected consumers; do not stop at a development merge or re-ask the already specified destination. This does not authorize unrelated releases, destructive production-data changes, genuine disciplinary decisions or messages to third parties. A real policy/access/approval blocker stops the affected transition and is reported precisely; it is never waived by this text.
+
+### Execute this skill chain
+
+Invoke agent-run-master → agent-mem-truth → agent-skl-find → **ops-open-run** with feature scope and the BSuite profile; record the opening done-contract, issue, owned repositories, affected consumers, skill/MCP/CLI routing and UI impact before edits. Use the dedicated implementation/research/red-team/testing skills matched to the issue. Re-inventory on task-class/module/tool changes.
+
+Then invoke **ops-ship-close-out** as the closeout orchestrator with that same feature scope and done-contract. Its release work invokes **bsuite-ship-visual-promote** and **ops-ship-all-apps** for the affected multi-app/package-consumer release. For a genuinely single-app change, explicitly load ops-ship-all-apps, record its scoped applicability decision, and use bsuite-ship-visual-promote as the single-change driver; do not mass-ship unrelated dirty apps to satisfy a skill name. Never recursively restart completed macro phases.
+
+Load these exact canonical definitions through agent-skl-find: /home/braden/.agents/skills/ops-open-run/SKILL.md; /home/braden/.agents/skills/ops-ship-all-apps/SKILL.md; /home/braden/.agents/skills/ops-ship-close-out/SKILL.md; /home/braden/.agents/skills/bsuite-ship-visual-promote/SKILL.md; /home/braden/.agents/skills/git-github-issue-closeout/SKILL.md; /home/braden/.agents/skills/agent-definition-of-done/SKILL.md; /home/braden/.agents/skills/bsuite-false-complete-gates/SKILL.md. Use slash commands only where actually exposed and user-invocable; otherwise name/read/execute the skill.
+
+**chains_with and related_skills are discovery metadata, not executed chains.** Explicitly invoke the required macro/micro-skills and record receipts: skill name, phase, inputs, relevant tools, evidence path, verdict and next consumer. Missing Skill-tool support means directly follow the canonical procedure and record that mechanism, not pretend a tool was called. Missing MCP/auth/model capacity requires a verified equivalent or a specific blocker, not skipped coverage.
+
+### Release states — this order overrides conflicting older examples
+
+1. **PREPARED:** confirm current main/development state and protected-branch rules; preserve production-only work, live lanes and dirty changes. Derive apps from current .gitmodules, identify all affected consumers, and own an isolated development-based feature worktree. Use signed commits; verify signatures across the introduced range, not only the signed merge HEAD. Complete applicable build/lint/type/test, schema/policy, package and adversarial checks. Identify operational dependencies, monitoring and a credible rollback path.
+2. **DEVELOPMENT_MERGED:** update the feature branch against its target, resolve actionable human/bot review comments on the final code, pass required checks and merge its PR into development. Use gh pr merge --merge; never --squash, --admin, or --delete-branch on a long-lived branch. Feature → main is forbidden. No direct pushes to protected long-lived branches.
+3. **DEVELOPMENT_VERIFIED:** wait for each affected development deployment and match its live SHA to the merge being tested. Resolve actual deployment/project mappings even if local Vercel metadata is missing. Perform authenticated d.* visual/functional verification as the intended roles: both themes, four responsive widths, appropriate tenant/delegation contexts, full create/save/reload/workflow effects, negative authority and failure/retry. Use bsuite-ship-visual-promote and bsuite-false-complete-gates. FAIL, UNKNOWN or INCOMPLETE blocks promotion. Agent-performed evidence is required; never hand the visual test back to Braden. If the tested code/target changes, re-evaluate affected evidence.
+4. **PRODUCTION_PROMOTED:** only after development verification, open development → main (or established master) PRs for the owned release. Review the full promotion diff so unrelated unfinished work is not swept in. Update against the target and resolve actionable reviews/checks before each merge; a changed SHA requires fresh relevant validation. Merge commits only, no bypass, no direct production push.
+5. **PRODUCTION_VERIFIED:** wait for actual production readiness, verify exact deployed SHA, runtime logs/health, critical user journeys and affected integrations/queues/schedules. Prove schema intent, deployed functions, secrets/config references, published package contents and resolved consumer lockfiles where applicable. A migration ledger, npm export, green build or provider READY alone is insufficient. Use the authorized rollback/recovery path on failure, then re-verify; do not claim done after rollback leaves the issue unresolved.
+6. **CLOSED_OUT:** finish ops-ship-close-out correctness, architecture, experience, currency, records, owned-artifact disposal and convergence. Run git-github-issue-closeout; reconcile GitHub issues/PRs, docs/plans, feature/component registries and actual deployment evidence. An issue automatically closed on development merge does not prove production completion: preserve the release evidence/remaining status on the issue or owning programme until production is verified. Use established set-dod-status only after gate APPROVE; never mass-approve untested rows. Compare development/main contents and both log directions: content-identical promotion merge-commit debt is not a reason for endless back-merges. Reconcile genuine divergent changes through protected PRs. Clean only owned, proven-merged, inactive feature branches/worktrees; preserve live/unrelated work and both long-lived branches. Do not rewind gitlinks.
+
+### DoD receipts and final verdict
+
+Run **agent-definition-of-done** and **bsuite-false-complete-gates**, with the skill-owned verifiers and fresh evidence. D1–D7 always; explicitly declare ui_touched and evaluate every applicable D8 limb, including current sibling denominator, real entry/wiring, clarity, powerful common path, lossless round trip, better alternative and action count. D9 requires actual authorized use/consumer resolution/engine run as applicable, with query/results; D10 requires owned temporary-artifact inventory and deletion evidence. Do not invent non-demo production transactions to pass D9.
+
+Pre-promotion readiness is not final completion: production-dependent D9 can only finish after the production state exists. Do not demand a final production-use APPROVE before allowing an otherwise validated promotion, and do not call readiness APPROVE for the whole issue. Final ops-ship-close-out verdict comes from gate_report.py with all required evidence and clean child verdicts. SEND_BACK stays parent-owned with the exact failed gate, retained work and next recovery action. No “done”, “shipped” or issue-scope closure claim before final APPROVE and production proof.
+
+### Skill interoperability and evolution are required work
+
+At start and each major phase, load bsuite_skill_mcp_pairings and /home/braden/.agents/skills/_shared/skill-mcp-pairings.json; route with ops-open-run's route.mjs plan and verify actual connected tools, installed skills, agent paths and model IDs. Map each handoff's producer/output/consumer and acceptance gate; do not rely on chaining beyond the client's stacking limit or on non-user-invocable slash expansion. Keep high-impact actions serial and at most two active lanes by default.
+
+For each missing capability, bad trigger, conflicting instruction, broken pairing or repeat failure uncovered, record the concrete example and improve the appropriate canonical layer in the same task: deterministic check first; shared script/reference next; SKILL.md judgment only when neither suffices. Update relevant related_skills/chains_with/suggested_agents or routing pairings when supported by evidence; do not create a second skill copy or weaken the gate. Read the hub's instructions/protection policy before editing global skills; preserve unrelated agent/model configuration. If another owner or a real protection rule prevents the correction, record a named linked follow-up and keep the explicit safe override in this task.
+
+Verify every edited skill with its scripts/verify.sh and relevant trigger/chain evaluations; update agent discovery/sync only when the change requires it. Log actual use/steer/false_complete through skill-event.sh. Run ops-open-run's route.mjs learn against supported real session evidence, even outside Claude when available; check what transcripts it actually consumed. No Claude-only Stop-hook assumption in Grok/Codex, no fabricated co-use or successful-learning claim from an empty scan. If the session format is unsupported, record actual invocation receipts and the adapter gap for the next routing improvement.
+
+Promote proven BSuite corrections through agent-mem-comms into the BSuite truth/pairing records and session/sleep packet; read back writes. Final evidence includes skills executed, tools unavailable/recovered, chain defects found, changes and tests, learning result and any explicitly owned follow-up. Do not churn skills when no improvement is justified: an evidenced no-change result is valid.
+
+### Known interoperability resolutions for this pack
+
+Current BSuite/operator rules above override old skill examples allowing direct-to-main features, squash merges, missing-deploy skips, force/direct re-sync pushes or estate-wide cleanup. Derive R80.4 and throughput from the actual app inventory; never follow a stale R80.3 list. The current operator-scoped native Codex team may use its approved tiered models; the September11 supervisor reserve prohibits external Codex CLI workers. Claude is unavailable. Verify Grok/Gemini/Qwen access and exact model IDs before use, with no silent paid fallback. Use scripts for mechanical work and cap two active workers by default. Historical Hermes three-lane IDs, pane wakes and cron instructions do not apply to a generic per-issue implementation. Current docs/ and docs/plans/ placement is explicit operator direction. Reconcile index sibling counts against current routes/consumers and repair stale counts, rather than copying an unverified denominator.
+
+## Captured issue requirements — refresh before acting
+
+## Operator requirement — 8 September 2026
+
+Braden says yesterday’s Claude Code task in VSCode covered Braden’s website and every other BSuite app landing page having consistent interlinked navigation, reciprocal backlinks and the feeling of browsing one website. This is an explicit current requirement regardless of whether the historical task can be recovered. Make a bounded attempt to recover and reconcile that task/PR; preserve verified existing work. If it cannot be recovered, record the provenance gap and proceed from this current instruction. Do not declare earlier work delivered without evidence.
+
+## Existing work to reuse, and why it is not completion evidence
+
+packages/nav-core/src/apps.ts contains shared six-app metadata and production URL mapping. braden/src/components/Navigation.tsx already mounts AppSwitcher; appList.ts consumes shared metadata. Public footer/header implementations still differ between braden, BSU and crm7 in the checked source. Braden Footer.tsx contains button-driven app links with a legacy /apps/r80-3 path; verify supported alias behavior before changing it. BSU MarketingHome has sibling links, and its marketingFooterCrossAppLinks.test.tsx checks signed-out versus OAuth signed-in behavior, but the domain predicate only enumerates crm/r8/conduit. None of this proves complete six-site reciprocal public navigation.
+
+## Acceptance criteria
+
+- [ ] Recover yesterday’s task, related branches/PRs/commits and current active writer if available. Record precise provenance or the bounded search gap. Inspect current branch, origin/development and production before crediting any claimed change. Do not create a competing implementation.
+- [ ] Build a public-route and header/footer inventory for all six apps and canonical domains. Identify the public landing route for each; where root becomes a dashboard after login, provide a stable public product route. Missing landing pages must be delivered, not silently excluded from the denominator.
+- [ ] Implement one shared public-navigation definition and common header/footer interaction contract consumed by all six apps. Preserve each app’s correct branding, product context and current-location indication while using consistent product names, ordering, labels, destinations and mobile behavior. Keep legitimate app-specific subnavigation.
+- [ ] Every landing provides clear reciprocal access to all other five public product landings and the corporate/suite context, using visible, meaningful crawlable anchor hrefs. Record a 6×6 directed matrix (30 cross-app destinations) plus relevant inner landing pages. An AppSwitcher hidden behind login, a footer on only one app, or button-only JavaScript routes does not satisfy this.
+- [ ] Signed-out people can browse product-to-product without an auth wall. Public product links continue to mean public product pages when signed in; an explicit Open app/Sign in action preserves the established OAuth 2.1 PKCE session handoff. Do not weaken auth or adopt browser-session SSO. Preserve browser Back, expected same-tab navigation, deep links, query/hash meaning and any form draft when a departure occurs.
+- [ ] Configure navigation labels, visibility, order and destinations visually through canonical customization/CMS ownership with inheritance and safe URL validation. Preview→publish→reload→rollback must update all intended consumers through executable workflows, with actor/version/audit evidence and useful error/retry behavior. No six divergent hardcoded menus.
+- [ ] Exercise all 30 directed links on development and production; record intended and actual final URL, HTTP/rendered result, active nav and return path. Test signed-out and signed-in modes, mobile/desktop, keyboard/focus, dark/light and tenant-brand applicability. Prove no unexpected auth, dead end, new-tab sprawl, missing menu item or false empty renderer.
+- [ ] Align product/backlink destinations with canonical-host issue braden#607 and suite discovery work; remove only superseded code and keep auth, docs, privacy and legitimate external product references intact. Update docs and independently verify full release contract.
+
+## Dependencies and related work
+
+- braden#607/#609: canonical and public indexing evidence; these are dependencies on the relevant decision, not a reason to stop independent work.
+- braden#602: new GTO software landing joins the public route inventory.
+- bsuite#3204: visual customization/workflow requirement.
+- docs/plans/20260814-nav-route-remediation-v1.00D.md is existing navigation architecture; expand its public-landing coverage without conflating private app-shell work.
+- docs/audits/20260905-accountability-evidence-record-v1.00W.md records a 6 September platform-vision handoff mentioning interlinked landings, but does not establish yesterday’s task identity.
+## Mandatory delivery scope
+
+Parent programme: GaryOcean428/bsuite#3204. All six BSuite apps: business-suite-unified, crm7, conduit, braden, R80.4, throughput. Get Muscles is excluded. R80.3 is historical, not an active app. Public landing navigation and signed-in application switching have different purposes; maintain both.
+
+Invoke agent-run-master → agent-mem-truth → agent-skl-find → ops-open-run. Resolve the canonical shared skills from /home/braden/.agents (slash commands when exposed, otherwise named SKILL.md), including bsuite-fix-the-class-not-the-page, bsuite-shared-ui-rollouts, bsuite-brand-system, check-dry-one-shot, check-docs-vs-code, research-best-practice, browser-live-chrome, test-verify-before-completion. Pair bsuite-user-advocate, bsuite-design-sheriff and bsuite-plans-keeper as applicable; consult definitions and review independently.
+
+Signed isolated feature branches → development PRs → deployed d.* tests on exact SHAs → production PRs → actual production-SHA/browser checks across affected apps. Publish shared packages properly and verify installed consumer versions; no workspace/file links or monorepo-only success. ops-ship-all-apps scopes every affected standalone deployment, then ops-ship-close-out, agent-definition-of-done D1–D7/D8 and bsuite-false-complete-gates. Record applied skill chains, real CLI model outcomes, corrections and warranted shared-skill improvements. No direct push main or closure on a static assertion/development merge alone.
+
+Codex in the IDE coordinates this phase. Claude is unavailable. Do not dispatch external Codex CLI workers. Use deterministic scripts for mechanical tasks, low-tier models for bounded classification, standard-tier models for scoped implementation, and high/frontier only for justified hard planning or independent review. Verify actual Grok/Gemini/Qwen model IDs and access before dispatch; never silently fall back to paid API usage. Cap two active workers by default with one writer per worktree. Read the current [IDE kickoff](../../20260914-codex-ide-closeout-refined-v1.00W.md) and the parent remediation-execution rule before acting.
+
+All reusable navigation and SEO/content controls must be documented in docs/ and implementation plans in docs/plans/ with source, ownership, workflows, examples, evidence and supersession links. Existing user-visible builders/CMS are the required editing route: support preview, save, reload, publication and rollback under appropriate authority; no code-only configuration replacing an unfinished visual feature. Count consumers from real independent inventories. Keep missing proof and external indexing waits explicit and tracked.
+
+## Historical task reconciliation
+
+The exact Claude Code task reportedly assigned on 7 September has not been recovered. Bounded read-only search covered visible user/assistant text in the BSuite Claude project sessions, nearby home/.claude project sessions (6–8 September), ~/.claude/history.jsonl and the BSuite VSCode workspace chat store. This is a provenance gap, not absence of the requirement. The operator restated it on 8 September. A separate 6 September platform-vision handoff explicitly mentions interlinked landings in docs/audits/20260905-accountability-evidence-record-v1.00W.md (ack58018e0d; tracker A34–A36). It is corroboration, not the identity or completion of yesterday's Claude task. Preserve any implementation discovered during execution.
+
+Paired work: https://github.com/GaryOcean428/bsuite/issues/3225; Braden-specific Search Console repairs remain https://github.com/GaryOcean428/braden/issues/607, https://github.com/GaryOcean428/braden/issues/608, https://github.com/GaryOcean428/braden/issues/609.

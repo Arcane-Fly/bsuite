@@ -1,0 +1,80 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# reflect_entity_schema 403s on every page load — authenticated has no EXECUTE grant, so the schema reflection has never run for any user
+
+https://github.com/GaryOcean428/crm7/issues/2551
+
+Snapshot updatedAt: 2026-09-07T13:50:05Z. Open at capture; re-read live.
+
+## `reflect_entity_schema` grants EXECUTE to nobody the browser signs in as
+
+Found while running the D8 pass for #2546 on `d.crm.crm7.app` (build `85b0885`). Every page load
+of `/training/plans/:id/edit` fires:
+
+```
+403 rpc/reflect_entity_schema
+ -> {"code":"42501","message":"permission denied for function reflect_entity_schema"}
+```
+
+The ACL, read from `pg_proc.proacl` on production:
+
+```
+reflect_entity_schema  owner=postgres  acl={postgres=X/postgres, service_role=X/postgres}
+```
+
+`authenticated` holds **no EXECUTE grant**. A browser session is `authenticated`, never
+`service_role`, so this RPC can never succeed from the app. Not for this account, not for any —
+I checked as `braden@braden.com.au`, which is `platform_role=developer` **and**
+`is_super_admin=t`. If that identity gets 42501, everyone does.
+
+## What the user sees
+
+`src/pages/training/plans/[id]/edit.tsx:278-283` renders the outcome directly:
+
+```tsx
+Schema-driven:{' '}
+{reflectedColumns.length > 0 ? `${reflectedColumns.length} reflected columns` : 'fallback schema'}
+```
+
+So the page permanently reads **"Schema-driven: fallback schema"**. It is not wrong, exactly —
+it is honest about having fallen back. It just never says why, and the reason is a missing grant
+rather than anything about the data.
+
+## Scope
+
+`useSchemaReflection` (from `@bsuite/schema-builder/hooks`) has **4 consumers, all in crm7**;
+business-suite-unified, conduit, braden, throughput and R80.4 have none. Method:
+`grep -rl useSchemaReflection <app>/src` per app.
+
+## Why it matters more than a cosmetic label
+
+The reflection is the feature that *looks* like it validates a form against the real schema.
+`buildTrainingPlanSchema(columns)` filters reflected columns against `EDITABLE_FIELDS` — so it
+reads as a live schema check. It is not one, on two counts:
+
+1. It only chooses **error-message wording** (`'Apprentice ID is required'` vs `'Apprentice ID'`);
+   an unknown field is silently ignored rather than flagged.
+2. It **never runs anyway**, because of this grant.
+
+That combination is why a `select()` naming a column that has not existed for months
+(#2546 — `training_plans.expected_end_date`, 42703, page dead for three weeks) sailed past the
+one mechanism on the page that appears designed to catch exactly that. Worth fixing the grant,
+and worth not treating the reflection as a guard until it both runs and fails on an unknown
+field.
+
+## Suggested fix
+
+Grant EXECUTE to `authenticated` **if** the function is safe for that role — it takes an entity
+name and returns column metadata, so the question is whether it can be used to enumerate tables
+a tenant should not see. That is a real question and I have not answered it; if the answer is no,
+the honest alternative is to delete the hook's callers rather than leave a permanently-failing
+request on every page load.
+
+Either way, a request that 403s on every single page load should not be silent.
+
+Filed by claude-code-bsuite-pi. All measurements read-only against production; no writes, no DDL,
+no grants issued.

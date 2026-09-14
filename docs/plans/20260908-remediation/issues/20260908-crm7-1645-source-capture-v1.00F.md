@@ -1,0 +1,45 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# [P3][ux] Tier 4 surface quality: empty states, mobile tables, lazy images, command palette, keyboard flows, date-format on exports
+
+https://github.com/GaryOcean428/crm7/issues/1645
+
+Snapshot updatedAt: 2026-08-26T12:22:56Z. Open at capture; re-read live.
+
+**Source:** operator full-spectrum review, 2026-08-11 (Tier 4, minus the timezone item which is filed separately as crm7#1624 because it is a compliance risk).
+
+A grouped issue rather than six thin ones — these are related surface-quality items and are best picked up together when someone is in this area.
+
+## 4.2 — Empty states: 322 instances, no shared component
+Quality will be inconsistent by construction. One `EmptyState` with icon / message / CTA slots standardises it. Worth doing before the count grows; also the natural home for the "you have no X yet, here is how to make one" copy that currently varies per page.
+
+## 4.3 — Mobile tables have no column-hiding or horizontal-scroll strategy
+Complements the open #1270 / #1271. **Field officers are the most mobile-bound persona in this product** — they are on-site, on a phone, and the tables they need are the widest. Pairs naturally with the virtualisation work in #1628 since both touch `EnhancedDataTable`'s render path.
+
+## 4.4 — `loading="lazy"` on images
+Trivial, unstarted. Note that the a11y sweep found **zero raw `<img>` without alt** in `src`, so images are largely rendered through components — apply the attribute at the component, not by hand at 300 call sites.
+
+## 4.5 — Command palette / global search across 443 pages
+Check whether one exists first. The valuable question is not "is there a cmd-K" but **"does it cover entities, or only routes"** — with 443 pages, navigating by route name is already hard; what a user actually wants is to type an apprentice's name.
+
+## 4.6 — Keyboard shortcuts and focus outlines for the bulk flows
+Timesheet approval queues and claim review are processed in volume by power users. These are the flows where keyboard support stops being an accessibility nicety and becomes a throughput feature. The new jsx-a11y gate (#1633) covers *static* violations; it cannot tell you that a queue is unusable without a mouse.
+
+## 4.7 — Verify the date-format preference is applied everywhere
+`au`/`us` preference exists — good. **Spot-check reports and PDFs specifically**: they typically bypass React hooks and format dates directly, so a preference implemented in a hook will silently not apply there. An Australian user seeing `03/04/2026` rendered as US month-first on an exported report is a real misreading, not a cosmetic one — and on a compliance document it is worse.
+
+## Suggested order
+4.7 first (it is a correctness bug, cheap to check), then 4.2 (compounding), then 4.3 with #1628, then 4.6, 4.5, 4.4.
+
+## Mandatory before merge (FF-SELF-VALIDATION-20260507)
+- **Validation loop**: §9.2 visual-equivalence
+- **Equivalence target**: per item — a screenshot pair at 375 and 1440 for the table and empty-state work; for 4.7, an exported PDF and a report screenshot showing the preferred format
+- **Cross red-team**: copilot checks 4.7 on an EXPORT path, not only in-app
+- **Skills to load**: web-ui-ux-patterns, machine-design-web-guidelines, data-pdf
+- **Self-report on divergence**: yes
+
+**Acceptance criteria:** each sub-item either shipped with evidence or explicitly deferred with a reason recorded here.

@@ -1,3 +1,12 @@
+---
+kind: standard
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/check-plan-currency-markers.mjs
+  - scripts/check-doc-classification.mjs
+---
+
 # Customization capability register and documentation contract
 
 Date: 8 September 2026. Status: Working requirements and remediation map; **not a claim of implementation or live usability**.
@@ -74,7 +83,7 @@ The supplied variation-named file has the same extracted discussion text as the 
 
 ## Execution and evidence
 
-See [remediation plan and launch prompts](plans/20260908-estate-remediation-plan-v1.00W.md), [audit](audits/20260908-estate-remediation-audit-v1.00W.md), and [all discovered related document paths](plans/20260908-remediation/documentation-inventory.md). The document-path inventory is discovery, not an assertion that every paragraph was revalidated. Implementation must widen it through backlinks, feature-index rows and app documentation.
+See [remediation plan and launch prompts](plans/20260908-estate-remediation-plan-v1.00W.md), [audit](audits/20260908-estate-remediation-audit-v1.00W.md), and [all discovered related document paths](plans/20260908-remediation/20260908-remediation-documentation-inventory-v1.00F.md). The document-path inventory is discovery, not an assertion that every paragraph was revalidated. Implementation must widen it through backlinks, feature-index rows and app documentation.
 
 ## 8 September addition — inbound SMS
 

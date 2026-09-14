@@ -1,3 +1,9 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
 # BSuite past-week failure audit and remediation
 
 8 September 2026. This delivers an evidence-based remediation backlog and launch pack, not product fixes or certification that every feature has been tested. The operator's latest clarification is controlling: formal disciplinary discussion is distinct from training-contract variation; all product customization must be visually achievable and linked through workflows; all customization documentation belongs in docs/ and docs/plans/, improving existing specifications.

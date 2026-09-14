@@ -1,3 +1,12 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite
+evidence:
+  - docs/plans/20260908-remediation/backlog.json
+  - docs/plans/20260908-remediation/evidence/release-contract-manifest.json
+---
+
 > **Historical 8 September plan; execution routing superseded on 14 September.** Use the [current Codex IDE kickoff](20260914-codex-ide-closeout-refined-v1.00W.md) and [reconciled 370-row pack](20260908-remediation/README.md). The embedded338 count, Claude handover, model dispatch and scheduler commands below are preserved provenance only and must not be executed. Current BSuite schedules remain paused. Preserve the underlying product acceptance requirements and refresh their live evidence.
 
 # Estate remediation implementation plan
@@ -7,7 +16,7 @@
 > the 332 counts below describe the original intake. Current completion is measured from
 > criterion evidence and GitHub, never inferred from those historical counts.
 
-> **Release contract v2, 8 September:** all 332 prompts now require development PR → verified d.* deployment → production PR → production verification → ops-ship-close-out and final DoD. They explicitly route ops-ship-all-apps for affected multi-app releases and require evidenced skill interoperability/evolution. [Read the mandatory contract](20260908-remediation/release-contract.md). Merely naming a skill or chains_with does not execute it.
+> **Release contract v2, 8 September:** all 370 prompts now require development PR → verified d.* deployment → production PR → production verification → ops-ship-close-out and final DoD. They explicitly route ops-ship-all-apps for affected multi-app releases and require evidenced skill interoperability/evolution. [Read the mandatory contract](20260908-remediation/20260908-remediation-release-contract-v1.00W.md). Merely naming a skill or chains_with does not execute it.
 
 8 September 2026. Working execution specification for the published issues. Product implementation remains open. Current issue status lives on GitHub; this plan defines order and acceptance, not a parallel dashboard.
 
@@ -28,7 +37,7 @@ Read the [capability register](../20260908-customization-capability-register-v1.
 | 4 | [bsuite#3210](https://github.com/GaryOcean428/bsuite/issues/3210) / [bsuite#3211](https://github.com/GaryOcean428/bsuite/issues/3211) / [bsuite#3212](https://github.com/GaryOcean428/bsuite/issues/3212) and existing mailbox/provider/portal work. | End-to-end provider/portal journeys, conflict/deletion review, consent/delegation and retry; specific external-access blockers remain explicit. |
 | 5 | All remaining captured issues and feature/documentation gaps under bsuite#3198. | Every in-scope capability has documented visual/workflow behavior, current consumer evidence, owner and honest disposition. |
 
-Waves are dependency order, not permission to defer security or independently ready work. Parent [bsuite#3204](https://github.com/GaryOcean428/bsuite/issues/3204) is an umbrella, not a prerequisite requiring itself to close before children start. Field contracts and contextual bindings should share an agreed interface and can be developed in separate repositories only when ownership is safe. Do not dispatch all 332 prompts simultaneously.
+Waves are dependency order, not permission to defer security or independently ready work. Parent [bsuite#3204](https://github.com/GaryOcean428/bsuite/issues/3204) is an umbrella, not a prerequisite requiring itself to close before children start. Field contracts and contextual bindings should share an agreed interface and can be developed in separate repositories only when ownership is safe. Do not dispatch all 370 prompts simultaneously.
 
 ## Discrete launch prompts and routing
 
@@ -56,9 +65,9 @@ This session reviewed histories and targeted source/live schema, not every produ
 
 ## Entry artifacts
 
-- [Refined prompt used for this audit](20260908-remediation/refined-prompt.md).
+- [Refined prompt used for this audit](20260908-remediation/20260908-remediation-refined-prompt-v1.00F.md).
 - [Full launch index](20260908-remediation/README.md).
-- [Related specification inventory](20260908-remediation/documentation-inventory.md).
+- [Related specification inventory](20260908-remediation/20260908-remediation-documentation-inventory-v1.00F.md).
 - [Machine-readable issue snapshot](20260908-remediation/backlog.json).
 - [Source and creation evidence](20260908-remediation/evidence/created-issues.json).
 
@@ -146,8 +155,8 @@ the task-specific skills from /home/braden/.agents. Read the skills before apply
 Protected execution root:
 /home/braden/.codex/visualizations/2026/09/08/01a07f58-73a6-71f2-a57d-5cf3b6b148dc/bsuite-remediation
 
-Read hermes-queue.json and docs/plans/20260908-remediation/{release-contract.md,
-hermes-queue-runbook.md,hermes-performance-review.md,sms-2594-goal-evidence.json} there.
+Read hermes-queue.json and docs/plans/20260908-remediation/{20260908-remediation-release-contract-v1.00W.md,
+20260908-remediation-hermes-queue-runbook-v1.00F.md,hermes-performance-review.md,sms-2594-goal-evidence.json} there.
 Run verify_sms_goal.py using its documented invocation; restore every C1–C12 criterion.
 Read the current crm7#2594 issue and live worker/PR state. The queue has 338 entries;
 do not equate pending metadata with a fresh verified GitHub count. Preserve existing work.
