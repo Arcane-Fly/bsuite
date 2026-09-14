@@ -1,7 +1,7 @@
 {
   "version": 2,
   "prompt_count": 370,
-  "contract_sha256": "74dcb697c4b6317a5b74a3cf194ad0fe21cac6dae436354df874aaeffdaee3ae",
+  "contract_sha256": "32cc75e0a38c9af0ddc188b049f25278b0e7ae803e2a89136e86206662ad7f52",
   "contract_header": "## Mandatory release, operational closeout and skill evolution \u2014 contract v2",
   "stages": [
     "PREPARED",

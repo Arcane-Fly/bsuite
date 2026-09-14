@@ -39,7 +39,7 @@ def related_acceptance_matches(text, expected):
 
 def main():
     manifest = json.loads((PACK / "evidence/release-contract-manifest.json").read_text())
-    prompts = sorted((PACK / "prompts").glob("*.md"))
+    prompts = sorted(p for p in (PACK / "prompts").glob("*.md") if p.name != "README.md")
     results = {p.name: errors_for(p.read_text(), manifest) for p in prompts}
     errors = {k: v for k, v in results.items() if v}
     assert len(prompts) == manifest["prompt_count"]
