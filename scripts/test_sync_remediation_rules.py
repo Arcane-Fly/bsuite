@@ -84,6 +84,14 @@ class SyncRulesTest(unittest.TestCase):
             self.assertEqual(sync_rules.sync(root, write=True), [])
             self.assertEqual(self.snapshot(root), first)
             self.assertEqual(sync_rules.sync(root), [])
+            formatted = root / 'crm7' / 'AGENTS.md'
+            formatted.write_text(formatted.read_text().replace(
+                sync_rules.START + '\n', sync_rules.START + '\n\n', 1
+            ))
+            after_formatter = self.snapshot(root)
+            self.assertEqual(sync_rules.sync(root), [])
+            self.assertEqual(sync_rules.sync(root, write=True), [])
+            self.assertEqual(self.snapshot(root), after_formatter)
             self.assertFalse(any(path.name.startswith('.') and '.md.' in path.name
                                  for path in root.rglob('*')))
             rule = root / sync_rules.APPS[-1] / sync_rules.RULE

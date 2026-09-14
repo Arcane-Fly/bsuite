@@ -88,13 +88,18 @@ def loader_output(path, name):
         starts == 1 and text.index(START) > text.index(END)
     ):
         return None, f'{path}: malformed or duplicate loader markers'
+    block = entry(name)
     if starts:
         before, rest = text.split(START, 1)
+        # Prettier inserts a blank line after the opening HTML comment. Preserve
+        # that equivalent Markdown form so check/write do not fight app hooks.
+        if rest.startswith('\n\n'):
+            block = block.replace(START + '\n', START + '\n\n', 1)
         _, after = rest.split(END, 1)
         text = before + after.lstrip('\n')
-    output = entry(name) + text
+    output = block + text
     if (
-        not output.startswith(entry(name))
+        not output.startswith(block)
         or output.count(START) != 1
         or output.count(END) != 1
     ):
