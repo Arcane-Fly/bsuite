@@ -18,6 +18,15 @@
 -- Any other state is not a leftover: 'processing' with metadata still on the
 -- original means nothing was committed, and succeeded/failed/skipped are final.
 --
+-- Why the event's OWN encrypted path is enough (bsuite#2664 pass 2, C3/B-N2):
+-- crm7's pass takes over a 'processing' event only once its attempt is older
+-- than 15 minutes, more than twice the platform's 400 s ceiling on one call,
+-- so an attempt that may still commit is never displaced. The event therefore
+-- always names the attempt whose ciphertext the metadata can point at, and an
+-- attempt that commits and then dies leaves exactly the second state above.
+-- (Before that rule a second call could rewrite the event to its own path in
+-- that window, and this predicate read 0 over a stored original.)
+--
 -- Both the watch's self-test and its count read THIS view, so the self-test
 -- proves the same predicate the count uses. It emits ids only: no file names,
 -- no storage paths, nothing about a person.
