@@ -343,6 +343,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     );
 
     const measureRef = useRef<HTMLDivElement | null>(null);
+    const surfaceRef = useRef<HTMLDivElement | null>(null);
     const lastReportedRowsRef = useRef<number | null>(null);
     const measureRafRef = useRef<number | null>(null);
     /**
@@ -373,9 +374,17 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     const reportRows = useCallback(
       (contentPx: number) => {
         if (!onAutoHeightChange) return;
+        // Chrome lives outside the observed content box. Count its actual
+        // padding and borders so appearance changes cannot overlap the next
+        // card. A consumer-owned Card is already inside the measured content.
+        const surfaceStyle = chrome && surfaceRef.current ? getComputedStyle(surfaceRef.current) : null;
+        const cardChromePx = surfaceStyle
+          ? [surfaceStyle.paddingTop, surfaceStyle.paddingBottom, surfaceStyle.borderTopWidth, surfaceStyle.borderBottomWidth]
+              .reduce((total, value) => total + (Number.parseFloat(value) || 0), 0)
+          : DEFAULT_CARD_CHROME_PX;
         const rows = computeAutoHeightRows({
           contentPx,
-          cardChromePx: DEFAULT_CARD_CHROME_PX,
+          cardChromePx,
           rowHeightPx: DEFAULT_ROW_HEIGHT,
           marginYPx: DEFAULT_MARGIN[1],
         });
@@ -383,7 +392,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
         lastReportedRowsRef.current = rows;
         onAutoHeightChange(id, rows);
       },
-      [id, onAutoHeightChange],
+      [chrome, id, onAutoHeightChange],
     );
 
     /**
@@ -412,7 +421,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       else warnOnceAboutCollapsedContent(el);
       // Re-measure when edit chrome mounts/unmounts so the strip is in the
       // row count in edit mode and gone again on lossless return.
-    }, [autoHeight, onAutoHeightChange, reportRows, isEditing]);
+    }, [autoHeight, onAutoHeightChange, reportRows, isEditing, cardStyleVars]);
 
     useEffect(() => {
       if (!autoHeight || !onAutoHeightChange) return;
@@ -527,6 +536,8 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * silently return whichever came first in document order.
              */
             data-grid-slot-key={id}
+            ref={surfaceRef}
+            data-card-padding={!chrome && cardStyleVars && '--card-padding' in cardStyleVars ? '' : undefined}
             className={
               chrome
                 ? // ONE radius token, read by the grid item AND available to any
@@ -583,7 +594,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * this attribute is identical to what it was before the card editor
              * existed. A chrome-owning surface applies `boxShadow` directly
              * to beat its default class. Layout-only wrappers pass the token
-             * to the painted consumer without drawing a second shadow.
+             * to the painted consumer without drawing a second shadow. The
+             * padding marker lets consumer Cards distinguish an explicit page
+             * inset from an app's unrelated default --card-padding token.
              */
             style={{
               contain: 'layout style',
@@ -591,7 +604,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
               ...(chrome && cardStyleVars && '--card-shadow' in cardStyleVars
                 ? { boxShadow: (cardStyleVars as Record<string, string>)['--card-shadow'] }
                 : null),
-              ...(cardStyleVars && '--card-padding' in cardStyleVars
+              ...(chrome && cardStyleVars && '--card-padding' in cardStyleVars
                 ? { padding: (cardStyleVars as Record<string, string>)['--card-padding'] }
                 : null),
             }}
