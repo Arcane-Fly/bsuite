@@ -36,6 +36,10 @@ import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps, RelationshipWidgetDetail } from './types.js';
 
+/** Ask one mounted canvas to acknowledge its preferences before closing. */
+export const PAGE_GRID_SAVE_EVENT = 'bsuite-page-grid-save';
+export interface PageGridSaveEventDetail { pageKey: string }
+
 /**
  * Single source of truth for the grid's pixel geometry — read by both the
  * `<Responsive>` props below AND `GridItem`'s auto-height measurement
@@ -553,14 +557,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                     // whose fallbacks are byte-identical to the `border
                     // border-border` they replace, so an operator who has never
                     // opened the card editor sees exactly the previous CSS.
-                    // The shadow deliberately keeps its ORIGINAL classes. An
-                    // elevation choice arrives as an inline `boxShadow`, which
-                    // beats the class without needing a fallback that restates
-                    // `shadow-sm`. Writing that fallback by hand was the first
-                    // attempt and it was wrong: elev-1 is CLOSE to shadow-sm
-                    // but not equal, so it would have silently restyled every
-                    // card on 305 pages the day this shipped.
-                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border-[length:var(--card-border-width,1px)] border-[color:var(--card-border-color,var(--border))] [border-style:var(--card-border-style,solid)] shadow-sm dark:shadow-[var(--glow-card,none)]',
+                    // Resting elevation and interaction feedback are separate:
+                    // a selected depth must not suppress hover/focus feedback.
+                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border-[length:var(--card-border-width,1px)] border-[color:var(--card-border-color,var(--border))] [border-style:var(--card-border-style,solid)] shadow-[var(--card-shadow,var(--shadow-elev-2))] hover:shadow-[var(--card-shadow-interaction,var(--shadow-elev-3))] focus-within:shadow-[var(--card-shadow-interaction,var(--shadow-elev-3))] dark:hover:shadow-[var(--card-shadow-interaction-dark,var(--glow-card-hover))] dark:focus-within:shadow-[var(--card-shadow-interaction-dark,var(--glow-card-hover))]',
                     // THE DOUBLED BOTTOM BORDER, AND WHY THE ARITHMETIC COULD NEVER FIX IT.
                     //
                     // computeAutoHeightRows uses Math.ceil to round content height up to
@@ -592,8 +591,8 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * `cardStyleVars` carries ONLY the properties the operator changed
              * (see cardStyle.ts). An untouched page spreads an empty object, so
              * this attribute is identical to what it was before the card editor
-             * existed. A chrome-owning surface applies `boxShadow` directly
-             * to beat its default class. Layout-only wrappers pass the token
+             * existed. A chrome-owning surface reads shadow tokens in its
+             * resting and interaction classes. Layout-only wrappers pass them
              * to the painted consumer without drawing a second shadow. The
              * padding marker lets consumer Cards distinguish an explicit page
              * inset from an app's unrelated default --card-padding token.
@@ -601,9 +600,6 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             style={{
               contain: 'layout style',
               ...cardStyleVars,
-              ...(chrome && cardStyleVars && '--card-shadow' in cardStyleVars
-                ? { boxShadow: (cardStyleVars as Record<string, string>)['--card-shadow'] }
-                : null),
               ...(chrome && cardStyleVars && '--card-padding' in cardStyleVars
                 ? { padding: (cardStyleVars as Record<string, string>)['--card-padding'] }
                 : null),
@@ -788,7 +784,11 @@ export function PageGridLayout({
   const isSaving = saveState?.pageKey === pageKey && saveState.status === 'saving';
   const saveFailed = saveState?.pageKey === pageKey && saveState.status === 'failed';
   const saveAttempt = useRef(0);
-  useLayoutEffect(() => () => { saveAttempt.current += 1; }, [pageKey, isEditing]);
+  const savingAttempt = useRef<number | null>(null);
+  useLayoutEffect(() => () => {
+    saveAttempt.current += 1;
+    savingAttempt.current = null;
+  }, [pageKey, isEditing]);
 
   // Auto-height dispatcher (blueprint amendment A1, hardened per quality
   // review 2026-07-14). `GridItem`'s ResizeObserver calls this per-widget
@@ -895,8 +895,9 @@ export function PageGridLayout({
     [setStoredCardStyle],
   );
   const saveAndExit = useCallback(async () => {
-    if (isSaving) return;
+    if (canEditPage === false || !isEditing || savingAttempt.current !== null) return;
     const attempt = ++saveAttempt.current;
+    savingAttempt.current = attempt;
     setSaveState({ pageKey, status: 'saving' });
     try {
       await Promise.all([flushPreferences(), flushLayerNames?.(), flushHiddenLayers?.(), flushCardStyle?.()]);
@@ -905,8 +906,18 @@ export function PageGridLayout({
       startTransition(() => setIsEditing(false));
     } catch {
       if (attempt === saveAttempt.current) setSaveState({ pageKey, status: 'failed' });
+    } finally {
+      if (savingAttempt.current === attempt) savingAttempt.current = null;
     }
-  }, [isSaving, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
+  }, [canEditPage, isEditing, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
+  useEffect(() => {
+    const onSaveRequest = (event: Event) => {
+      const detail = (event as CustomEvent<PageGridSaveEventDetail>).detail;
+      if (detail?.pageKey === pageKey) void saveAndExit();
+    };
+    window.addEventListener(PAGE_GRID_SAVE_EVENT, onSaveRequest);
+    return () => window.removeEventListener(PAGE_GRID_SAVE_EVENT, onSaveRequest);
+  }, [pageKey, saveAndExit]);
   const extraWidgets = useMemo(() => {
     const rendered: Record<string, React.ReactNode> = {};
     if (!createEntityWidget) return rendered;

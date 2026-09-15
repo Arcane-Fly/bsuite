@@ -33,6 +33,50 @@ function openEditor() {
 afterEach(cleanup);
 
 describe('page editor save acknowledgement', () => {
+  it('acknowledges a targeted header save, retains failure, and retries without closing sibling grids', async () => {
+    const f = fixture('card_style');
+    render(<>{grid(f.adapter)}{grid(f.adapter, 'sibling')}</>);
+    openEditor();
+    const request = (pageKey: string) => window.dispatchEvent(new CustomEvent('bsuite-page-grid-save', { detail: { pageKey } }));
+    act(() => { request('save-contract'); request('save-contract'); });
+    expect(f.flush).toHaveBeenCalledTimes(7);
+    expect(f.flush.mock.calls.every(([key]) => key.startsWith('page:save-contract_'))).toBe(true);
+    expect(screen.getByRole('button', { name: 'Saving…' }).hasAttribute('disabled')).toBe(true);
+    await act(async () => { f.fail(); });
+    expect(screen.getByRole('alert').textContent).toContain('could not be saved');
+    expect(screen.getAllByRole('region', { name: 'Canvas editor controls' })).toHaveLength(2);
+    f.recover();
+    await act(async () => { request('save-contract'); });
+    expect(screen.getAllByRole('region', { name: 'Canvas editor controls' })).toHaveLength(1);
+    expect(screen.getAllByRole('textbox', { name: 'Widget draft' }).map(el => (el as HTMLInputElement).value))
+      .toEqual(['Keep this text', 'Keep this text']);
+  });
+
+  it('ignores header save requests without a matching open editable canvas', () => {
+    const f = fixture('card_style');
+    render(grid(f.adapter));
+    act(() => window.dispatchEvent(new CustomEvent('bsuite-page-grid-save', { detail: { pageKey: 'save-contract' } })));
+    openEditor();
+    act(() => window.dispatchEvent(new CustomEvent('bsuite-page-grid-save', { detail: { pageKey: 'another-page' } })));
+    act(() => window.dispatchEvent(new CustomEvent('bsuite-page-grid-save')));
+    expect(f.flush).not.toHaveBeenCalled();
+  });
+
+  it('allows implicit edit permission and rejects a permission revoked while editing', async () => {
+    const f = fixture('card_style');
+    const view = render(<PageGridLayout pageKey="permission" defaultLayouts={layouts}
+      preferenceAdapter={f.adapter} widgets={{ card: 'Card' }} />);
+    openEditor();
+    act(() => window.dispatchEvent(new CustomEvent('bsuite-page-grid-save', { detail: { pageKey: 'permission' } })));
+    expect(f.flush).toHaveBeenCalledTimes(7);
+    await act(async () => { f.fail(); });
+    view.rerender(<PageGridLayout pageKey="permission" defaultLayouts={layouts} canEditPage={false}
+      preferenceAdapter={f.adapter} widgets={{ card: 'Card' }} />);
+    f.recover();
+    act(() => window.dispatchEvent(new CustomEvent('bsuite-page-grid-save', { detail: { pageKey: 'permission' } })));
+    expect(f.flush).toHaveBeenCalledTimes(7);
+  });
+
   it('composes appearance fields changed before the next render', () => {
     const f = fixture('card_style');
     render(grid(f.adapter));

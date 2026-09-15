@@ -76,7 +76,8 @@ describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
     );
     const el = surface(container);
     expect(el.style.getPropertyValue('--card-shadow')).toBe('var(--shadow-elev-4)');
-    expect(el.style.boxShadow).toBe(chrome ? 'var(--shadow-elev-4)' : '');
+    expect(el.style.boxShadow).toBe('');
+    expect(el.style.getPropertyValue('--card-shadow-interaction')).toBe('var(--shadow-elev-4), var(--shadow-elev-1)');
   });
 
   it('paints NO border, radius or background on a default grid item', () => {
@@ -178,7 +179,7 @@ describe('chrome is opt-in, at two levels, and per-item wins', () => {
      * "restores the pre-2.0.0 surface exactly" actually claims. Assert the
      * paint, not the spelling.
      */
-    for (const cls of ['bg-card', 'shadow-sm']) {
+    for (const cls of ['bg-card', 'shadow-[var(--card-shadow,var(--shadow-elev-2))]']) {
       expect(el.classList.contains(cls), `chrome on must paint ${cls}`).toBe(true);
     }
     expect(paintsBorder(el), 'chrome on must paint a border').toBe(true);

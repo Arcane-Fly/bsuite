@@ -1,4 +1,5 @@
-export { PageGridLayout } from './PageGridLayout.js';
+export { PageGridLayout, PAGE_GRID_SAVE_EVENT } from './PageGridLayout.js';
+export type { PageGridSaveEventDetail } from './PageGridLayout.js';
 export { PageEditorLauncher } from './PageEditorLauncher.js';
 export { CanvasCard } from './CanvasCard.js';
 /*
