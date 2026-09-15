@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { PageGridLayout } from '../PageGridLayout.js';
 import { CanvasCard } from '../CanvasCard.js';
 import { buildCanvasCardLayout } from '../canvasCardLayout.js';
-import type { GridLayouts } from '../types.js';
+import { DEFAULT_CARD_STYLE } from '../cardStyle.js';
+import type { GridLayouts, PageGridPreferenceFactory } from '../types.js';
 
 /**
  * G1 — the grid-item chrome inversion.
@@ -41,6 +42,26 @@ function paintsBorder(el: Element): boolean {
 }
 
 describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
+  it.each([false, true])('a saved elevation paints only a chrome-owning surface: %s', (chrome) => {
+    const preferenceAdapter: PageGridPreferenceFactory = <T,>(key: string, fallback: T) => ({
+      value: key.endsWith('_card_style') ? { ...DEFAULT_CARD_STYLE, elevation: 4 } as T : fallback,
+      setValue: () => undefined,
+      loaded: true,
+    });
+    const { container } = render(
+      <PageGridLayout
+        pageKey={`saved-shadow-${chrome}`}
+        defaultLayouts={layouts}
+        itemChrome={chrome}
+        preferenceAdapter={preferenceAdapter}
+        widgets={{ alpha: <div>Painted consumer</div> }}
+      />,
+    );
+    const el = surface(container);
+    expect(el.style.getPropertyValue('--card-shadow')).toBe('var(--shadow-elev-4)');
+    expect(el.style.boxShadow).toBe(chrome ? 'var(--shadow-elev-4)' : '');
+  });
+
   it('paints NO border, radius or background on a default grid item', () => {
     const { container } = render(
       <PageGridLayout
