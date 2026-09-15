@@ -202,14 +202,18 @@ export function usePageGridLayout({
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const { value: savedLayoutVersion, setValue: setSavedLayoutVersion, loaded: versionLoaded } =
+  const { value: savedLayoutVersion, setValue: setSavedLayoutVersion, loaded: versionLoaded, flush: flushVersion } =
     preferenceAdapter<number>(`page:${pageKey}_grid_version`, 0);
-  const { value: savedLayout, setValue: setSavedLayout, loaded: layoutLoaded } =
+  const { value: savedLayout, setValue: setSavedLayout, loaded: layoutLoaded, flush: flushLayout } =
     preferenceAdapter<GridLayouts>(`page:${pageKey}_grid_layouts`, defaultLayouts);
-  const { value: savedLayoutCols, setValue: setLayoutCols } =
+  const { value: savedLayoutCols, setValue: setLayoutCols, flush: flushCols } =
     preferenceAdapter<number>(`page:${pageKey}_grid_cols`, defaultCols);
-  const { value: savedBaseCols, setValue: setBaseCols } =
+  const { value: savedBaseCols, setValue: setBaseCols, flush: flushBaseCols } =
     preferenceAdapter<number>(`page:${pageKey}_grid_base_cols`, defaultCols);
+
+  const flushPreferences = useCallback(async () => {
+    await Promise.all([flushVersion?.(), flushLayout?.(), flushCols?.(), flushBaseCols?.()]);
+  }, [flushVersion, flushLayout, flushCols, flushBaseCols]);
 
   const prefsLoaded = layoutLoaded && versionLoaded;
 
@@ -953,6 +957,7 @@ export function usePageGridLayout({
     layoutCols,
     isEditing,
     setIsEditing,
+    flushPreferences,
     activeCols,
     activeCompactor,
     onLayoutChange,
