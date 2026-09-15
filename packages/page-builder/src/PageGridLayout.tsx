@@ -742,6 +742,7 @@ export function PageGridLayout({
     layoutCols,
     isEditing,
     setIsEditing,
+    flushPreferences,
     activeCols,
     activeCompactor,
     onLayoutChange,
@@ -769,6 +770,12 @@ export function PageGridLayout({
     defaultAutoHeight,
     layoutMigrations,
   });
+
+  const [saveState, setSaveState] = useState<{ pageKey: string; status: 'saving' | 'failed' } | null>(null);
+  const isSaving = saveState?.pageKey === pageKey && saveState.status === 'saving';
+  const saveFailed = saveState?.pageKey === pageKey && saveState.status === 'failed';
+  const saveAttempt = useRef(0);
+  useLayoutEffect(() => () => { saveAttempt.current += 1; }, [pageKey, isEditing]);
 
   // Auto-height dispatcher (blueprint amendment A1, hardened per quality
   // review 2026-07-14). `GridItem`'s ResizeObserver calls this per-widget
@@ -850,11 +857,11 @@ export function PageGridLayout({
   const [extraRelationshipWidgetConfigs, setExtraRelationshipWidgetConfigs] = useState<
     Record<string, RelationshipWidgetDetail>
   >({});
-  const { value: layerNames, setValue: setLayerNames } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
+  const { value: layerNames, setValue: setLayerNames, flush: flushLayerNames } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
     `page:${pageKey}_grid_layer_names`,
     {},
   );
-  const { value: hiddenLayerIds, setValue: setHiddenLayerIds } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
+  const { value: hiddenLayerIds, setValue: setHiddenLayerIds, flush: flushHiddenLayers } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
     `page:${pageKey}_grid_hidden_layers`,
     {},
   );
@@ -865,15 +872,28 @@ export function PageGridLayout({
    * survives a reload, follows the operator across devices wherever the app
    * backs the adapter with the database, and needs no new storage concept.
    */
-  const { value: storedCardStyle, setValue: setStoredCardStyle } = (preferenceAdapter ?? defaultPreferenceAdapter)<
+  const { value: storedCardStyle, setValue: setStoredCardStyle, flush: flushCardStyle } = (preferenceAdapter ?? defaultPreferenceAdapter)<
     unknown
   >(`page:${pageKey}_card_style`, DEFAULT_CARD_STYLE);
   const cardStyle = useMemo(() => normaliseCardStyle(storedCardStyle), [storedCardStyle]);
   const cardStyleVars = useMemo(() => toCssVars(cardStyle), [cardStyle]);
   const updateCardStyle = useCallback(
-    (patch: Partial<CardStyle>) => setStoredCardStyle({ ...cardStyle, ...patch }),
-    [cardStyle, setStoredCardStyle],
+    (patch: Partial<CardStyle>) => setStoredCardStyle((previous: unknown) => ({ ...normaliseCardStyle(previous), ...patch })),
+    [setStoredCardStyle],
   );
+  const saveAndExit = useCallback(async () => {
+    if (isSaving) return;
+    const attempt = ++saveAttempt.current;
+    setSaveState({ pageKey, status: 'saving' });
+    try {
+      await Promise.all([flushPreferences(), flushLayerNames?.(), flushHiddenLayers?.(), flushCardStyle?.()]);
+      if (attempt !== saveAttempt.current) return;
+      setSaveState(null);
+      startTransition(() => setIsEditing(false));
+    } catch {
+      if (attempt === saveAttempt.current) setSaveState({ pageKey, status: 'failed' });
+    }
+  }, [isSaving, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
   const extraWidgets = useMemo(() => {
     const rendered: Record<string, React.ReactNode> = {};
     if (!createEntityWidget) return rendered;
@@ -1259,6 +1279,7 @@ export function PageGridLayout({
           )}
           role="region"
           aria-label="Canvas editor controls"
+          aria-busy={isSaving}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -1315,13 +1336,20 @@ export function PageGridLayout({
               <button
                 type="button"
                 className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium bg-primary text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                onClick={() => startTransition(() => setIsEditing(false))}
+                disabled={isSaving}
+                onClick={() => { void saveAndExit(); }}
               >
                 <Save className="h-4 w-4 mr-2" />
-                Save &amp; Exit
+                {isSaving ? 'Saving…' : 'Save & Exit'}
               </button>
             </div>
           </div>
+
+          {saveFailed && (
+            <p role="alert" className="mt-2 text-sm text-destructive">
+              Changes could not be saved. Your changes are still here. Try Save &amp; Exit again.
+            </p>
+          )}
 
           <div
             id="page-grid-editor-controls-body"

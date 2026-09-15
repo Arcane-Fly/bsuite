@@ -75,6 +75,10 @@ export interface PageGridPreferenceAdapter<T> {
   value: T;
   setValue: (value: T | ((previous: T) => T)) => void;
   loaded: boolean;
+  /** Wait for pending writes and reject if the latest change was not saved.
+   * A subsequent explicit call may retry a failed write without losing the draft.
+   * Synchronous adapters may omit this; remote adapters should implement it. */
+  flush?: () => Promise<void>;
 }
 
 export type PageGridPreferenceFactory = <T>(
@@ -274,6 +278,7 @@ export interface UsePageGridLayoutResult {
   layoutCols: number;
   isEditing: boolean;
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
+  flushPreferences: () => Promise<void>;
   activeCols: Record<string, number>;
   activeCompactor: Compactor;
   onLayoutChange: (_layout: unknown, layouts: unknown, wasGesture?: boolean) => void;
