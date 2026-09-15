@@ -51,6 +51,13 @@ When adding `autoHeight` to an existing page's layout, bump that page's
 
 ## Edit-mode chrome (2.7.1-next.0+)
 
+`PAGE_GRID_EDITING_EVENT` reports committed changes from `2.7.1-next.1`.
+Its `{ pageKey, editing }` payload and event name are unchanged. The matching
+canvas DOM is updated before listeners run, including when Save & Exit uses
+a React transition. Initial mounting, unchanged state and abandoned transitions
+do not emit notifications. Consumers must match the page key and preserve
+focus on surviving inputs when synchronizing their header controls.
+
 While the canvas editor is open, each grid item renders an in-flow strip
 (`[data-slot="grid-item-editor-chrome"]`) above the card content: the widget
 name and a Hide control. The strip is **not** absolutely positioned over the
