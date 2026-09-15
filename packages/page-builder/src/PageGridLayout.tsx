@@ -1,4 +1,5 @@
 import { ElementScopeProvider } from './elementScope.js';
+import { CardPaddingBoundary } from './cardPadding.js';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
 import React, {
   startTransition,
@@ -340,9 +341,14 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
      * of card overflow across 70 sites. An extra element here would have been a
      * real risk; a provider is not one.
      */
+    const cardPadding = !chrome && cardStyleVars && '--card-padding' in cardStyleVars
+      && typeof cardStyleVars['--card-padding'] === 'string'
+      ? cardStyleVars['--card-padding'] : undefined;
     const scopedContent = (
       <ElementScopeProvider scope={{ pageKey, cardKey: id, cardLabel: label, isEditing }}>
-        {content}
+        <CardPaddingBoundary padding={cardPadding}>
+          {content}
+        </CardPaddingBoundary>
       </ElementScopeProvider>
     );
 

@@ -76,8 +76,8 @@
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 23,
-      "exports": 25
+      "sourceFiles": 24,
+      "exports": 26
     },
     "@bsuite/nav-core": {
       "available": true,
@@ -129,8 +129,8 @@
       "exports": 62
     }
   },
-  "sharedComponents": 202,
-  "unusedSharedComponents": 175,
+  "sharedComponents": 203,
+  "unusedSharedComponents": 176,
   "localComponentFiles": {
     "crm7": 451,
     "business-suite-unified": 119,
@@ -547,6 +547,13 @@
       },
       "consumerFiles": 7,
       "consumingApps": 1
+    },
+    {
+      "name": "CardPaddingBoundary",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "CustomPageView",

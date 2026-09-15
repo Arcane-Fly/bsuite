@@ -71,6 +71,15 @@ stays flat. Consumers must read all three variables; chrome-owning grid items
 already do. Default painted grid cards now use neutral elevation 2, with
 interaction feedback, matching the D2C card recovery.
 
+From `2.7.1-next.6`, app Cards import `useCardPadding` and
+`CardPaddingBoundary` from `@bsuite/page-builder/card-padding`. Read the
+inset before rendering the Card, apply a defined value to its painted surface,
+and wrap its children with a boundary without a padding prop. Inner Cards then
+keep their spacing; a nested grid establishes its own independent inset.
+The grid supplies no child inset when it paints chrome itself. This replaces
+consumer CSS `@scope` rules, which do not cover the supported Safari/Firefox
+baseline. The subpath keeps a standalone Card import separate from grid code.
+
 While the canvas editor is open, each grid item renders an in-flow strip
 (`[data-slot="grid-item-editor-chrome"]`) above the card content: the widget
 name and a Hide control. The strip is **not** absolutely positioned over the
