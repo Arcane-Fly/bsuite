@@ -8,6 +8,8 @@ evidence:
   - docs/20260731-supabase-verification-gates-v1.00W.md
 ---
 
+> Current takeover checkpoint and model-cost rules: [20260914-codex-takeover-v1.00W.md](20260914-codex-takeover-v1.00W.md). This earlier prompt remains historical scope and evidence; its execution state is superseded.
+
 # Codex IDE closeout kickoff — refined prompt
 
 **Date:** 2026-09-14 · **Complexity:** Heavy · **Status:** prepared for operator handoff; independent review APPROVE (2026-09-14); execution checkpoint still in progress.
