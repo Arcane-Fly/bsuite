@@ -581,13 +581,14 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * `cardStyleVars` carries ONLY the properties the operator changed
              * (see cardStyle.ts). An untouched page spreads an empty object, so
              * this attribute is identical to what it was before the card editor
-             * existed. `boxShadow` is set as a real declaration rather than a
-             * custom property because it has to beat the `shadow-sm` class.
+             * existed. A chrome-owning surface applies `boxShadow` directly
+             * to beat its default class. Layout-only wrappers pass the token
+             * to the painted consumer without drawing a second shadow.
              */
             style={{
               contain: 'layout style',
               ...cardStyleVars,
-              ...(cardStyleVars && '--card-shadow' in cardStyleVars
+              ...(chrome && cardStyleVars && '--card-shadow' in cardStyleVars
                 ? { boxShadow: (cardStyleVars as Record<string, string>)['--card-shadow'] }
                 : null),
               ...(cardStyleVars && '--card-padding' in cardStyleVars
