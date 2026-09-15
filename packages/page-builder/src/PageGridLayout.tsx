@@ -1,4 +1,5 @@
 import { ElementScopeProvider } from './elementScope.js';
+import { CardPaddingBoundary } from './cardPadding.js';
 import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
 import React, {
   startTransition,
@@ -35,6 +36,10 @@ import { isRelationshipWritable } from './relationshipCatalog.js';
 import { usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps, RelationshipWidgetDetail } from './types.js';
+
+/** Ask one mounted canvas to acknowledge its preferences before closing. */
+export const PAGE_GRID_SAVE_EVENT = 'bsuite-page-grid-save';
+export interface PageGridSaveEventDetail { pageKey: string }
 
 /**
  * Single source of truth for the grid's pixel geometry — read by both the
@@ -336,13 +341,19 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
      * of card overflow across 70 sites. An extra element here would have been a
      * real risk; a provider is not one.
      */
+    const cardPadding = !chrome && cardStyleVars && '--card-padding' in cardStyleVars
+      && typeof cardStyleVars['--card-padding'] === 'string'
+      ? cardStyleVars['--card-padding'] : undefined;
     const scopedContent = (
       <ElementScopeProvider scope={{ pageKey, cardKey: id, cardLabel: label, isEditing }}>
-        {content}
+        <CardPaddingBoundary padding={cardPadding}>
+          {content}
+        </CardPaddingBoundary>
       </ElementScopeProvider>
     );
 
     const measureRef = useRef<HTMLDivElement | null>(null);
+    const surfaceRef = useRef<HTMLDivElement | null>(null);
     const lastReportedRowsRef = useRef<number | null>(null);
     const measureRafRef = useRef<number | null>(null);
     /**
@@ -373,9 +384,17 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     const reportRows = useCallback(
       (contentPx: number) => {
         if (!onAutoHeightChange) return;
+        // Chrome lives outside the observed content box. Count its actual
+        // padding and borders so appearance changes cannot overlap the next
+        // card. A consumer-owned Card is already inside the measured content.
+        const surfaceStyle = chrome && surfaceRef.current ? getComputedStyle(surfaceRef.current) : null;
+        const cardChromePx = surfaceStyle
+          ? [surfaceStyle.paddingTop, surfaceStyle.paddingBottom, surfaceStyle.borderTopWidth, surfaceStyle.borderBottomWidth]
+              .reduce((total, value) => total + (Number.parseFloat(value) || 0), 0)
+          : DEFAULT_CARD_CHROME_PX;
         const rows = computeAutoHeightRows({
           contentPx,
-          cardChromePx: DEFAULT_CARD_CHROME_PX,
+          cardChromePx,
           rowHeightPx: DEFAULT_ROW_HEIGHT,
           marginYPx: DEFAULT_MARGIN[1],
         });
@@ -383,7 +402,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
         lastReportedRowsRef.current = rows;
         onAutoHeightChange(id, rows);
       },
-      [id, onAutoHeightChange],
+      [chrome, id, onAutoHeightChange],
     );
 
     /**
@@ -412,7 +431,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       else warnOnceAboutCollapsedContent(el);
       // Re-measure when edit chrome mounts/unmounts so the strip is in the
       // row count in edit mode and gone again on lossless return.
-    }, [autoHeight, onAutoHeightChange, reportRows, isEditing]);
+    }, [autoHeight, onAutoHeightChange, reportRows, isEditing, cardStyleVars]);
 
     useEffect(() => {
       if (!autoHeight || !onAutoHeightChange) return;
@@ -527,6 +546,8 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * silently return whichever came first in document order.
              */
             data-grid-slot-key={id}
+            ref={surfaceRef}
+            data-card-padding={!chrome && cardStyleVars && '--card-padding' in cardStyleVars ? '' : undefined}
             className={
               chrome
                 ? // ONE radius token, read by the grid item AND available to any
@@ -542,14 +563,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                     // whose fallbacks are byte-identical to the `border
                     // border-border` they replace, so an operator who has never
                     // opened the card editor sees exactly the previous CSS.
-                    // The shadow deliberately keeps its ORIGINAL classes. An
-                    // elevation choice arrives as an inline `boxShadow`, which
-                    // beats the class without needing a fallback that restates
-                    // `shadow-sm`. Writing that fallback by hand was the first
-                    // attempt and it was wrong: elev-1 is CLOSE to shadow-sm
-                    // but not equal, so it would have silently restyled every
-                    // card on 305 pages the day this shipped.
-                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border-[length:var(--card-border-width,1px)] border-[color:var(--card-border-color,var(--border))] [border-style:var(--card-border-style,solid)] shadow-sm dark:shadow-[var(--glow-card,none)]',
+                    // Resting elevation and interaction feedback are separate:
+                    // a selected depth must not suppress hover/focus feedback.
+                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border-[length:var(--card-border-width,1px)] border-[color:var(--card-border-color,var(--border))] [border-style:var(--card-border-style,solid)] shadow-[var(--card-shadow,var(--shadow-elev-2))] hover:shadow-[var(--card-shadow-interaction,var(--shadow-elev-3))] focus-within:shadow-[var(--card-shadow-interaction,var(--shadow-elev-3))] dark:hover:shadow-[var(--card-shadow-interaction-dark,var(--glow-card-hover))] dark:focus-within:shadow-[var(--card-shadow-interaction-dark,var(--glow-card-hover))]',
                     // THE DOUBLED BOTTOM BORDER, AND WHY THE ARITHMETIC COULD NEVER FIX IT.
                     //
                     // computeAutoHeightRows uses Math.ceil to round content height up to
@@ -581,17 +597,16 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * `cardStyleVars` carries ONLY the properties the operator changed
              * (see cardStyle.ts). An untouched page spreads an empty object, so
              * this attribute is identical to what it was before the card editor
-             * existed. A chrome-owning surface applies `boxShadow` directly
-             * to beat its default class. Layout-only wrappers pass the token
-             * to the painted consumer without drawing a second shadow.
+             * existed. A chrome-owning surface reads shadow tokens in its
+             * resting and interaction classes. Layout-only wrappers pass them
+             * to the painted consumer without drawing a second shadow. The
+             * padding marker lets consumer Cards distinguish an explicit page
+             * inset from an app's unrelated default --card-padding token.
              */
             style={{
               contain: 'layout style',
               ...cardStyleVars,
-              ...(chrome && cardStyleVars && '--card-shadow' in cardStyleVars
-                ? { boxShadow: (cardStyleVars as Record<string, string>)['--card-shadow'] }
-                : null),
-              ...(cardStyleVars && '--card-padding' in cardStyleVars
+              ...(chrome && cardStyleVars && '--card-padding' in cardStyleVars
                 ? { padding: (cardStyleVars as Record<string, string>)['--card-padding'] }
                 : null),
             }}
@@ -775,7 +790,11 @@ export function PageGridLayout({
   const isSaving = saveState?.pageKey === pageKey && saveState.status === 'saving';
   const saveFailed = saveState?.pageKey === pageKey && saveState.status === 'failed';
   const saveAttempt = useRef(0);
-  useLayoutEffect(() => () => { saveAttempt.current += 1; }, [pageKey, isEditing]);
+  const savingAttempt = useRef<number | null>(null);
+  useLayoutEffect(() => () => {
+    saveAttempt.current += 1;
+    savingAttempt.current = null;
+  }, [pageKey, isEditing]);
 
   // Auto-height dispatcher (blueprint amendment A1, hardened per quality
   // review 2026-07-14). `GridItem`'s ResizeObserver calls this per-widget
@@ -882,8 +901,9 @@ export function PageGridLayout({
     [setStoredCardStyle],
   );
   const saveAndExit = useCallback(async () => {
-    if (isSaving) return;
+    if (canEditPage === false || !isEditing || savingAttempt.current !== null) return;
     const attempt = ++saveAttempt.current;
+    savingAttempt.current = attempt;
     setSaveState({ pageKey, status: 'saving' });
     try {
       await Promise.all([flushPreferences(), flushLayerNames?.(), flushHiddenLayers?.(), flushCardStyle?.()]);
@@ -892,8 +912,18 @@ export function PageGridLayout({
       startTransition(() => setIsEditing(false));
     } catch {
       if (attempt === saveAttempt.current) setSaveState({ pageKey, status: 'failed' });
+    } finally {
+      if (savingAttempt.current === attempt) savingAttempt.current = null;
     }
-  }, [isSaving, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
+  }, [canEditPage, isEditing, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
+  useEffect(() => {
+    const onSaveRequest = (event: Event) => {
+      const detail = (event as CustomEvent<PageGridSaveEventDetail>).detail;
+      if (detail?.pageKey === pageKey) void saveAndExit();
+    };
+    window.addEventListener(PAGE_GRID_SAVE_EVENT, onSaveRequest);
+    return () => window.removeEventListener(PAGE_GRID_SAVE_EVENT, onSaveRequest);
+  }, [pageKey, saveAndExit]);
   const extraWidgets = useMemo(() => {
     const rendered: Record<string, React.ReactNode> = {};
     if (!createEntityWidget) return rendered;

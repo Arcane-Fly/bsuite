@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/page-builder",
-  "version": "2.7.1-next.3",
+  "version": "2.7.1-next.6",
   "description": "Shared BSuite responsive page-builder grid and layout persistence primitives",
   "type": "module",
   "license": "UNLICENSED",
@@ -24,6 +24,10 @@
       "types": "./dist/index.d.ts"
     },
     "./styles.css": "./src/styles/react-grid-layout-overrides.css",
+    "./card-padding": {
+      "import": "./dist/cardPadding.js",
+      "types": "./dist/cardPadding.d.ts"
+    },
     "./scanner": {
       "import": "./dist/scanner/index.js",
       "types": "./dist/scanner/index.d.ts"
