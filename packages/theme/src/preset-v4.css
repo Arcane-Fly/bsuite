@@ -254,12 +254,20 @@
      --tw-ring-shadow with it. Measured: `shadow-elev-0 ring-2` rendered NO
      FOCUS RING. Tailwind's own `shadow-none` sidesteps this with `0 0 #0000`;
      `transparent` is the same trick without a pure-black alpha form. */
+}
+
+/* Page appearance stores a depth, then reads var(--shadow-elev-N) at runtime.
+   Keep the entire ramp even when the app has no matching utility class.
+   `inline` still resolves each utility through the current role-bound ink. */
+@theme inline static {
   --shadow-elev-0: 0 0 0 0 transparent;
   --shadow-elev-1: 0 1px 2px 0 var(--shadow-ink-soft);
   --shadow-elev-2: 0 4px 6px -1px var(--shadow-ink), 0 2px 4px -2px var(--shadow-ink-soft);
   --shadow-elev-3: 0 10px 15px -3px var(--shadow-ink), 0 4px 6px -4px var(--shadow-ink-soft);
   --shadow-elev-4: 0 20px 25px -5px var(--shadow-ink), 0 8px 10px -6px var(--shadow-ink-faint);
+}
 
+@theme inline {
   /* ------------------------------------------------------------
      Tailwind's OWN shadow scale, rebound onto the same ink.
      ------------------------------------------------------------
