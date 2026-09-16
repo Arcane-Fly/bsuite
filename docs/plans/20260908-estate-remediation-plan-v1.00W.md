@@ -194,3 +194,9 @@ steps without asking for routine permission; report a genuine blocker with its r
 Exclude Get Muscles and the separate Xero/GST task. Maintain visual/code customization
 parity, disciplinary Record of Discussion semantics, and executable workflow linkage.
 ```
+
+## 16 September — scoped record-section takeover
+
+Codex owns the operator-requested Callibre consolidation, record create/edit/view parity and in-context related-record controls; Claude retains unrelated active lanes. Continue from the existing bsuite#3206 and crm7#2474/#2477/#2061 launch prompts. This is not a new backlog and does not change their full acceptance requirements.
+
+Callibre's bounded live data correction has fresh evidence in [crm7#2474](https://github.com/GaryOcean428/crm7/issues/2474#issuecomment-5692979299). Record UI work remains under implementation and must pass the [capability-register round trip](../20260908-customization-capability-register-v1.00W.md#16-september--clienthost-record-parity-and-linking), exact development/production deployment checks and full DoD before it is accepted. Preserve the distinction between the original client and its linked host storage: consolidation must not make either set of documents or the person's host relationship disappear from the screen.

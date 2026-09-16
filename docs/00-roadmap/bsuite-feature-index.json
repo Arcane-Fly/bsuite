@@ -379,7 +379,7 @@
   "sibling_enumeration_method": "sibling_class assigned in pass 1 from the reusable pattern the surface is built from, normalised in pass 3; count is the number of index rows sharing that class",
   "compliance_risk": [],
   "origin": "pass1-code-truth",
-  "notes": "",
+  "notes": "2026-09-16 operator takeover: record create/edit/view parity and in-context relationships are being implemented under bsuite#3206 and crm7#2477/#2061, with Callibre data correction evidenced in crm7#2474. See docs/20260908-customization-capability-register-v1.00W.md, 16 September section. Data correction is production-verified; client UI changes are not yet deployed-accepted. Fresh sibling_class enumeration returns 146 rows (CRM7 123, BSU 14, Conduit 9); historical sibling_count metadata of 148 is stale and must not be treated as verified coverage.",
   "dod_status": "not-evaluated"
  },
  {
