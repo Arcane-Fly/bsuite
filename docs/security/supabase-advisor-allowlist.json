@@ -501,6 +501,17 @@
       "added": "2026-09-09",
       "review": "Re-justify if the generic subject-ownership hardening migration lands without this rule being re-read against its new body, or if a third overload of workflow_run_start appears.",
       "tracked_in": null
+    },
+    {
+      "added": "2026-09-16",
+      "lint": "authenticated_security_definer_function_executable",
+      "mode": "accepted",
+      "object_type": "function",
+      "objects": [
+        "team_invitation_seat_available(p_team_id uuid, p_tenant_id uuid, p_user_id uuid)"
+      ],
+      "reason": "The RLS predicate added by business-suite-unified migration 20261201010300_recover_team_invitation_capacity_lock (applied to production), which replaced a team_invitations INSERT policy that queried team_invitations from inside its own WITH CHECK and so recursed under RLS.\n\nThis is the ESTABLISHED ACCEPTED CLASS on this list: RLS PREDICATES. team_invitations_admin_insert (FOR INSERT TO authenticated) calls it in WITH CHECK, and a policy expression is evaluated as the querying role, so revoking EXECUTE from authenticated would not narrow who can invite; it would fail every direct invitation insert. SECURITY DEFINER is what lets the predicate count team_invitations without re-entering that table's own policies.\n\nVERIFIED LIVE 2026-09-16 against the production catalog (SELECT only):\n  * SECURITY DEFINER, VOLATILE, search_path pinned to 'public, pg_temp'.\n  * proacl {postgres, service_role, authenticated}=X; has_function_privilege('anon', ...) = FALSE.\n  * The live body is the migration's body exactly (908 bytes; whitespace-normalised md5 identical to the file).\n  * Referenced by exactly ONE policy (public.team_invitations team_invitations_admin_insert) and by no other function.\n\nIt cannot be pointed at anyone else. It returns FALSE, before taking any lock or reading any row, unless p_user_id IS auth.uid(), the caller is_team_admin of p_team_id, and p_tenant_id is one of the caller's own auth_tenant_id() tenants. Only then does it take the per-tenant advisory transaction lock (lock_team_seat_capacity, which authenticated cannot execute) and return one BOOLEAN: whether members plus live pending invitations are below the tenant's latest subscription seat_count. No row data leaves the function.",
+      "review": "Re-justify if the signature changes (objects match by full signature), if any policy other than team_invitations_admin_insert or any function starts calling it, or if the early-return checks on auth.uid(), is_team_admin and auth_tenant_id() are ever loosened."
     }
   ],
   "entries": [
