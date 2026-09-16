@@ -71,10 +71,53 @@ export type LayoutMigration = (
   defaults: GridLayouts
 ) => GridLayouts;
 
+/**
+ * Where the READ of one preference key stands (bsuite#3277).
+ *
+ * - `'loading'` — the stored value has not arrived yet. `value` is a local
+ *   mirror or the fallback.
+ * - `'loaded'`  — `value` is what is stored for this key, or nothing is stored
+ *   and `value` is the fallback. Only this state authorises a write.
+ * - `'failed'`  — the read errored. `value` is a local mirror or the fallback
+ *   and says NOTHING about what is stored.
+ *
+ * A failed read is not an empty read. On a device with no local copy, crm7 and
+ * business-suite-unified reported a failed `_grid_version` read as "loaded,
+ * version 0"; the version gate then took its discard branch and wrote the
+ * defaults over the user's saved layout — 200 of 200 pages in the measurement.
+ */
+export type PageGridPreferenceStatus = 'loading' | 'loaded' | 'failed';
+
 export interface PageGridPreferenceAdapter<T> {
   value: T;
   setValue: (value: T | ((previous: T) => T)) => void;
+  /**
+   * The two-state read signal every adapter has always reported. An adapter
+   * that implements `status` must keep this equal to `status === 'loaded'` —
+   * never true after a failed read.
+   *
+   * An adapter that does NOT implement `status` keeps exactly the meaning this
+   * had before: `true` is `'loaded'`, `false` is `'loading'`.
+   */
   loaded: boolean;
+  /**
+   * The three-state read signal. When present it is AUTHORITATIVE over
+   * `loaded`: `usePageGridLayout` treats a key as readable only when `status`
+   * is `'loaded'` AND `loaded` is true, so an adapter that adds `status` beside
+   * an older "the read settled" `loaded` still cannot authorise a write after a
+   * failure.
+   *
+   * Once a key has loaded, a later background re-read that fails must NOT move
+   * it back to `'failed'` — the value it holds is still the stored one.
+   */
+  status?: PageGridPreferenceStatus;
+  /**
+   * Re-read THIS key after a failed read, in place: no remount, no reset of any
+   * other key, and no write. The adapter moves the key to `'loading'` and then
+   * to `'loaded'` or back to `'failed'`. Omit it only if the adapter genuinely
+   * cannot read again without a reload.
+   */
+  retry?: () => void;
   /** Wait for pending writes and reject if the latest change was not saved.
    * A subsequent explicit call may retry a failed write without losing the draft.
    * Synchronous adapters may omit this; remote adapters should implement it. */
@@ -279,6 +322,22 @@ export interface UsePageGridLayoutResult {
   isEditing: boolean;
   setIsEditing: React.Dispatch<React.SetStateAction<boolean>>;
   flushPreferences: () => Promise<void>;
+  /**
+   * The read state of every preference key this hook reads OR writes
+   * (`_grid_version`, `_grid_layouts`, `_grid_cols`, `_grid_base_cols`),
+   * combined: `'failed'` if any failed, else `'loading'` if any is still
+   * loading, else `'loaded'`. Until it is `'loaded'` the hook runs no version
+   * gate, no migration, no discard and no write of any kind (bsuite#3277).
+   */
+  preferencesStatus: PageGridPreferenceStatus;
+  /** True when at least one failed key's adapter offers `retry`. */
+  canRetryPreferences: boolean;
+  /**
+   * Re-read ONLY the keys whose read failed, via each adapter's own `retry`.
+   * Nothing remounts: editing state, the draft and every loaded key are kept,
+   * and the gate simply runs once every key has loaded.
+   */
+  retryPreferences: () => void;
   activeCols: Record<string, number>;
   activeCompactor: Compactor;
   onLayoutChange: (_layout: unknown, layouts: unknown, wasGesture?: boolean) => void;

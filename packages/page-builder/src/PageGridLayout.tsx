@@ -1,6 +1,6 @@
 import { ElementScopeProvider } from './elementScope.js';
 import { CardPaddingBoundary } from './cardPadding.js';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RefreshCw, RotateCcw, Save, Settings2, Unlock, X } from 'lucide-react';
 import React, {
   startTransition,
   useCallback,
@@ -33,7 +33,7 @@ import {
 } from './cardStyle.js';
 import { defaultPreferenceAdapter } from './preferences.js';
 import { isRelationshipWritable } from './relationshipCatalog.js';
-import { usePageGridLayout } from './usePageGridLayout.js';
+import { combinePreferenceStatuses, preferenceStatusOf, usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps, RelationshipWidgetDetail } from './types.js';
 
@@ -141,6 +141,13 @@ type GridItemProps = {
   pageKey: string;
   onHide: (id: string) => void;
   /**
+   * Editing is open but paused because a preference read failed or is still
+   * loading (bsuite#3277). The card keeps its edit-mode label, but hide is
+   * disabled and the move cursor is withdrawn, because neither would do
+   * anything.
+   */
+  editingPaused?: boolean;
+  /**
    * When true, this item's height tracks its own measured content height
    * (blueprint amendment A1) instead of being manually resizable. See the
    * ResizeObserver effect below and `computeAutoHeightRows`.
@@ -230,10 +237,12 @@ function GridItemEditorChrome({
   id,
   label,
   onHide,
+  hideDisabled = false,
 }: {
   id: string;
   label: string;
   onHide: (id: string) => void;
+  hideDisabled?: boolean;
 }) {
   return (
     <div
@@ -258,7 +267,8 @@ function GridItemEditorChrome({
       </span>
       <button
         type="button"
-        className="ml-auto h-6 w-6 shrink-0 rounded-full flex items-center justify-center bg-destructive hover:bg-destructive text-destructive-foreground shadow transition-colors"
+        className="ml-auto h-6 w-6 shrink-0 rounded-full flex items-center justify-center bg-destructive hover:bg-destructive text-destructive-foreground shadow transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        disabled={hideDisabled}
         data-no-drag
         onPointerDown={(event) => event.stopPropagation()}
         onClick={(event) => {
@@ -314,6 +324,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   label,
   pageKey,
   onHide,
+  editingPaused = false,
   autoHeight,
   onAutoHeightChange,
   chrome = false,
@@ -482,7 +493,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     // protected via the `cancel` selector below in the <Responsive> render.
     const outerClass = cn(
       'relative group overflow-visible',
-      isEditing && 'drag-handle cursor-move',
+      isEditing && 'drag-handle',
+      // Paused editing (bsuite#3277) cannot move a card, so it must not promise to.
+      isEditing && !editingPaused && 'cursor-move',
       injectedClassName
     );
     return (
@@ -687,7 +700,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                  */}
                 <div ref={measureRef} className="flow-root">
                   {isEditing ? (
-                    <GridItemEditorChrome id={id} label={label} onHide={onHide} />
+                    <GridItemEditorChrome id={id} label={label} onHide={onHide} hideDisabled={editingPaused} />
                   ) : null}
                   {scopedContent}
                 </div>
@@ -695,7 +708,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
             ) : (
               <>
                 {isEditing ? (
-                  <GridItemEditorChrome id={id} label={label} onHide={onHide} />
+                  <GridItemEditorChrome id={id} label={label} onHide={onHide} hideDisabled={editingPaused} />
                 ) : null}
                 <div data-slot="grid-item-body" className="min-h-0 flex-1 overflow-auto">
                   {scopedContent}
@@ -758,6 +771,9 @@ export function PageGridLayout({
     isEditing,
     setIsEditing,
     flushPreferences,
+    preferencesStatus,
+    canRetryPreferences,
+    retryPreferences,
     activeCols,
     activeCompactor,
     onLayoutChange,
@@ -858,7 +874,6 @@ export function PageGridLayout({
     }
   }, [flushAutoHeightUpdates, scheduleFrame]);
 
-  const resizeEnabled = isEditing && isResizable;
   const resizeConstraints = useMemo(
     () => [
       // `gridBounds` caps width at the active column count, so we don't need
@@ -876,14 +891,16 @@ export function PageGridLayout({
   const [extraRelationshipWidgetConfigs, setExtraRelationshipWidgetConfigs] = useState<
     Record<string, RelationshipWidgetDetail>
   >({});
-  const { value: layerNames, setValue: setLayerNames, flush: flushLayerNames } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
+  const layerNamesPreference = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
     `page:${pageKey}_grid_layer_names`,
     {},
   );
-  const { value: hiddenLayerIds, setValue: setHiddenLayerIds, flush: flushHiddenLayers } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
+  const { value: layerNames, setValue: setLayerNames, flush: flushLayerNames } = layerNamesPreference;
+  const hiddenLayersPreference = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
     `page:${pageKey}_grid_hidden_layers`,
     {},
   );
+  const { value: hiddenLayerIds, setValue: setHiddenLayerIds, flush: flushHiddenLayers } = hiddenLayersPreference;
   /*
    * Card appearance, per page, persisted beside the layout.
    *
@@ -891,17 +908,95 @@ export function PageGridLayout({
    * survives a reload, follows the operator across devices wherever the app
    * backs the adapter with the database, and needs no new storage concept.
    */
-  const { value: storedCardStyle, setValue: setStoredCardStyle, flush: flushCardStyle } = (preferenceAdapter ?? defaultPreferenceAdapter)<
-    unknown
-  >(`page:${pageKey}_card_style`, DEFAULT_CARD_STYLE);
+  const cardStylePreference = (preferenceAdapter ?? defaultPreferenceAdapter)<unknown>(
+    `page:${pageKey}_card_style`,
+    DEFAULT_CARD_STYLE,
+  );
+  const { value: storedCardStyle, setValue: setStoredCardStyle, flush: flushCardStyle } = cardStylePreference;
+
+  /*
+   * THE EDIT GATE (bsuite#3277).
+   *
+   * The hook refuses every write while any of ITS keys is loading or failed.
+   * This canvas reads and writes three more keys the hook never sees — layer
+   * names, hidden layers and card appearance — so the same rule is applied to
+   * them here, and the two are combined into the one state the editor shows.
+   *
+   * While it is not `'loaded'` the editor stays open but PAUSED: the banner says
+   * why, a failed read offers Retry, every control in the banner body is
+   * disabled by a single `<fieldset disabled>` (so a control added later cannot
+   * forget the gate), drag/resize/hide are off, and every write path in this
+   * component is refused underneath the disabled controls as well.
+   *
+   * Retry is in place. It calls `retry` on each FAILED key's adapter — the
+   * hook's four through `retryPreferences`, this component's three directly —
+   * and nothing else: no remount, no key change, no reset. The editor, its
+   * expanded/collapsed state and everything already loaded stay exactly as they
+   * are; the pause lifts on the render in which the last failed key loads.
+   */
+  const layerNamesStatus = preferenceStatusOf(layerNamesPreference);
+  const hiddenLayersStatus = preferenceStatusOf(hiddenLayersPreference);
+  const cardStyleStatus = preferenceStatusOf(cardStylePreference);
+  const editingPreferencesStatus = combinePreferenceStatuses([
+    preferencesStatus,
+    layerNamesStatus,
+    hiddenLayersStatus,
+    cardStyleStatus,
+  ]);
+  const editingPaused = editingPreferencesStatus !== 'loaded';
+  const resizeEnabled = isEditing && isResizable && !editingPaused;
+  const { retry: retryLayerNames } = layerNamesPreference;
+  const { retry: retryHiddenLayers } = hiddenLayersPreference;
+  const { retry: retryCardStyle } = cardStylePreference;
+  const canRetryEditingPreferences =
+    canRetryPreferences ||
+    (layerNamesStatus === 'failed' && typeof retryLayerNames === 'function') ||
+    (hiddenLayersStatus === 'failed' && typeof retryHiddenLayers === 'function') ||
+    (cardStyleStatus === 'failed' && typeof retryCardStyle === 'function');
+  // Keyed by page so a retry on one page never says "still" about another.
+  const [retriedPage, setRetriedPage] = useState<string | null>(null);
+  const retriedAndStillFailed = retriedPage === pageKey && editingPreferencesStatus === 'failed';
+  const retryEditingPreferences = useCallback(() => {
+    setRetriedPage(pageKey);
+    retryPreferences();
+    if (layerNamesStatus === 'failed') retryLayerNames?.();
+    if (hiddenLayersStatus === 'failed') retryHiddenLayers?.();
+    if (cardStyleStatus === 'failed') retryCardStyle?.();
+  }, [
+    cardStyleStatus,
+    hiddenLayersStatus,
+    layerNamesStatus,
+    pageKey,
+    retryCardStyle,
+    retryHiddenLayers,
+    retryLayerNames,
+    retryPreferences,
+  ]);
+
   const cardStyle = useMemo(() => normaliseCardStyle(storedCardStyle), [storedCardStyle]);
   const cardStyleVars = useMemo(() => toCssVars(cardStyle), [cardStyle]);
   const updateCardStyle = useCallback(
-    (patch: Partial<CardStyle>) => setStoredCardStyle((previous: unknown) => ({ ...normaliseCardStyle(previous), ...patch })),
-    [setStoredCardStyle],
+    (patch: Partial<CardStyle>) => {
+      if (editingPaused) return;
+      setStoredCardStyle((previous: unknown) => ({ ...normaliseCardStyle(previous), ...patch }));
+    },
+    [editingPaused, setStoredCardStyle],
   );
+  const resetCardStyle = useCallback(() => {
+    if (editingPaused) return;
+    setStoredCardStyle({ ...DEFAULT_CARD_STYLE });
+  }, [editingPaused, setStoredCardStyle]);
   const saveAndExit = useCallback(async () => {
     if (canEditPage === false || !isEditing || savingAttempt.current !== null) return;
+    if (editingPaused) {
+      // Every write is refused while paused, so the paused keys hold nothing to
+      // save. Flushing them would only let an adapter that refuses to flush a
+      // failed key hold the user in an editor they cannot use. (A write made
+      // before the pause — the page switched mid-session — is already with its
+      // adapter and keeps saving there; exiting does not cancel it.)
+      startTransition(() => setIsEditing(false));
+      return;
+    }
     const attempt = ++saveAttempt.current;
     savingAttempt.current = attempt;
     setSaveState({ pageKey, status: 'saving' });
@@ -915,7 +1010,7 @@ export function PageGridLayout({
     } finally {
       if (savingAttempt.current === attempt) savingAttempt.current = null;
     }
-  }, [canEditPage, isEditing, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
+  }, [canEditPage, isEditing, editingPaused, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
   useEffect(() => {
     const onSaveRequest = (event: Event) => {
       const detail = (event as CustomEvent<PageGridSaveEventDetail>).detail;
@@ -1076,11 +1171,16 @@ export function PageGridLayout({
     return filtered;
   }, [autoHeightRows, currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
 
+  // Every write below is refused while editing is paused (bsuite#3277) — the
+  // controls that reach them are disabled too, but a disabled control is a
+  // presentation; the refusal is the guarantee.
   const hideLayer = (layerId: string) => {
+    if (editingPaused) return;
     setHiddenLayerIds((previous) => ({ ...previous, [layerId]: true }));
   };
 
   const showLayer = (layerId: string, defaultSize?: { w?: number; h?: number; minW?: number; minH?: number }) => {
+    if (editingPaused) return;
     setHiddenLayerIds((previous) => {
       if (!previous[layerId]) return previous;
       const { [layerId]: _removed, ...rest } = previous;
@@ -1097,6 +1197,12 @@ export function PageGridLayout({
     const handleAddEntityWidget = (event: Event) => {
       const detail = (event as CustomEvent<{ entityType: string; label?: string }>).detail;
       if (!detail?.entityType) return;
+      if (editingPaused) {
+        // Nothing is registered or added while paused; the user lands in the
+        // editor, where the reason and Retry are shown.
+        startTransition(() => setIsEditing(true));
+        return;
+      }
 
       const widgetId = `entity:${detail.entityType}`;
       const alreadyInLayout = activeLayouts.lg?.some((item) => item.i === widgetId);
@@ -1126,6 +1232,7 @@ export function PageGridLayout({
     addEntityWidgetEventNames,
     addWidget,
     createEntityWidget,
+    editingPaused,
     onRegisterEntityWidget,
     setIsEditing,
   ]);
@@ -1143,6 +1250,10 @@ export function PageGridLayout({
     const handleAddRelationshipWidget = (event: Event) => {
       const detail = (event as CustomEvent<RelationshipWidgetDetail>).detail;
       if (!detail?.hostEntityType || !detail.fkColumn || !detail.targetEntityType) return;
+      if (editingPaused) {
+        startTransition(() => setIsEditing(true));
+        return;
+      }
 
       if (!isRelationshipWritable(relationshipCatalog, detail)) {
         onRelationshipWidgetRejected?.(detail);
@@ -1177,6 +1288,7 @@ export function PageGridLayout({
     addRelationshipWidgetEventNames,
     addWidget,
     createRelationshipWidget,
+    editingPaused,
     onRegisterRelationshipWidget,
     onRelationshipWidgetRejected,
     relationshipCatalog,
@@ -1204,6 +1316,7 @@ export function PageGridLayout({
   );
 
   const handleLayerRename = (layerId: string, value: string) => {
+    if (editingPaused) return;
     const trimmed = value.trim();
     setLayerNames((previous) => {
       if (trimmed.length === 0) {
@@ -1325,7 +1438,8 @@ export function PageGridLayout({
                 <h3 className={cn('font-semibold text-foreground', controlsCollapsed ? 'text-sm' : 'text-lg')}>
                   Canvas Editor Active
                 </h3>
-                {!controlsCollapsed && (
+                {/* Paused editing cannot move or resize a card (bsuite#3277); the notice below says why. */}
+                {!controlsCollapsed && !editingPaused && (
                   <span className="text-sm text-muted-foreground">
                     Drag anywhere on a card to move it. Resize with the bottom-right handle.
                   </span>
@@ -1369,11 +1483,43 @@ export function PageGridLayout({
                 disabled={isSaving}
                 onClick={() => { void saveAndExit(); }}
               >
-                <Save className="h-4 w-4 mr-2" />
-                {isSaving ? 'Saving…' : 'Save & Exit'}
+                {/* Paused editing has nothing to save, so the button says what it does. */}
+                {editingPaused ? <X className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                {isSaving ? 'Saving…' : editingPaused ? 'Exit' : 'Save & Exit'}
               </button>
             </div>
           </div>
+
+          {editingPaused && (
+            <div
+              role={editingPreferencesStatus === 'failed' ? 'alert' : 'status'}
+              data-page-grid-editing-paused={editingPreferencesStatus}
+              className={cn(
+                'flex flex-wrap items-center gap-2 text-sm',
+                editingPreferencesStatus === 'failed' ? 'text-destructive' : 'text-muted-foreground',
+              )}
+            >
+              <p>
+                {editingPreferencesStatus === 'failed'
+                  ? `Editing is paused: your saved settings for this page ${
+                      retriedAndStillFailed ? 'still couldn\'t' : 'couldn\'t'
+                    } be loaded. Nothing can be changed until they load, so nothing you saved is overwritten.${
+                      canRetryEditingPreferences ? '' : ' Reload the page to try again.'
+                    }`
+                  : 'Loading your saved settings for this page… Editing starts as soon as they arrive.'}
+              </p>
+              {editingPreferencesStatus === 'failed' && canRetryEditingPreferences && (
+                <button
+                  type="button"
+                  onClick={retryEditingPreferences}
+                  className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
 
           {saveFailed && (
             <p role="alert" className="mt-2 text-sm text-destructive">
@@ -1384,7 +1530,18 @@ export function PageGridLayout({
           <div
             id="page-grid-editor-controls-body"
             hidden={controlsCollapsed}
+            // Dimmed while paused so the disabled state reads at a glance; inline
+            // rather than a utility so no consumer's CSS build can drop it.
+            style={editingPaused ? { opacity: 0.6 } : undefined}
             className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border max-h-[60vh] overflow-y-auto">
+            {/*
+             * ONE disabled fieldset gates every control in the body (bsuite#3277),
+             * so a control added here later inherits the gate without anyone
+             * remembering it. `display: contents` keeps the fieldset out of the
+             * flex layout — its children lay out exactly as before — and is set
+             * inline so it cannot depend on a consumer emitting the utility.
+             */}
+            <fieldset disabled={editingPaused} style={{ display: 'contents' }}>
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm shrink-0 text-muted-foreground">Columns:</span>
@@ -1542,7 +1699,7 @@ export function PageGridLayout({
 
               <button
                 type="button"
-                onClick={() => setStoredCardStyle({ ...DEFAULT_CARD_STYLE })}
+                onClick={resetCardStyle}
                 disabled={isDefaultCardStyle(cardStyle)}
                 className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
@@ -1670,6 +1827,7 @@ export function PageGridLayout({
               <RotateCcw className="h-4 w-4 mr-1" />
               Reset to Default
             </button>
+            </fieldset>
           </div>
         </div>
       )}
@@ -1742,7 +1900,7 @@ export function PageGridLayout({
             // that is regenerated (and therefore discarded) on the next render.
             onBreakpointChange={handleBreakpointChange}
             dragConfig={{
-              enabled: isEditing,
+              enabled: isEditing && !editingPaused,
               handle: '.drag-handle',
               bounded: false,
               cancel:
@@ -1781,6 +1939,7 @@ export function PageGridLayout({
                   label={layerNames[layoutItem.i] || widgetMeta?.[layoutItem.i]?.label || layoutItem.i}
                   pageKey={pageKey}
                   onHide={hideLayer}
+                  editingPaused={editingPaused}
                   autoHeight={layoutItem.autoHeight}
                   onAutoHeightChange={handleAutoHeightChange}
                   chrome={layoutItem.chrome ?? itemChrome}
