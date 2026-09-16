@@ -103,3 +103,15 @@ See [remediation plan and launch prompts](plans/20260908-estate-remediation-plan
 ## 8 September addition — inbound SMS
 
 crm7#2594 (https://github.com/GaryOcean428/crm7/issues/2594) is a P1 live defect independent of deal work: Mobile Message inbound capture → canonical conversation → inbox/record timeline → visually configured workflow. Includes full-content recovery, correlation, consent, unread/reply controls, tenant isolation and operational replay. See docs/plans/20260908-remediation/prompts/crm7-2594.md. Source audit found usage-only writes and a separate communications reader; deployed bridge/catalog verification remains required.
+
+## 16 September — client/host record parity and linking
+
+Operator-directed implementation owns the record itself (create/edit/detail), distinct from editing the page layout under ADR-0011. Existing prompt ownership remains C02/C06 → bsuite#3206, C03 → bsuite#3207 with crm7#2477/#2061 for CRM related records; Callibre duplicate correction is a bounded part of crm7#2474 (D-114).
+
+**Verified data correction:** Callibre now has one client record with the existing host employer linked. The original client ID, lead and client-owned agreement survive; the one person formerly attached to the duplicate now references the survivor. Guarded rollback rehearsal, independent review, transactional before-image audit events, fresh database reads and signed-in production reload are recorded in [crm7#2474](https://github.com/GaryOcean428/crm7/issues/2474#issuecomment-5692979299). This does not merge tenant organisations: MBAWA remains the parent and FutureBuild the GTO.
+
+**Acceptance for the current code work:** create, edit and detail consume one client field contract and status set; omitted optional fields remain available later; names represent primary contacts; errors retain drafts. A combined client/host shows documents owned by both records. Related records use canonical foreign keys, the shared data grid and an in-place selector; removing a link keeps the related record. Scope follows the actual record's tenant under server authorization, including authorized parent/platform views. Competing edits must not overwrite a relationship silently. A missing catalogue/read permission must be visible, not disguised as an empty collection.
+
+**Round-trip proof required before acceptance:** open Callibre from the client list, inspect both original client and host agreements and its linked person; edit an optional field, save and reload; select or create a related record in place, reload to prove its canonical link, remove the link and prove the record survives. Exercise denied writes, concurrent changes, retry, keyboard, narrow viewport and both themes. Record exact deployed SHA, sibling enumeration and action counts. Local suites and the data correction do not establish deployed UI completion.
+
+The broader bsuite#3206 contract remains open for all indexed entities, visual field/layout authoring, tables and workflow inputs. Its 146-row intake denominator is historical inventory evidence, not a claim that all siblings have passed. Full issue closure requires refreshed class-wide evidence.
