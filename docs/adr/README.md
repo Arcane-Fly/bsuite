@@ -17,6 +17,7 @@ This directory holds the authoritative decisions that govern cross-repo architec
 | [ADR-0009](ADR-0009-funding-refinement-semantics.md) | Funding Refinement Semantics — the placement-time look at funding REPLACES, it does not add | Accepted | 2026-08-26 | ✅ live in crm7 (separate-ledger model); ❌ contradicted by one unwired R80.4 module | — |
 | [ADR-0010](ADR-0010-fix-the-class-not-the-page.md) | Fix the class, not the page — platform-wide defects are closed platform-wide or not at all | Accepted | 2026-08-26 | ⚠️ policy; enforcement exists (D8.1 + `bsuite_feature_index.sibling_class`), nine classes still open | — |
 | [ADR-0011](ADR-0011-one-custom-page-renderer.md) | One custom-page renderer, with a per-app widget catalogue | Proposed | 2026-09-03 | ❌ not yet built | supersedes ADR-0003 |
+| [ADR-0012](ADR-0012-operator-decision-register-20260916.md) | Operator decision register, 2026-09-16 — 13 decisions reserved to the operator, with recommendations | Proposed | — | ⚠️ **#1 ruled + executed** (linear history removed from crm7 `12812477` + BSU `13700163`); 12 open; 21 candidates removed as already ruled | — |
 
 > **The `Built?` column is mandatory.** It was added on 2026-08-17 after an audit found
 > that three ratified ADRs had never been implemented and the index gave no way to tell.
