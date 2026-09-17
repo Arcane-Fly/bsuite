@@ -1,0 +1,28 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# [#665 child 3/4] Conduit-side: portal user discoverability + xrefs to CRM7 portals
+
+https://github.com/GaryOcean428/crm7/issues/725
+
+Snapshot updatedAt: 2026-07-28T08:57:49Z. Open at capture; re-read live.
+
+Child of #665. Conduit is the ATS — once a candidate becomes an apprentice (host-placed), Conduit links to /portal/worker on CRM7.
+
+## Scope
+
+Conduit currently has no awareness of CRM7 portal URLs. Should:
+
+1. Persist apprentice_user_id on conduit's apprentices table after CRM7 RPC creates the apprentice from a candidate
+2. Surface 'Open in Worker Portal' link on each placed-apprentice card -> https://crm.crm7.app/portal/worker
+3. Same for host -> https://crm.crm7.app/portal/host-employer
+4. Same for field officer -> https://crm.crm7.app/portal/field-officer
+
+## Mandatory before merge
+
+- Validation loop: §9.2 visual links present and click-through works
+- Cross red-team: claude-code wave 3
+- Skills: supabase-auth-comprehensive

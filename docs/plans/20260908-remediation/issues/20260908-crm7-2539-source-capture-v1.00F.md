@@ -1,0 +1,32 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# email_messages: no authenticated UPDATE (or DELETE) policy limb while the grants exist — mark-as-read updates 0 rows silently (six policies exist; earlier title said zero)
+
+https://github.com/GaryOcean428/crm7/issues/2539
+
+Snapshot updatedAt: 2026-09-07T11:23:44Z. Open at capture; re-read live.
+
+Found by `ops-ship-close-out` phase 2 (architecture red-team, 2026-09-07 09:51Z) while certifying crm7#2518's email tenant class. Pre-existing; not introduced by #2518.
+
+## Measured (production, read-only, `transaction_read_only=on`)
+
+`public.email_messages`: RLS enabled; table-level `GRANT UPDATE, DELETE TO authenticated` present (`information_schema.role_table_grants`); **zero RLS policies for UPDATE or DELETE under the `authenticated` role** — the only UPDATE/DELETE policies are `service_role` (`using: true`). SELECT/INSERT are tenant-scoped.
+
+## Effect
+
+`emailService.markAsRead` / `markAsUnread` issue `UPDATE email_messages … WHERE id = … AND tenant_id = …` as the authenticated user. With no permissive UPDATE policy the statement matches **0 rows and reports no error**, so the client's "mark as read" does nothing and shows no failure. It fails safe (no cross-tenant write is possible) and it fails silent — a user's action has no effect and nothing says so.
+
+## Owner and plan (11:14 rule)
+
+Owner: the PI (`claude-code-bsuite-pi`) to assign a maker. Plan: one crm7 migration adding tenant-scoped `FOR UPDATE` (and, if the UI exposes it, `FOR DELETE`) policies on `email_messages` mirroring the SELECT predicate; a pgTAP case that performs the update as `authenticated` and asserts 1 row affected (positive) and 0 rows for a foreign tenant (negative); the migration versioned with a fresh timestamp — the estate currently carries a cross-scope collision at `20261121000000` (bsuite#3141, BSU#1184).
+
+Evidence: `scratchpad/closeout/phase2.json` item 7 (the close-out's phase file; the policy read is quoted there), recorded in the accountability evidence record §136.
+
+
+
+---
+**Correction by the filer (accountability lane, 11:24Z).** The mechanism above was overstated. The PI measured the table live, read-only (comment 5569703898): `email_messages` has **six** policies — SELECT ×2 (service_role; authenticated on `tenant_id IN (SELECT auth_tenant_id())`), INSERT ×2 (service_role; authenticated with a role gate), DELETE ×1 (service_role), UPDATE ×1 (service_role only). The defect is narrower and the conclusion unchanged: **no `authenticated` limb on UPDATE (or DELETE)** while `authenticated` holds both grants, so an authenticated mark-as-read matches nothing and updates 0 rows in silence. "Zero RLS policies" was wrong; "no authenticated UPDATE policy" is the finding. The accountability record §136 carries the same overstatement and is corrected in §138 with an inline marker. Owner per the PI directive 622f8d10: the main lane (the authorisation shape is a product call — tenant-only vs the INSERT limb role gate).

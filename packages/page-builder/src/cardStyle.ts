@@ -12,9 +12,9 @@
  * THE DEFAULT IS "DON'T EMIT ANYTHING". `toCssVars` returns only the
  * properties that DIFFER from `DEFAULT_CARD_STYLE`, and the chrome element
  * falls back to exactly the values it used before this file existed. A page
- * whose operator has never opened the editor therefore renders byte-identical
- * CSS — this is a capability, not a restyle, and it must not show up as a
- * visual diff on 305 pages the day it ships.
+ * whose operator has never opened the editor uses the component defaults.
+ * The September 2026 recovery intentionally makes those defaults visibly
+ * elevated; appearance settings do not have to be entered to enable shadows.
  *
  * TOKENS, NOT COLOURS. `borderTone` names a theme token, never a literal.
  * The estate bans hex/rgb in D2C apps (`bsuite/no-hardcoded-colours`) and the
@@ -64,9 +64,8 @@ export interface CardStyle {
  *
  * `radius: 24` is `1.5rem`, the existing `--radius-card` fallback.
  * `borderWidth: 1` + `borderTone: 'border'` is the existing `border
- * border-border`. `elevation: null` preserves `shadow-sm` and the dark-mode
- * `--glow-card` rule rather than replacing them with an elevation token that
- * is close but not equal.
+ * border-border`. `elevation: null` leaves the component's resting and
+ * interaction defaults in place; an explicit zero opts out of both.
  */
 export const DEFAULT_CARD_STYLE: CardStyle = {
   radius: 24,
@@ -156,7 +155,14 @@ export function toCssVars(style: CardStyle): React.CSSProperties {
     vars['--card-border-style'] = style.borderStyle;
   }
   if (style.elevation !== null) {
-    vars['--card-shadow'] = `var(--shadow-elev-${style.elevation})`;
+    const resting = `var(--shadow-elev-${style.elevation})`;
+    vars['--card-shadow'] = resting;
+    // Preserve the selected depth while adding visible feedback, including
+    // at the top of the ramp. Explicit zero remains flat in every state.
+    vars['--card-shadow-interaction'] = style.elevation === 0
+      ? resting : `${resting}, var(--shadow-elev-1)`;
+    vars['--card-shadow-interaction-dark'] = style.elevation === 0
+      ? resting : `${resting}, var(--glow-card-hover)`;
   }
   if (style.padding !== null) {
     vars['--card-padding'] = `${style.padding}px`;

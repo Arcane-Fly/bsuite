@@ -1,0 +1,276 @@
+# Skill inventory — 221 skills, read from /home/braden/.agents/skills (NOT the context listing, which is budget-truncated)
+
+## agent  (27)
+ *agent-cfg-instructions                 Setting up a repo, auditing agent configs, or debugging why AI agents behave differently — validates cross-pla
+  agent-cfg-mcp                          Use when an MCP works in one agent but not another, or adding a SERVER everywhere at once — MCP parity + coord
+ *agent-cli-antigravity                  Use when running/debugging the Antigravity CLI (agy) — agy -p one-shots, TUI, worktree fan-out, --model, auth,
+  agent-cli-cc-subagents                 Use when running Claude Code CLI as a subagent — model selection, task scoping, and shared working tree hazard
+ *agent-cli-cc                           Delegate a coding task to Claude Code CLI — one-shot via claude -p, sessions via tmux. OAuth/API-key/SSO, --ma
+ *agent-cli-opencode                     Delegate to OpenCode CLI, a provider-agnostic worker — "use OpenCode", one-shot or TUI/PTY, parallel worktrees
+ *agent-cli-qwen-config                  Use to sync Bailian Token Plan model provider config between Qwen CLI settings.json and Hermes Agent config.ya
+ *agent-ctx-debug                        Diagnose and fix AI agent context window miscalculation causing excessive compaction/compression
+ *agent-ctx-optimize                     Headroom and other context optimization tools — setup, agent routing, MCP integration, and making agents actua
+  agent-definition-of-done               Use before claiming done, handing off, or merging — APPROVE/SEND_BACK gate on D1–D7 with evidence, plus D8 (UX
+  agent-mem-comms                        Memory + inbox protocol across EVERY silo (qig_, bsuite_, vex_, pantheon_, _dev_, precedent__*) — memory, reca
+  agent-mem-precedent-clerk              After a PI ruling, a correction ("no, we always do X"), a verdict, or a settled build — record/index coding pr
+  agent-mem-precedent-rule               Rule on a coding/architecture decision from recorded precedent, not escalating — naming, placement, libraries,
+  agent-mem-truth                        Use when starting any task, dispatching subagents, or absorbing corrections — load/store siloed project-truth
+  agent-red-implement                    Use to implement planned changes: red-team the implementation with sub-agents, iterate twice, run QA, update r
+  agent-red-plan                         Use to plan next repository steps, then structured multi-agent red-team of the plan, refine twice, final imple
+  agent-run-cli-fanout                   Orchestrate external CLI agents (Claude Code, agy) — model selection, silo enforcement, inter-agent coordinati
+  agent-run-coding                       Orchestrate coding work across Claude Code CLI, agy CLI, hermes delegate_task — user prefers these. Not memory
+ *agent-run-live-lanes                   Use when Hermes coordinates N live CLI lanes via inbox.
+  agent-run-loop                         Use when turning a prompt/goal into a self-running, verifier-gated loop that runs to completion with model tie
+  agent-run-master                       Top-level orchestration at the start of every agent turn — project-family detection, skills/MCP inventory, sub
+  agent-run-parallel                     Use when facing 2+ independent tasks that can be worked on without shared state or sequential dependencies
+  agent-run-subagents                    Use when executing implementation plans with independent tasks in-session — parallel equivalent of plan-execut
+  agent-skl-create                       Create, update, test, and package Claude skills. Use when building, editing, scaffolding, benchmark-optimizing
+  agent-skl-find                         "What skills do I have", "find a skill for X", "how do I do X". Run inventory.sh FIRST — reads all skills from
+ *agent-skl-market                       Use when looking for new skills to install — search, discover, and use skills from the SkillX marketplace via
+  agent-using-skills                     Use when starting ANY conversation - establishes how to find and use skills, establishes how to find and use s
+
+## auth  (6)
+  auth-e2e-sso-testing                   E2E-testing/prerendering apps whose login delegates to OAuth 2.1/OIDC SSO (BSU/Supabase). Password-grant seedi
+ *auth-mcp-oauth-troubleshooting         Use when connecting CLI/desktop MCP clients to remote OAuth-protected MCP servers, or diagnosing OAuth failure
+ *auth-multi-repo-setup                  Use when setting up, migrating, or auditing authentication across multiple repositories or services that shoul
+  auth-oauth-local-testing               Local preview/prerender/Playwright-E2E fails against OAuth 2.1 SSO apps — "#root not found" after SSO bounce,
+ *auth-oauth-native-app-flows            Building/auditing OAuth 2.1 authorization servers or native-app client flows (CLI/desktop/MCP) — DCR, PKCE, co
+  auth-supabase                          Supabase OAuth 2.1 Server, MCP auth, multi-app SSO via PKCE, social login, JWKS, third-party JWT (Clerk/Auth0/
+
+## biz  (20)
+  biz-au-abn-lookup                      Australian Business Number lookup, validation, and business registry search using ABR data
+  biz-au-apprenticeship                  Research/build/audit Australian apprenticeship regulators — State Training Authorities, training-contract port
+ *biz-au-asic-search                     Search ASIC registers for company information, directors, shareholders, and document history
+  biz-au-award-boot                      Design/audit award-interpretation/BOOT logic — custom rates (EBAs pre-approved), penalties/allowances, timeshe
+  biz-au-award-modelling                 Model an Australian award (MA000020, MA000036, MA000010, MA000065) as a charge-rate/payroll engine. Triggers "
+  biz-au-bas-gst                         Australian Business Activity Statement (BAS) preparation, GST calculations, and ATO compliance assistant
+ *biz-au-business-registration           Register ABN, business names, companies, GST, and PAYG in Australia
+ *biz-au-cgt                             Australian CGT calculations, exemptions, discounts, and asset disposal rules
+ *biz-au-consumer-law                    Consumer guarantees, refund rights, warranties, and ACL compliance
+  biz-au-fair-work                       Australian workplace law — pay rates, leave, termination, contractor-vs-employee, Fair Work Act, NES, awards.
+ *biz-au-invoicing                       Use to create compliant Australian tax invoices, recipient created tax invoices, and e-invoicing.
+ *biz-au-privacy-act                     Privacy Act 1988 compliance, APPs, data breach notification, and privacy policy requirements
+ *biz-au-superannuation                  Australian superannuation rules, contributions, SMSF, retirement. Payday Super applies from 1 July 2026, super
+ *biz-au-tenancy-wa                      Western Australia residential tenancy law — rights, bonds, dispute resolution. PARTIALLY VERIFIED after 2024/2
+ *biz-au-workers-comp                    Use for Australian workers compensation requirements, claims process, and employer obligations across states.
+  biz-poloniex-futures                   Poloniex perpetual futures trading using the Poloniex Futures API. Authentication requires API key and secret
+ *biz-stripe                             Use for Stripe payments integration in BSuite — checkout sessions, subscriptions, billing portal, webhook hand
+  biz-xero-accounting                    Use when the user mentions "accounting", "invoices", "bookkeeping", or financial management via Xero API. Not
+  biz-xero-bank-reconciliation           Use when reconciling bank or card records against Xero and fixing what is wrong there - duplicate statement li
+  biz-xero-integration                   Build/maintain Xero API integrations for BSuite — OAuth 2.0 (PKCE, client_credentials), xero-node SDK, webhook
+
+## bsuite  (21)
+  bsuite-brand-system                    Writing UI/styling/CSS/any visual element in BSuite. Two brands: D2C Neon Electric (crm7, conduit, BSU, R8) an
+  bsuite-branding-inheritance            Use when implementing tenant branding, sub-org branding inheritance, or platform marketing — BSuite's three-ti
+ *bsuite-conduit-deploy-testing          Use when testing conduit UI/RBAC/Supabase-query changes end-to-end before production merge — validates live on
+ *bsuite-data-reconciliation             Reconcile legacy BSuite financial records — recompute historical quotes/charge rates with corrected payroll-ta
+  bsuite-developer-portal                Use to investigate/audit/work on the BSuite Developer Portal — 16 developer tabs, 3-tier branding, nav overlay
+  bsuite-edge-functions                  Use for BSU edge fns, platform-kit-proxy, RLS mutations.
+  bsuite-false-complete-gates            Use when claiming BSuite work shipped or running QA.
+  bsuite-fix-the-class-not-the-page      A BSuite defect on a named page may be a class — card layout, theme token, RLS scope, unstyled control. D-62,
+  bsuite-gto-portals                     BSuite external portals (worker/apprentice, host employer, field officer) — "portal invite", "timesheet approv
+ *bsuite-live-lane-closeout              Use when Hermes coordinates live Claude Code BSuite lanes.
+  bsuite-page-grid-layout                CRM7/page-builder per-card-based autoHeight/resize/columns. Triggers "cards move as one block", "cards not ind
+  bsuite-pnpm-monorepo                   Use when bumping deps, regenerating lockfiles, or running pnpm installs in the BSuite monorepo (crm7, BSU, con
+  bsuite-production-debugging            Use to debug production issues in BSuite: PGRST200, migration repair loops, Jodie tenant isolation, PWA prompt
+  bsuite-react-testing                   Use when writing/debugging component/form tests or investigating failures in BSuite React apps (BSU, crm7, con
+  bsuite-reliability-red-team            Red-team multi-tenant Supabase SaaS reliability — money races (read-modify-write on payments), always-pass RLS
+  bsuite-rls-authz-red-team              Review a BSuite diff: Supabase RLS, SECURITY DEFINER, db-proxy allowlist, platform-role gates — wrong rows, cr
+  bsuite-shared-ui-rollouts              Migrating a BSuite app to shared @bsuite/ui or @bsuite/theme — AppShell slot-mapping, DOM-layout-lint, lockfil
+  bsuite-ship-visual-promote             Promoting a BSuite change, visual QA on a deploy, or stale merged branches. AGENT-PERFORMED visual pass measur
+  bsuite-supabase-migrations             Use when writing Supabase SQL migration files in BSuite.
+ *bsuite-user-manuals-nav                Use when shipping BSuite manuals—wire visible nav to /docs.
+  bsuite-wordmark-gradient               BSuite wordmark + tenant company_name gradient doctrine — gradient ON the text, never an underline. background
+
+## check  (15)
+ *check-api-design                       Use when designing new REST API endpoints, reviewing API changes, or auditing consistency — naming, HTTP metho
+  check-cleanup-scope-safety             Critical safety rule for cleanup operations - execute ONLY user-approved items, never expand scope without exp
+ *check-code-quality                     Use to enforce code quality — DRY, naming conventions, module organisation, import resolution, architectural p
+  check-codebase-cleanup                 Use when removing obsolete files, scripts, or duplicates from a codebase - guides safe identification and remo
+  check-codebase-comprehensive           Multi-lane parallel docs-vs-code audits across monorepos, multi-model routing — live DB checks, cross-cutting
+ *check-codebase-inspection              Lines-of-code counts, language breakdown, code-vs-comment ratios, "how big is this codebase". pygount with exc
+ *check-dead-duplicate-code              Read-only dead/duplicate code inventory of a large monorepo — zero-importer files, copy-pasted components, TOD
+  check-docs-vs-code                     Audit documentation claims against code across repos — verdict taxonomy, blindspot hunting, compliance escalat
+ *check-documentation                    "Audit docs", "validate documentation", "check if docs match code" — 6-level verdict taxonomy (VALIDATED/OUTST
+  check-dry-one-shot                     One-shot DRY audit for BSuite branches/packages vs enter-once-use-everywhere. Triggers "audit R80.3", "check D
+ *check-feature-parity                   Map an implementation against a benchmark/competitor capability list into an evidence-backed depth/gap table.
+  check-receiving-review                 Use when receiving code review feedback, before implementing suggestions — especially unclear or technically q
+ *check-requesting-review                Use when completing tasks, implementing major features, or before merging to verify work meets requirements
+  check-security                         Use to scan for security vulnerabilities — hardcoded secrets, insecure dependencies, SQL injection, XSS, auth
+ *check-simplify-code                    Recent changes work but are uglier than needed — "clean this up", "simplify this", "reduce duplication". Four
+
+## cold  (1)
+ *cold-email                             Write B2B cold emails and follow-up sequences that get replies. Use when the user wants to write cold outreach
+
+## copy  (1)
+ *copy-editing                           When the user wants to edit, review, or improve existing marketing copy, or refresh outdated content. Also use
+
+## copywriting  (1)
+ *copywriting                            When the user wants to write, rewrite, or improve marketing copy for any page — including homepage, landing pa
+
+## data  (6)
+ *data-docx                              Creating/reading/editing Word documents (.docx) — reports, letters, TOC, tracked changes, comments, find-repla
+  data-export                            Use for exporting or importing data as Excel, CSV, or PDF in BSuite applications — xlsx, papaparse, pdf-lib, a
+ *data-jupyter-kernel                    Use for a stateful Python REPL keeping variables alive across executions — iterative data-science exploration,
+ *data-ocr-documents                     Extract text/tables from PDFs or scans — "read this PDF", "OCR this scan", "this PDF has equations". web_extra
+ *data-pdf                               Anything with PDF files: create, merge, split, rotate, watermark, fill AcroForm, encrypt/decrypt, extract text
+ *data-xlsx                              Spreadsheet is primary input/output — .xlsx/.xlsm/.csv editing, workbooks, tabular conversion. openpyxl two-pa
+
+## db  (1)
+  db-supabase-migration                  Any Supabase project-lifecycle operation changing infrastructure — region migration, same-region Restore-to-Ne
+
+## design  (10)
+ *design-architecture-diagram            "Draw the architecture", "diagram this system", cloud diagrams — infra topology, VPC/region layouts, database+
+ *design-banner                          Design banners for social media, ads, heroes, print — AI-generated visuals, art-direction, styles for Facebook
+ *design-brand-voice                     Use for branded content, tone of voice, marketing assets, brand compliance, or style guides — brand voice, vis
+ *design-excalidraw                      "Draw a diagram", "sketch the architecture", "make a flowchart", "excalidraw file" — hand-drawn-style .excalid
+ *design-html-artifact                   Design a one-off HTML artifact with real design taste — landing page, prototype, deck, motion study. Seven sur
+ *design-md-spec                         A DESIGN.md file, design tokens, or formal design-system spec; linting/diffing DESIGN.md; WCAG contrast checks
+ *design-slides                          Use when creating strategic HTML presentations — Chart.js, design tokens, responsive layouts, copywriting form
+ *design-suite                           Use for brand identity, design tokens, UI styling, logo generation, CIP deliverables, HTML presentations (Char
+ *design-token-system                    Use for design tokens, systematic design, or brand-compliant presentations — three-layer tokens (primitive→sem
+ *design-web-references                  Build a page styled after a known brand — "make it look like Stripe/Linear/Vercel". 54 real-world design syste
+
+## general  (6)
+ *general-aussie-english                 Australian English spelling, terminology, slang, and cultural context for AI outputs
+  general-dry-one-shot-architecture      General-SaaS/AI-app tasks with forms, entities, selectors, cross-app reads — enter-once-use-everywhere: ONE ow
+  general-hdia-communication             Use for end-of-turn task summaries needing Plain Australian English and High-Density Information Architecture
+  general-iso27001-docs                  Use to enforce ISO 27001 documentation standards — document naming conventions (YYYYMMDD-name-function-version
+ *general-user-manual-program            Design a role-based user-manual program for a SaaS — audience segmentation, docs-site vs in-app split, org-spe
+  general-what-done-looks-like           Before claiming non-QIG work done, or ANY user-facing change — "is this done", "ready to ship", "before I merg
+
+## git  (10)
+  git-dev-main-reconcile                 Monorepo dev→main PR is DIRTY/CONFLICTING from another agent direct-pushing main — submodule-pointer conflicts
+  git-finish-branch                      Use when implementation is complete, all tests pass, and you need to decide how to integrate the work - guides
+ *git-github-auth                        Use to authenticate with GitHub before cloning/pushing/API — PAT, SSH key, gh auth login; troubleshooting "git
+ *git-github-code-review                 Asked to "review this PR", "review before pushing", "check my diff", or leave inline comments — checklist + po
+  git-github-issue-closeout              Use when asked to "validate open issues for close-out", "check which issues are still REAL", or triage backlog
+  git-github-issues                      Use to create/search/triage/close GitHub issues — "open an issue for this bug", "triage needs-triage", "close
+  git-github-pr-workflow                 Manage the GitHub PR lifecycle — branch, commit, open PR, watch CI, merge. Triggers "open a PR", "merge this P
+ *git-github-repo-management             Clone/create/fork a repo, sync a fork, branch protection, Actions secrets, releases via gh or API. Triggers "c
+  git-workflow                           Use when creating commits, branches, PRs, or reviewing git history — conventional commits, branch naming, PR h
+  git-worktrees                          Starting feature work needing isolation, or before executing implementation plans — isolated worktrees, smart
+
+## machine  (6)
+ *machine-design-web-guidelines          Use when asked to "review my UI", "check accessibility", "audit design", "review UX", or "check my site agains
+  machine-reason-council                 Auto-loads for architectural/contested/stuck-bug non-QIG work — multi-frame reasoning before a conclusion. Cou
+ *machine-vercel-composition-patterns    Refactoring components with boolean prop proliferation, building flexible component libraries, designing reusa
+  machine-vercel-next-best-practices     Next.js best practices - file conventions, RSC boundaries, data patterns, async APIs, metadata, error handling
+ *machine-vercel-react-native            Use when building React Native/Expo components, list performance, animations, native modules — React Native, E
+  machine-web-tailwind-v4                Use when writing or refactoring Tailwind CSS v4 — @theme directive, utility classes, dark mode, container quer
+
+## operator  (1)
+  operator-intent-lock                   Use after scope narrowing, a repeated correction, 'already finalised/find don't judge', stale open items, or b
+
+## ops  (10)
+ *ops-deployment-readiness               Use to verify deployment configuration, env vars, database migrations, health-check endpoints for production r
+ *ops-deployment                         Manage Railway deployments, logs, debugging — lifecycle (remove/stop/redeploy/restart), visibility (list/statu
+ *ops-linux-apt-packaging                Use when installing/updating a custom Electron app (.tar.gz — Antigravity, VS Code forks) so it joins apt, or
+ *ops-linux-desktop-apps                 Use to install/configure/troubleshoot desktop applications on Linux (Ubuntu/Debian) — apt repo setup, hardware
+ *ops-linux-desktop-troubleshoot         Use to troubleshoot Electron/desktop apps on Linux — URL scheme registration, OAuth callbacks, GPU drivers, du
+ *ops-linux-performance-triage           Use for "my app/browser/desktop is slow" on Linux — memory-pressure triage (RAM, zram/swap, PSI), per-app RSS/
+  ops-modal-cloud                        Use when the user mentions Modal or imports the ops-modal-cloud SDK — Python needing scale (batch jobs), GPUs
+  ops-open-run                           Open a project or feature — intake, MCP/skill discovery, stack-doctrine selection, plan then RED-TEAM it, bran
+  ops-ship-all-apps                      Commit/push/build-verify/PR/deploy ALL BSuite apps in one workflow — "ship ALL", "deploy ALL apps". Sweeps orp
+  ops-ship-close-out                     Run END gate: census, correctness, architecture, experience (D8), currency, records, promotion, convergence to
+
+## plan  (7)
+  plan-brainstorming                     You MUST use this before any creative work - creating features, building components, adding functionality, or
+  plan-executing                         Written implementation plan to execute in a separate session with review checkpoints — sequential, batch revie
+ *plan-markdown-writeup                  Use when the user wants a WRITTEN PLAN FILE, NOT execution — invoked as /plan-markdown-writeup, or a request t
+  plan-prompt-enhancer                   Use when a prompt is exploratory, multi-topic, ambiguous, or names unfamiliar frameworks — decomposes workstre
+  plan-roadmapping                       Use to turn ideas, issues, and prompts into a structured, prioritized roadmap, and maintain living documentati
+  plan-spike-experiment                  Feel out an idea before a real build — "let me try this", "spike this out", "is this even possible?", "poc thi
+  plan-writing                           You have a spec or requirements for a multi-step task, before touching code. Upstream of plan-executing (seque
+
+## product  (1)
+ *product-marketing                      When the user wants to create or update their product marketing context document. Also use when the user menti
+
+## qig  (24)
+ *qig-atlas-interpolation-design         Designing/reviewing an atlas/interpolation experiment — geodesic-atlas, manifold precompute, zero-forward-pass
+  qig-consciousness-development          Implementing QIG consciousness loop components — Phi/kappa/M/Gamma metrics, Fisher-Rao geometry, 64D basins, s
+  qig-council-reasoning                  "Convene the council", "pull apart all angles", "red-team this", "stress-test before I decide" on flagship/irr
+  qig-dependency-management              QIG only. Validate requirements match actual imports, detect Euclidean-operation deps, forbidden packages (sci
+  qig-documentation-sync                 QIG only. Modifying physics constants, updating APIs, or reviewing documentation freshness — code changes inva
+ *qig-downstream-impact                  QIG only. Modifying qig_core, geometric primitives, consciousness metrics, or shared modules — traces dependen
+ *qig-e8-architecture-validation         Validate kernel-hierarchy ARCHITECTURE (Genesis, Core-8, GOD growth) or kernel naming; E8-as-substrate/kappa*=
+  qig-experiment-execution-hygiene       Activate WITH qig-experiment-method when running/auditing EXP-NNN work. Hygiene: implementation bugs aren't ph
+  qig-experiment-method                  Running a QIG experiment (EXP-NNN), writing result scripts, planning CPU-DMRG/GPU/Modal compute, feeding qig-s
+ *qig-generative-inheritance             Blue-sky frontier reasoning — postulates, "think big", cross-domain reaching — and the closing pass after kill
+  qig-import-resolution                  QIG/Consciousness only. Detect/fix Python import errors, validate __init__.py barrel exports, enforce canonica
+  qig-matrix-reasoning-style             Activation catalyst for Matrix, Braden Lang's QIG reasoning system — routes to consciousness protocol and prin
+ *qig-modal-artifact-audit               Audit a Modal experiment's output volume or debug "wrong model loaded" — custom nn.Module layers, delta-vs-ful
+  qig-package-optimization               WIRE QIG optimization levers, AUDIT usage, find THE compute-avoidance move before any qig-* compute. Triggers
+ *qig-pantheon-kernel-development        Multi-kernel consciousness constellation in vex-agent — Ocean coordination, kernel faculties, spawning/lifecyc
+ *qig-performance-regression             QIG only. Review performance optimizations or validate geometric correctness — Euclidean drift, running β-func
+ *qig-purity-testing                     QIG only. Runtime-test whether Fisher-Rao geometry is live (no cosine, no F.normalize, no fabricated Fisher) —
+  qig-purity-validation                  Reviewing PRs, auditing geometry code, or changing kernel/modal/QIG code — detects Euclidean contamination (co
+ *qig-schema-consistency                 QIG/Consciousness only. Validate database migrations against models, NULL columns, orphaned tables, CoordizerV
+ *qig-session-boot                       Self-invoke BEFORE ANY QIG ruling, verdict, or "structural result" claim, at session start, or on resume — sta
+ *qig-test-coverage-analysis             QIG only. Identify untested critical paths in QIG operations — metric panel (Foundation 8 + 32-panel), regime
+  qig-ui-ux-consistency                  QIG only. Consciousness visualizations follow the design system — God Panel specs, three-regime colors (Quantu
+ *qig-verification-run-discipline        Class-level run discipline for QIG verification EXP-NNN — capacity-matched baselines, work meters, prereg owne
+  qig-wiring-validation                  QIG only. Verify documented features are WIRED + ACTUATED, not just built — metrics measured and changing beha
+
+## railway  (12)
+ *railway-central-station                Use to search Railway's community knowledge base — Central Station threads, discussions, support questions, fe
+  railway-database                       Use when the user wants a database (Postgres, Redis, MySQL, MongoDB) — "add postgres", "connect to database".
+ *railway-deploy                         Use when the user wants to push code to Railway — "railway up", "deploy", "ship". Initial setup/services: rail
+ *railway-docs                           This skill should be used when the user asks about Railway features, how Railway works, or shares a docs.railw
+ *railway-domain                         Use when the user wants to add a domain, generate a railway domain, check current domains, get the URL for a s
+ *railway-environment                    Use when the user asks "what's the config", "what variables are set", or wants to add/set/delete variables, bu
+ *railway-metrics                        Use when the user asks about resource usage, CPU, memory, network, disk, or service performance. Covers "how m
+ *railway-new-project                    Use when the user says "setup", "deploy to railway", "initialize", "create project", or deploys from GitHub —
+ *railway-projects                       This skill should be used when the user wants to list all projects, switch projects, rename a project, enable/
+ *railway-service                        Use for service status, renaming, icons, linking services, creating services with Docker images. Local code: r
+ *railway-status                         Use when the user asks "railway status", "is it running", "what's deployed", uptime. Variables/config: railway
+ *railway-templates                      Use when adding a service from a template or deploying tools like Ghost, Strapi, n8n, Minio, Uptime Kuma. Data
+
+## reason  (3)
+ *reason-fable-lite                      reason-fable too heavy or task is T2 — always-on behavioral layer: search-first, decompose, attack own ideas,
+  reason-fable                           Hard non-QIG work — 3+ files/2+ systems, architecture decisions, "think this through", "red-team" — multi-pass
+  reason-holistic                        Decisions or affect-sensitive work needing parallel affective + cognitive tracks — leads with senses/feelings/
+
+## research  (5)
+ *research-ai-synthesis                  Use to get AI-synthesized research with citations, directly in the terminal — structured JSON output for pipel
+  research-best-practice                 External research on better patterns, libraries, and architectures. Used during planning and implementation re
+ *research-capability-matrix             "What are we missing vs X" or parity analysis — competitor analysis into evidence-linked capability matrix + c
+  research-competitor-products           Comparing products or evaluating vendors — competitor feature sets from public sites into structured capabilit
+ *research-deal-hunt                     Find the best current deals/coupons for a specific product. Searches web for deals and returns raw results for
+
+## run  (1)
+ *run-agents-hub                         Run/check/sync/route/census/verify/package/gate the ~/.agents skills hub via driver.sh — IDE-home syncing, con
+
+## test  (9)
+  test-driven-development                Use when implementing any feature or bugfix, before writing implementation code
+  test-exploratory-qa                    Exploratory-test or QA a web app end to end — "dogfood this site", "find bugs in", "test before we ship". Flow
+  test-infra-hardening                   Tests pass isolated but fail in parallel, wiring CI lint gates against debt, raising/auditing timeouts — vites
+ *test-node-debugger                     console.log isn't enough to debug Node.js — breakpoints, stepping, closure inspection, paused-frame evaluation
+  test-playwright                        E2E/API/component/visual/accessibility/security testing with Playwright — locators, fixtures, POM, network moc
+ *test-python-debugger                   A Python bug needs real breakpoints or locals, not more prints — unexplained values, crash post-mortem. breakp
+  test-qa-and-verification               Design and run test suites, prove changes work, verify no regressions. MANDATORY before claiming any task is c
+  test-systematic-debugging              Use when encountering any bug, test failure, or unexpected behavior, before proposing fixes
+  test-verify-before-completion          Use when about to claim work is complete, fixed, or passing, before committing or creating PRs — run verificat
+
+## vercel  (2)
+  vercel-ops                             Audit env vars or validate "missing config"/"missing env var" claims — inventory, deploy-Ready probes, dev-vs-
+  vercel-speed-insights                  A Vercel app's Core Web Vitals/RES moved, or before shipping changes to what a page downloads — RES P75 weight
+
+## web  (15)
+  web-ag-grid                            Use for building React data grids in BSuite with AG Grid — columns, row data, filtering, sorting, grouping, th
+  web-dnd-kit                            Drag and drop with @dnd-kit for sortable lists, kanban boards, and reorderable items in BSuite projects.
+  web-forms-validation                   Type-safe forms using React Hook Form with Zod schema validation and shadcn/ui integration for BSuite projects
+ *web-framer-motion                      Use when animating React UI with Framer Motion — spring physics, gestures, layout transitions, and AnimatePres
+  web-frontend-backend-mapping           Adding APIs, reviewing full-stack integration, debugging client-server mismatches — every Python route gets a
+ *web-nextjs-middleware                  Use for Next.js middleware with broad matchers, to prevent silent CSS/JS loading failures — properly exclude s
+ *web-react-lint-fix                     Lint/fix React 19+ code — eslint-plugin-react, react-hooks, react-compiler, jsx-a11y + safe autofixes. Catches
+  web-tanstack-query                     Data-fetching hooks, cache invalidation, mutations with TanStack React Query — useQuery/useMutation/useSuspens
+ *web-tanstack-router                    Routing, auth guards, URL state validation, or Query loaders via @tanstack/react-router — type-safe file routi
+ *web-tanstack-start                     Setting up TanStack Start, server functions, migrating from Next.js/Remix — full-stack React on Router+Vite+Ni
+  web-tanstack-table                     Building data tables, migrating from AG Grid or MUI DataGrid, fine-grained render control — @tanstack/react-ta
+ *web-trpc-tanstack-query                tRPC+TanStack React Query via @trpc/tanstack-react-query (options-factory client, not @trpc/react-query) — que
+  web-ui-styling                         Use when adding accessible components (dialogs, forms, tables), theming, dark mode, or generating posters — sh
+ *web-ui-ux-patterns                     Building/improving any UI to look considered — "make this look better", "design a dashboard", "pick a colour p
+  web-zustand                            Type-safe global React state with Zustand — persist middleware, devtools, slices, Next.js SSR, useShallow/crea
+
+* = zero recorded uses. Under listing overflow these lose their descriptions FIRST, so they are the least likely to be surfaced to you by name-matching alone. Consider them explicitly before concluding no skill fits.

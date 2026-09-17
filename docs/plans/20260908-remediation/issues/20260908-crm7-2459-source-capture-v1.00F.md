@@ -1,0 +1,47 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# Form layout builder shows schema nouns, a false empty state, and a ticket ID as a name
+
+https://github.com/GaryOcean428/crm7/issues/2459
+
+Snapshot updatedAt: 2026-09-06T09:34:03Z. Open at capture; re-read live.
+
+Raised by the operator from a screenshot of `/settings/form-layout-detail`. Three separate D8 failures visible on one screen, none of which any gate this session would have caught, because every gate was checking structure and none was reading the words.
+
+## 1. The empty state says the opposite of the truth
+
+The Fields panel shows a count of **0** and the text **"All fields placed"**, beside a canvas reading **"No sections yet"**.
+
+The condition is `unplacedFields.length === 0` at [FormLayoutBuilder.tsx:253](crm7/src/components/ui-customization/FormLayoutBuilder.tsx#L253), which is vacuously true when there are no fields at all. So a brand-new layout tells the user everything is done at the exact moment nothing exists. It is not merely unhelpful, it actively points away from the next action.
+
+An empty layout should say there are no fields yet and offer the way to get one. That is the same gap as #2450, seen from the other side: there is no way to create a field here, and the screen also declines to mention that any are missing.
+
+## 2. Schema vocabulary is rendered directly to the user
+
+Four places on this one screen: the `people / default` badge beside the title, `Entity: people`, `Context: default`, and `Layout — People`.
+
+`entity_type` and `context` are column names. "people" is a table. D8.3 asks for labels in the user's nouns; a person managing a form does not have an entity or a context, they have *what this form is for* and *where it is used*.
+
+The page already knows how to do this — it looks up `entities.find(e => e.name === entity_type)?.label` and only falls back to the raw value. The label lookup is there and the field name beside it is not.
+
+## 3. A ticket reference became a user-visible object name
+
+The layout is called **"AD-7 exercise"**. AD-7 is an internal reference to the `tenant_entity_records` write path in `EntityTableWidget`. It is a fixture row in `form_layouts` owned by the E2E tenant `00000000-0000-0000-0000-000000000e2e`.
+
+It is confined to that tenant, so no customer sees it, and it is still worth fixing twice over: fixtures that survive in a tenant people demo and screenshot from will be read as product, and nothing prevented a developer's ticket ID from becoming an object name in the first place.
+
+## Also on this screen
+
+**Deploy Scope: All / Org / Locked.** Three words that do not say what they do. What is deployed, to whom, and what does Locked prevent? A first-time user cannot predict the outcome of pressing any of them, which is the D8.3 test.
+
+**"Save from the builder to create a new version of this layout."** This explains a mechanism rather than offering an action, on a panel that has a Save button eight centimetres away.
+
+## Acceptance
+
+Someone who has never seen this screen can say what the layout is for, what state it is in, and what to do next, from the screen alone. Specifically: the empty state names the absence and offers the remedy; no column or table name appears in any visible label; and every deploy control says what it will do.
+
+Not a copy pass over the same nouns. If a word cannot be replaced with something a user would say, that is a sign the control needs rethinking rather than renaming.

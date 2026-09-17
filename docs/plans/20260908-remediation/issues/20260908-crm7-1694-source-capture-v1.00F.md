@@ -1,0 +1,31 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# Existing funding templates cannot be selected or applied
+
+https://github.com/GaryOcean428/crm7/issues/1694
+
+Snapshot updatedAt: 2026-08-13T05:58:35Z. Open at capture; re-read live.
+
+Operator observed: Existing funding templates cannot be selected or applied.
+
+**Route/surface:** funding templates (wherever they are listed/selected)
+
+Directive: D-80 (2026-08-13)
+
+## Acceptance criteria
+- Existing funding templates are selectable from the funding entry flow.
+- Selecting a template applies its fields to the current funding record (amount, timeframe/dates, "how applied" category — see item 12) rather than doing nothing.
+- Applying a template does not silently overwrite fields the user has already entered without confirmation.
+
+## Mandatory before merge
+- **Validation loop:** §9.1 output-equivalence — applying a template must produce the same field values as manually entering the same data.
+- **Equivalence target:** A funding record created via template selection is indistinguishable in the database from one entered manually with the same values.
+- **Cross red-team:** bsuite-user-advocate
+- **Skills to load:** general-dry-one-shot-architecture
+
+---
+*Filed under operator directive D-80 (2026-08-13). Filing is not addressing (D-59) — no fix is implied or claimed by this issue.*

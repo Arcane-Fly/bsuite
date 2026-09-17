@@ -1,0 +1,84 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# 33 baselined PostgREST column references still name columns that do not exist — and the baseline cannot tell an empty cell from a dead page
+
+https://github.com/GaryOcean428/crm7/issues/2547
+
+Snapshot updatedAt: 2026-09-07T18:49:11Z. Open at capture; re-read live.
+
+## One of these baselined column references was killing a page. Nobody had asked about the other 33.
+
+`scripts/postgrest-column-baseline.json` has held `training_plans.expected_end_date` in its
+`schemaAbsent` list since **2026-08-17**. Measured on production today:
+
+```
+400 training_plans?select=id,person_id,qualification_id,start_date,expected_end_date,status,notes
+ -> {"code":"42703","message":"column training_plans.expected_end_date does not exist"}
+```
+
+That threw, so `/training/plans/:id/edit` rendered "Unable to load training plan" and no form.
+**Nobody could edit a training plan for three weeks**, while the guard reported the cause every
+run as expected-broken. Fixed in #2546.
+
+A baseline is the right tool for landing a guard over existing debt — that is not the complaint.
+The complaint is that **nothing in the baseline distinguishes severity**. These two sit in the
+same list and read identically:
+
+- a `select()` naming a missing column → PostgREST 400 → the query throws → **the page dies**
+- a missing column read off an already-fetched row → `undefined` → **a blank cell**
+
+The second is cosmetic. The first is an outage. Only the first is worth waking someone up for,
+and today's took three weeks to notice because it looked exactly like the second in the one
+place anybody was looking.
+
+## The remaining 33
+
+`schemaAbsent` — column references that do not exist in the live schema:
+
+```
+apprentices.cancellation_reason      qualifications.industry_area
+apprentices.commencement_date        qualifications.is_active
+apprentices.completion_date          qualifications.is_superseded
+employers.name                       qualifications.name
+guardian_consents.consent_date       qualifications.nominal_hours
+host_agreements.start_date           site_visits.outcome
+host_agreements.title                site_visits.person_id
+incidents.resolution                 site_visits.placement_id
+inspection_checklists.name           support_contacts.person_id
+invoices.amount                      tenant_settings.xero_earnings_map
+invoices.client_id                   tenants.ram_environment
+pay_runs.provider                    tenants.usi_org_code
+people.usi_verification_source       timesheets.status
+people.usi_verified_at               training_plan_units.due_date
+picklists.sort_order                 training_plans.qualification_code
+user_profiles.tenant_id              user_profiles.user_id
+whs_audits.scheduled_date
+```
+
+**I have not triaged these and I am not claiming they are all broken pages.** Some are certainly
+harmless reads off a fetched row. But `invoices.amount`, `invoices.client_id`,
+`timesheets.status`, `employers.name`, `qualifications.name` and
+`apprentices.commencement_date` are the kind of names that appear in a `select()`, and a
+`select()` is the fatal case. Nothing has asked which is which.
+
+## What would actually fix this
+
+1. **Triage the 33 by call shape, not by name.** For each, is it inside a `.select()` /
+   `.eq()` / `.order()` — where PostgREST rejects the request — or a property read off a row
+   that is already back? That is a mechanical pass over the same AST walk the linter already
+   does (it reports "953 `.from()` chain(s) walked", so it knows).
+2. **Split the baseline by severity.** `schemaAbsent` should distinguish *request-fatal* from
+   *renders-undefined*, and the guard should refuse to baseline a new request-fatal entry at
+   all — that is the class that takes a page down.
+3. **The generated types are the upstream cause.** `src/types/entities.ts` declared
+   `expected_end_date` and `progress` for `TrainingPlan` and neither real column, so `tsc`
+   endorsed the broken select and the linter was the only thing that could see it. The 12
+   entries under `typesStale` say the same thing from the other direction.
+
+Related: #2546 (the fix, and the six surfaces the type drift had silently blanked).
+
+Filed by claude-code-bsuite-pi. Production measurements read-only; no writes, no DDL.
