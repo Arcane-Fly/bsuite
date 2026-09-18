@@ -1,8 +1,136 @@
 {
   "generatedFrom": "scripts/generate-component-registry.mjs",
   "method": "exports parsed from packages/*/src; consumers parsed from every app import statement (multi-line aware), not grepped",
-  "sharedComponents": 182,
-  "unusedSharedComponents": 155,
+  "coverageContract": "every declared source must be READABLE and every declared root must EXIST — for an app that is both `src` and the `src/components` whose file count is published as localComponentFiles. A source that could not be read, and a declared root that is not there, are reported as unavailable and BLOCK generation; neither is ever counted as zero. localComponentFiles is null, never 0, for an app that was not measured.",
+  "coverageComplete": true,
+  "declaredApps": [
+    "crm7",
+    "business-suite-unified",
+    "conduit",
+    "braden",
+    "throughput",
+    "R80.4"
+  ],
+  "unavailableApps": [],
+  "unavailablePackages": [],
+  "appCoverage": {
+    "crm7": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 1548,
+      "componentFiles": 451
+    },
+    "business-suite-unified": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 340,
+      "componentFiles": 119
+    },
+    "conduit": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 325,
+      "componentFiles": 100
+    },
+    "braden": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 312,
+      "componentFiles": 208
+    },
+    "throughput": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 162,
+      "componentFiles": 91
+    },
+    "R80.4": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 226,
+      "componentFiles": 6
+    }
+  },
+  "packageCoverage": {
+    "@bsuite/ui": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 23,
+      "exports": 37
+    },
+    "@bsuite/data-grid": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 24,
+      "exports": 12
+    },
+    "@bsuite/page-builder": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 24,
+      "exports": 26
+    },
+    "@bsuite/nav-core": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 20,
+      "exports": 14
+    },
+    "@bsuite/theme": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 11,
+      "exports": 12
+    },
+    "@bsuite/schema-builder": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 32,
+      "exports": 27
+    },
+    "@bsuite/jodie": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 8,
+      "exports": 10
+    },
+    "@bsuite/auth": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 4,
+      "exports": 3
+    },
+    "@bsuite/data-export": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 10,
+      "exports": 0
+    },
+    "@bsuite/workflow-canvas": {
+      "available": true,
+      "reason": "ok",
+      "detail": null,
+      "sourceFiles": 30,
+      "exports": 62
+    }
+  },
+  "sharedComponents": 203,
+  "unusedSharedComponents": 176,
   "localComponentFiles": {
     "crm7": 451,
     "business-suite-unified": 119,
@@ -421,6 +549,13 @@
       "consumingApps": 1
     },
     {
+      "name": "CardPaddingBoundary",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "CustomPageView",
       "package": "@bsuite/page-builder",
       "consumers": {},
@@ -492,6 +627,13 @@
     },
     {
       "name": "PAGE_GRID_EDITING_EVENT",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PAGE_GRID_SAVE_EVENT",
       "package": "@bsuite/page-builder",
       "consumers": {},
       "consumerFiles": 0,
@@ -1043,6 +1185,27 @@
       "consumingApps": 0
     },
     {
+      "name": "AuthCoordinationUnavailableError",
+      "package": "@bsuite/auth",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "AuthOwnershipSupersededError",
+      "package": "@bsuite/auth",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "BusinessSuiteOAuthExchangeUncertainError",
+      "package": "@bsuite/auth",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "BUILT_IN_NODE_DATA_SCHEMAS",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
@@ -1051,6 +1214,13 @@
     },
     {
       "name": "BUILT_IN_NODE_DESCRIPTORS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "COMPACT_MAX_WIDTH_PX",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
       "consumerFiles": 0,
@@ -1232,6 +1402,13 @@
       "consumingApps": 0
     },
     {
+      "name": "TASK_PRIORITY_OPTIONS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "TERMINATOR_DEFAULT_SIZE",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
@@ -1274,7 +1451,91 @@
       "consumingApps": 0
     },
     {
+      "name": "WORKFLOW_ACTION_KINDS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_ACTION_VOCABULARY",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_CHROME_SURFACE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_INSPECTOR_SURFACE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_INSPECTOR_WIDTH",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "WORKFLOW_NODE_KINDS",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_PALETTE_SURFACE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_PALETTE_WIDTH",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_REGION_INSPECTOR",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_REGION_PALETTE",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_REGION_PALETTE_COMPACT",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_REGION_TOOLBAR",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WORKFLOW_TOOLBAR_SURFACE",
       "package": "@bsuite/workflow-canvas",
       "consumers": {},
       "consumerFiles": 0,
@@ -1288,6 +1549,20 @@
       },
       "consumerFiles": 1,
       "consumingApps": 1
+    },
+    {
+      "name": "WorkflowCanvasLayoutContext",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "WorkflowChromeSlottedContext",
+      "package": "@bsuite/workflow-canvas",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
     },
     {
       "name": "WorkflowEdgeSchema",
@@ -1371,6 +1646,104 @@
       "consumers": {},
       "consumerFiles": 0,
       "consumingApps": 0
+    }
+  ],
+  "coverage": [
+    {
+      "name": "crm7",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "business-suite-unified",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "conduit",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "braden",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "throughput",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "R80.4",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/ui",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/data-grid",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/page-builder",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/nav-core",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/theme",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/schema-builder",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/jodie",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/auth",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/data-export",
+      "available": true,
+      "reason": "ok",
+      "detail": null
+    },
+    {
+      "name": "packages/workflow-canvas",
+      "available": true,
+      "reason": "ok",
+      "detail": null
     }
   ]
 }

@@ -170,13 +170,35 @@ command -v supabase >/dev/null 2>&1 || die "the supabase CLI is not installed �
 command -v psql     >/dev/null 2>&1 || die "psql is not installed (apt-get install postgresql-client)."
 command -v node     >/dev/null 2>&1 || die "node is not installed."
 
-BASELINE="$ROOT/crm7/supabase/migrations/baseline/20260807_prod_baseline_schema_dump.sql"
-[ -f "$BASELINE" ] || die "baseline dump missing at $BASELINE
+# crm7 renames this file as it re-cuts the baseline (20260807 -> 20260907,
+# crm7#2533) with no forwarding path, so a hardcoded filename goes stale the
+# next time crm7 does. Resolved by pattern instead: newest
+# `*_prod_baseline_schema_dump.sql` by name (the 14-digit YYYYMMDD prefix
+# sorts lexicographically = chronologically). Exactly one candidate is
+# required — see rehearsal-bootstrap.sh for the same resolution, shared logic
+# duplicated here because this script runs before submodules are guaranteed
+# present and cannot source a file that may not exist yet.
+BASELINE_DIR="$ROOT/crm7/supabase/migrations/baseline"
+mapfile -t BASELINE_CANDIDATES < <(find "$BASELINE_DIR" -maxdepth 1 -name '*_prod_baseline_schema_dump.sql' 2>/dev/null | sort)
+
+case "${#BASELINE_CANDIDATES[@]}" in
+  0)
+    die "no *_prod_baseline_schema_dump.sql found under $BASELINE_DIR
 
 The substrate is the PRODUCTION BASELINE, not an empty database. Replaying onto
 an empty database is exactly what lets CREATE TABLE IF NOT EXISTS look like it
 worked — the estate's historical defect. Run:
   git submodule update --init --recursive"
+    ;;
+  1)
+    BASELINE="${BASELINE_CANDIDATES[0]}"
+    ;;
+  *)
+    die "${#BASELINE_CANDIDATES[@]} baseline dumps found under $BASELINE_DIR — refusing to guess which is production's:
+$(printf '  %s\n' "${BASELINE_CANDIDATES[@]}")
+Remove the stale one(s) or resolve the collision before rehearsing."
+    ;;
+esac
 
 # A rehearsal missing a scope is not a rehearsal. Same assertion the CI job
 # makes, for the same reason: a partial checkout finds no problem and reports

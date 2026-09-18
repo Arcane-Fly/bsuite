@@ -2,6 +2,40 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.0.1 — 2026-09-17
+
+Release of the 1.0.1-next line, unchanged. No source difference from
+1.0.1-next.1; only the version is finalised, so npm's `latest` moves off 1.0.0
+and consumers stop having to pin a prerelease to get the session-ownership
+work below.
+
+## 1.0.1-next.1 — 2026-09-09
+
+### Added
+
+- Opt-in same-origin session ownership coordinator using Web Locks, durable logout revocations and recovery markers. Older commits cannot publish after a newer sign-in or logout; failed cleanup must reconcile before another commit.
+- Per-state ownership bindings and a synchronous `beforeRedirect` hook for carrying the original attempt across OAuth navigation. A failed binding cancels its redirect and preserves unrelated flows.
+- Adapter guide and adversarial tests covering superseded session writes, partial publication, cleanup failure and delayed logout.
+
+All session writers in each consumer must adopt the coordinator. Publication alone does not change consumer behavior or complete deployed acceptance.
+
+## 1.0.1-next.0 — 2026-09-09
+
+### Fixed
+
+- Keep concurrent PKCE transactions and per-code exchange claims isolated; late cleanup cannot release a replacement claim or erase another flow.
+- Reject malformed or expired transaction records and missing or mismatched requested ID-token nonces.
+- Ignore superseded refresh results before token writes, expiry events, or navigation.
+- Report an uncertain token exchange explicitly when transport or response-body reading fails; callers must start a fresh sign-in instead of replaying a potentially consumed code.
+- Clear pending flow maps on sign-out with the other OAuth transaction state.
+
+### Added
+
+- `attemptSilentAuthDetailed()` distinguishes authenticated, redirecting, failed, and superseded outcomes. The existing boolean API remains compatible; consumers must adopt the detailed result to avoid starting an interactive authorization while silent navigation is pending.
+- `hasPendingBusinessSuiteTransaction(state)` shares the validated pending-transaction predicate with callback adapters.
+
+Consumer adoption and deployed acceptance are required separately from this prerelease.
+
 ## 0.2.7 — 2026-07-06
 
 ### Fixed — concurrent OAuth flows no longer clobber each other's PKCE state

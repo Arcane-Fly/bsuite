@@ -1,0 +1,74 @@
+[
+  {
+    "repo": "R80.4",
+    "path": "/home/braden/Desktop/Dev/bsuite/R80.4",
+    "branch": "",
+    "ahead": 0,
+    "behind": 7,
+    "has_changes": false,
+    "current_sha": "10187e27271c065777a86312d2daaa633b2fb57b",
+    "unique_commits": 0,
+    "needs_salvage": false,
+    "reason": "Up to date with origin/development"
+  },
+  {
+    "repo": "braden",
+    "path": "/home/braden/Desktop/Dev/bsuite/braden",
+    "branch": "salvage/takeover-20260908-052921",
+    "ahead": 0,
+    "behind": 0,
+    "has_changes": false,
+    "current_sha": "51681d200c9b079efb249d50e14c307e915c9c6f",
+    "unique_commits": 0,
+    "needs_salvage": false,
+    "reason": "Up to date with origin/development"
+  },
+  {
+    "repo": "business-suite-unified",
+    "path": "/home/braden/Desktop/Dev/bsuite/business-suite-unified",
+    "branch": "",
+    "ahead": 5,
+    "behind": 0,
+    "has_changes": false,
+    "current_sha": "31e9261549f7329bff0eeb3ba41dfd8b563f2854",
+    "unique_commits": 5,
+    "needs_salvage": true,
+    "reason": "5 unique commits ahead of origin/development"
+  },
+  {
+    "repo": "conduit",
+    "path": "/home/braden/Desktop/Dev/bsuite/conduit",
+    "branch": "salvage/takeover-20260908-052914",
+    "ahead": 0,
+    "behind": 0,
+    "has_changes": false,
+    "current_sha": "03358448d8560c7377f9281be6da58194df109b5",
+    "unique_commits": 0,
+    "needs_salvage": false,
+    "reason": "Up to date with origin/development"
+  },
+  {
+    "repo": "crm7",
+    "path": "/home/braden/Desktop/Dev/bsuite/crm7",
+    "branch": "development",
+    "ahead": 34,
+    "behind": 0,
+    "has_changes": false,
+    "current_sha": "db1aefa715c2edfaa583ab3bcc0fdb1fc2c6b245",
+    "unique_commits": 34,
+    "needs_salvage": true,
+    "reason": "34 unique commits ahead of origin/development"
+  },
+  {
+    "repo": "throughput",
+    "path": "/home/braden/Desktop/Dev/bsuite/throughput",
+    "branch": "chore/resync-dev-with-main-20260908",
+    "ahead": 1,
+    "behind": 0,
+    "has_changes": false,
+    "current_sha": "3a569851f87f77616656cc021ec4997345bbecc2",
+    "unique_commits": 1,
+    "needs_salvage": true,
+    "reason": "1 unique commits ahead of origin/development"
+  }
+]

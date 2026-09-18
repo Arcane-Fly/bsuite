@@ -1,0 +1,233 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/check-plan-currency-markers.mjs
+  - scripts/check-doc-classification.mjs
+---
+
+> **Current as of 2026-09-14:** This is an active engineering plan. Refresh its live issue and evidence before execution; this marker does not assert implementation or release completion.
+
+# Kick off crm7#678: feat(rates): forward-year charge schedule + annual-review-only re-approval gate (FWC/EBA/on-cost)
+
+Implement and verify https://github.com/GaryOcean428/crm7/issues/678. This is one bounded issue, not a launch of the whole backlog. Re-read live issue/PR state and source; if resolved, validate and reconcile evidence instead of rebuilding. Act after reading; do not stop at a plan or ask again whether to continue.
+
+## Context, skills and paired agents
+
+Repository: /home/braden/Desktop/Dev/bsuite/crm7. Use an isolated worktree based on current development and preserve other lanes. Read parent/app AGENTS.md, CONTRIBUTING.md, relevant DESIGN.md, BSuite truth index bsuite_project_truth_index and current memory bsuite_session_20260914 (the dated bsuite_objective_lock_20260908_remediation_audit is historical context). This prompt commissions this implementation; the audit did not implement the product.
+
+Invoke **agent-run-master first**, then **agent-skl-find** to resolve named skills/tools from /home/braden/.agents. Slash commands work when exposed by the client; otherwise name the skill and read its SKILL.md. Record actual use. Dedicated applicable skills take precedence over generic agents.
+
+- **agent-run-master** — /agent-run-master where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/agent-run-master/SKILL.md.
+- **agent-skl-find** — /agent-skl-find where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/agent-skl-find/SKILL.md.
+- **agent-mem-truth** — /agent-mem-truth where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/agent-mem-truth/SKILL.md.
+- **agent-definition-of-done** — name and load this skill; it is not user-invocable. Definition: /home/braden/.agents/skills/agent-definition-of-done/SKILL.md.
+- **bsuite-false-complete-gates** — /bsuite-false-complete-gates where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/bsuite-false-complete-gates/SKILL.md.
+- **test-verify-before-completion** — /test-verify-before-completion where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/test-verify-before-completion/SKILL.md.
+- **test-infra-hardening** — /test-infra-hardening where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/test-infra-hardening/SKILL.md.
+- **git-workflow** — /git-workflow where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/git-workflow/SKILL.md.
+- **check-cleanup-scope-safety** — /check-cleanup-scope-safety where exposed; otherwise name and load the skill. Definition: /home/braden/.agents/skills/check-cleanup-scope-safety/SKILL.md.
+
+- **bsuite-platform** — load /home/braden/.agents/agents/bsuite-platform.md; use its applicable role and skills. Review evidence independently of the implementer.
+- **completion-enforcer** — load /home/braden/.agents/agents/completion-enforcer.md; use its applicable role and skills. Review evidence independently of the implementer.
+
+Codex in the IDE coordinates this phase. Claude is unavailable. Do not dispatch external Codex CLI workers. Use deterministic scripts for mechanical tasks, low-tier models for bounded classification, standard-tier models for scoped implementation, and high/frontier only for justified hard planning or independent review. Verify actual Grok/Gemini/Qwen model IDs and access before dispatch; never silently fall back to paid API usage. Cap two active workers by default with one writer per worktree. Read the current [IDE kickoff](../../20260914-codex-ide-closeout-refined-v1.00W.md) and the parent remediation-execution rule before acting.
+
+Use at most two active lanes by default, one writer per repository/worktree. Coordinate a single owner for shared migrations and package publication. The parent owns failed children and recovery after context/usage limits. Do not have two models edit the same checkout.
+
+## Product standard and documentation
+
+Read /home/braden/Desktop/Dev/bsuite/docs/20260908-customization-capability-register-v1.00W.md and /home/braden/Desktop/Dev/bsuite/docs/plans/20260908-estate-remediation-plan-v1.00W.md, then their mapped existing specifications. All customization features belong in docs/, with implementation plans in docs/plans/. Improve the applicable existing documents in the same delivery: user controls/defaults, canonical data/permissions, save/version behavior, workflow connections, worked examples and evidence. Preserve dated history and mark supersession; do not fork an unlinked plan or revive the retired dashboard.
+
+Anything achievable through product code must be visually achievable under appropriate authority, all linked through executable workflows. Record of Discussion is a formal disciplinary discussion, separate from training-contract variation. Hardcoded forms, an inert canvas, filename-only attachment, or API-only functionality do not satisfy this requirement. Reuse canonical services and capable existing builders; no competing engine or weakened permission checks.
+
+## Execution and issue-specific acceptance
+
+1. Re-read the issue and recent linked PRs; resolve every cited path against current source. Distinguish operator report, historical assertion, source finding and reproduced defect. Credit working limbs.
+2. Find the feature/documentation rows and canonical upstream owner. Enumerate sibling routes, dialogs, widgets, handlers and consumers using independent axes; state blind spots. Parent programme membership is not a blocking dependency on its own completion.
+3. Before library/runtime edits run Gate A: exact installed-version Context7 guidance, research-best-practice, installed-source confirmation. Resolve routine details from evidence/precedent; do not re-ask settled preferences.
+4. Implement the shared cause and failure paths together with consumers. Remove only superseded code in the authorized change. Never delete a feature, bypass authority, fabricate data or disable a test to pass.
+5. **Specific verification focus:** Run the real registered gate or delivery path against the final commit; deliberately break its claimed condition and confirm failure, then restore and confirm success. Inventory active owners before touching worktrees.
+6. Fulfil every current acceptance criterion below. For user-facing work exercise the actual deployed d.* journey on its exact deployed SHA with the intended role, save/reload and downstream IDs. Test failure/retry, denied permissions, keyboard and responsive use. Count siblings and intent-to-result actions. Ask literally whether finishing requires leaving the page; prefer inline creation or prove automatic lossless return with the new detail applied.
+7. Use signed commits and PRs through development; never direct-push main. Verify actual published package/consumer versions and live schema where applicable. Follow current deployment and bot-review gates. Do not expand scope to production data cleanup, real disciplinary decisions or external messages without authorization.
+8. Update the same issue and applicable docs with final SHA, routes/roles, exact tests/output, screenshots, saved/run IDs and failure/consumer evidence. Run agent-definition-of-done and bsuite-false-complete-gates; explicitly declare UI impact. Missing runtime evidence is a precise remaining blocker, never a done claim. Parent owns recovery.
+
+## Escalation packet for Grok or Astra
+
+Carry this prompt plus isolated worktree/repo/branch; exact HEAD and dirty status; issue/specification links; reproduced trigger; exact error/output; current relevant paths; attempted fixes and why they failed; tests run; canonical owner/schema evidence; preserved drafts/data; remaining acceptance criteria; and one precise decision to resolve. Stop the prior writer first. Review model output and diffs before accepting; a model verdict does not authorize merge.
+
+## Mandatory release, operational closeout and skill evolution — contract v2
+
+**The destination is production through development, then verified operational closeout.** Launching this implementation prompt carries Braden's direction to complete that sequence for this issue and its affected consumers; do not stop at a development merge or re-ask the already specified destination. This does not authorize unrelated releases, destructive production-data changes, genuine disciplinary decisions or messages to third parties. A real policy/access/approval blocker stops the affected transition and is reported precisely; it is never waived by this text.
+
+### Execute this skill chain
+
+Invoke agent-run-master → agent-mem-truth → agent-skl-find → **ops-open-run** with feature scope and the BSuite profile; record the opening done-contract, issue, owned repositories, affected consumers, skill/MCP/CLI routing and UI impact before edits. Use the dedicated implementation/research/red-team/testing skills matched to the issue. Re-inventory on task-class/module/tool changes.
+
+Then invoke **ops-ship-close-out** as the closeout orchestrator with that same feature scope and done-contract. Its release work invokes **bsuite-ship-visual-promote** and **ops-ship-all-apps** for the affected multi-app/package-consumer release. For a genuinely single-app change, explicitly load ops-ship-all-apps, record its scoped applicability decision, and use bsuite-ship-visual-promote as the single-change driver; do not mass-ship unrelated dirty apps to satisfy a skill name. Never recursively restart completed macro phases.
+
+Load these exact canonical definitions through agent-skl-find: /home/braden/.agents/skills/ops-open-run/SKILL.md; /home/braden/.agents/skills/ops-ship-all-apps/SKILL.md; /home/braden/.agents/skills/ops-ship-close-out/SKILL.md; /home/braden/.agents/skills/bsuite-ship-visual-promote/SKILL.md; /home/braden/.agents/skills/git-github-issue-closeout/SKILL.md; /home/braden/.agents/skills/agent-definition-of-done/SKILL.md; /home/braden/.agents/skills/bsuite-false-complete-gates/SKILL.md. Use slash commands only where actually exposed and user-invocable; otherwise name/read/execute the skill.
+
+**chains_with and related_skills are discovery metadata, not executed chains.** Explicitly invoke the required macro/micro-skills and record receipts: skill name, phase, inputs, relevant tools, evidence path, verdict and next consumer. Missing Skill-tool support means directly follow the canonical procedure and record that mechanism, not pretend a tool was called. Missing MCP/auth/model capacity requires a verified equivalent or a specific blocker, not skipped coverage.
+
+### Release states — this order overrides conflicting older examples
+
+1. **PREPARED:** confirm current main/development state and protected-branch rules; preserve production-only work, live lanes and dirty changes. Derive apps from current .gitmodules, identify all affected consumers, and own an isolated development-based feature worktree. Use signed commits; verify signatures across the introduced range, not only the signed merge HEAD. Complete applicable build/lint/type/test, schema/policy, package and adversarial checks. Identify operational dependencies, monitoring and a credible rollback path.
+2. **DEVELOPMENT_MERGED:** update the feature branch against its target, resolve actionable human/bot review comments on the final code, pass required checks and merge its PR into development. Use gh pr merge --merge; never --squash, --admin, or --delete-branch on a long-lived branch. Feature → main is forbidden. No direct pushes to protected long-lived branches.
+3. **DEVELOPMENT_VERIFIED:** wait for each affected development deployment and match its live SHA to the merge being tested. Resolve actual deployment/project mappings even if local Vercel metadata is missing. Perform authenticated d.* visual/functional verification as the intended roles: both themes, four responsive widths, appropriate tenant/delegation contexts, full create/save/reload/workflow effects, negative authority and failure/retry. Use bsuite-ship-visual-promote and bsuite-false-complete-gates. FAIL, UNKNOWN or INCOMPLETE blocks promotion. Agent-performed evidence is required; never hand the visual test back to Braden. If the tested code/target changes, re-evaluate affected evidence.
+4. **PRODUCTION_PROMOTED:** only after development verification, open development → main (or established master) PRs for the owned release. Review the full promotion diff so unrelated unfinished work is not swept in. Update against the target and resolve actionable reviews/checks before each merge; a changed SHA requires fresh relevant validation. Merge commits only, no bypass, no direct production push.
+5. **PRODUCTION_VERIFIED:** wait for actual production readiness, verify exact deployed SHA, runtime logs/health, critical user journeys and affected integrations/queues/schedules. Prove schema intent, deployed functions, secrets/config references, published package contents and resolved consumer lockfiles where applicable. A migration ledger, npm export, green build or provider READY alone is insufficient. Use the authorized rollback/recovery path on failure, then re-verify; do not claim done after rollback leaves the issue unresolved.
+6. **CLOSED_OUT:** finish ops-ship-close-out correctness, architecture, experience, currency, records, owned-artifact disposal and convergence. Run git-github-issue-closeout; reconcile GitHub issues/PRs, docs/plans, feature/component registries and actual deployment evidence. An issue automatically closed on development merge does not prove production completion: preserve the release evidence/remaining status on the issue or owning programme until production is verified. Use established set-dod-status only after gate APPROVE; never mass-approve untested rows. Compare development/main contents and both log directions: content-identical promotion merge-commit debt is not a reason for endless back-merges. Reconcile genuine divergent changes through protected PRs. Clean only owned, proven-merged, inactive feature branches/worktrees; preserve live/unrelated work and both long-lived branches. Do not rewind gitlinks.
+
+### DoD receipts and final verdict
+
+Run **agent-definition-of-done** and **bsuite-false-complete-gates**, with the skill-owned verifiers and fresh evidence. D1–D7 always; explicitly declare ui_touched and evaluate every applicable D8 limb, including current sibling denominator, real entry/wiring, clarity, powerful common path, lossless round trip, better alternative and action count. D9 requires actual authorized use/consumer resolution/engine run as applicable, with query/results; D10 requires owned temporary-artifact inventory and deletion evidence. Do not invent non-demo production transactions to pass D9.
+
+Pre-promotion readiness is not final completion: production-dependent D9 can only finish after the production state exists. Do not demand a final production-use APPROVE before allowing an otherwise validated promotion, and do not call readiness APPROVE for the whole issue. Final ops-ship-close-out verdict comes from gate_report.py with all required evidence and clean child verdicts. SEND_BACK stays parent-owned with the exact failed gate, retained work and next recovery action. No “done”, “shipped” or issue-scope closure claim before final APPROVE and production proof.
+
+### Skill interoperability and evolution are required work
+
+At start and each major phase, load bsuite_skill_mcp_pairings and /home/braden/.agents/skills/_shared/skill-mcp-pairings.json; route with ops-open-run's route.mjs plan and verify actual connected tools, installed skills, agent paths and model IDs. Map each handoff's producer/output/consumer and acceptance gate; do not rely on chaining beyond the client's stacking limit or on non-user-invocable slash expansion. Keep high-impact actions serial and at most two active lanes by default.
+
+For each missing capability, bad trigger, conflicting instruction, broken pairing or repeat failure uncovered, record the concrete example and improve the appropriate canonical layer in the same task: deterministic check first; shared script/reference next; SKILL.md judgment only when neither suffices. Update relevant related_skills/chains_with/suggested_agents or routing pairings when supported by evidence; do not create a second skill copy or weaken the gate. Read the hub's instructions/protection policy before editing global skills; preserve unrelated agent/model configuration. If another owner or a real protection rule prevents the correction, record a named linked follow-up and keep the explicit safe override in this task.
+
+Run the verifier documented in each edited skill's SKILL.md and the relevant trigger/chain evaluations; update agent discovery/sync only when the change requires it. Log actual use/steer/false_complete through skill-event.sh. Run ops-open-run's route.mjs learn against supported real session evidence, even outside Claude when available; check what transcripts it actually consumed. No Claude-only Stop-hook assumption in Grok/Codex, no fabricated co-use or successful-learning claim from an empty scan. If the session format is unsupported, record actual invocation receipts and the adapter gap for the next routing improvement.
+
+Promote proven BSuite corrections through agent-mem-comms into the BSuite truth/pairing records and session/sleep packet; read back writes. Final evidence includes skills executed, tools unavailable/recovered, chain defects found, changes and tests, learning result and any explicitly owned follow-up. Do not churn skills when no improvement is justified: an evidenced no-change result is valid.
+
+### Known interoperability resolutions for this pack
+
+Current BSuite/operator rules above override old skill examples allowing direct-to-main features, squash merges, missing-deploy skips, force/direct re-sync pushes or estate-wide cleanup. Derive R80.4 and throughput from the actual app inventory; never follow a stale R80.3 list. The current operator-scoped native Codex team may use its approved tiered models; the September11 supervisor reserve prohibits external Codex CLI workers. Claude is unavailable. Verify Grok/Gemini/Qwen access and exact model IDs before use, with no silent paid fallback. Use scripts for mechanical work and cap two active workers by default. Historical Hermes three-lane IDs, pane wakes and cron instructions do not apply to a generic per-issue implementation. Current docs/ and docs/plans/ placement is explicit operator direction. Reconcile index sibling counts against current routes/consumers and repair stale counts, rather than copying an unverified denominator.
+
+## Captured issue requirements — refresh before acting
+
+This is a source snapshot, not authority to override current operator instructions or the task. Validate old paths/claims. Live issue: https://github.com/GaryOcean428/crm7/issues/678.
+
+---
+
+## Scope
+
+Once a charge rate is approved, it must be **LOCKED** until one of three regulatory triggers fires. The current model treats apprentice year progression (Year 1 → 2 → 3 → 4) as a new-quote event, forcing manual re-approval that should never happen. The forward-year schedule should be approved **once** when the original quote is signed off, then resolved automatically by the engine as the apprentice ages into each year band.
+
+## Operational anchor (operator-stated, 2026-05-12)
+
+> "Once the charges are approved they are usually set until they change again — usually annually when the EBA or award says so, July 1st for award. If an apprentice progresses during that time, the rate for the next year is already set."
+
+This is the canonical policy. The current code violates it.
+
+## The three legitimate re-rate triggers
+
+1. **Fair Work Annual Wage Review** — handed down by FWC, effective **1 July** each year. Affects modern-award-covered workers.
+2. **EBA / Enterprise Agreement scheduled increases** — per the EA's wage schedule clause, on the date that EA specifies.
+3. **On-cost rate changes** — super guarantee step-ups (e.g. 11.5% → 12% on 1 July 2025, Payday Super on 1 July 2026), workers' comp policy renewal, payroll tax threshold changes, CTF levy changes.
+
+**Apprentice year progression is NOT a re-rate event.** Year 2/3/4 rates should be pre-baked into the original approval.
+
+## Current state (verified in code, 2026-05-12)
+
+- `charge_rate_quotes` (`supabase/migrations/20260301100800_create_charge_rate_quotes.sql`) carries **one** `charge_rate_hourly` NUMERIC + `effective_date` per row. No forward schedule, no `next_review_date`, no `review_trigger`.
+- `R80.3/src/services/awardRulesEngine.ts:resolveCurrentYear()` correctly resolves the apprentice's current year from commencement + RPL + CBP, but the quote it produces only stores ONE year's rate.
+- `src/lib/billingEngine.ts:138-155` picks the latest approved quote by `effective_date DESC LIMIT 1` — so when an apprentice ticks over to Year 2, the system keeps billing at the Year 1 rate until someone manually re-approves a new quote.
+- No annual-review cron exists to auto-draft new quotes on 1 July.
+
+## Acceptance criteria
+
+### Schema change
+
+1. **Migration** `forward_year_charge_schedule.sql`:
+   ```sql
+   ALTER TABLE charge_rate_quotes
+     ADD COLUMN IF NOT EXISTS forward_schedule JSONB,
+     ADD COLUMN IF NOT EXISTS approved_until_review_trigger TEXT
+       CHECK (approved_until_review_trigger IN (
+         'fwc_annual_review','eba_scheduled_increase','on_cost_change',
+         'super_guarantee_step_up','manual_override'
+       )),
+     ADD COLUMN IF NOT EXISTS next_scheduled_review_date DATE,
+     ADD COLUMN IF NOT EXISTS quote_kind TEXT
+       CHECK (quote_kind IN ('single_year','multi_year_forward','mid_period_adjustment'))
+       DEFAULT 'multi_year_forward';
+   ```
+
+   `forward_schedule` shape:
+   ```json
+   {
+     "year_1": { "hourly": 38.50, "weekly_billed": 1463.00, "effective_from": "2026-01-15", "effective_to": "2027-01-14" },
+     "year_2": { "hourly": 44.20, "weekly_billed": 1679.60, "effective_from": "2027-01-15", "effective_to": "2028-01-14" },
+     "year_3": { "hourly": 49.80, "weekly_billed": 1892.40, "effective_from": "2028-01-15", "effective_to": "2029-01-14" },
+     "year_4": { "hourly": 55.10, "weekly_billed": 2093.80, "effective_from": "2029-01-15", "effective_to": "2030-01-14" }
+   }
+   ```
+
+2. **Backfill migration**: for every existing approved quote, derive a single-year `forward_schedule` from the current `charge_rate_hourly`, set `quote_kind='single_year'` (preserves legacy semantics until operator re-approves).
+
+### Engine changes
+
+3. **R80.3 `calcBridge.ts` / `awardRulesEngine.ts`**: when calculating a quote, produce the full forward schedule (Year 1..4 for apprenticeships, Year 1..N for traineeships) at the SAME approval time, using:
+   - Current FWC/EBA rate table for each year band
+   - Same on-cost stack across all years (super, WC, payroll tax, leave loading, training, admin, margin)
+   - Junior/adult split at apprentice's 21st birthday if it falls inside the schedule
+   - Year-12-completion modifier if applicable
+   - CBP certified year (overrides time-based progression)
+
+4. **`src/lib/billingEngine.ts:fetchTimesheetGroups()`** rewrite: instead of `ORDER BY effective_date DESC LIMIT 1`, resolve the apprentice's current year-band for the billing period (use the same `resolveCurrentYear()` logic from R8), then pick `forward_schedule[year_N].hourly` from the **still-current** approved quote. Only treat a quote as expired when `next_scheduled_review_date <= period_start` AND a newer approved quote exists.
+
+5. **Junior→Adult crossover within a year**: if the apprentice's 21st birthday falls mid-billing-period, split the period at the birthday and bill at junior rate before, adult rate after. Forward schedule must carry both junior and adult variants for the year that contains the crossover.
+
+### Annual review cron
+
+6. **New scheduled function** `annual-rate-review` running 00:00 AWST on:
+   - **1 July** each year (FWC Annual Wage Review effective date)
+   - EBA-specific dates (driven by `enterprise_agreements.scheduled_review_dates[]`)
+   - Super guarantee step-up dates (1 July when applicable per ATO schedule)
+
+   Behaviour:
+   - Identifies approved quotes whose `approved_until_review_trigger` matches the firing trigger AND whose `next_scheduled_review_date <= today`
+   - Auto-drafts replacement quotes pre-populated with the new rates × original forward schedule structure
+   - Sets new drafts to `status='draft'`, links to the superseded quote via `supersedes_quote_id`
+   - Notifies tenant admin + operator via `email-dispatcher` (subject: "Annual rate review — N quotes ready to review") and `send-notification` (in-app)
+   - Logs to `audit_log` with full diff (old vs new rate per year band)
+
+7. **Operator dashboard** at `src/pages/billing/annual-review.tsx`:
+   - List of pending review drafts
+   - Bulk approve / reject / edit
+   - Diff view per quote: old forward schedule vs new
+   - "Apply" pushes status to `approved`, creates rate-adjustment line items on next invoice for any partial periods straddling the effective date
+
+### UI surface
+
+8. **Quote approval UI** (`src/pages/billing/quotes/[id].tsx` or similar): show the full forward schedule as a table (Year 1..N rows × columns: hourly / weekly billed / effective from / effective to). Operator approves the whole schedule, not one rate.
+
+9. **Apprentice detail page**: show "Current rate" + "Next year's rate (locked in)" + "Next regulatory review" date. The operator sees that no action is needed for the apprentice's normal progression.
+
+### Tests
+
+10. **Unit test scenarios**:
+    - Year-1 apprentice on 2026-06-30 → tick over to Year 2 on 2027-01-15 → billing on 2027-01-20 picks Year 2 rate from the SAME approved quote. No new approval event.
+    - Year-2 apprentice on 2026-06-30 → FWC Annual Review fires 2026-07-01 → cron drafts new quote → operator approves → all subsequent invoices use new schedule from 2026-07-01.
+    - Apprentice 21st birthday falls 2026-09-15 in middle of a billing period → invoice splits the period: junior rate to 2026-09-14, adult rate from 2026-09-15.
+    - EBA effective 2026-10-01 → cron only drafts for quotes flagged `approved_until_review_trigger='eba_scheduled_increase'`, leaves modern-award quotes alone.
+    - Super guarantee step-up on 2026-07-01 → cron drafts new quotes with updated on-costs but same gross rate. (Variance reflected in margin.)
+
+### Brand system clause (MANDATORY)
+
+D2C Neon Electric. All UI changes MUST use oklch + semantic tokens only. No inline hex codes.
+
+### Branch policy (MANDATORY)
+
+Target branch for your PR MUST be `development`, not `main`. Per the `ship-all-apps` workflow, all feature work merges to `development` first.
+
+## Deps / blockers
+
+- Pairs with issue #219 (R8 charge engine) — that issue should consume the new forward_schedule shape.
+- Pairs with issue #663 (training_day_pattern_periods) — both establish "approved-once, valid-until-trigger" semantics for apprentice-level data.
+- Soft-pairs with issue #664 (billing traceability) — invoice line drill-down should show which forward_schedule year was applied.
+
+## References
+
+- `supabase/migrations/20260301100800_create_charge_rate_quotes.sql` (current schema)
+- `R80.3/src/services/awardRulesEngine.ts:resolveCurrentYear()` (year resolution logic)
+- `src/lib/billingEngine.ts:138-155` (the broken latest-quote lookup)
+- `src/lib/pipelines/chargeToBilling.ts:211,328` — already names `'award_annual_review'` as a billing adjustment reason but doesn't wire it
+- Audit doc §11 in the billing-flow audit notes

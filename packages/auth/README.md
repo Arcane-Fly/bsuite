@@ -1,6 +1,18 @@
 # @bsuite/auth
 
-OAuth 2.1 PKCE client shared across BSuite apps (CRM7, Conduit, R80.3, Braden, Throughput). BSU is the OAuth server; this package is the client every other app uses to consume it.
+OAuth 2.1 PKCE client shared across BSuite apps (CRM7, Conduit, R80.4, Braden, Throughput). BSU is the OAuth server; this package is the client every other app uses to consume it.
+
+## Concurrent sign-in and callback recovery
+
+The opt-in [session ownership coordinator](docs/session-ownership.md) serializes
+consumer SDK writes and logout across same-origin tabs. Consumer adapter wiring,
+transaction snapshot binding and deployed verification remain required.
+
+Login initiators should use `attemptSilentAuthDetailed()`. Continue to the destination on `authenticated`; stop on `redirecting` or `superseded`; offer interactive recovery on `failed`. The old boolean helper remains compatible but cannot distinguish a scheduled navigation from failure. Assigning `window.location` does not stop subsequent JavaScript.
+
+Route callbacks with `hasPendingBusinessSuiteTransaction(state)`, which requires this origin's complete, fresh transaction state. Do not dispatch from state shape or the presence of an unrelated legacy key. Legacy transactions also require their verifier, nonce and timestamp. Incomplete transactions need a fresh sign-in.
+
+`BusinessSuiteOAuthExchangeUncertainError.recovery` is `fresh-sign-in`: the server may have consumed the single-use code before a network or response-body failure. Never automatically replay it. Callback error handlers must preserve unrelated transactions and newer sessions. Capture the consumer session/logout generation before starting an exchange and check it again after verification and before committing tokens or navigating. An exchange already in flight can return after sign-out; its result must not restore the previous session. After successful exchange, bridge through the consumer's `supabase.auth.setSession()` before protected data reads. Host-local session storage remains separate from cross-app OAuth SSO.
 
 The package is intentionally small — it defaults to the production BSuite Supabase host (`https://tuybltdrdefjblnplpqo.supabase.co`), supports an explicit OAuth-server override for persistent development Supabase branches, resolves redirect URIs from `VITE_APP_URL` (or `NEXT_PUBLIC_APP_URL`) when available, and falls back to `${window.location.origin}/auth/callback`. It depends only on `jose` for JWKS verification.
 
@@ -22,7 +34,7 @@ pnpm add @bsuite/auth
 
 ## Usage
 
-Every consumer app creates a thin wrapper that re-exports the shared client bound to its OAuth client ID. Example from CRM7 (the canonical reference — same pattern in `R80.3`, `braden`, `conduit`, `throughput`):
+Every consumer app creates a thin wrapper that re-exports the shared client bound to its OAuth client ID. Example from CRM7 (the canonical reference — same pattern in `R80.4`, `braden`, `conduit`, `throughput`):
 
 ```ts
 // src/lib/business-suite-oauth.ts
@@ -37,14 +49,14 @@ export const {
   getUserInfo,
   clearBSTokens,
   startBSTokenRefresh,
-  attemptSilentAuth,
+  attemptSilentAuthDetailed,
 } = createOAuthClient('30f76744-3e0b-40bf-abb8-8c587389802e'); // your app's OAuth client ID
 ```
 
 Then wire it into the auth lifecycle:
 
 ```ts
-// On a login button click — redirects to BSU /oauth/consent (Promise never resolves)
+// On a login button click — schedules navigation to the OAuth server
 void signInWithBusinessSuite();
 
 // In your /auth/callback route, with `code` and `state` parsed from the URL
@@ -55,7 +67,8 @@ localStorage.setItem('bs_user', JSON.stringify(user));
 if (tokens.id_token) localStorage.setItem('bs_id_token', tokens.id_token);
 
 // On app mount (e.g. AuthContext / AuthProvider) — try OIDC silent re-auth before showing the login UI
-const alreadyAuthed: boolean = await attemptSilentAuth();
+const result = await attemptSilentAuthDetailed();
+// Stop on redirecting/superseded; navigate only on authenticated.
 
 // Start the auto-refresh loop and capture the cleanup function
 const stopRefresh: () => void = startBSTokenRefresh();
@@ -130,14 +143,15 @@ interface VerifiedUser {
 | `localStorage` | `bs_oauth_state` | CSRF state | sign-in flow only, TTL-guarded |
 | `localStorage` | `bs_oauth_nonce` | OIDC replay-protection nonce | sign-in flow only, TTL-guarded |
 | `localStorage` | `bs_oauth_started_at` | PKCE TTL sentinel | sign-in flow only |
-| `localStorage` | `bs_oauth_inflight_code` | duplicate code-exchange guard | callback only |
+| `localStorage` | `bs_oauth_flows` | State-keyed PKCE transactions | ten minutes / completion / sign-out |
+| `localStorage` | `bs_oauth_inflight_codes` | Per-code claims with owner identity | ten minutes / owning completion / sign-out |
 
 ## Design notes
 
 - **Per-domain `localStorage`** — tokens never leave the app's own origin. Cross-app SSO is achieved via OIDC `prompt=none` silent re-auth (`attemptSilentAuth`), NOT cross-domain cookies. The deprecated `business_suite_auth` cookie SSO scheme was removed 2025-02-27; do not reintroduce it.
 - **JWKS verification** — `verifyAccessToken` fetches the Supabase `/.well-known/jwks.json` once and caches it via `jose`'s `createRemoteJWKSet`. RS256/ES256 only.
 - **PKCE S256 mandatory** — no implicit flow, no `plain` challenge.
-- **OIDC nonce verification** — if `id_token` is returned, its `nonce` claim is verified against the value stored in `localStorage('bs_oauth_nonce')`. Mismatch throws “id_token nonce mismatch — possible replay attack” (OIDC Core §3.1.2.2).
+- **OIDC nonce verification** — if `id_token` is returned, its `nonce` claim is verified against the nonce in the matching state-keyed transaction (or eligible legacy transaction). A missing or mismatched nonce throws “id_token nonce mismatch — possible replay attack” (OIDC Core §3.1.2.2).
 - **Token expiry event** — if the auto-refresh loop fails or a sibling tab removes `bs_access_token`, the package dispatches a `bs-oauth-expired` `CustomEvent` on `window` so apps can react (e.g. show a banner) before tokens are cleared. Reasons: `network_error`, `refresh_rejected`, `cross_tab_logout`.
 
 ## Per-app OAuth client IDs

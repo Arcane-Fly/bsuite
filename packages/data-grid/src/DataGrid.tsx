@@ -38,12 +38,13 @@ import { computeFillDownExtent, computeFillRange, mapFillTargetToSource, type Fi
 import { isPrintableEditTrigger, moveEnter, moveFocus, moveTab, type GridBounds } from './lib/keyboard.js';
 import { isCellInRange, normalizeRange, rangeToCells, type CellPosition, type CellRange } from './lib/selection.js';
 import type { LinkEdit } from './types.js';
-import { UndoStack } from './lib/undo.js';
+import { UndoStack, type UndoEntry } from './lib/undo.js';
 import type {
   CellEdit,
+  CellEditResult,
+  CellValueChange,
   CellEditorProps,
   DataGridColumn,
-  DataGridError,
   DataGridErrorPhase,
   DataGridHandle,
   DataGridProps,
@@ -55,8 +56,25 @@ const DEFAULT_COLUMN_WIDTH = 150;
 const DEFAULT_MIN_COLUMN_WIDTH = 60;
 const DEFAULT_UNDO_LIMIT = 200;
 
-function overlayKey(rowIndex: number, columnId: string): string {
-  return `${rowIndex}:${columnId}`;
+function overlayKey(rowId: string, columnId: string): string {
+  return JSON.stringify([rowId, columnId]);
+}
+
+interface OptimisticCell {
+  value: unknown;
+  owner: symbol;
+  pending: boolean;
+}
+
+interface EditVersion {
+  value: unknown;
+  previous?: EditVersion;
+  failed: boolean;
+  settled: Promise<void>;
+  finish: () => void;
+}
+function versionValue(version: EditVersion): unknown {
+  return version.failed && version.previous ? versionValue(version.previous) : version.value;
 }
 
 function editorFor<TRow>(column: DataGridColumn<TRow>): (props: CellEditorProps<TRow>) => ReactElement {
@@ -299,16 +317,40 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
   // ── Overlay: optimistic values layered over `data` until the host's own
   // re-render catches up, and reverted (with onError fired first) if the
   // host's onCellsEdited rejects. ──────────────────────────────────────
-  const [overlay, setOverlay] = useState<Map<string, unknown>>(() => new Map());
+  const [overlay, setOverlay] = useState<Map<string, OptimisticCell>>(() => new Map());
+  const cellOwners = useRef(new Map<string, symbol>());
+  const versions = useRef(new Map<string, EditVersion>());
+  const undoDependencies = useRef(new WeakMap<CellEdit<TRow>, EditVersion>());
+  const historyOwners = useRef(new WeakMap<UndoEntry<CellEdit<TRow>[]>, symbol>());
+  const rowIdentity = useCallback((row: TRow, index: number): string => getRowId?.(row, index) ?? String(index), [getRowId]);
+  const rowsById = useMemo(() => new Map(data.map((row, index) => [rowIdentity(row, index), { row, index }])), [data, rowIdentity]);
+  const currentRows = useRef(rowsById);
+  currentRows.current = rowsById;
+  // Release acknowledged successful overlays. Later refetches must remain authoritative.
+  useEffect(() => {
+    setOverlay((previous) => {
+      let next = previous;
+      for (const [key, cell] of previous) {
+        const [rowId, columnId] = JSON.parse(key) as [string, string];
+        const current = rowsById.get(rowId);
+        const column = columnConfigById.get(columnId);
+        if (!cell.pending && current && column && Object.is(column.accessor(current.row), cell.value)) {
+          if (next === previous) next = new Map(previous);
+          next.delete(key);
+        }
+      }
+      return next;
+    });
+  }, [rowsById, columnConfigById, overlay]);
   const getEffectiveValue = useCallback(
     (rowIndex: number, columnId: string): unknown => {
-      const key = overlayKey(rowIndex, columnId);
-      if (overlay.has(key)) return overlay.get(key);
+      const key = overlayKey(rowIdentity(data[rowIndex], rowIndex), columnId);
+      if (overlay.has(key)) return overlay.get(key)!.value;
       const column = columnConfigById.get(columnId);
       const row = data[rowIndex];
       return column && row ? column.accessor(row) : undefined;
     },
-    [overlay, data, columnConfigById],
+    [overlay, data, columnConfigById, rowIdentity],
   );
 
   // ── Selection: anchor (drag/shift-click origin) + focus (current cell). ─
@@ -324,6 +366,9 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
   const fillSourceRef = useRef<CellRange | null>(null);
 
   const undoStackRef = useRef(new UndoStack<CellEdit<TRow>[]>(undoLimit));
+  const historyEpoch = useRef(0);
+  const traversalRunning = useRef(false);
+  const traversalQueue = useRef<Array<{ epoch: number; run: () => Promise<void> }>>([]);
   const [, forceRender] = useReducer((n: number) => n + 1, 0);
 
   const rowVirtualizer = useVirtualizer({
@@ -411,74 +456,196 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
   // ── Mutation pipeline ---------------------------------------------------
 
   async function commitEdits(
-    edits: CellEdit<TRow>[],
+    input: CellEdit<TRow>[],
     phase: DataGridErrorPhase,
-    opts?: { skipUndoPush?: boolean },
-  ): Promise<void> {
-    if (edits.length === 0) return;
+    traversal?: { entry: UndoEntry<CellEdit<TRow>[]>; direction: 'undo' | 'redo' },
+  ): Promise<CellEditResult> {
+    if (input.length === 0) return { failures: [] };
+    if (!traversal) historyEpoch.current += 1;
+    const owner = Symbol('cell mutation');
+    let selected = input;
+    // An undo must not persist a failed predecessor's draft while that predecessor
+    // is still unresolved. Ordinary edits remain concurrent and optimistic.
+    if (traversal) {
+      const keyFor = (edit: CellEdit<TRow>) => overlayKey(edit.rowId ?? rowIdentity(edit.row, edit.rowIndex), edit.columnId);
+      for (const edit of input) cellOwners.current.set(keyFor(edit), owner);
+      historyOwners.current.set(traversal.entry, owner);
+      await Promise.all(input.map((edit) => undoDependencies.current.get(edit)?.settled));
+      selected = input.filter((edit) => cellOwners.current.get(keyFor(edit)) === owner);
+      if (!selected.length) {
+        undoStackRef.current.replace(traversal.entry);
+        forceRender();
+        return { failures: [] };
+      }
+    }
+    const edits = selected.map((edit) => {
+      const rowId = edit.rowId ?? rowIdentity(edit.row, edit.rowIndex);
+      const current = currentRows.current.get(rowId);
+      return { ...edit, rowId, rowIndex: current?.index ?? -1, row: current?.row ?? edit.row };
+    });
+    const keyOf = (edit: CellEdit<TRow>) => overlayKey(edit.rowId!, edit.columnId);
+    const attemptVersions = edits.map((edit) => {
+      const key = keyOf(edit);
+      const latest = versions.current.get(key);
+      const previous = latest && Object.is(versionValue(latest), edit.previousValue) ? latest : {
+        value: edit.previousValue, failed: false, settled: Promise.resolve(), finish: () => {},
+      };
+      let finish!: () => void;
+      const settled = new Promise<void>((resolve) => { finish = resolve; });
+      const version: EditVersion = { value: edit.value, previous, failed: false, settled, finish };
+      versions.current.set(key, version);
+      cellOwners.current.set(key, owner);
+      return version;
+    });
     setOverlay((prev) => {
       const next = new Map(prev);
-      for (const edit of edits) next.set(overlayKey(edit.rowIndex, edit.columnId), edit.value);
-      // A fresh attempt clears the previous refusal — a stale marker on a cell
-      // the reader has since fixed is its own small lie.
-      setRefusals((prevRef) => {
-        if (prevRef.size === 0) return prevRef;
-        const cleared = new Map(prevRef);
-        for (const edit of edits) cleared.delete(overlayKey(edit.rowIndex, edit.columnId));
-        return cleared;
-      });
+      for (const edit of edits) next.set(keyOf(edit), { value: edit.value, owner, pending: true });
       return next;
     });
-    if (!opts?.skipUndoPush) {
-      undoStackRef.current.push({
-        before: edits.map((e) => ({ ...e, value: e.previousValue, previousValue: e.value })),
-        after: edits,
-      });
-      forceRender();
+    setRefusals((prev) => {
+      const next = new Map(prev);
+      for (const edit of edits) next.delete(keyOf(edit));
+      return next;
+    });
+    const entry = traversal?.entry ?? {
+      before: edits.map((e, index) => {
+        const previous = attemptVersions[index].previous!;
+        const inverse = { ...e, get value() { return versionValue(previous); }, previousValue: e.value };
+        undoDependencies.current.set(inverse, previous);
+        return inverse;
+      }),
+      after: edits,
+    };
+    if (!traversal) undoStackRef.current.push(entry);
+    historyOwners.current.set(entry, owner);
+    forceRender();
+    const failures = new Map<string, string>();
+    for (const edit of edits) {
+      if (edit.rowIndex < 0) failures.set(keyOf(edit), 'This row is no longer available. Refresh before retrying.');
+      const config = columnConfigById.get(edit.columnId);
+      if (config?.editable !== true) failures.set(keyOf(edit), 'This field is read-only.');
+      if (config?.link) failures.set(keyOf(edit), 'Choose the related record using its picker.');
     }
+    let cause: unknown;
+    const available = edits.filter((edit) => !failures.has(keyOf(edit)));
     try {
-      await onCellsEdited(edits);
+      const result = available.length ? await onCellsEdited(available) : undefined;
+      if (result) {
+        const keys = new Set(available.map(keyOf));
+        for (const failure of result.failures) {
+          const key = overlayKey(failure.rowId, failure.columnId);
+          if (!keys.has(key) || failures.has(key) || failure.status !== 'failed') {
+            throw new Error('Invalid per-cell edit outcome. Refresh before retrying.');
+          }
+          failures.set(key, failure.message || 'Failed to save the edit.');
+        }
+      }
     } catch (err) {
-      if (!opts?.skipUndoPush) undoStackRef.current.discardLast();
-      // Tell the host FIRST. A grid that reverts a failed edit without
-      // surfacing why reproduces the "edited, nothing happened" defect
-      // this package exists to close (see DataGridError doc comment).
-      const error: DataGridError<TRow> = {
-        message: err instanceof Error ? err.message : 'Failed to save the edit.',
-        cause: err,
-        phase,
-        edits,
-      };
-      onError(error);
-      setRefusals((prev) => {
-        const next = new Map(prev);
-        for (const edit of edits) next.set(overlayKey(edit.rowIndex, edit.columnId), error.message);
-        return next;
-      });
-      setOverlay((prev) => {
-        const next = new Map(prev);
-        for (const edit of edits) next.delete(overlayKey(edit.rowIndex, edit.columnId));
-        return next;
-      });
-      forceRender();
+      cause = err;
+      const message = err instanceof Error ? err.message : 'Failed to save the edit.';
+      for (const edit of available) failures.set(keyOf(edit), message);
     }
+    edits.forEach((edit, index) => {
+      const version = attemptVersions[index];
+      version.failed = failures.has(keyOf(edit));
+      if (version.failed) {
+        // Collapse settled ancestry so repeated failures do not retain an unbounded chain.
+        void version.previous!.settled.then(() => {
+          version.value = versionValue(version.previous!);
+          version.previous = undefined;
+          version.finish();
+        });
+      } else {
+        version.previous = undefined;
+        version.finish();
+      }
+    });
+    const owned = (edit: CellEdit<TRow>) => cellOwners.current.get(keyOf(edit)) === owner;
+    const savedKeys = new Set(edits.filter((e) => (!traversal || owned(e)) && !failures.has(keyOf(e))).map(keyOf));
+    const failedEdits = edits.filter((e) => owned(e) && failures.has(keyOf(e)));
+    const failedKeys = new Set(failedEdits.map(keyOf));
+    const subset = (keys: Set<string>): UndoEntry<CellEdit<TRow>[]> | undefined => keys.size ? {
+      before: entry.before.filter((e) => keys.has(keyOf(e))),
+      after: entry.after.filter((e) => keys.has(keyOf(e))),
+    } : undefined;
+    if (historyOwners.current.get(entry) === owner) {
+      if (traversal) {
+        undoStackRef.current.settle(entry, traversal.direction, subset(savedKeys), subset(failedKeys));
+      } else {
+        undoStackRef.current.replace(entry, subset(savedKeys));
+      }
+    }
+    setOverlay((prev) => {
+      const next = new Map(prev);
+      for (const edit of edits) {
+        const key = keyOf(edit);
+        if (!owned(edit) || next.get(key)?.owner !== owner) continue;
+        if (failures.has(key)) next.delete(key);
+        else next.set(key, { value: edit.value, owner, pending: false });
+      }
+      return next;
+    });
+    setRefusals((prev) => {
+      const next = new Map(prev);
+      for (const edit of failedEdits) if (owned(edit)) next.set(keyOf(edit), failures.get(keyOf(edit))!);
+      return next;
+    });
+    forceRender();
+    // Each error contains only its failed cells; retry drafts belong to the host.
+    for (const message of new Set(failedEdits.map((e) => failures.get(keyOf(e))!))) {
+      onError({ message, cause, phase, edits: failedEdits.filter((e) => failures.get(keyOf(e)) === message) });
+    }
+    return { failures: edits.filter(edit => failures.has(keyOf(edit))).map(edit => ({
+      rowId: edit.rowId!, columnId: edit.columnId, status: 'failed' as const, message: failures.get(keyOf(edit))!,
+    })) };
   }
 
-  const handleUndo = useCallback((): void => {
-    const entry = undoStackRef.current.undo();
-    if (!entry) return;
-    forceRender();
-    void commitEdits(entry.before, 'undo', { skipUndoPush: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onCellsEdited, onError, overlay, data, columnConfigById]);
+  async function applyCells(changes: readonly CellValueChange[]): Promise<CellEditResult> {
+    const seen = new Set<string>();
+    const edits = changes.map(change => {
+      const current = currentRows.current.get(change.rowId);
+      const config = columnConfigById.get(change.columnId);
+      const key = overlayKey(change.rowId, change.columnId);
+      if (!current || !config) throw new Error('This row or field is no longer available. Refresh before retrying.');
+      if (seen.has(key)) throw new Error('A retry must contain each cell once.');
+      seen.add(key);
+      return {rowId: change.rowId, rowIndex: current.index, row: current.row,
+        columnId: change.columnId, value: change.value,
+        previousValue: getEffectiveValue(current.index, change.columnId)};
+    });
+    return commitEdits(edits, 'edit');
+  }
 
-  const handleRedo = useCallback((): void => {
-    const entry = undoStackRef.current.redo();
-    if (!entry) return;
-    forceRender();
-    void commitEdits(entry.after, 'redo', { skipUndoPush: true });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onCellsEdited, onError, overlay, data, columnConfigById]);
+  function drainTraversals(): void {
+    if (traversalRunning.current) return;
+    const intent = traversalQueue.current.shift();
+    if (!intent) return;
+    if (intent.epoch !== historyEpoch.current) {
+      drainTraversals();
+      return;
+    }
+    traversalRunning.current = true;
+    void intent.run().finally(() => {
+      traversalRunning.current = false;
+      drainTraversals();
+    });
+  }
+
+  // Preserve the sequence of history operations. Overlay ownership can change
+  // between normal edits, but two successful undos must each retain their redo.
+  function enqueueTraversal(direction: 'undo' | 'redo'): void {
+    traversalQueue.current.push({
+      epoch: historyEpoch.current,
+      run: async () => {
+        const entry = undoStackRef.current.begin(direction);
+        if (entry) await commitEdits(direction === 'undo' ? entry.before : entry.after, direction, {entry, direction});
+      },
+    });
+    drainTraversals();
+  }
+
+  const handleUndo = (): void => enqueueTraversal('undo');
+  const handleRedo = (): void => enqueueTraversal('redo');
 
   const handleCopy = useCallback(async (): Promise<void> => {
     if (!selection) return;
@@ -754,9 +921,18 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
    * this package propagating anything.
    */
   async function commitLinkEdit(edit: LinkEdit<TRow>): Promise<void> {
+    const key = overlayKey(rowIdentity(edit.row, edit.rowIndex), edit.columnId);
+    const owner = Symbol('link mutation');
+    cellOwners.current.set(key, owner);
+    setRefusals((prev) => {
+      if (cellOwners.current.get(key) !== owner) return prev;
+      const next = new Map(prev);
+      next.delete(key);
+      return next;
+    });
     setOverlay((prev) => {
       const next = new Map(prev);
-      next.set(overlayKey(edit.rowIndex, edit.columnId), edit.refId);
+      next.set(key, { value: edit.refId, owner, pending: true });
       return next;
     });
     try {
@@ -766,10 +942,23 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
         );
       }
       await onLinkEdit(edit);
+      setOverlay((prev) => {
+        if (cellOwners.current.get(key) !== owner || prev.get(key)?.owner !== owner) return prev;
+        const next = new Map(prev);
+        next.set(key, { value: edit.refId, owner, pending: false });
+        return next;
+      });
     } catch (err) {
+      if (cellOwners.current.get(key) !== owner) return;
       setOverlay((prev) => {
         const next = new Map(prev);
-        next.delete(overlayKey(edit.rowIndex, edit.columnId));
+        if (next.get(key)?.owner === owner) next.delete(key);
+        return next;
+      });
+      setRefusals((prev) => {
+        if (cellOwners.current.get(key) !== owner) return prev;
+        const next = new Map(prev);
+        next.set(key, err instanceof Error ? err.message : String(err));
         return next;
       });
       onError({
@@ -915,6 +1104,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
   useImperativeHandle(
     ref,
     () => ({
+      applyCells,
       undo: handleUndo,
       redo: handleRedo,
       canUndo: () => undoStackRef.current.canUndo(),
@@ -923,7 +1113,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
       getFocusedCell: () => (selection ? selection.focus : null),
       copySelection: handleCopy,
     }),
-    [handleUndo, handleRedo, selection, handleCopy],
+    [applyCells, handleUndo, handleRedo, selection, handleCopy],
   );
 
   const normalizedSelection = selection ? normalizeRange(selection.anchor, selection.focus) : null;
@@ -1115,7 +1305,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
                     style={{ position: 'sticky', left: 0, zIndex: 10, width: frozenWidth, height: vr.size }}
                     column={columnConfigById.get(frozenColumn.id)!}
                     row={row.original}
-                    refusal={refusals.get(overlayKey(row.index, frozenColumn.id))}
+                    refusal={refusals.get(overlayKey(row.id, frozenColumn.id))}
                     rowId={getRowId ? getRowId(row.original, row.index) : String(row.index)}
                     editable={canEditColumn(frozenColumn.id)}
                     rowIndex={row.index}
@@ -1144,7 +1334,7 @@ function DataGridInner<TRow extends RowData>(props: DataGridProps<TRow>, ref: Re
                       style={{ position: 'absolute', left: frozenWidth + vc.start, top: 0, width: vc.size, height: vr.size }}
                       column={config}
                       row={row.original}
-                      refusal={refusals.get(overlayKey(row.index, config.id))}
+                      refusal={refusals.get(overlayKey(row.id, config.id))}
                     rowId={getRowId ? getRowId(row.original, row.index) : String(row.index)}
                     editable={canEditColumn(config.id)}
                     rowIndex={row.index}

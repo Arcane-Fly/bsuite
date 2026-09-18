@@ -1,0 +1,53 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# The public / Lighthouse gate is still asserted on its BEST run (optimistic = Math.max)
+
+https://github.com/GaryOcean428/crm7/issues/2510
+
+Snapshot updatedAt: 2026-09-06T17:12:25Z. Open at capture; re-read live.
+
+`lighthouserc.json`'s three assertions for the public root are pinned to **`aggregationMethod: optimistic`**. For a `minScore` assertion that is **`Math.max`** — the gate is checked against the **best** of its five runs, not the typical one.
+
+This is the same structural weakness #2507 was written to retire on `/contacts`, still live one route over.
+
+## Why it was left that way, deliberately
+
+#2507 switched `/contacts` to `median` and left `/` alone **on purpose**. Its entire evidential value rests on one-variable diffs — a red had to be attributable to the thing under test. Switching the public route in the same PR would have turned a passing, unrelated gate red and destroyed that attribution. Pinning `optimistic` explicitly, rather than leaving the default invisible, was the interim step.
+
+It is now a documented decision with no owner. This issue is the owner.
+
+## What is measured
+
+**At the head of #2507, `/`'s representative (median) run scores 0.83 against its 0.75 floor** — about 8 points of headroom. So the public gate is **not** a false green today, and this is not urgent.
+
+Two honest caveats, because the number should not be oversold:
+
+- 0.83 is the **representative run** LHCI uploads, which it selects as the median run by a composite metric — it is not literally the median of the five performance scores. A passing assertion prints nothing, so the exact median is not in the CI log.
+- It is **one job**. `/contacts` showed ~2700 ms of job-to-job variance on these runners; there is no reason to assume `/` is steadier.
+
+The local `{0.88, 0.70, 0.73}` that first raised the alarm came from a machine simultaneously running Docker Postgres and a TLS proxy. It is **not** evidence about CI, and #2507's record now says so.
+
+## Why it still matters
+
+Nothing guarantees that headroom holds, and **no gate would say if it stopped**. A route checked on `Math.max` degrades silently until the best of five drops below the floor — by which point the typical run has been failing for some time.
+
+## Acceptance criteria
+
+- `/`'s three assertions carry an explicit `aggregationMethod: median`.
+- The **actual median** is measured first — drive `minScore` to `1` so the failing assertion prints `found:`, read it, restore. (That is how #2507 read `/contacts`'s median: `expected: <=1 / found: 3028.8139`.)
+- Thresholds are re-derived from that statistic **before** the switch, so the PR does not land red.
+- Done in **its own PR**, where a red can be attributed to this change and nothing else.
+
+## Mandatory before merge (FF-SELF-VALIDATION-20260507)
+
+- **Validation loop**: §9.1 output-equivalence
+- **Equivalence target**: the measured median printed by CI, before and after, with the statistic named beside every number
+- **Cross red-team**: verify the new thresholds were derived from the median and not from a passing run that happened to be quoted
+- **Skills to load**: `vercel-speed-insights`
+- **Self-report on divergence**: yes — if the median turns out to be below 0.75, say so plainly; that would make this a live false-green rather than a latent one
+
+Context: #2507 (the gate and the aggregation finding), bsuite#2581 open item 10.

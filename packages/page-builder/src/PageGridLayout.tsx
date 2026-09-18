@@ -1,5 +1,6 @@
 import { ElementScopeProvider } from './elementScope.js';
-import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RotateCcw, Save, Settings2, Unlock } from 'lucide-react';
+import { CardPaddingBoundary } from './cardPadding.js';
+import { ArrowDown, ArrowUp, ChevronDown, ChevronUp, Eye, EyeOff, Layers, LayoutGrid, Lock, Plus, RefreshCw, RotateCcw, Save, Settings2, Unlock, X } from 'lucide-react';
 import React, {
   startTransition,
   useCallback,
@@ -32,9 +33,13 @@ import {
 } from './cardStyle.js';
 import { defaultPreferenceAdapter } from './preferences.js';
 import { isRelationshipWritable } from './relationshipCatalog.js';
-import { usePageGridLayout } from './usePageGridLayout.js';
+import { combinePreferenceStatuses, preferenceStatusOf, usePageGridLayout } from './usePageGridLayout.js';
 import { cn } from './utils.js';
 import type { GridLayouts, PageGridLayoutProps, RelationshipWidgetDetail } from './types.js';
+
+/** Ask one mounted canvas to acknowledge its preferences before closing. */
+export const PAGE_GRID_SAVE_EVENT = 'bsuite-page-grid-save';
+export interface PageGridSaveEventDetail { pageKey: string }
 
 /**
  * Single source of truth for the grid's pixel geometry — read by both the
@@ -136,6 +141,13 @@ type GridItemProps = {
   pageKey: string;
   onHide: (id: string) => void;
   /**
+   * Editing is open but paused because a preference read failed or is still
+   * loading (bsuite#3277). The card keeps its edit-mode label, but hide is
+   * disabled and the move cursor is withdrawn, because neither would do
+   * anything.
+   */
+  editingPaused?: boolean;
+  /**
    * When true, this item's height tracks its own measured content height
    * (blueprint amendment A1) instead of being manually resizable. See the
    * ResizeObserver effect below and `computeAutoHeightRows`.
@@ -202,6 +214,76 @@ type GridItemProps = {
  * the silent case audible in development and leaves production untouched, which
  * is the same trade @bsuite/theme 1.3.0 made for its missing-provider warning.
  */
+/**
+ * Edit-mode label + hide. These used to be `absolute top-2 left-2` /
+ * `top-2 right-2` overlays on the card (PageGridLayout GridItem, historically
+ * around the 407/415 marks). That painted the widget name and the hide control
+ * on top of the card heading — measured on the Candidates card at 1440.
+ *
+ * An earlier draft of this comment also claimed 390. Withdrawn: the instrument
+ * that produced that number never asserted its own `innerWidth`, and the cell
+ * labelled "390" reported 1560. What 390 actually looks like is now measured
+ * and recorded in `editor-chrome-geometry-390.json` — and it is a different
+ * fact: below a 480px container `buildResponsiveLayouts` stacks every card to
+ * full width, so 390 has no narrow card at all.
+ *
+ * In-flow, measured: the strip is a flex-none row. AutoHeight includes it in
+ * the unconstrained measure wrapper so the grid grows rather than overlapping.
+ * Fixed-height cards keep it *above* the overflow-auto body so hide cannot
+ * scroll away. Drag still starts from the strip (outer `.drag-handle`); hide
+ * is a `button` + `data-no-drag` so the existing cancel selector ignores it.
+ */
+function GridItemEditorChrome({
+  id,
+  label,
+  onHide,
+  hideDisabled = false,
+}: {
+  id: string;
+  label: string;
+  onHide: (id: string) => void;
+  hideDisabled?: boolean;
+}) {
+  return (
+    <div
+      data-slot="grid-item-editor-chrome"
+      className="flex min-w-0 flex-none items-center gap-1 px-2 py-1 bg-muted text-muted-foreground"
+    >
+      {/*
+       * `min-w-0` + `truncate` are the narrow-width contract, not decoration.
+       * The label is a flex item whose automatic minimum size is its MIN-CONTENT
+       * — one long unbroken widget name ("Reconciliation" on a 3-column card at
+       * 390) is wider than the row, the row cannot shrink to fit, and `ml-auto`
+       * then pushes the hide button past the card's right edge. `truncate`
+       * (overflow:hidden) makes that automatic minimum resolve to 0, so the name
+       * clips with an ellipsis and hide stays inside the box. `title` keeps the
+       * full name reachable, so clipping costs nothing.
+       */}
+      <span
+        className="min-w-0 truncate text-[10px] px-1.5 py-0.5 rounded-md font-medium"
+        title={label}
+      >
+        {label}
+      </span>
+      <button
+        type="button"
+        className="ml-auto h-6 w-6 shrink-0 rounded-full flex items-center justify-center bg-destructive hover:bg-destructive text-destructive-foreground shadow transition-colors disabled:opacity-50 disabled:pointer-events-none"
+        disabled={hideDisabled}
+        data-no-drag
+        onPointerDown={(event) => event.stopPropagation()}
+        onClick={(event) => {
+          event.stopPropagation();
+          onHide(id);
+        }}
+        title={`Hide ${label}`}
+        aria-label={`Hide ${label}`}
+      >
+        <EyeOff className="h-3 w-3" aria-hidden="true" />
+      </button>
+    </div>
+  );
+}
+
 let warnedAboutCollapsedContent = false;
 function warnOnceAboutCollapsedContent(el: HTMLElement): void {
   if (warnedAboutCollapsedContent) return;
@@ -242,6 +324,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
   label,
   pageKey,
   onHide,
+  editingPaused = false,
   autoHeight,
   onAutoHeightChange,
   chrome = false,
@@ -269,13 +352,19 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
      * of card overflow across 70 sites. An extra element here would have been a
      * real risk; a provider is not one.
      */
+    const cardPadding = !chrome && cardStyleVars && '--card-padding' in cardStyleVars
+      && typeof cardStyleVars['--card-padding'] === 'string'
+      ? cardStyleVars['--card-padding'] : undefined;
     const scopedContent = (
       <ElementScopeProvider scope={{ pageKey, cardKey: id, cardLabel: label, isEditing }}>
-        {content}
+        <CardPaddingBoundary padding={cardPadding}>
+          {content}
+        </CardPaddingBoundary>
       </ElementScopeProvider>
     );
 
     const measureRef = useRef<HTMLDivElement | null>(null);
+    const surfaceRef = useRef<HTMLDivElement | null>(null);
     const lastReportedRowsRef = useRef<number | null>(null);
     const measureRafRef = useRef<number | null>(null);
     /**
@@ -306,9 +395,17 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     const reportRows = useCallback(
       (contentPx: number) => {
         if (!onAutoHeightChange) return;
+        // Chrome lives outside the observed content box. Count its actual
+        // padding and borders so appearance changes cannot overlap the next
+        // card. A consumer-owned Card is already inside the measured content.
+        const surfaceStyle = chrome && surfaceRef.current ? getComputedStyle(surfaceRef.current) : null;
+        const cardChromePx = surfaceStyle
+          ? [surfaceStyle.paddingTop, surfaceStyle.paddingBottom, surfaceStyle.borderTopWidth, surfaceStyle.borderBottomWidth]
+              .reduce((total, value) => total + (Number.parseFloat(value) || 0), 0)
+          : DEFAULT_CARD_CHROME_PX;
         const rows = computeAutoHeightRows({
           contentPx,
-          cardChromePx: DEFAULT_CARD_CHROME_PX,
+          cardChromePx,
           rowHeightPx: DEFAULT_ROW_HEIGHT,
           marginYPx: DEFAULT_MARGIN[1],
         });
@@ -316,7 +413,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
         lastReportedRowsRef.current = rows;
         onAutoHeightChange(id, rows);
       },
-      [id, onAutoHeightChange],
+      [chrome, id, onAutoHeightChange],
     );
 
     /**
@@ -343,7 +440,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       latestContentPxRef.current = contentPx;
       if (contentPx > 0) reportRows(contentPx);
       else warnOnceAboutCollapsedContent(el);
-    }, [autoHeight, onAutoHeightChange, reportRows]);
+      // Re-measure when edit chrome mounts/unmounts so the strip is in the
+      // row count in edit mode and gone again on lossless return.
+    }, [autoHeight, onAutoHeightChange, reportRows, isEditing, cardStyleVars]);
 
     useEffect(() => {
       if (!autoHeight || !onAutoHeightChange) return;
@@ -394,7 +493,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
     // protected via the `cancel` selector below in the <Responsive> render.
     const outerClass = cn(
       'relative group overflow-visible',
-      isEditing && 'drag-handle cursor-move',
+      isEditing && 'drag-handle',
+      // Paused editing (bsuite#3277) cannot move a card, so it must not promise to.
+      isEditing && !editingPaused && 'cursor-move',
       injectedClassName
     );
     return (
@@ -402,28 +503,6 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
         <div className="h-full w-full relative">
           {isEditing && (
             <div className="absolute inset-0 z-10 pointer-events-none rounded-3xl border-2 border-transparent group-hover:border-primary/50 transition-colors bg-primary/5" />
-          )}
-          {isEditing && (
-            <div className="absolute top-2 left-2 z-30 flex items-center gap-1 pointer-events-none">
-              <span className="text-[10px] px-1.5 py-0.5 rounded-md opacity-80 font-medium bg-muted text-muted-foreground">
-                {label}
-              </span>
-            </div>
-          )}
-          {isEditing && (
-            <button
-              className="absolute top-2 right-2 z-30 h-6 w-6 rounded-full flex items-center justify-center bg-destructive/80 hover:bg-destructive text-destructive-foreground shadow transition-colors"
-              data-no-drag
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onHide(id);
-              }}
-              title={`Hide ${label}`}
-              aria-label={`Hide ${label}`}
-            >
-              <EyeOff className="h-3 w-3" aria-hidden="true" />
-            </button>
           )}
           <div
             data-slot="grid-item-surface"
@@ -480,6 +559,8 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * silently return whichever came first in document order.
              */
             data-grid-slot-key={id}
+            ref={surfaceRef}
+            data-card-padding={!chrome && cardStyleVars && '--card-padding' in cardStyleVars ? '' : undefined}
             className={
               chrome
                 ? // ONE radius token, read by the grid item AND available to any
@@ -495,14 +576,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                     // whose fallbacks are byte-identical to the `border
                     // border-border` they replace, so an operator who has never
                     // opened the card editor sees exactly the previous CSS.
-                    // The shadow deliberately keeps its ORIGINAL classes. An
-                    // elevation choice arrives as an inline `boxShadow`, which
-                    // beats the class without needing a fallback that restates
-                    // `shadow-sm`. Writing that fallback by hand was the first
-                    // attempt and it was wrong: elev-1 is CLOSE to shadow-sm
-                    // but not equal, so it would have silently restyled every
-                    // card on 305 pages the day this shipped.
-                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border-[length:var(--card-border-width,1px)] border-[color:var(--card-border-color,var(--border))] [border-style:var(--card-border-style,solid)] shadow-sm dark:shadow-[var(--glow-card,none)]',
+                    // Resting elevation and interaction feedback are separate:
+                    // a selected depth must not suppress hover/focus feedback.
+                    'w-full rounded-[var(--radius-card,1.5rem)] transition-all flex flex-col bg-card border-[length:var(--card-border-width,1px)] border-[color:var(--card-border-color,var(--border))] [border-style:var(--card-border-style,solid)] shadow-[var(--card-shadow,var(--shadow-elev-2))] hover:shadow-[var(--card-shadow-interaction,var(--shadow-elev-3))] focus-within:shadow-[var(--card-shadow-interaction,var(--shadow-elev-3))] dark:hover:shadow-[var(--card-shadow-interaction-dark,var(--glow-card-hover))] dark:focus-within:shadow-[var(--card-shadow-interaction-dark,var(--glow-card-hover))]',
                     // THE DOUBLED BOTTOM BORDER, AND WHY THE ARITHMETIC COULD NEVER FIX IT.
                     //
                     // computeAutoHeightRows uses Math.ceil to round content height up to
@@ -534,16 +610,16 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * `cardStyleVars` carries ONLY the properties the operator changed
              * (see cardStyle.ts). An untouched page spreads an empty object, so
              * this attribute is identical to what it was before the card editor
-             * existed. `boxShadow` is set as a real declaration rather than a
-             * custom property because it has to beat the `shadow-sm` class.
+             * existed. A chrome-owning surface reads shadow tokens in its
+             * resting and interaction classes. Layout-only wrappers pass them
+             * to the painted consumer without drawing a second shadow. The
+             * padding marker lets consumer Cards distinguish an explicit page
+             * inset from an app's unrelated default --card-padding token.
              */
             style={{
               contain: 'layout style',
               ...cardStyleVars,
-              ...(cardStyleVars && '--card-shadow' in cardStyleVars
-                ? { boxShadow: (cardStyleVars as Record<string, string>)['--card-shadow'] }
-                : null),
-              ...(cardStyleVars && '--card-padding' in cardStyleVars
+              ...(chrome && cardStyleVars && '--card-padding' in cardStyleVars
                 ? { padding: (cardStyleVars as Record<string, string>)['--card-padding'] }
                 : null),
             }}
@@ -597,39 +673,48 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
              * re-creates the very gap the `h-fit` above removes — the surface would hug
              * the wrapper, and the wrapper would stretch to the over-allocated height.
              * So autoHeight uses `flex-none` and the wrapper is content-sized.
+             *
+             * Editor chrome is IN FLOW. On autoHeight it sits inside the unconstrained
+             * measure wrapper so ResizeObserver grows the slot. On a fixed-height card
+             * it sits above the overflow-auto body so hide/label cannot scroll away.
              */}
-            <div
-              className={cn(
-                'min-h-0',
-                autoHeight ? 'flex-none overflow-visible' : 'flex-1 overflow-auto',
-              )}
-            >
-              {/*
-               * `flow-root` is load-bearing, not cosmetic. This wrapper had no
-               * padding, border or formatting context of its own, and its parent
-               * is `overflow-visible` under autoHeight — so a last child's
-               * `margin-bottom` COLLAPSED THROUGH both and never reached
-               * `contentRect.height`. The observer then under-reported the
-               * content by exactly that margin, the grid allocated that many
-               * pixels too few, and the card rendered taller than its slot: the
-               * card's bottom border sat outside the item box. Measured on
-               * production /payroll/timesheets 2026-08-28 — a single `mb-8` on
-               * the card's only child put the surface 32px past its own border,
-               * which is 2rem, exactly the margin. 70 call sites across 45 files
-               * in crm7 alone start a CanvasCard with a margin-bearing child, so
-               * this is fixed HERE, in the measurement, rather than by deleting
-               * a margin on each page. `flow-root` establishes a block
-               * formatting context, which is the minimal thing that stops the
-               * collapse while changing nothing about how the content lays out.
-               */}
-              {autoHeight ? (
+            {autoHeight ? (
+              <div data-slot="grid-item-body" className="min-h-0 flex-none overflow-visible">
+                {/*
+                 * `flow-root` is load-bearing, not cosmetic. This wrapper had no
+                 * padding, border or formatting context of its own, and its parent
+                 * is `overflow-visible` under autoHeight — so a last child's
+                 * `margin-bottom` COLLAPSED THROUGH both and never reached
+                 * `contentRect.height`. The observer then under-reported the
+                 * content by exactly that margin, the grid allocated that many
+                 * pixels too few, and the card rendered taller than its slot: the
+                 * card's bottom border sat outside the item box. Measured on
+                 * production /payroll/timesheets 2026-08-28 — a single `mb-8` on
+                 * the card's only child put the surface 32px past its own border,
+                 * which is 2rem, exactly the margin. 70 call sites across 45 files
+                 * in crm7 alone start a CanvasCard with a margin-bearing child, so
+                 * this is fixed HERE, in the measurement, rather than by deleting
+                 * a margin on each page. `flow-root` establishes a block
+                 * formatting context, which is the minimal thing that stops the
+                 * collapse while changing nothing about how the content lays out.
+                 */}
                 <div ref={measureRef} className="flow-root">
+                  {isEditing ? (
+                    <GridItemEditorChrome id={id} label={label} onHide={onHide} hideDisabled={editingPaused} />
+                  ) : null}
                   {scopedContent}
                 </div>
-              ) : (
-                scopedContent
-              )}
-            </div>
+              </div>
+            ) : (
+              <>
+                {isEditing ? (
+                  <GridItemEditorChrome id={id} label={label} onHide={onHide} hideDisabled={editingPaused} />
+                ) : null}
+                <div data-slot="grid-item-body" className="min-h-0 flex-1 overflow-auto">
+                  {scopedContent}
+                </div>
+              </>
+            )}
           </div>
         </div>
         {/*
@@ -685,6 +770,10 @@ export function PageGridLayout({
     layoutCols,
     isEditing,
     setIsEditing,
+    flushPreferences,
+    preferencesStatus,
+    canRetryPreferences,
+    retryPreferences,
     activeCols,
     activeCompactor,
     onLayoutChange,
@@ -712,6 +801,16 @@ export function PageGridLayout({
     defaultAutoHeight,
     layoutMigrations,
   });
+
+  const [saveState, setSaveState] = useState<{ pageKey: string; status: 'saving' | 'failed' } | null>(null);
+  const isSaving = saveState?.pageKey === pageKey && saveState.status === 'saving';
+  const saveFailed = saveState?.pageKey === pageKey && saveState.status === 'failed';
+  const saveAttempt = useRef(0);
+  const savingAttempt = useRef<number | null>(null);
+  useLayoutEffect(() => () => {
+    saveAttempt.current += 1;
+    savingAttempt.current = null;
+  }, [pageKey, isEditing]);
 
   // Auto-height dispatcher (blueprint amendment A1, hardened per quality
   // review 2026-07-14). `GridItem`'s ResizeObserver calls this per-widget
@@ -775,7 +874,6 @@ export function PageGridLayout({
     }
   }, [flushAutoHeightUpdates, scheduleFrame]);
 
-  const resizeEnabled = isEditing && isResizable;
   const resizeConstraints = useMemo(
     () => [
       // `gridBounds` caps width at the active column count, so we don't need
@@ -793,14 +891,16 @@ export function PageGridLayout({
   const [extraRelationshipWidgetConfigs, setExtraRelationshipWidgetConfigs] = useState<
     Record<string, RelationshipWidgetDetail>
   >({});
-  const { value: layerNames, setValue: setLayerNames } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
+  const layerNamesPreference = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, string>>(
     `page:${pageKey}_grid_layer_names`,
     {},
   );
-  const { value: hiddenLayerIds, setValue: setHiddenLayerIds } = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
+  const { value: layerNames, setValue: setLayerNames, flush: flushLayerNames } = layerNamesPreference;
+  const hiddenLayersPreference = (preferenceAdapter ?? defaultPreferenceAdapter)<Record<string, boolean>>(
     `page:${pageKey}_grid_hidden_layers`,
     {},
   );
+  const { value: hiddenLayerIds, setValue: setHiddenLayerIds, flush: flushHiddenLayers } = hiddenLayersPreference;
   /*
    * Card appearance, per page, persisted beside the layout.
    *
@@ -808,15 +908,117 @@ export function PageGridLayout({
    * survives a reload, follows the operator across devices wherever the app
    * backs the adapter with the database, and needs no new storage concept.
    */
-  const { value: storedCardStyle, setValue: setStoredCardStyle } = (preferenceAdapter ?? defaultPreferenceAdapter)<
-    unknown
-  >(`page:${pageKey}_card_style`, DEFAULT_CARD_STYLE);
+  const cardStylePreference = (preferenceAdapter ?? defaultPreferenceAdapter)<unknown>(
+    `page:${pageKey}_card_style`,
+    DEFAULT_CARD_STYLE,
+  );
+  const { value: storedCardStyle, setValue: setStoredCardStyle, flush: flushCardStyle } = cardStylePreference;
+
+  /*
+   * THE EDIT GATE (bsuite#3277).
+   *
+   * The hook refuses every write while any of ITS keys is loading or failed.
+   * This canvas reads and writes three more keys the hook never sees — layer
+   * names, hidden layers and card appearance — so the same rule is applied to
+   * them here, and the two are combined into the one state the editor shows.
+   *
+   * While it is not `'loaded'` the editor stays open but PAUSED: the banner says
+   * why, a failed read offers Retry, every control in the banner body is
+   * disabled by a single `<fieldset disabled>` (so a control added later cannot
+   * forget the gate), drag/resize/hide are off, and every write path in this
+   * component is refused underneath the disabled controls as well.
+   *
+   * Retry is in place. It calls `retry` on each FAILED key's adapter — the
+   * hook's four through `retryPreferences`, this component's three directly —
+   * and nothing else: no remount, no key change, no reset. The editor, its
+   * expanded/collapsed state and everything already loaded stay exactly as they
+   * are; the pause lifts on the render in which the last failed key loads.
+   */
+  const layerNamesStatus = preferenceStatusOf(layerNamesPreference);
+  const hiddenLayersStatus = preferenceStatusOf(hiddenLayersPreference);
+  const cardStyleStatus = preferenceStatusOf(cardStylePreference);
+  const editingPreferencesStatus = combinePreferenceStatuses([
+    preferencesStatus,
+    layerNamesStatus,
+    hiddenLayersStatus,
+    cardStyleStatus,
+  ]);
+  const editingPaused = editingPreferencesStatus !== 'loaded';
+  const resizeEnabled = isEditing && isResizable && !editingPaused;
+  const { retry: retryLayerNames } = layerNamesPreference;
+  const { retry: retryHiddenLayers } = hiddenLayersPreference;
+  const { retry: retryCardStyle } = cardStylePreference;
+  const canRetryEditingPreferences =
+    canRetryPreferences ||
+    (layerNamesStatus === 'failed' && typeof retryLayerNames === 'function') ||
+    (hiddenLayersStatus === 'failed' && typeof retryHiddenLayers === 'function') ||
+    (cardStyleStatus === 'failed' && typeof retryCardStyle === 'function');
+  // Keyed by page so a retry on one page never says "still" about another.
+  const [retriedPage, setRetriedPage] = useState<string | null>(null);
+  const retriedAndStillFailed = retriedPage === pageKey && editingPreferencesStatus === 'failed';
+  const retryEditingPreferences = useCallback(() => {
+    setRetriedPage(pageKey);
+    retryPreferences();
+    if (layerNamesStatus === 'failed') retryLayerNames?.();
+    if (hiddenLayersStatus === 'failed') retryHiddenLayers?.();
+    if (cardStyleStatus === 'failed') retryCardStyle?.();
+  }, [
+    cardStyleStatus,
+    hiddenLayersStatus,
+    layerNamesStatus,
+    pageKey,
+    retryCardStyle,
+    retryHiddenLayers,
+    retryLayerNames,
+    retryPreferences,
+  ]);
+
   const cardStyle = useMemo(() => normaliseCardStyle(storedCardStyle), [storedCardStyle]);
   const cardStyleVars = useMemo(() => toCssVars(cardStyle), [cardStyle]);
   const updateCardStyle = useCallback(
-    (patch: Partial<CardStyle>) => setStoredCardStyle({ ...cardStyle, ...patch }),
-    [cardStyle, setStoredCardStyle],
+    (patch: Partial<CardStyle>) => {
+      if (editingPaused) return;
+      setStoredCardStyle((previous: unknown) => ({ ...normaliseCardStyle(previous), ...patch }));
+    },
+    [editingPaused, setStoredCardStyle],
   );
+  const resetCardStyle = useCallback(() => {
+    if (editingPaused) return;
+    setStoredCardStyle({ ...DEFAULT_CARD_STYLE });
+  }, [editingPaused, setStoredCardStyle]);
+  const saveAndExit = useCallback(async () => {
+    if (canEditPage === false || !isEditing || savingAttempt.current !== null) return;
+    if (editingPaused) {
+      // Every write is refused while paused, so the paused keys hold nothing to
+      // save. Flushing them would only let an adapter that refuses to flush a
+      // failed key hold the user in an editor they cannot use. (A write made
+      // before the pause — the page switched mid-session — is already with its
+      // adapter and keeps saving there; exiting does not cancel it.)
+      startTransition(() => setIsEditing(false));
+      return;
+    }
+    const attempt = ++saveAttempt.current;
+    savingAttempt.current = attempt;
+    setSaveState({ pageKey, status: 'saving' });
+    try {
+      await Promise.all([flushPreferences(), flushLayerNames?.(), flushHiddenLayers?.(), flushCardStyle?.()]);
+      if (attempt !== saveAttempt.current) return;
+      setSaveState(null);
+      startTransition(() => setIsEditing(false));
+    } catch {
+      if (attempt === saveAttempt.current) setSaveState({ pageKey, status: 'failed' });
+    } finally {
+      if (savingAttempt.current === attempt) savingAttempt.current = null;
+    }
+  }, [canEditPage, isEditing, editingPaused, pageKey, flushPreferences, flushLayerNames, flushHiddenLayers, flushCardStyle, setIsEditing]);
+  useEffect(() => {
+    const onSaveRequest = (event: Event) => {
+      const detail = (event as CustomEvent<PageGridSaveEventDetail>).detail;
+      if (detail?.pageKey === pageKey) void saveAndExit();
+    };
+    window.addEventListener(PAGE_GRID_SAVE_EVENT, onSaveRequest);
+    return () => window.removeEventListener(PAGE_GRID_SAVE_EVENT, onSaveRequest);
+  }, [pageKey, saveAndExit]);
   const extraWidgets = useMemo(() => {
     const rendered: Record<string, React.ReactNode> = {};
     if (!createEntityWidget) return rendered;
@@ -969,11 +1171,16 @@ export function PageGridLayout({
     return filtered;
   }, [autoHeightRows, currentLayouts, hiddenLayerIds, renderableWidgetKeys]);
 
+  // Every write below is refused while editing is paused (bsuite#3277) — the
+  // controls that reach them are disabled too, but a disabled control is a
+  // presentation; the refusal is the guarantee.
   const hideLayer = (layerId: string) => {
+    if (editingPaused) return;
     setHiddenLayerIds((previous) => ({ ...previous, [layerId]: true }));
   };
 
   const showLayer = (layerId: string, defaultSize?: { w?: number; h?: number; minW?: number; minH?: number }) => {
+    if (editingPaused) return;
     setHiddenLayerIds((previous) => {
       if (!previous[layerId]) return previous;
       const { [layerId]: _removed, ...rest } = previous;
@@ -990,6 +1197,12 @@ export function PageGridLayout({
     const handleAddEntityWidget = (event: Event) => {
       const detail = (event as CustomEvent<{ entityType: string; label?: string }>).detail;
       if (!detail?.entityType) return;
+      if (editingPaused) {
+        // Nothing is registered or added while paused; the user lands in the
+        // editor, where the reason and Retry are shown.
+        startTransition(() => setIsEditing(true));
+        return;
+      }
 
       const widgetId = `entity:${detail.entityType}`;
       const alreadyInLayout = activeLayouts.lg?.some((item) => item.i === widgetId);
@@ -1019,6 +1232,7 @@ export function PageGridLayout({
     addEntityWidgetEventNames,
     addWidget,
     createEntityWidget,
+    editingPaused,
     onRegisterEntityWidget,
     setIsEditing,
   ]);
@@ -1036,6 +1250,10 @@ export function PageGridLayout({
     const handleAddRelationshipWidget = (event: Event) => {
       const detail = (event as CustomEvent<RelationshipWidgetDetail>).detail;
       if (!detail?.hostEntityType || !detail.fkColumn || !detail.targetEntityType) return;
+      if (editingPaused) {
+        startTransition(() => setIsEditing(true));
+        return;
+      }
 
       if (!isRelationshipWritable(relationshipCatalog, detail)) {
         onRelationshipWidgetRejected?.(detail);
@@ -1070,6 +1288,7 @@ export function PageGridLayout({
     addRelationshipWidgetEventNames,
     addWidget,
     createRelationshipWidget,
+    editingPaused,
     onRegisterRelationshipWidget,
     onRelationshipWidgetRejected,
     relationshipCatalog,
@@ -1097,6 +1316,7 @@ export function PageGridLayout({
   );
 
   const handleLayerRename = (layerId: string, value: string) => {
+    if (editingPaused) return;
     const trimmed = value.trim();
     setLayerNames((previous) => {
       if (trimmed.length === 0) {
@@ -1202,6 +1422,7 @@ export function PageGridLayout({
           )}
           role="region"
           aria-label="Canvas editor controls"
+          aria-busy={isSaving}
         >
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div className="flex items-center gap-3">
@@ -1217,7 +1438,8 @@ export function PageGridLayout({
                 <h3 className={cn('font-semibold text-foreground', controlsCollapsed ? 'text-sm' : 'text-lg')}>
                   Canvas Editor Active
                 </h3>
-                {!controlsCollapsed && (
+                {/* Paused editing cannot move or resize a card (bsuite#3277); the notice below says why. */}
+                {!controlsCollapsed && !editingPaused && (
                   <span className="text-sm text-muted-foreground">
                     Drag anywhere on a card to move it. Resize with the bottom-right handle.
                   </span>
@@ -1258,18 +1480,68 @@ export function PageGridLayout({
               <button
                 type="button"
                 className="inline-flex items-center rounded-md px-3 py-2 text-sm font-medium bg-primary text-primary-foreground shadow transition-colors hover:bg-primary/90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
-                onClick={() => startTransition(() => setIsEditing(false))}
+                disabled={isSaving}
+                onClick={() => { void saveAndExit(); }}
               >
-                <Save className="h-4 w-4 mr-2" />
-                Save &amp; Exit
+                {/* Paused editing has nothing to save, so the button says what it does. */}
+                {editingPaused ? <X className="h-4 w-4 mr-2" /> : <Save className="h-4 w-4 mr-2" />}
+                {isSaving ? 'Saving…' : editingPaused ? 'Exit' : 'Save & Exit'}
               </button>
             </div>
           </div>
 
+          {editingPaused && (
+            <div
+              role={editingPreferencesStatus === 'failed' ? 'alert' : 'status'}
+              data-page-grid-editing-paused={editingPreferencesStatus}
+              className={cn(
+                'flex flex-wrap items-center gap-2 text-sm',
+                editingPreferencesStatus === 'failed' ? 'text-destructive' : 'text-muted-foreground',
+              )}
+            >
+              <p>
+                {editingPreferencesStatus === 'failed'
+                  ? `Editing is paused: your saved settings for this page ${
+                      retriedAndStillFailed ? 'still couldn\'t' : 'couldn\'t'
+                    } be loaded. Nothing can be changed until they load, so nothing you saved is overwritten.${
+                      canRetryEditingPreferences ? '' : ' Reload the page to try again.'
+                    }`
+                  : 'Loading your saved settings for this page… Editing starts as soon as they arrive.'}
+              </p>
+              {editingPreferencesStatus === 'failed' && canRetryEditingPreferences && (
+                <button
+                  type="button"
+                  onClick={retryEditingPreferences}
+                  className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-2 py-1 text-sm text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                  Retry
+                </button>
+              )}
+            </div>
+          )}
+
+          {saveFailed && (
+            <p role="alert" className="mt-2 text-sm text-destructive">
+              Changes could not be saved. Your changes are still here. Try Save &amp; Exit again.
+            </p>
+          )}
+
           <div
             id="page-grid-editor-controls-body"
             hidden={controlsCollapsed}
+            // Dimmed while paused so the disabled state reads at a glance; inline
+            // rather than a utility so no consumer's CSS build can drop it.
+            style={editingPaused ? { opacity: 0.6 } : undefined}
             className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-2 border-t border-border max-h-[60vh] overflow-y-auto">
+            {/*
+             * ONE disabled fieldset gates every control in the body (bsuite#3277),
+             * so a control added here later inherits the gate without anyone
+             * remembering it. `display: contents` keeps the fieldset out of the
+             * flex layout — its children lay out exactly as before — and is set
+             * inline so it cannot depend on a consumer emitting the utility.
+             */}
+            <fieldset disabled={editingPaused} style={{ display: 'contents' }}>
             <div className="flex items-center gap-2">
               <LayoutGrid className="h-4 w-4 shrink-0 text-muted-foreground" />
               <span className="text-sm shrink-0 text-muted-foreground">Columns:</span>
@@ -1427,7 +1699,7 @@ export function PageGridLayout({
 
               <button
                 type="button"
-                onClick={() => setStoredCardStyle({ ...DEFAULT_CARD_STYLE })}
+                onClick={resetCardStyle}
                 disabled={isDefaultCardStyle(cardStyle)}
                 className="inline-flex items-center gap-1 rounded-md border border-border-interactive px-2 py-1 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               >
@@ -1555,6 +1827,7 @@ export function PageGridLayout({
               <RotateCcw className="h-4 w-4 mr-1" />
               Reset to Default
             </button>
+            </fieldset>
           </div>
         </div>
       )}
@@ -1627,7 +1900,7 @@ export function PageGridLayout({
             // that is regenerated (and therefore discarded) on the next render.
             onBreakpointChange={handleBreakpointChange}
             dragConfig={{
-              enabled: isEditing,
+              enabled: isEditing && !editingPaused,
               handle: '.drag-handle',
               bounded: false,
               cancel:
@@ -1666,6 +1939,7 @@ export function PageGridLayout({
                   label={layerNames[layoutItem.i] || widgetMeta?.[layoutItem.i]?.label || layoutItem.i}
                   pageKey={pageKey}
                   onHide={hideLayer}
+                  editingPaused={editingPaused}
                   autoHeight={layoutItem.autoHeight}
                   onAutoHeightChange={handleAutoHeightChange}
                   chrome={layoutItem.chrome ?? itemChrome}

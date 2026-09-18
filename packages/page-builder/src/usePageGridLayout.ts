@@ -19,9 +19,44 @@ import type {
   GridLayoutItem,
   GridLayouts,
   LayoutMigration,
+  PageGridPreferenceAdapter,
+  PageGridPreferenceStatus,
   UsePageGridLayoutOptions,
   UsePageGridLayoutResult,
 } from './types.js';
+
+/**
+ * One key's read state, resolved from what its adapter reports (bsuite#3277).
+ *
+ * `status` is authoritative when present, and a key counts as readable only if
+ * `status` is `'loaded'` AND `loaded` is true. The conjunction is the point: the
+ * first adapter a consumer ships will add `status` beside its old "the read
+ * settled" `loaded`, and that `loaded` is true after an error. Anything that is
+ * not positively loaded — including a `status` value this version does not know —
+ * resolves to not-loaded, so an unrecognised state fails closed.
+ *
+ * An adapter without `status` keeps the meaning `loaded` always had.
+ */
+export function preferenceStatusOf(
+  adapter: Pick<PageGridPreferenceAdapter<unknown>, 'loaded' | 'status'>,
+): PageGridPreferenceStatus {
+  if (adapter.status === 'failed') return 'failed';
+  if (adapter.status === undefined) return adapter.loaded ? 'loaded' : 'loading';
+  return adapter.status === 'loaded' && adapter.loaded ? 'loaded' : 'loading';
+}
+
+/**
+ * Several keys' read states as one: a failure outranks a key still loading,
+ * because the failure is what the user can act on (Retry) and a still-loading
+ * key must not hide it.
+ */
+export function combinePreferenceStatuses(
+  statuses: readonly PageGridPreferenceStatus[],
+): PageGridPreferenceStatus {
+  if (statuses.includes('failed')) return 'failed';
+  if (statuses.includes('loading')) return 'loading';
+  return 'loaded';
+}
 
 export const DEFAULT_EDITOR_EVENT_NAMES = [
   'bsuite-open-page-editor',
@@ -32,13 +67,10 @@ export const DEFAULT_EDITOR_EVENT_NAMES = [
 ] as const;
 
 /**
- * Event name broadcast on `window` whenever any PageGridLayout transitions
- * its `isEditing` state. Launcher widgets (e.g. floating "Edit Page" FABs)
- * subscribe to this so they can hide themselves while the canvas editor is
- * already active — prevents the redundant-affordance UX issue where a
- * "Edit Page" button sits in the corner while the editor banner is visible
- * at the top. `detail.editing` is the new state; `detail.pageKey` lets
- * launchers scope by page if they handle multiple grids on one screen.
+ * Broadcast after a PageGridLayout commits an editing-state change. Header
+ * launchers use this to synchronize their label and restore keyboard focus
+ * after canvas controls disappear. Initial state and abandoned transitions do
+ * not publish an event. `detail.pageKey` identifies the changed canvas.
  */
 export const PAGE_GRID_EDITING_EVENT = 'bsuite-page-grid-editing';
 
@@ -172,24 +204,17 @@ export function usePageGridLayout({
   const effectiveLayoutVersion = layoutVersion + PACKAGE_LAYOUT_EPOCH;
   const containerRef = useRef<HTMLElement | null>(null);
   const [containerWidth, setContainerWidth] = useState(0);
-  const [isEditing, setIsEditingState] = useState(false);
-  const setIsEditing = useCallback(
-    (next: boolean | ((previous: boolean) => boolean)) => {
-      setIsEditingState((previous) => {
-        const resolved = typeof next === 'function' ? next(previous) : next;
-        if (resolved !== previous && typeof window !== 'undefined') {
-          // Broadcast to FAB launchers so they can hide while the editor is open.
-          window.dispatchEvent(
-            new CustomEvent<PageGridEditingEventDetail>(PAGE_GRID_EDITING_EVENT, {
-              detail: { pageKey, editing: resolved },
-            }),
-          );
-        }
-        return resolved;
-      });
-    },
-    [pageKey],
-  );
+  const [isEditing, setIsEditing] = useState(false);
+  const publishedEditing = useRef(false);
+  useEffect(() => {
+    if (publishedEditing.current === isEditing) return;
+    publishedEditing.current = isEditing;
+    window.dispatchEvent(
+      new CustomEvent<PageGridEditingEventDetail>(PAGE_GRID_EDITING_EVENT, {
+        detail: { pageKey, editing: isEditing },
+      }),
+    );
+  }, [isEditing, pageKey]);
   const [resetConfirmOpen, setResetConfirmOpen] = useState(false);
 
   useLayoutEffect(() => {
@@ -212,16 +237,72 @@ export function usePageGridLayout({
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
-  const { value: savedLayoutVersion, setValue: setSavedLayoutVersion, loaded: versionLoaded } =
-    preferenceAdapter<number>(`page:${pageKey}_grid_version`, 0);
-  const { value: savedLayout, setValue: setSavedLayout, loaded: layoutLoaded } =
-    preferenceAdapter<GridLayouts>(`page:${pageKey}_grid_layouts`, defaultLayouts);
-  const { value: savedLayoutCols, setValue: setLayoutCols } =
-    preferenceAdapter<number>(`page:${pageKey}_grid_cols`, defaultCols);
-  const { value: savedBaseCols, setValue: setBaseCols } =
-    preferenceAdapter<number>(`page:${pageKey}_grid_base_cols`, defaultCols);
+  const versionPreference = preferenceAdapter<number>(`page:${pageKey}_grid_version`, 0);
+  const layoutPreference = preferenceAdapter<GridLayouts>(`page:${pageKey}_grid_layouts`, defaultLayouts);
+  const colsPreference = preferenceAdapter<number>(`page:${pageKey}_grid_cols`, defaultCols);
+  const baseColsPreference = preferenceAdapter<number>(`page:${pageKey}_grid_base_cols`, defaultCols);
+  const { value: savedLayoutVersion, setValue: setSavedLayoutVersion, flush: flushVersion, retry: retryVersion } =
+    versionPreference;
+  const { value: savedLayout, setValue: setSavedLayout, flush: flushLayout, retry: retryLayout } = layoutPreference;
+  const { value: savedLayoutCols, setValue: setLayoutCols, flush: flushCols, retry: retryCols } = colsPreference;
+  const { value: savedBaseCols, setValue: setBaseCols, flush: flushBaseCols, retry: retryBaseCols } =
+    baseColsPreference;
 
-  const prefsLoaded = layoutLoaded && versionLoaded;
+  const flushPreferences = useCallback(async () => {
+    await Promise.all([flushVersion?.(), flushLayout?.(), flushCols?.(), flushBaseCols?.()]);
+  }, [flushVersion, flushLayout, flushCols, flushBaseCols]);
+
+  /*
+   * NOTHING IS WRITTEN UNTIL EVERY KEY THIS HOOK TOUCHES HAS BEEN READ (bsuite#3277).
+   *
+   * The gate below used to wait for `_grid_layouts` and `_grid_version` only, and
+   * trusted `loaded` to mean "the stored value is here". crm7 and
+   * business-suite-unified set `loaded` on a read ERROR too, so on a device with
+   * no local copy a failed `_grid_version` read looked like "loaded, version 0" —
+   * the gate took its discard branch and wrote the page defaults over the user's
+   * saved layout. Measured with the real 2.7.0 hook: 200 of 200 pages.
+   *
+   * The rule now covers every key the hook READS or WRITES — `_grid_cols` and
+   * `_grid_base_cols` included, because a discard writes them — and every write
+   * the hook can make, not only the gate's: a gesture, compact, reset, add, move,
+   * lock, remove and a column change are all refused while any key is loading or
+   * failed. `PageGridLayout` shows the reason and a Retry while that holds.
+   */
+  const versionStatus = preferenceStatusOf(versionPreference);
+  const layoutStatus = preferenceStatusOf(layoutPreference);
+  const colsStatus = preferenceStatusOf(colsPreference);
+  const baseColsStatus = preferenceStatusOf(baseColsPreference);
+  const preferencesStatus = combinePreferenceStatuses([versionStatus, layoutStatus, colsStatus, baseColsStatus]);
+  const preferencesWritable = preferencesStatus === 'loaded';
+
+  /*
+   * Retry is PER KEY and IN PLACE. Each adapter's own `retry` re-runs that one
+   * key's read — crm7 re-runs its fetch effect, business-suite-unified refetches
+   * that key's query, conduit re-reads that key's local copy. This hook, its
+   * editing state and every key that already loaded stay mounted; the gate above
+   * simply runs once the last failed key lands. A key that loaded is never
+   * re-read, so a retry cannot disturb a value that is already right.
+   */
+  const canRetryPreferences =
+    (versionStatus === 'failed' && typeof retryVersion === 'function') ||
+    (layoutStatus === 'failed' && typeof retryLayout === 'function') ||
+    (colsStatus === 'failed' && typeof retryCols === 'function') ||
+    (baseColsStatus === 'failed' && typeof retryBaseCols === 'function');
+  const retryPreferences = useCallback(() => {
+    if (versionStatus === 'failed') retryVersion?.();
+    if (layoutStatus === 'failed') retryLayout?.();
+    if (colsStatus === 'failed') retryCols?.();
+    if (baseColsStatus === 'failed') retryBaseCols?.();
+  }, [
+    baseColsStatus,
+    colsStatus,
+    layoutStatus,
+    retryBaseCols,
+    retryCols,
+    retryLayout,
+    retryVersion,
+    versionStatus,
+  ]);
 
   /*
    * Migration keys arrive in the CONSUMER's version space — `layoutVersion={2}`
@@ -263,7 +344,8 @@ export function usePageGridLayout({
   }, [savedLayout]);
 
   useEffect(() => {
-    if (!prefsLoaded) return;
+    // Every key read AND written must be loaded without failure — see above.
+    if (!preferencesWritable) return;
     const storedVersion = savedLayoutVersion ?? 0;
     if (storedVersion >= effectiveLayoutVersion) return;
 
@@ -309,7 +391,7 @@ export function usePageGridLayout({
     defaultLayouts,
     effectiveLayoutVersion,
     effectiveMigrations,
-    prefsLoaded,
+    preferencesWritable,
     savedLayoutVersion,
     setBaseCols,
     setLayoutCols,
@@ -669,12 +751,14 @@ export function usePageGridLayout({
    */
   const commitLayout = useCallback(
     (layouts: GridLayouts) => {
+      // bsuite#3277: no write while any key is loading or failed.
+      if (!preferencesWritable) return;
       const canonical = canonicaliseLayoutForPersist(layouts);
       if (!canonical) return;
       setSavedLayout(stripAutoHeightRows(canonical));
       setBaseCols(layoutCols);
     },
-    [canonicaliseLayoutForPersist, layoutCols, setBaseCols, setSavedLayout, stripAutoHeightRows],
+    [canonicaliseLayoutForPersist, layoutCols, preferencesWritable, setBaseCols, setSavedLayout, stripAutoHeightRows],
   );
 
 
@@ -770,9 +854,11 @@ export function usePageGridLayout({
    */
   const handleColumnChange = useCallback(
     (newCols: number) => {
+      // bsuite#3277: no write while any key is loading or failed.
+      if (!preferencesWritable) return;
       setLayoutCols(newCols);
     },
-    [setLayoutCols],
+    [preferencesWritable, setLayoutCols],
   );
 
   /**
@@ -797,10 +883,12 @@ export function usePageGridLayout({
   /** Persist a bare `lg` item list from a mutator, re-basing the same way. */
   const commitItems = useCallback(
     (items: GridLayoutItem[]) => {
+      // bsuite#3277: no write while any key is loading or failed.
+      if (!preferencesWritable) return;
       setSavedLayout(layoutsWithLg(items));
       setBaseCols(layoutCols);
     },
-    [layoutCols, layoutsWithLg, setBaseCols, setSavedLayout],
+    [layoutCols, layoutsWithLg, preferencesWritable, setBaseCols, setSavedLayout],
   );
 
   const handleCompact = useCallback(() => {
@@ -821,12 +909,14 @@ export function usePageGridLayout({
   }, [currentLayouts, commitItems]);
 
   const handleReset = useCallback(() => {
+    // bsuite#3277: no write while any key is loading or failed.
+    if (!preferencesWritable) return;
     startTransition(() => {
       setSavedLayout(defaultLayouts);
       setLayoutCols(defaultCols);
       setBaseCols(defaultCols);
     });
-  }, [defaultCols, defaultLayouts, setBaseCols, setLayoutCols, setSavedLayout]);
+  }, [defaultCols, defaultLayouts, preferencesWritable, setBaseCols, setLayoutCols, setSavedLayout]);
 
   const addWidget = useCallback(
     (widgetKey: string, initialSize?: Partial<Pick<GridLayoutItem, 'w' | 'h' | 'minW' | 'minH'>>) => {
@@ -842,7 +932,11 @@ export function usePageGridLayout({
       };
       startTransition(() => commitItems([...(currentLayouts.lg ?? []), newItem]));
     },
-    [currentLayouts, layoutCols, layoutsWithLg, setSavedLayout],
+    // `commitItems` is the write funnel and carries the read-state refusal
+    // (bsuite#3277). Omit it and the mutator keeps the funnel from the render it
+    // was created in: paused editing never un-pauses for this control after a
+    // Retry, because retrying a key that changes no layout re-creates nothing.
+    [commitItems, currentLayouts, layoutCols],
   );
 
   const moveWidget = useCallback(
@@ -861,7 +955,7 @@ export function usePageGridLayout({
       ];
       startTransition(() => commitItems(nextItems));
     },
-    [currentLayouts, layoutsWithLg, setSavedLayout],
+    [commitItems, currentLayouts],
   );
 
   const setWidgetLocked = useCallback(
@@ -877,7 +971,7 @@ export function usePageGridLayout({
       });
       startTransition(() => commitItems(nextItems));
     },
-    [currentLayouts, layoutsWithLg, setSavedLayout],
+    [commitItems, currentLayouts],
   );
 
   const removeWidget = useCallback(
@@ -885,7 +979,7 @@ export function usePageGridLayout({
       const nextItems = (currentLayouts.lg ?? []).filter((item) => item.i !== widgetKey);
       startTransition(() => commitItems(nextItems));
     },
-    [currentLayouts, layoutsWithLg, setSavedLayout],
+    [commitItems, currentLayouts],
   );
 
   /**
@@ -963,6 +1057,10 @@ export function usePageGridLayout({
     layoutCols,
     isEditing,
     setIsEditing,
+    flushPreferences,
+    preferencesStatus,
+    canRetryPreferences,
+    retryPreferences,
     activeCols,
     activeCompactor,
     onLayoutChange,
