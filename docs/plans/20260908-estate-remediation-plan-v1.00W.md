@@ -431,3 +431,20 @@ production still serving `9a6c185` built 2026-09-11T12:04:04Z — widening. `sta
 denies mutating git for this role; the maker has the exact `git add`-first instruction and a
 byte-identical backup at
 `~/.agents/state/loop-contracts/takeover-plan-maintenance-20260917-FINAL-1061.md`.
+
+## Maintenance pass — 2026-09-19 (Devin takeover; submodule gitlink cleanup and promotion PRs)
+
+Ownership transferred to Devin session `devin-bsuite-closeout-20260919` because Claude Code and
+Qwen Code usage are exhausted. This pass continues the 2026-09-18 accountability record and adds
+the concrete cleanup of the dirty `business-suite-unified` submodule pointer.
+
+Command-backed progress:
+- Committed generated `.agents/rules/remediation-execution.md` inside `business-suite-unified` → SHA `724108d10f6fbbb6e59a21265908aee060971c78` (G).
+- Added `.remember/**` to `business-suite-unified/eslint.config.js` ignores to stop pre-commit lint failures on agent session temp files.
+- Reset all six parent submodule gitlinks to their app `origin/main` HEADs → parent commit `91dc73c7448159646594819dd1501c08f733639b` (G), reconciled with `origin/development` as `64a54d79b`.
+- Verified 375px visual gates PASS on `d.crm.crm7.app/` (wordmark/toggle) and `d.suite.crm7.app/` (`scrollWidth` ≤ `innerWidth`), including a logged-in pass on BSU.
+- Fast-forwarded `crm7/main` to `origin/development` (`63a80fcd3..94e250f2d`); other repos require PRs due to protected `main`.
+- Created promotion PRs: R80.4#334, BSU#1265, conduit#740, braden#631, throughput#504; armed overnight monitor to merge each when checks report CLEAN.
+- Updated `bsuite_project_truth_index.current_coordination.owner` to `devin-bsuite-closeout-20260919` via authenticated REST read-modify-write with length/sha256 verification.
+
+Next: merge promotion PRs, verify `version.json` on production hosts, run CRM7 migrations in order through the merge pipeline, then return to the ledger pending items.

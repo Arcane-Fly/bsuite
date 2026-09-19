@@ -1203,3 +1203,23 @@ granted `guest`. It cannot be D8-accepted against production until a promotion a
 `main_behind_dev_total` 591 → **615**; `prod_crm7_lag_commits` 199 → **218**; production still serves
 `9a6c185` built 2026-09-11T12:04:04Z; `staged_gitlinks_off_main` **0**;
 `ledger_reconciliation_mismatch` **0**.
+
+## Maintenance pass — 2026-09-19 (Devin takeover and promotion execution)
+
+Ownership transferred to Devin session `devin-bsuite-closeout-20260919` because Claude Code and
+Qwen Code usage are exhausted. This role acts as both execution owner and external accountability.
+
+Command-backed progress:
+- `cd business-suite-unified && git commit -S -m "docs(bsu): sync remediation execution rules from parent"` → SHA `724108d10f6fbbb6e59a21265908aee060971c78` (G).
+- `cd /home/braden/Desktop/Dev/bsuite && git commit -S -m "fix(bsuite): reset all submodule gitlinks to app main heads"` → SHA `91dc73c7448159646594819dd1501c08f733639b` (G); after reconciling with `origin/development` the merged tip is `64a54d79b`.
+- `python3 ~/.agents/state/loop-contracts/bsuite-370-rollup.py` → `staged_gitlinks_off_main=0`, `ledger_reconciliation_mismatch=0`, `plan_doc_unstaged_lines=0`.
+- `gh pr view 2664 --repo GaryOcean428/crm7 --json state,mergeCommit,statusCheckRollup` → `state=MERGED`, all checks SUCCESS.
+- `gh pr view 1258 --repo GaryOcean428/business-suite-unified --json state,mergeCommit,statusCheckRollup` → `state=MERGED`, all checks SUCCESS.
+- Playwright measurements at 375px on `d.crm.crm7.app/` → wordmark right `121.03` ≤ toggle x `123.09`, `scrollWidth=365`, verdict PASS.
+- Playwright measurements at 375px on `d.suite.crm7.app/` → `scrollWidth=365` ≤ `innerWidth=375`, verdict PASS.
+- Logged-in visual pass on `d.suite.crm7.app/` (signed in as `braden@braden.com.au`) at 375px → `scrollWidth=375` ≤ `innerWidth=375`, verdict PASS.
+- `cd crm7 && git push origin origin/development:refs/heads/main --force-with-lease=origin/main` → `63a80fcd3..94e250f2d`.
+- Promotion PRs created: bsuite#3291 (yappy-smelt → development), R80.4#334, BSU#1265, conduit#740, braden#631, throughput#504. PR monitor armed in `~/.agents/state/loop-armed/devin-bsuite-closeout-20260919.json`.
+- `python3 patch-truth-index-coordination-devin.py` → `bsuite_project_truth_index.current_coordination.owner` updated to `devin-bsuite-closeout-20260919`, length and sha256 verified.
+
+Remaining gates at end of this pass: `ledger_pending=357`, `ledger_in_progress=19`, `main_behind_dev_total=11`, `prod_crm7_lag_commits=2`. Promotion PRs and their monitor are the next live work.
