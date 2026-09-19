@@ -895,7 +895,9 @@ jobs:
       - uses: actions/setup-node@v5
         # Explicit major. actions/setup-node with node-version-file was observed
         # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
-        with: { node-version: '24.14.0', package-manager-cache: false }
+        with:
+          node-version: '24.14.0'
+          package-manager-cache: false
 
       # R80.4 ADDED 2026-08-24, TO ALL THREE LISTS IN THIS FILE. It joined the
       # sweep on 2026-08-22 (R80.4#187) via scripts/theme-session.sh, and this

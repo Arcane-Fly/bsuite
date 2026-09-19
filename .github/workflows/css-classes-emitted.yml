@@ -140,7 +140,9 @@ jobs:
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
       - uses: actions/setup-node@v5
-        with: { node-version: '24.14.0', package-manager-cache: false }
+        with:
+          node-version: '24.14.0'
+          package-manager-cache: false
 
       # Each app is its OWN pnpm project with its OWN lockfile — see the header
       # comment above for why this gate needs no separate packages/ build.
