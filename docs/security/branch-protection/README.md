@@ -97,13 +97,38 @@ on both branches. Prove it can fail with `node scripts/check-required-contexts-p
   the newest dump stale, and the gate above cannot see that: it compares workflows to the
   committed file, not to GitHub. Re-dump in the PR that writes protection. That is the whole
   convention.
-- **Anything about rulesets.** `repos/GaryOcean428/bsuite/rulesets` is a second, independent
-  layer — as of 2026-09-03 the `default` ruleset re-requires `build-and-test` and
-  `DOM Layout Invariants` on the default branch on top of classic protection, and the
-  `development` ruleset requires no status checks at all. Ruleset-level required checks are
-  configured through a different API and are not in these files.
+- **Anything about rulesets — that is now banked and gated separately.** `repos/<owner>/<repo>/rulesets`
+  is a second, independent mechanism — as of 2026-09-03 the `default` ruleset re-requires
+  `build-and-test` and `DOM Layout Invariants` on the default branch on top of classic
+  protection, and the `development` ruleset requires no status checks at all. Ruleset-level
+  required checks are configured through a different API and are not in these files: they
+  are banked in [`rulesets/`](./rulesets/) and watched by `scripts/check-ruleset-drift.mjs`
+  (bsuite#3165), nightly in the same workflow as this gate.
 - **Whether a required gate is correct**, or can fail. That is each gate's own `--self-test`
   and the LANE-WATCHER entry that registers it.
+
+## Linear history is OFF — ratified posture (bsuite#3165, ADR-0012 item 1)
+
+**`required_linear_history` is not part of the desired posture on any repo in this estate.**
+Classic protection on every `main` and `development` reports it `false`, and no ruleset
+carries it — verified live 2026-09-19 across all seven repos, with the verbatim default-branch
+rulesets banked in [`rulesets/`](./rulesets/).
+
+Merge commits on `main` are **expected and protected** — by `non_fast_forward` (both layers)
+plus required status checks, not by linear history. The estate promotes with
+`gh pr merge --merge` and never `--squash` or rebase, because those rewrite SHAs and the
+promotion merge commit is the record that a development tree was promoted.
+
+The history behind that ruling: from before 2026-09-07 the bsuite `default` ruleset carried
+`required_linear_history` while classic protection did not, so every `development → main`
+promotion was structurally unmergeable without `--admin` — merge commits landed *through*
+the bypass (e.g. PR #3119), which was strictly worse than either policy it was choosing
+between. The rule was removed from the ruleset on 2026-09-07 during the incident-restoration
+window; ADR-0012 item 1 (operator decision register, 2026-09-16) ratified the removal.
+`scripts/check-ruleset-drift.mjs` now fails if the rule reappears on any banked ruleset —
+live presence fails even when a stale dump agrees. The last two promotions landed as merge
+commits without `--admin`: PR #3148 (merge `2aeb253d`, 2026-09-07) and PR #3236 (merge
+`88c9df9b`, 2026-09-18).
 
 ## Re-dumping
 
@@ -198,8 +223,11 @@ concluding:
 
 ### The watcher
 
-`scripts/check-branch-protection-drift.mjs`, run nightly by
-`.github/workflows/branch-protection-drift.yml`, compares live protection against the newest dump
-here and encodes that table. **Weakening fails; strengthening only warns** — a context added live
-and not yet re-dumped is a stale dump, and a gate that fires on every legitimate protection write
-is one people switch off. Re-dumping after a deliberate write clears the warning.
+`scripts/check-branch-protection-drift.mjs` (classic protection) and
+`scripts/check-ruleset-drift.mjs` (rulesets, bsuite#3165), run nightly by
+`.github/workflows/branch-protection-drift.yml`, compare live protection against the newest
+dump in each directory and encode the table above. **Weakening fails; strengthening warns** —
+a context added live and not yet re-dumped is a stale dump, and a gate that fires on every
+legitimate protection write is one people switch off. Re-dumping after a deliberate write
+clears the warning. The ruleset gate adds one absolute: `required_linear_history` present
+live fails even when a dump agrees — see "Linear history is OFF" above.

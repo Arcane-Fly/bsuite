@@ -21,6 +21,17 @@
 # scripts/check-required-contexts-producible.mjs had already named this exact gap in
 # its own header and placed it in "a nightly lane" — which did not exist. This is it.
 #
+# WHY THERE ARE TWO GATES
+#
+# Branch protection here is TWO independent mechanisms: classic protection
+# (banked in docs/security/branch-protection/*.json) and repository RULESETS
+# (banked in docs/security/branch-protection/rulesets/*.json). A ruleset edit
+# leaves no diff in the classic dumps and vice versa — the 2026-09-07 incident
+# touched both in one window. The classic gate ran alone from 2026-09-07; the
+# ruleset gate (bsuite#3165) closes the second half after required_linear_history
+# on the bsuite main ruleset made every merge-commit promotion unmergeable until
+# it was removed and ratified OFF in ADR-0012 item 1.
+#
 # WHY THE SELF-TEST RUNS FIRST
 #
 # A drift result is only worth as much as the instrument that produced it, and this
@@ -47,6 +58,7 @@ on:
   pull_request:
     paths:
       - 'scripts/check-branch-protection-drift.mjs'
+      - 'scripts/check-ruleset-drift.mjs'
       - '.github/workflows/branch-protection-drift.yml'
       - 'docs/security/branch-protection/**'
 
@@ -69,11 +81,16 @@ jobs:
           node-version: '24'
 
       # The instrument before the measurement. Hermetic: no network, no token.
-      - name: Prove the reader
+      - name: Prove the reader (classic protection gate)
         run: node scripts/check-branch-protection-drift.mjs --self-test
 
+      # The ruleset sibling of the classic gate. Hermetic too: the fixtures are
+      # in-process, so this proves the comparator before any token is used.
+      - name: Prove the reader (ruleset gate)
+        run: node scripts/check-ruleset-drift.mjs --self-test
+
       # On a pull_request the token is not expected to carry administration read, and
-      # a PR must not be blocked by that. The self-test above is what a PR proves;
+      # a PR must not be blocked by that. The self-tests above are what a PR proves;
       # the live comparison is the scheduled lane's job.
       - name: Compare live protection against the committed dumps
         if: github.event_name != 'pull_request'
@@ -83,18 +100,40 @@ jobs:
           node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
         continue-on-error: false
 
+      # Same token requirement and same PR carve-out as the classic gate. The
+      # ruleset reader walks every repo named in the banked dumps, so one
+      # schedule covers all seven repos' default-branch rulesets.
+      - name: Compare live rulesets against the committed ruleset dumps
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+        run: |
+          node scripts/check-ruleset-drift.mjs | tee /tmp/ruleset-drift.txt
+        continue-on-error: false
+
       - name: Summary
         if: always() && github.event_name != 'pull_request'
         run: |
           {
-            echo '### Branch protection drift'
+            echo '### Branch protection drift (classic + rulesets)'
+            echo
+            echo '#### Classic protection vs committed dumps'
             echo
             if [ -s /tmp/drift.txt ]; then
               sed 's/^/    /' /tmp/drift.txt
             else
-              echo 'The live comparison produced no output — treat this as UNKNOWN, not clean.'
+              echo 'The classic comparison produced no output — treat this as UNKNOWN, not clean.'
             fi
             echo
-            echo 'Restore from the newest dump in `docs/security/branch-protection/`;'
-            echo 'the procedure is in the README beside them.'
+            echo '#### Rulesets vs committed ruleset dumps'
+            echo
+            if [ -s /tmp/ruleset-drift.txt ]; then
+              sed 's/^/    /' /tmp/ruleset-drift.txt
+            else
+              echo 'The ruleset comparison produced no output — treat this as UNKNOWN, not clean.'
+            fi
+            echo
+            echo 'Restore from the newest dump in `docs/security/branch-protection/` (or'
+            echo '`docs/security/branch-protection/rulesets/`); the procedure is in the README'
+            echo 'beside them.'
           } >> "$GITHUB_STEP_SUMMARY"
