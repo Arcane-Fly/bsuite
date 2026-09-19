@@ -162,6 +162,7 @@ sql.js
 stripe
 tailwind-merge
 tailwindcss-animate
+tw-animate-css
 use-sync-external-store
 vaul
 wouter

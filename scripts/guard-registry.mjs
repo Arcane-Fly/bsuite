@@ -286,16 +286,26 @@ export const GUARDS = [
     ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
     mode: 'run',
     notes:
-      'setup-node@v5 defaults package-manager-cache: true and resolves the ' +
-      'packageManager field\'s pnpm BEFORE corepack runs, dying with ' +
-      '"Unable to locate executable file: pnpm". PR #2048 fixed this by hand ' +
-      'across 22 workflows and MISSED advance-submodule-pointers.yml, which ' +
-      'then failed 20 of 20 scheduled runs (2026-08-20 to 08-21) unnoticed. ' +
-      'That workflow is the estate\'s only WRITER of submodule gitlinks and ' +
-      'six workflows read them, so its silence made six green guards report ' +
-      'stale pointers as app findings. A clean pass prints the guarded/total ' +
-      'step counts and the files scanned; finding zero setup-node steps, or ' +
-      'fewer than the floor, is a hard failure rather than a pass.',
+      'setup-node@v5 defaults package-manager-cache: true and engages the ' +
+      'package-manager cache whenever package.json has a packageManager field, ' +
+      'even with no cache: input. It fails twice without pnpm or a store on ' +
+      'PATH/disk: at setup time ("Unable to locate executable file: pnpm") and, ' +
+      'on lockfile-changing PRs, in the POST step ("Path Validation Error") — ' +
+      'upstream-confirmed in actions/setup-node#1363 and actions/toolkit#2128. ' +
+      'PR #2048 fixed the setup-time mode by hand across 22 workflows and ' +
+      'MISSED advance-submodule-pointers.yml, which then failed 20 of 20 ' +
+      'scheduled runs (2026-08-20 to 08-21) unnoticed. bsuite#3150 measured the ' +
+      'post-step mode: crm7 and business-suite-unified control-boundary-contrast ' +
+      'failed on lockfile PRs, fixed on app development (crm7#5fc97b0aa, ' +
+      'BSU#72ad87b) and awaiting promotion. The guard counts anchored key lines ' +
+      'so prose mentions cannot mask an unguarded step, and runs a --scope mode ' +
+      'over the six apps at the pinned gitlinks with a bidirectional baseline ' +
+      'ratchet (scripts/setup-node-guard-baseline.json): a NEW unguarded step ' +
+      'fails, and a baseline entry that no longer matches a live violation ' +
+      'fails too, forcing deletion once the apps promote. In --scope mode the ' +
+      'install-bearing form (pnpm/action-setup before setup-node, explicit ' +
+      "cache: 'pnpm', a real pnpm install line) is accepted as guarded — the " +
+      'upstream-endorsed alternative for jobs that really install.',
   },
 
   {
@@ -1723,7 +1733,10 @@ export const GUARDS = [
     repo: '.',
     // The comparison needs a token with administration:read on the repo; only the
     // reader and its cases run here. `--self-test` is what this registry can verify
-    // locally. The live comparison runs nightly in its own workflow.
+    // locally. The live comparison runs nightly in its own workflow — for EVERY
+    // estate repo since 2026-09-19 (bsuite#3141): dumps are namespaced under
+    // docs/security/branch-protection/<repo>/ and the repo list is derived from
+    // .gitmodules plus the parent.
     command: ['node', 'scripts/check-branch-protection-drift.mjs', '--self-test'],
     ciWorkflow: '.github/workflows/branch-protection-drift.yml',
     mode: 'run',
@@ -1739,22 +1752,52 @@ export const GUARDS = [
       'on every legitimate protection write is one people switch off. It also ' +
       'separates "not protected" from "could not tell" — a 404 from the protection ' +
       'endpoint means both, and during the incident that 404 was nearly read as ' +
-      'proof of removal until a positive control against another repo returned 200.',
+      'proof of removal until a positive control against another repo returned 200. ' +
+      'Since bsuite#3141 it walks all 7 estate repos × main+development; a branch ' +
+      'with no committed dump FAILS as dump-missing rather than being watched ' +
+      'silently-not.',
     evidence:
-      '"[protection-drift] self-test: 13/13 pass — 13 case(s) exercised (11 ' +
-      'comparison verdicts covering an identical read, a deleted protection object, ' +
-      'an ambiguous 404, an unreadable one, a removed context, an added context that ' +
-      'must only WARN, enforce_admins off, force pushes on, deletions on and removed ' +
-      'PR reviews; plus newest-dump-per-branch and an unparseable dump that must fail ' +
-      'closed)". The summary names its denominator because LANE-WATCHER rejected this ' +
-      'guard on first registration for printing a verdict with no count — the same ' +
-      'silent-pass class it exists to catch. ' +
-      'Bitten twice 2026-09-07: downgrading contexts-removed to a warning and ' +
-      'deleting the ambiguity branch each turned the suite red — the second ' +
-      'reproducing the incident\'s own near-miss, three confident findings ' +
-      'including "contexts-removed" on a branch whose state was merely unreadable. ' +
-      'Against live protection the same day: "compared live protection against 2 ' +
-      'committed dump(s): development@20260906, main@20260906 / no drift." exit 0.',
+      '"[protection-drift] self-test: 15/15 pass — 15 case(s) exercised (12 ' +
+      'comparison verdicts across TWO repos — bsuite and crm7, each with their own ' +
+      'main dump — covering an identical read, a deleted protection object, an ' +
+      'ambiguous 404, an unreadable one, a removed context, an added context that ' +
+      'must only WARN, enforce_admins off, force pushes on, deletions on, removed ' +
+      'PR reviews, and a weakening on repo 2 that fails while repo 1 stays green; ' +
+      'plus newest-dump-per-repo-branch, a branch with no committed dump that must ' +
+      'FAIL dump-missing, and an unparseable dump that must fail closed)" (bsuite#3141, ' +
+      '2026-09-19). Against live protection, multi-repo: "compared live protection ' +
+      'against 14 committed dump(s) across 7 repo(s): … / no drift." exit 0.',
+  },
+
+  {
+    id: 'bot-merge-rollup',
+    label: 'The pointer-advance bot refuses to arm auto-merge over ANY red check',
+    repo: '.',
+    // Hermetic: the self-test injects rollups and a disarm spy; no network.
+    command: ['node', 'scripts/check-bot-merge-rollup.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/advance-submodule-pointers.yml',
+    mode: 'run',
+    notes:
+      'bsuite#3141 finding 4: on 2026-09-07 the pointer-advance bot merged PR ' +
+      '#3145 with FIVE checks red — none of them required, and `gh pr merge --auto` ' +
+      'merges when the REQUIRED checks conclude, never waiting for a non-required ' +
+      'one. A bot cannot read a non-required failure as advisory: the only actor ' +
+      'who could stop the merge was the one merging over it. This gate runs inside ' +
+      'the bot workflow on EVERY tick, reads the FULL check rollup of the standing ' +
+      'PR head, arms auto-merge only on a fully green rollup, and refuses ' +
+      '(disarming + failing the run, naming every red check) on any red or an ' +
+      'unreadable rollup. Pending waits — arming while pending is the incident ' +
+      'shape by construction.',
+    evidence:
+      '"[bot-merge-rollup] self-test: 11/11 pass — 11 case(s) exercised (a green ' +
+      'rollup that arms, one red NON-REQUIRED check that refuses and disarms — the ' +
+      '#3145 shape, pending and not-started rollups that wait without arming, a ' +
+      'cancelled check read as red, an unreadable rollup read as red, an unknown ' +
+      'bucket read as pending, a failing disarm surfaced, and a refusal that names ' +
+      'the red check\'s workflow)". Against the LIVE standing PR on 2026-09-19: ' +
+      '"::error title=Bot merge refused — 21 red check(s) … rollup: 66 green, 21 ' +
+      'red, 0 pending, 8 skipped of 95 check(s)." exit 1 — and it disarmed the ' +
+      'auto-merge that --auto had armed over them.',
   },
 
   {

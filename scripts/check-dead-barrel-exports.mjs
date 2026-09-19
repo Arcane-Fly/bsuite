@@ -30,7 +30,7 @@
  *   4. `export *` is not counted — it names nothing, so nothing can be judged
  */
 import { readFileSync, readdirSync, statSync, writeFileSync, existsSync } from 'node:fs'
-import { join, dirname, resolve } from 'node:path'
+import { join, dirname, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const HERE = dirname(fileURLToPath(import.meta.url))
@@ -115,7 +115,7 @@ function measure(app) {
     if (!/[\\/]index\.tsx?$/.test(path)) continue
     const names = barrelExportNames(readFileSync(path, 'utf8'))
     if (!names.length) continue
-    const ownDir = dirname(path)
+    const ownDir = dirname(path) + sep
     const d = names.filter((n) => !isUsed(n, files, ownDir))
     total += names.length; dead += d.length
     if (d.length) worst.push({ barrel: path.slice(ROOT.length + app.length + 2), dead: d.length, of: names.length })

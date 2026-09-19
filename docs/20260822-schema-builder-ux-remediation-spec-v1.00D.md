@@ -1034,3 +1034,5 @@ Recorded because a defect list that only ever grows is not being checked.
    `deal`) have no table at all. Anything joining the layers by name — including the
    `rename_physical_column` RPC's `public.<name>` lookup — misses 44 times out of 44.
    Related to open finding **R-5** in the findings register.
+
+Gate: schema drift behind the builder surfaces specified here is checked by `check-schema-lag.mjs`.
