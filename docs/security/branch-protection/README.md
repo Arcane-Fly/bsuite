@@ -10,9 +10,16 @@ evidence:
 
 # Branch protection dumps — the before-state of every protection write
 
-Each `<branch>-<YYYYMMDD>.json` is the **verbatim** body of
-`gh api repos/GaryOcean428/bsuite/branches/<branch>/protection`, taken **before** a write in
-the PR that made the write. They exist for three reasons, each with an incident behind it.
+Each `docs/security/branch-protection/<repo>/<branch>-<YYYYMMDD>.json` is the **verbatim**
+body of `gh api repos/GaryOcean428/<repo>/branches/<branch>/protection`, taken **before** a
+write in the PR that made the write. `<repo>` is the estate's seven repositories — `bsuite`
+(the parent) plus the six `.gitmodules` submodules: `crm7`, `business-suite-unified`,
+`conduit`, `braden`, `throughput`, `R80.4`. Since 2026-09-19 (bsuite#3141) every repo has its
+own directory: the old flat `<branch>-<date>.json` scheme collided across repos, because every
+repo has a `main`. A `rulesets/` sibling (bsuite#3199's ruleset dumps — a different mechanism)
+lands separately and is invisible to the drift gate either way.
+
+They exist for three reasons, each with an incident behind it.
 
 ## 1. The rollback has to be in history, not in scrollback
 
@@ -86,7 +93,9 @@ a context string still sitting in protection does the same thing.
 
 `scripts/check-required-contexts-producible.mjs` reads **these files** — never the live API, so
 it needs no token — and fails the build when any required context is unproducible,
-path-filtered, `if:`-gated, or scoped to a branch it is not required on. It runs on every PR
+path-filtered, `if:`-gated, or scoped to a branch it is not required on. It reads the **bsuite
+namespace only** (`bsuite/<branch>-<date>.json`): its job index is this repo's workflows, and
+another repo's required context is unanswerable here. It runs on every PR
 inside the `LANE-WATCHER — every guard states what it examined` job, which is itself required
 on both branches. Prove it can fail with `node scripts/check-required-contexts-producible.mjs
 --self-test` (11 cases, one planted defect or one positive control each; the count is the script's own summary line).
@@ -109,22 +118,38 @@ on both branches. Prove it can fail with `node scripts/check-required-contexts-p
 
 ```sh
 d=$(date +%Y%m%d)
+# ONE repo:
 for b in development main; do
   gh api "repos/GaryOcean428/bsuite/branches/$b/protection" \
-    > "docs/security/branch-protection/$b-$d.json"
+    > "docs/security/branch-protection/bsuite/$b-$d.json"
+done
+# EVERY repo in the estate (parent + .gitmodules) — run after any protection
+# write anywhere, and re-run nightly by the drift workflow on failure:
+for r in bsuite crm7 business-suite-unified conduit braden throughput R80.4; do
+  for b in development main; do
+    gh api "repos/GaryOcean428/$r/branches/$b/protection" \
+      > "docs/security/branch-protection/$r/$b-$d.json"
+  done
 done
 node scripts/check-required-contexts-producible.mjs            # must be clean
 node scripts/check-required-contexts-producible.mjs --update-baseline
+node scripts/check-branch-protection-drift.mjs --self-test     # must be clean
 ```
 
-The gate reads the **newest** file per branch by the date in the filename; older dumps stay
-because they are the rollback for the write that superseded them.
+The gate reads the **newest** file per repo×branch by the date in the filename; older dumps
+stay because they are the rollback for the write that superseded them. The drift gate
+(`scripts/check-branch-protection-drift.mjs`) derives the repo list from `.gitmodules` plus
+the parent — a new submodule is picked up automatically, and until its dumps are committed
+the nightly job FAILS with `dump-missing` rather than silently watching 12 of 16 branches.
+`PROTECTION_REPOS` ("repos=A@dir,B" or bare slugs) narrows a run to a subset for bisecting;
+out-of-scope dumps then warn instead of fail.
 
 **Two writes on the same day** share one filename, so the before-state of the second is the
 *previous commit of that file*, not a second file — `git log -p docs/security/branch-protection/`
-is the record. That is what happened on 2026-09-03: the first commit of `main-20260903.json` holds
-the 30-context state before `align` and `Every gitlink sits on its app's own main` were appended,
-and the second holds the 32-context state after.
+is the record. That is what happened on 2026-09-03: the first commit of
+`bsuite/main-20260903.json` (then `main-20260903.json` at the top level, moved into `bsuite/`
+by bsuite#3141) holds the 30-context state before `align` and `Every gitlink sits on its app's
+own main` were appended, and the second holds the 32-context state after.
 
 ## Restoring from a dump — exercised for the first time on 2026-09-07
 
@@ -150,7 +175,7 @@ b=main   # or development
 python3 - "$b" > "$S/body.json" <<'PY'
 import json,sys,glob,os
 b=sys.argv[1]
-f=sorted(glob.glob(f"docs/security/branch-protection/{b}-*.json"))[-1]
+f=sorted(glob.glob(f"docs/security/branch-protection/bsuite/{b}-*.json"))[-1]
 d=json.load(open(f))
 en=lambda k: bool(d.get(k,{}).get('enabled'))
 json.dump({
@@ -199,7 +224,11 @@ concluding:
 ### The watcher
 
 `scripts/check-branch-protection-drift.mjs`, run nightly by
-`.github/workflows/branch-protection-drift.yml`, compares live protection against the newest dump
-here and encodes that table. **Weakening fails; strengthening only warns** — a context added live
-and not yet re-dumped is a stale dump, and a gate that fires on every legitimate protection write
-is one people switch off. Re-dumping after a deliberate write clears the warning.
+`.github/workflows/branch-protection-drift.yml`, compares live protection for EVERY estate
+repo (`GaryOcean428/<repo>`, derived from `.gitmodules` plus the parent) against the newest
+dump in its `<repo>/` directory here, and encodes the table above. **Weakening fails;
+strengthening only warns** — a context added live and not yet re-dumped is a stale dump, and a
+gate that fires on every legitimate protection write is one people switch off. Re-dumping
+after a deliberate write clears the warning. A repo×branch with no committed dump FAILS as
+`dump-missing` — the gate states its denominator rather than watching 2 of 14 branches while
+rendering as green over all 14.

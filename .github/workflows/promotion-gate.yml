@@ -39,6 +39,15 @@ name: Promotion gate
 # records that the AGENT-PERFORMED visual DoD ran (ops-ship-all-apps ->
 # bsuite-ship-visual-promote, V-C1..V-C10) and that its evidence is on this PR.
 # Applying it without having run that is the same false-complete it always was.
+#
+# ── STANDARD ENFORCED, 2026-09-19 (bsuite#3138) ───────────────────────────────
+# The gate blocks NEW visual fails, not any fail anywhere. A pre-existing fail
+# (already open as an issue) does not block when the PR's visual-DoD evidence
+# names it by issue number AND shows the promotion does not change the surface
+# it appears on (pointer-style no-touch evidence: gitlinks equal what production
+# serves, dependency resolution frozen). UNKNOWN/INCOMPLETE still blocks (V-3).
+# A surface-changing promotion still gets the full green-matrix standard.
+# The block message below states this to the agent at block time.
 
 on:
   pull_request:
@@ -87,13 +96,31 @@ jobs:
           To promote: run the AGENT-PERFORMED visual DoD, post its evidence on this PR, then
           apply the label `visual-dod-passed`.
 
-          The visual DoD is ops-ship-all-apps -> bsuite-ship-visual-promote, V-C1..V-C10:
-          no pure white or black, sensible density (2-up / 3-up), layout that makes sense,
-          the task finishable on-page without needless round-trips, Storybook actually
-          installed and visually editable. Both themes, four breakpoints.
+          STANDARD ENFORCED (bsuite#3138) — the visual DoD (ops-ship-all-apps ->
+          bsuite-ship-visual-promote, V-C1..V-C10) must find that this promotion
+          INTRODUCES NO NEW visual FAIL:
+
+          - A NEW fail blocks absolutely.
+          - A PRE-EXISTING fail (already open as an issue) does not block, provided each
+            is named by issue number in this PR's visual-DoD evidence AND the evidence
+            shows this promotion does not change the surface the fail appears on.
+            No-touch evidence means BOTH: every submodule gitlink the PR moves points at
+            a commit the app's production host already serves (compare the live SHA from
+            the deployment, not from git), and dependency resolution is frozen (the
+            lockfile resolves exactly what resolves live, e.g. the @bsuite/page-builder
+            pin and resolved version; CI and Vercel install --frozen-lockfile).
+          - UNKNOWN / INCOMPLETE blocks (ruling V-3): a class the inspection could not
+            evaluate is never a pass.
+          - A promotion that DOES change rendered surfaces gets the full standard,
+            unchanged: a green matrix across the d.* hosts, both themes, four
+            breakpoints.
+
+          `visual-dod-passed` means: the agent ran the full visual DoD on the d.* deploys
+          AND either found no fails, or named every pre-existing fail by issue number
+          with no-touch evidence. Applying the label without that is a false-complete,
+          and the label event is timestamped in the PR timeline, so it is attributable
+          afterwards.
 
           This is AGENT work and does not wait on Braden — operator ruling, 2026-09-06.
-          Applying the label without having run it is a false-complete, and the label event
-          is timestamped in the PR timeline, so it is attributable afterwards.
           MSG
           exit 1
