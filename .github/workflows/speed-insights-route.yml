@@ -75,7 +75,9 @@ jobs:
         run: scripts/assert-app-trees-present.sh crm7 business-suite-unified conduit braden throughput
 
       - uses: actions/setup-node@v5
-        with: { node-version: '24.14.0', package-manager-cache: false }
+        with:
+          node-version: '24.14.0'
+          package-manager-cache: false
 
       # Two of the six self-test cases assert the gate FIRES, and one asserts
       # it does NOT fire on the /next entrypoint — the exclusion that keeps

@@ -72,7 +72,9 @@ jobs:
         run: scripts/assert-app-trees-present.sh crm7 business-suite-unified conduit braden throughput
 
       - uses: actions/setup-node@v5
-        with: { node-version: '24.14.0', package-manager-cache: false }
+        with:
+          node-version: '24.14.0'
+          package-manager-cache: false
 
       # The controls that matter are the ones that must NOT count: a comment
       # mentioning a symbol is not a use of it, and reading it as one is how this
