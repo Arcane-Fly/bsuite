@@ -63,7 +63,7 @@ jobs:
       # Every app is a PRIVATE submodule, so the default GITHUB_TOKEN cannot
       # clone them and fails with a bare "Repository not found".
       - name: Checkout (with submodules — the apps live there)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
@@ -92,10 +92,10 @@ jobs:
           echo "all six submodules present"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         # Explicit major: actions/setup-node with node-version-file was observed
         # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
-        with: { node-version: '24.14.0' }
+        with: { node-version: '24.14.0', package-manager-cache: false }
 
       - name: Build the scanner
         shell: bash

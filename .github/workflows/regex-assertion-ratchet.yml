@@ -52,13 +52,14 @@ jobs:
       # No submodules: the diff is a parent-repo artefact, and submodule content
       # is irrelevant to "what did this PR add". Not fetching them also removes
       # the failure mode that killed the previous design.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # Watched to catch a planted defect AND watched not to flag prose that
       # quotes one. Both, or it cannot tell found-nothing from checked-nothing.

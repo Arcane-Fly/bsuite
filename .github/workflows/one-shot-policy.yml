@@ -42,7 +42,7 @@ jobs:
     name: No app writes an entity another app owns
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
@@ -50,9 +50,10 @@ jobs:
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # The script exits 2 if the policy doc is missing or parses to zero entities —
       # a scan over no ownership map would report zero violations and read as clean.

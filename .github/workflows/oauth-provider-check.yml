@@ -438,7 +438,7 @@ jobs:
     name: Verify every shipped origin is a registered redirect_uri
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Probe the live OAuth authorize endpoint
         shell: bash
         run: ./scripts/check-oauth-redirect-uris.sh
