@@ -162,6 +162,12 @@ jobs:
       - name: Prove the checker can fail before trusting what it says
         run: node scripts/advance-submodule-pointers.mjs --self-test
 
+      # Same discipline for the merge gate this job ends with: a rollup reader
+      # that cannot tell red from pending must be SEEN to fail before its
+      # verdicts gate anything (bsuite#3141 finding 4).
+      - name: Prove the merge gate can fail before trusting what it says
+        run: node scripts/check-bot-merge-rollup.mjs --self-test
+
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -503,21 +509,56 @@ jobs:
           CURRENT_BASE="$(gh pr view "$BR" --json baseRefName -q .baseRefName)"
           if [ "$CURRENT_BASE" != "development" ]; then
             echo "::warning title=Refusing to arm auto-merge::$BR targets '$CURRENT_BASE', not 'development' — this workflow only ever creates it against development, so something retargeted it by hand. Not arming auto-merge; fix the base or investigate before merging."
-          # Non-fatal on failure: this call runs AFTER the PR is confirmed open above.
-          # If enabling auto-merge itself fails (e.g. a transient API error), the
-          # correct, already-pushed advances and the open PR must not be reported as a
-          # job failure over a convenience step — the next hourly run retries this call
-          # regardless, and the PR remains mergeable by hand in the meantime.
-          elif gh pr merge "$BR" --auto --merge 2>/tmp/automerge.log; then
-            echo "auto-merge armed on $BR — merges itself once all required checks pass"
-          else
-            echo "::warning title=Could not arm auto-merge::gh pr merge --auto failed for $BR (see below); the PR is open and correct, and can be merged by hand, or will retry next scheduled run."
-            cat /tmp/automerge.log
+          # NO ARMING HERE — the base check above stays as the retarget tripwire,
+          # but arming moved to the dedicated "Gate the standing PR on its full
+          # check rollup" step at the end of this job (bsuite#3141 finding 4).
+          # Arming directly after the force-push — with every check pending — is
+          # exactly how #3145 merged over five red checks: auto-merge merges on
+          # the REQUIRED checks concluding and never waits for a non-required
+          # one. The gate step reads the FULL rollup and arms only on a fully
+          # green one, every tick, changed or not.
           fi
 
       - name: Say so even when there is nothing to do
         if: steps.advance.outputs.changed != 'true'
         run: echo "All submodule pointers already match their app main tips."
+
+      # THE MERGE GATE — runs on EVERY tick, changed or not. The #3145 hole was
+      # not only "arm while pending": it was that nothing on a bot PR ever reads
+      # the FULL rollup. Auto-merge merges on the REQUIRED checks concluding;
+      # a red non-required check is invisible to it. The gate here reads the
+      # whole rollup of the standing PR head and:
+      #
+      #   all green   -> arms auto-merge itself (--arm, on this verdict only)
+      #   any red     -> disarms if armed + FAILS this run, naming every red check
+      #   any pending -> waits, arms nothing (arm-while-pending IS the #3145 shape)
+      #   no PR yet   -> waits, arms nothing
+      #   unreadable  -> treated as red: disarm + fail (a bot that cannot see
+      #                  must not press the button)
+      #
+      # `if: always()` — even a run that failed earlier still gates its own PR:
+      # a red rollup must not keep an armed auto-merge sitting on it because a
+      # step above happened to fail first. The arming decision is keyed on the
+      # gate's own verdict inside one invocation — not an exit code (exit 0
+      # covers both green and pending) and not a second rollup read.
+      - name: Gate the standing PR on its full check rollup
+        if: always()
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+        run: |
+          set -o pipefail
+          BR=chore/auto-advance-submodule-pointers
+          PR_STATE="$(gh pr view "$BR" --json state -q .state 2>/dev/null || echo NONE)"
+          if [ "$PR_STATE" != "OPEN" ]; then
+            echo "standing PR state: $PR_STATE — nothing to gate and nothing to arm this tick."
+            exit 0
+          fi
+          node scripts/check-bot-merge-rollup.mjs --arm "$BR" | tee /tmp/gate.txt
+          gate_exit="${PIPESTATUS[0]}"
+          if [ "$gate_exit" != "0" ]; then
+            echo "::error title=Bot merge gate refused::the check rollup on $BR is not fully green — auto-merge has been disarmed (or was never armed) and this run FAILS. Fix the red checks named above; the gate re-runs on the next hourly tick."
+          fi
+          exit "$gate_exit"
 
       # THE JOB STILL GOES RED ON A REFUSAL — just AFTER the safe advances above
       # have shipped, not instead of them. `if: always()` so this runs whether the
