@@ -1,3 +1,12 @@
+---
+kind: decision
+authority: operator
+owner: bsuite
+evidence:
+  - docs/adr/README.md
+  - AGENTS.md
+---
+
 # ADR-0012 — Operator decision register, 2026-09-16
 
 | | |
