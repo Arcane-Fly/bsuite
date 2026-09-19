@@ -92,16 +92,20 @@ jobs:
       # On a pull_request the token is not expected to carry administration read, and
       # a PR must not be blocked by that. The self-test above is what a PR proves;
       # the live comparison is the scheduled lane's job.
+      #
+      # The dispatch input reaches the script through the ENVIRONMENT, never by
+      # string interpolation into the run block: `${{ inputs.repo }}` pasted into
+      # shell is a command-injection sink (semgrep run-shell-injection, flagged on
+      # this file's first multi-repo revision) — an input value is data, not code.
       - name: Compare live protection against the committed dumps
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
-        # PROTECTION_REPOS narrows the run to one repo for a dispatch bisect; on
-        # schedule/dispatch-without-input it is unset and the whole estate is compared.
+          DISPATCH_REPO: ${{ github.event.inputs.repo }}
         run: |
-          if [ -n "${{ github.event.inputs.repo || '' }}" ]; then
-            echo "Comparing a single repo: ${{ github.event.inputs.repo }}"
-            PROTECTION_REPOS="${{ github.event.inputs.repo }}" node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
+          if [ -n "$DISPATCH_REPO" ]; then
+            echo "Comparing a single repo: $DISPATCH_REPO"
+            PROTECTION_REPOS="$DISPATCH_REPO" node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
           else
             node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
           fi
