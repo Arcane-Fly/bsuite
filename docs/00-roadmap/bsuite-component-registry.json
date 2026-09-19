@@ -18,29 +18,29 @@
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 1548,
-      "componentFiles": 451
+      "sourceFiles": 1582,
+      "componentFiles": 461
     },
     "business-suite-unified": {
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 340,
+      "sourceFiles": 341,
       "componentFiles": 119
     },
     "conduit": {
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 325,
-      "componentFiles": 100
+      "sourceFiles": 350,
+      "componentFiles": 101
     },
     "braden": {
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 312,
-      "componentFiles": 208
+      "sourceFiles": 314,
+      "componentFiles": 209
     },
     "throughput": {
       "available": true,
@@ -53,8 +53,8 @@
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 226,
-      "componentFiles": 6
+      "sourceFiles": 227,
+      "componentFiles": 7
     }
   },
   "packageCoverage": {
@@ -130,14 +130,14 @@
     }
   },
   "sharedComponents": 203,
-  "unusedSharedComponents": 176,
+  "unusedSharedComponents": 174,
   "localComponentFiles": {
-    "crm7": 451,
+    "crm7": 461,
     "business-suite-unified": 119,
-    "conduit": 100,
-    "braden": 208,
+    "conduit": 101,
+    "braden": 209,
     "throughput": 91,
-    "R80.4": 6
+    "R80.4": 7
   },
   "components": [
     {
@@ -439,9 +439,9 @@
       "name": "DataGrid",
       "package": "@bsuite/data-grid",
       "consumers": {
-        "crm7": 4
+        "crm7": 5
       },
-      "consumerFiles": 4,
+      "consumerFiles": 5,
       "consumingApps": 1
     },
     {
@@ -635,9 +635,12 @@
     {
       "name": "PAGE_GRID_SAVE_EVENT",
       "package": "@bsuite/page-builder",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
+      "consumers": {
+        "business-suite-unified": 1,
+        "conduit": 1
+      },
+      "consumerFiles": 2,
+      "consumingApps": 2
     },
     {
       "name": "PageEditorLauncher",
@@ -1194,9 +1197,11 @@
     {
       "name": "AuthOwnershipSupersededError",
       "package": "@bsuite/auth",
-      "consumers": {},
-      "consumerFiles": 0,
-      "consumingApps": 0
+      "consumers": {
+        "conduit": 1
+      },
+      "consumerFiles": 1,
+      "consumingApps": 1
     },
     {
       "name": "BusinessSuiteOAuthExchangeUncertainError",
