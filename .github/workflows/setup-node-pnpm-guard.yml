@@ -16,6 +16,20 @@ name: setup-node pnpm guard
 #      advance-submodule-pointers.yml, which then failed 20 of 20 scheduled
 #      runs between 2026-08-20T07:29 and 2026-08-21T02:40 with nobody watching.
 #
+#   3. 2026-09-07 — the post-step failure mode, bsuite#3150: on any
+#      lockfile-changing PR, a v5 step in a job that runs no install fails its
+#      POST step with
+#
+#          ##[error]Path Validation Error: Path(s) specified in the action
+#          for caching do(es) not exist, hence no cache is being saved.
+#
+#      because the auto-enabled cache has nothing to save. Upstream confirmed
+#      the mechanism in actions/setup-node#1363 and endorses the same one-line
+#      fix for both modes. Upstream's alternative resolution — restricting
+#      automatic caching to npm (actions/setup-node#1374, released in v6) —
+#      would also clear it; this estate fixes in place instead and keeps the
+#      explicit flag this guard enforces.
+#
 # The second one cost more than a stale pointer. advance-submodule-pointers is
 # the estate's ONLY WRITER of submodule gitlinks and six workflows READ them —
 # so while it was silent, six green guards confidently reported stale pointers
@@ -31,11 +45,29 @@ on:
       - '.github/workflows/**'
       - 'scripts/check-setup-node-pnpm-guard.mjs'
       - 'scripts/guard-registry.mjs'
+      - 'scripts/setup-node-guard-baseline.json'
+      # bsuite#3150 step 5 (option b): the guard now also scans the six apps'
+      # workflows AT THE PINNED GITLINKS, so a PR that moves an app pointer
+      # must trigger this check — a submodule appears in the parent's diff as
+      # the bare path, never as `app/**`.
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'throughput'
+      - 'braden'
+      - 'R80.4'
   push:
     branches: [main, development]
     paths:
       - '.github/workflows/**'
       - 'scripts/check-setup-node-pnpm-guard.mjs'
+      - 'scripts/setup-node-guard-baseline.json'
+      - 'crm7'
+      - 'conduit'
+      - 'business-suite-unified'
+      - 'throughput'
+      - 'braden'
+      - 'R80.4'
   # A workflow file can be edited by a merge that touched nothing this guard
   # watches (a revert, a submodule pointer bump carrying a workflow change).
   # The daily run is the backstop for that.
@@ -107,3 +139,72 @@ jobs:
 
       - name: No workflow watches a path a parent diff can never contain
         run: node scripts/check-workflow-path-reachability.mjs
+
+  # ---------------------------------------------------------------------------
+  # bsuite#3150 step 5 (option b): one guard, one owner. The same failure class
+  # lives in the apps' workflows, which the parent-tree scan above never sees.
+  # This job checks out the six app submodules AT THE PINNED GITLINKS and runs
+  # the same checker in --scope mode over each app's .github/workflows/.
+  #
+  # Known pinned-main offenders (crm7 and business-suite-unified
+  # control-boundary-contrast.yml — fixes on app development awaiting
+  # promotion) are recorded in scripts/setup-node-guard-baseline.json and the
+  # ratchet is bidirectional: a NEW unguarded step fails, and a baseline entry
+  # that no longer matches a live violation ALSO fails, forcing its deletion
+  # the moment the apps promote.
+  #
+  # Why pinned gitlinks and not app development tips: parent CI measures what
+  # the parent tree actually pins — an app's tip is not what ships.
+  # ---------------------------------------------------------------------------
+  app-scope:
+    name: setup-node pnpm guard (app scopes, pinned gitlinks)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # Pinned gitlinks only — the parent tree's own truth.
+          submodules: recursive
+          fetch-depth: 1
+          # Every app is a PRIVATE submodule: the default GITHUB_TOKEN gets a
+          # bare "Repository not found". House pattern is the cross-repo PAT
+          # with a GITHUB_TOKEN fallback (estate-alignment.yml idiom).
+          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+
+      - name: Assert the submodules actually checked out
+        shell: bash
+        # REFUSE TO SCAN AN EMPTY TREE — a guard that reads nothing and exits 0
+        # is a false pass, the estate's most-repeated failure class.
+        run: scripts/assert-app-trees-present.sh
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+          # Same condition the parent job enforces — guarding the guard.
+          package-manager-cache: false
+
+      - name: Prove the app-scope checker can fail before trusting what it says
+        shell: bash
+        # Planted-omission positive control, app form: strip the explicit
+        # `cache: 'pnpm'` line from crm7/ci.yml (present at BOTH the pinned
+        # main and development shapes of that file), which leaves an
+        # install-bearing job with no explicit cache and must fail the guard.
+        run: |
+          set -euo pipefail
+          cp crm7/.github/workflows/ci.yml /tmp/ci-backup.yml
+          sed -i "/^[[:space:]]*cache:[[:space:]]*'pnpm'/d" crm7/.github/workflows/ci.yml
+          if node scripts/check-setup-node-pnpm-guard.mjs \
+              --scope crm7 --scope conduit --scope business-suite-unified \
+              --scope throughput --scope braden --scope R80.4; then
+            echo "::error::APP-SCOPE POSITIVE CONTROL FAILED — the guard passed a tree with a planted unguarded setup-node@v5 step. The checker is broken; its clean passes mean nothing."
+            cp /tmp/ci-backup.yml crm7/.github/workflows/ci.yml
+            exit 1
+          fi
+          cp /tmp/ci-backup.yml crm7/.github/workflows/ci.yml
+          echo "app-scope positive control ok — checker detects a planted omission"
+
+      - name: Check every setup-node@v5 step is guarded (all six app scopes)
+        run: |
+          node scripts/check-setup-node-pnpm-guard.mjs \
+            --scope crm7 --scope conduit --scope business-suite-unified \
+            --scope throughput --scope braden --scope R80.4

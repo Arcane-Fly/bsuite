@@ -286,16 +286,26 @@ export const GUARDS = [
     ciWorkflow: '.github/workflows/setup-node-pnpm-guard.yml',
     mode: 'run',
     notes:
-      'setup-node@v5 defaults package-manager-cache: true and resolves the ' +
-      'packageManager field\'s pnpm BEFORE corepack runs, dying with ' +
-      '"Unable to locate executable file: pnpm". PR #2048 fixed this by hand ' +
-      'across 22 workflows and MISSED advance-submodule-pointers.yml, which ' +
-      'then failed 20 of 20 scheduled runs (2026-08-20 to 08-21) unnoticed. ' +
-      'That workflow is the estate\'s only WRITER of submodule gitlinks and ' +
-      'six workflows read them, so its silence made six green guards report ' +
-      'stale pointers as app findings. A clean pass prints the guarded/total ' +
-      'step counts and the files scanned; finding zero setup-node steps, or ' +
-      'fewer than the floor, is a hard failure rather than a pass.',
+      'setup-node@v5 defaults package-manager-cache: true and engages the ' +
+      'package-manager cache whenever package.json has a packageManager field, ' +
+      'even with no cache: input. It fails twice without pnpm or a store on ' +
+      'PATH/disk: at setup time ("Unable to locate executable file: pnpm") and, ' +
+      'on lockfile-changing PRs, in the POST step ("Path Validation Error") — ' +
+      'upstream-confirmed in actions/setup-node#1363 and actions/toolkit#2128. ' +
+      'PR #2048 fixed the setup-time mode by hand across 22 workflows and ' +
+      'MISSED advance-submodule-pointers.yml, which then failed 20 of 20 ' +
+      'scheduled runs (2026-08-20 to 08-21) unnoticed. bsuite#3150 measured the ' +
+      'post-step mode: crm7 and business-suite-unified control-boundary-contrast ' +
+      'failed on lockfile PRs, fixed on app development (crm7#5fc97b0aa, ' +
+      'BSU#72ad87b) and awaiting promotion. The guard counts anchored key lines ' +
+      'so prose mentions cannot mask an unguarded step, and runs a --scope mode ' +
+      'over the six apps at the pinned gitlinks with a bidirectional baseline ' +
+      'ratchet (scripts/setup-node-guard-baseline.json): a NEW unguarded step ' +
+      'fails, and a baseline entry that no longer matches a live violation ' +
+      'fails too, forcing deletion once the apps promote. In --scope mode the ' +
+      'install-bearing form (pnpm/action-setup before setup-node, explicit ' +
+      "cache: 'pnpm', a real pnpm install line) is accepted as guarded — the " +
+      'upstream-endorsed alternative for jobs that really install.',
   },
 
   {
