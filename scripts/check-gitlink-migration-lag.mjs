@@ -39,7 +39,9 @@
  * estate keeps finding, so it exits 2.
  *
  * USAGE
- *   node scripts/check-gitlink-migration-lag.mjs
+ *   node scripts/check-gitlink-migration-lag.mjs            # gitlinks at HEAD
+ *   node scripts/check-gitlink-migration-lag.mjs <ref>      # gitlinks at another ref
+ *   node scripts/check-gitlink-migration-lag.mjs :staged    # gitlinks in the INDEX, before committing
  *   node scripts/check-gitlink-migration-lag.mjs --self-test
  */
 
@@ -47,6 +49,8 @@ import { execFileSync } from 'node:child_process'
 import { existsSync, readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
+
+import { gitlinkAt, gitlinkParserCases } from './lib/gitlink-at.mjs'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..')
 
@@ -127,6 +131,8 @@ function selfTest() {
   check('the real applier still declares a floor this gate can read',
     existsSync(wf) && readFloor(readFileSync(wf, 'utf8')) !== null, true)
 
+  for (const c of gitlinkParserCases()) cases.push([c.n, c.ok, JSON.stringify(c.got), JSON.stringify(c.want)])
+
   const failed = cases.filter(([, ok]) => !ok)
   for (const [label, ok, a, e] of cases) if (!ok) console.error(`  ✗ ${label}\n      expected ${e}\n      actual   ${a}`)
   if (failed.length) {
@@ -143,6 +149,7 @@ function selfTest() {
 
 function main() {
   if (process.argv.includes('--self-test')) return selfTest()
+  const ref = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : 'HEAD'
 
   const wfPath = join(ROOT, '.github/workflows/supabase-migrate.yml')
   if (!existsSync(wfPath)) {
@@ -178,9 +185,15 @@ function main() {
       blind.push(name)
       continue
     }
-    const gitlink = git(['ls-tree', 'HEAD', name]).split(/\s+/)[2]
+    let gitlink
+    try {
+      gitlink = gitlinkAt(ref, name, ROOT)
+    } catch (e) {
+      blind.push(`${name} (unreadable gitlink at ${ref}: ${e.message})`)
+      continue
+    }
     if (!gitlink) {
-      blind.push(`${name} (no gitlink in HEAD)`)
+      blind.push(`${name} (no gitlink at ${ref})`)
       continue
     }
 

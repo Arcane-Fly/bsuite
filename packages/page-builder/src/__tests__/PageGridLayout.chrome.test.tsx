@@ -4,7 +4,8 @@ import { describe, expect, it } from 'vitest';
 import { PageGridLayout } from '../PageGridLayout.js';
 import { CanvasCard } from '../CanvasCard.js';
 import { buildCanvasCardLayout } from '../canvasCardLayout.js';
-import type { GridLayouts } from '../types.js';
+import { DEFAULT_CARD_STYLE } from '../cardStyle.js';
+import type { GridLayouts, PageGridPreferenceFactory } from '../types.js';
 
 /**
  * G1 — the grid-item chrome inversion.
@@ -41,6 +42,44 @@ function paintsBorder(el: Element): boolean {
 }
 
 describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
+  it.each([false, true])('inner padding belongs to the painted surface: %s', (chrome) => {
+    const preferenceAdapter: PageGridPreferenceFactory = <T,>(key: string, fallback: T) => ({
+      value: key.endsWith('_card_style') ? { ...DEFAULT_CARD_STYLE, padding: 8 } as T : fallback,
+      setValue: () => undefined,
+      loaded: true,
+    });
+    const { container } = render(
+      <PageGridLayout pageKey={`saved-padding-${chrome}`} defaultLayouts={layouts}
+        itemChrome={chrome} preferenceAdapter={preferenceAdapter}
+        widgets={{ alpha: <div>Painted consumer</div> }} />,
+    );
+    const el = surface(container);
+    expect(el.style.getPropertyValue('--card-padding')).toBe('8px');
+    expect(el.style.padding).toBe(chrome ? '8px' : '');
+    expect(el.hasAttribute('data-card-padding')).toBe(!chrome);
+  });
+
+  it.each([false, true])('a saved elevation paints only a chrome-owning surface: %s', (chrome) => {
+    const preferenceAdapter: PageGridPreferenceFactory = <T,>(key: string, fallback: T) => ({
+      value: key.endsWith('_card_style') ? { ...DEFAULT_CARD_STYLE, elevation: 4 } as T : fallback,
+      setValue: () => undefined,
+      loaded: true,
+    });
+    const { container } = render(
+      <PageGridLayout
+        pageKey={`saved-shadow-${chrome}`}
+        defaultLayouts={layouts}
+        itemChrome={chrome}
+        preferenceAdapter={preferenceAdapter}
+        widgets={{ alpha: <div>Painted consumer</div> }}
+      />,
+    );
+    const el = surface(container);
+    expect(el.style.getPropertyValue('--card-shadow')).toBe('var(--shadow-elev-4)');
+    expect(el.style.boxShadow).toBe('');
+    expect(el.style.getPropertyValue('--card-shadow-interaction')).toBe('var(--shadow-elev-4), var(--shadow-elev-1)');
+  });
+
   it('paints NO border, radius or background on a default grid item', () => {
     const { container } = render(
       <PageGridLayout
@@ -51,6 +90,7 @@ describe('grid-item chrome is OFF by default (the 2.0.0 inversion)', () => {
     );
     const el = surface(container);
     expect(el.dataset.chrome).toBe('off');
+    expect(el.hasAttribute('data-card-padding')).toBe(false);
     expect(el.classList.contains('bg-card'), 'chrome off must not paint a background').toBe(false);
     expect(paintsBorder(el), 'chrome off must not paint a border').toBe(false);
     expect(
@@ -139,7 +179,7 @@ describe('chrome is opt-in, at two levels, and per-item wins', () => {
      * "restores the pre-2.0.0 surface exactly" actually claims. Assert the
      * paint, not the spelling.
      */
-    for (const cls of ['bg-card', 'shadow-sm']) {
+    for (const cls of ['bg-card', 'shadow-[var(--card-shadow,var(--shadow-elev-2))]']) {
       expect(el.classList.contains(cls), `chrome on must paint ${cls}`).toBe(true);
     }
     expect(paintsBorder(el), 'chrome on must paint a border').toBe(true);

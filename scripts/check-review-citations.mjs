@@ -94,8 +94,10 @@ const CITATION = new RegExp(
   // "EXT is not defined" at import, which made the two must-FAIL controls exit
   // 1 for the wrong reason and look like passes. Only the must-PASS control
   // exposed it — which is why this file keeps one.
-  '(?:^|[\\s(\\[<"\'`])' + // left boundary
-    '((?:[\\w.@~-]+\\/)+[\\w.@-]+\\.' + // dir segments + filename
+  '(?:^|[\\s(\\[<>"\'`])' + // left boundary, including HTML code wrappers
+    // The first segment excludes Markdown delimiters; later segments also
+    // admit Next route groups and dynamic/optional catch-all parameters.
+    '([\\w.@~-]+\\/(?:[\\w.@~()\\[\\]-]+\\/)*[\\w.@-]+\\.' +
     SOURCE_EXT +
     ')' +
     EXTEND, // optional :line, optional :col, and hard extension boundary
@@ -340,6 +342,34 @@ function selfTest() {
       fail.code !== 0 &&
         fail.out.includes('FAIL: 1 of 4 cited path(s) do not exist in this repo.') &&
         fail.out.includes('crm7/src/pages/truncation.tsx'),
+    );
+
+    write('src/app/(dashboard)/field-officer-assignments/_view.tsx', '// exists');
+    write('src/app/(dashboard)/jobs/[id]/distribute/_view.tsx', '// exists');
+    write('src/app/docs/[[...slug]]/page.tsx', '// exists');
+    write('review.md', [
+      '[src/app/(dashboard)/field-officer-assignments/_view.tsx[509-625]](https://example.com/review)',
+      '`src/app/(dashboard)/jobs/[id]/distribute/_view.tsx:337:2`',
+      '<code>src/app/docs/[[...slug]]/page.tsx</code>',
+    ].join('\n'));
+
+    const routes = runFixtureReview(reviewFile, fixture);
+    check(
+      'Next route groups, dynamic and optional catch-all segments resolve without Markdown delimiters',
+      routes.code === 0 &&
+        /citations found 3\s+resolved 3\s+unresolved 0/.test(routes.out),
+    );
+
+    write('review.md', [
+      '`crm7/src/services/builder.mjs`',
+      '`src/app/(dashboard)/jobs/[missing]/distribute/_view.tsx`',
+    ].join('\n'));
+    const missingRoute = runFixtureReview(reviewFile, fixture);
+    check(
+      'missing dynamic route fails even when another ordinary citation resolves',
+      missingRoute.code !== 0 &&
+        missingRoute.out.includes('FAIL: 1 of 2 cited path(s) do not exist in this repo.') &&
+        missingRoute.out.includes('src/app/(dashboard)/jobs/[missing]/distribute/_view.tsx'),
     );
   } finally {
     rmSync(fixture, { recursive: true, force: true });

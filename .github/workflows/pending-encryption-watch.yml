@@ -168,13 +168,20 @@ jobs:
         run: |
           set -euo pipefail
           # The same proof as the step above, for the second measure, and just
-          # as strict. Four synthetic documents go in inside a transaction that
+          # as strict. Five synthetic documents go in inside a transaction that
           # ALWAYS rolls back, one per state the detector must tell apart:
           #
           #   a  event cleanup_pending                              -> counts
           #   b  event processing, metadata already on ciphertext   -> counts
           #   c  event processing, metadata still on the original   -> must NOT
           #   d  event succeeded                                    -> must NOT
+          #   e  event processing, document encrypted, but at a
+          #      DIFFERENT path from this event's ciphertext        -> must NOT
+          #
+          # e pins the `m.storage_path = e.encrypted_storage_path` clause: without
+          # it, any processing event of an encrypted document counts, including
+          # an attempt that never committed while another one did (bsuite#2664
+          # pass 2, B-N1). Dropping that clause now reads 3, not 2.
           #
           # The delta must be EXACTLY 2. Below 2 it misses an unencrypted copy
           # that is still stored; above 2 it reports copies that are gone, and
@@ -191,20 +198,20 @@ jobs:
                  SELECT t.id, '__watch_selftest__', 'completed_with_failures'
                    FROM public.tenants t LIMIT 1
                  RETURNING id, tenant_id),
-               probe (tag, event_status, on_ciphertext) AS (VALUES
-                 ('a', 'cleanup_pending', true),
-                 ('b', 'processing',      true),
-                 ('c', 'processing',      false),
-                 ('d', 'succeeded',       true)),
+               probe (tag, event_status, metadata_suffix) AS (VALUES
+                 ('a', 'cleanup_pending', '.encrypted-probe'),
+                 ('b', 'processing',      '.encrypted-probe'),
+                 ('c', 'processing',      ''),
+                 ('d', 'succeeded',       '.encrypted-probe'),
+                 ('e', 'processing',      '.encrypted-other')),
                doc AS (
                  INSERT INTO public.document_metadata
                    (tenant_id, storage_bucket, storage_path, file_name, file_size, mime_type,
                     document_category, document_type, is_encrypted)
                  SELECT run.tenant_id, 'apprentice-documents',
-                        'selftest/leftover-' || p.tag || '.pdf'
-                          || CASE WHEN p.on_ciphertext THEN '.encrypted-probe' ELSE '' END,
+                        'selftest/leftover-' || p.tag || '.pdf' || p.metadata_suffix,
                         'leftover-' || p.tag || '.pdf', 1, 'application/pdf',
-                        '__watch_selftest__', 'other', p.on_ciphertext
+                        '__watch_selftest__', 'other', p.metadata_suffix <> ''
                    FROM run CROSS JOIN probe p
                  RETURNING id, tenant_id, file_name)
           INSERT INTO public.document_encryption_events

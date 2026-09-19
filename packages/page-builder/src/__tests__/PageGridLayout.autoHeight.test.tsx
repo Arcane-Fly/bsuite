@@ -3,6 +3,7 @@ import { act, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { PageGridLayout } from '../PageGridLayout.js';
 import { computeAutoHeightRows } from '../autoHeight.js';
+import { DEFAULT_CARD_STYLE } from '../cardStyle.js';
 import type { GridLayouts, PageGridPreferenceFactory } from '../types.js';
 
 /**
@@ -144,6 +145,30 @@ describe('PageGridLayout auto-height integration (ResizeObserver -> flush -> ren
     card2: <div data-testid="card2-content">Tabs card</div>,
     card3: <div data-testid="card3-content">Entity linker</div>,
   };
+
+  it('reserves chrome padding outside the observed content box', async () => {
+    const preferenceAdapter: PageGridPreferenceFactory = <T,>(key: string, fallback: T) => ({
+      value: key.endsWith('_card_style') ? { ...DEFAULT_CARD_STYLE, padding: 48 } as T : fallback,
+      setValue: () => undefined,
+      loaded: true,
+    });
+    await act(async () => {
+      render(<PageGridLayout pageKey="autoheight-padding" defaultLayouts={defaultLayouts}
+        widgets={widgets} itemChrome preferenceAdapter={preferenceAdapter} />);
+    });
+    const observer = measureObserverFor('card2-content', 'card3-content');
+    await act(async () => {
+      fireContentHeight(observer, 240);
+      await nextFrame();
+      await nextFrame();
+    });
+    const allocated = Number.parseFloat(gridItemFor('card2-content').style.height);
+    // Content and its 48px top/bottom inset must fit. Leave room for the
+    // default border and less than one grid-row unit of rounding; customized
+    // CSS border widths are tested in Chromium.
+    expect(allocated).toBeGreaterThanOrEqual(240 + 48 * 2);
+    expect(allocated).toBeLessThan(240 + 48 * 2 + CARD_CHROME + ROW_HEIGHT + MARGIN_Y);
+  });
 
   it('two autoHeight cards settling in the SAME frame BOTH render their measured heights (CRITICAL #1)', async () => {
     await act(async () => {

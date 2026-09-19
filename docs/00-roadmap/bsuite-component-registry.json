@@ -76,8 +76,8 @@
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 23,
-      "exports": 24
+      "sourceFiles": 24,
+      "exports": 26
     },
     "@bsuite/nav-core": {
       "available": true,
@@ -129,8 +129,8 @@
       "exports": 62
     }
   },
-  "sharedComponents": 201,
-  "unusedSharedComponents": 174,
+  "sharedComponents": 203,
+  "unusedSharedComponents": 176,
   "localComponentFiles": {
     "crm7": 451,
     "business-suite-unified": 119,
@@ -549,6 +549,13 @@
       "consumingApps": 1
     },
     {
+      "name": "CardPaddingBoundary",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
       "name": "CustomPageView",
       "package": "@bsuite/page-builder",
       "consumers": {},
@@ -620,6 +627,13 @@
     },
     {
       "name": "PAGE_GRID_EDITING_EVENT",
+      "package": "@bsuite/page-builder",
+      "consumers": {},
+      "consumerFiles": 0,
+      "consumingApps": 0
+    },
+    {
+      "name": "PAGE_GRID_SAVE_EVENT",
       "package": "@bsuite/page-builder",
       "consumers": {},
       "consumerFiles": 0,
