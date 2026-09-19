@@ -590,7 +590,7 @@ they ride along in a commit.
 The objective for this maintenance pass said to "see `.claude` local to this directory and all
 goals". `.claude/` holds `settings.local.json` (permissions include `gh workflow run
 supabase-migrate.yml`, `mcp__claude_ai_Supabase__execute_sql`, BrowserBase and `python3 *`),
-`agent-memory/` with six `bsuite-*` role definitions, `scripts/arm-timers.sh`, the canonical skill
+`agent-memory/` with six `bsuite-*` role definitions, `.claude/scripts/arm-timers.sh`, the canonical skill
 set, and a `worktrees/` directory that is **empty**. The goals live in Codex's own store, table
 `thread_goals`, read-only:
 
