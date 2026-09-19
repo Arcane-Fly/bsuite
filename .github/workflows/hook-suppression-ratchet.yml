@@ -61,9 +61,10 @@ jobs:
         run: scripts/assert-app-trees-present.sh
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # The positive control runs FIRST and gates the real scan. The scanner's
       # failure mode is silent: a tokeniser regression reports a SMALLER

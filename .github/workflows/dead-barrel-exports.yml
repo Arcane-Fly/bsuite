@@ -59,7 +59,7 @@ jobs:
       # them and fails with a bare "Repository not found" — a 404 that reads as
       # a missing repo rather than as a permissions problem.
       - name: Checkout (with submodules — the apps live there)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
@@ -71,8 +71,8 @@ jobs:
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh crm7 business-suite-unified conduit braden throughput
 
-      - uses: actions/setup-node@v4
-        with: { node-version: '24.14.0' }
+      - uses: actions/setup-node@v5
+        with: { node-version: '24.14.0', package-manager-cache: false }
 
       # The controls that matter are the ones that must NOT count: a comment
       # mentioning a symbol is not a use of it, and reading it as one is how this

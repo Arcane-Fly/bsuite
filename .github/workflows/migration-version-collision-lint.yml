@@ -81,7 +81,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (with submodules — every scope must be scanned)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
           # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
@@ -95,9 +95,10 @@ jobs:
         run: scripts/assert-app-trees-present.sh
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # A gate whose pass and no-op states are indistinguishable hides
       # defects (bsuite#1688 lesson, reapplied here). Prove the checker can
@@ -128,7 +129,7 @@ jobs:
       # default branch, so it needs the submodules actually present. The default
       # GITHUB_TOKEN cannot clone sibling PRIVATE repos.
       - name: Checkout (with submodules — the gitlink IS the subject)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0
@@ -138,9 +139,10 @@ jobs:
         run: scripts/assert-app-trees-present.sh
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # Fetch each submodule's own branches. `actions/checkout` leaves a submodule
       # at the recorded commit with no branch refs, and this gate's whole question

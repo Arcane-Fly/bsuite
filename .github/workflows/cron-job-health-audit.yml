@@ -77,7 +77,7 @@ jobs:
       # square people learn to scroll past, and it took the whole pg_cron audit down with
       # it. No submodules: the only file this job reads is the parent's own baseline.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Guard — require project ref
         env:

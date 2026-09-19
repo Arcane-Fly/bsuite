@@ -129,9 +129,10 @@ jobs:
       # crm7 because that is the only tree this job reads.
       - run: scripts/assert-app-trees-present.sh crm7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # THE CI STEP NAME IS FIXED BY THE ESTATE'S OWN RULE. It runs the SAME
       # entry point the observe job runs, over fixtures carrying planted
@@ -284,9 +285,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       - name: Guard — require project ref
         env:
