@@ -3,88 +3,61 @@
   "owner": "devin-bsuite-closeout-20260919",
   "description": "BSuite 370-prompt remediation closeout: continuous loop, subagent lanes, accountability hooks.",
   "hooks": {
-    "sessionStart": [
+    "SessionStart": [
       {
-        "name": "model-proxy-ensure",
-        "command": "python3 /home/braden/.agents/hooks/model-proxy-ensure.py",
-        "timeout": 15,
-        "required": false
-      },
-      {
-        "name": "bsuite-loop-state-restore",
-        "command": "/home/braden/.agents/scripts/bsuite-status",
-        "timeout": 30,
-        "required": false
-      },
-      {
-        "name": "bsuite-accountability-repoint",
-        "command": "python3 /home/braden/.agents/hooks/accountability-repoint.py",
-        "timeout": 5,
-        "required": false
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "/home/braden/.agents/hooks/bsuite-devin-session-start.sh", "timeout": 60 }
+        ]
       }
     ],
-    "preToolUse": [
+    "PreToolUse": [
       {
-        "name": "pre-destructive-git",
-        "command": "python3 /home/braden/.agents/hooks/pre-destructive-git.py",
-        "timeout": 60,
-        "required": true
+        "matcher": "exec",
+        "hooks": [
+          { "type": "command", "command": "python3 /home/braden/.agents/hooks/pre-destructive-git.py", "timeout": 60 }
+        ]
       },
       {
-        "name": "session-context",
-        "command": "python3 /home/braden/.agents/hooks/session-context.py hook",
-        "timeout": 5,
-        "required": false
-      },
-      {
-        "name": "context-hook",
-        "command": "python3 /home/braden/.agents/hooks/context-hook.py",
-        "timeout": 5,
-        "required": false
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "python3 /home/braden/.agents/hooks/session-context.py hook", "timeout": 5 },
+          { "type": "command", "command": "python3 /home/braden/.agents/hooks/context-hook.py", "timeout": 5 }
+        ]
       }
     ],
-    "postToolUse": [
+    "PostToolUse": [
       {
-        "name": "session-context",
-        "command": "python3 /home/braden/.agents/hooks/session-context.py hook",
-        "timeout": 5,
-        "required": false
-      },
-      {
-        "name": "context-hook",
-        "command": "python3 /home/braden/.agents/hooks/context-hook.py",
-        "timeout": 5,
-        "required": false
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "python3 /home/braden/.agents/hooks/session-context.py hook", "timeout": 5 },
+          { "type": "command", "command": "python3 /home/braden/.agents/hooks/context-hook.py", "timeout": 5 }
+        ]
       }
     ],
-    "userPromptSubmit": [
+    "UserPromptSubmit": [
       {
-        "name": "steer-signal",
-        "command": "python3 /home/braden/.agents/hooks/steer-signal.py",
-        "timeout": 5,
-        "required": false
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "python3 /home/braden/.agents/hooks/steer-signal.py", "timeout": 5 }
+        ]
       }
     ],
-    "stop": [
+    "Stop": [
       {
-        "name": "dod-gate",
-        "command": "python3 /home/braden/.agents/hooks/dod-gate.py",
-        "timeout": 10,
-        "required": false
-      },
-      {
-        "name": "loop-gate",
-        "command": "/home/braden/.agents/scripts/bsuite-loop-gate-check.sh",
-        "timeout": 10,
-        "required": false
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "python3 /home/braden/.agents/hooks/dod-gate.py", "timeout": 10 },
+          { "type": "command", "command": "/home/braden/.agents/scripts/bsuite-loop-gate-check.sh", "timeout": 20 }
+        ]
       }
     ],
-    "sessionEnd": [
+    "SessionEnd": [
       {
-        "name": "bsuite-memory-sync",
-        "command": "/home/braden/.agents/hooks/bsuite-memory-sync-hook.sh /home/braden/Desktop/Dev/bsuite/.playwright-mcp",
-        "timeout": 60,
-        "required": false
+        "matcher": "",
+        "hooks": [
+          { "type": "command", "command": "/home/braden/.agents/hooks/bsuite-memory-sync-hook.sh /home/braden/Desktop/Dev/bsuite/.playwright-mcp", "timeout": 60 }
+        ]
       }
     ]
   },
