@@ -1223,3 +1223,13 @@ Command-backed progress:
 - `python3 patch-truth-index-coordination-devin.py` → `bsuite_project_truth_index.current_coordination.owner` updated to `devin-bsuite-closeout-20260919`, length and sha256 verified.
 
 Remaining gates at end of this pass: `ledger_pending=357`, `ledger_in_progress=19`, `main_behind_dev_total=11`, `prod_crm7_lag_commits=2`. Promotion PRs and their monitor are the next live work.
+
+## Escalation paths — 2026-09-19
+
+Verified against the local model proxy at `http://127.0.0.1:8820` (`~/.claude/model-proxy/config.json`):
+- `fable` is a passthrough prefix → Anthropic Claude Fable.
+- Fable fallback chain (when Anthropic rejects): `gpt-6-astra` → `glm-5.3` → `qwen3.8-max` → `kimi-k3` → `deepseek-v4-pro` → `gpt-5.6-sol`.
+- `gpt-6-astra` route is the explicit Astra path via OpenRouter (`openai/gpt-6-astra`), tier `flagship`, reserved for impassable obstacles.
+- `gpt-5.6-sol` is also available via OpenRouter as a Fable-tier peer.
+
+These routes are live in the proxy and can be invoked by model id for high-level reasoning / deadlock-breaking without operator intervention.
