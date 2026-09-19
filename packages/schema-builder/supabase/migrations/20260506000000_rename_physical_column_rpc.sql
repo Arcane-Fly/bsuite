@@ -53,7 +53,6 @@
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
 
-BEGIN;
 
 -- 1. Audit log table — one row per attempted schema mutation (dry-run or wet-run).
 CREATE TABLE IF NOT EXISTS public.schema_mutations_audit (
@@ -332,4 +331,3 @@ comment on function public.rename_physical_column(uuid, uuid, text, boolean) is
   'false, reason: ''no_physical_table'' } when the entity has no matching '
   'public.<name> table. See docs/20260504-schema-builder-phase-3-plan-v1.00W.md §3.B.';
 
-COMMIT;
