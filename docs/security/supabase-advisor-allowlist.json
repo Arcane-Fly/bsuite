@@ -519,6 +519,30 @@
    ],
    "reason": "The RLS predicate added by business-suite-unified migration 20261201010300_recover_team_invitation_capacity_lock (applied to production), which replaced a team_invitations INSERT policy that queried team_invitations from inside its own WITH CHECK and so recursed under RLS.\n\nThis is the ESTABLISHED ACCEPTED CLASS on this list: RLS PREDICATES. team_invitations_admin_insert (FOR INSERT TO authenticated) calls it in WITH CHECK, and a policy expression is evaluated as the querying role, so revoking EXECUTE from authenticated would not narrow who can invite; it would fail every direct invitation insert. SECURITY DEFINER is what lets the predicate count team_invitations without re-entering that table's own policies.\n\nVERIFIED LIVE 2026-09-16 against the production catalog (SELECT only):\n  * SECURITY DEFINER, VOLATILE, search_path pinned to 'public, pg_temp'.\n  * proacl {postgres, service_role, authenticated}=X; has_function_privilege('anon', ...) = FALSE.\n  * The live body is the migration's body exactly (908 bytes; whitespace-normalised md5 identical to the file).\n  * Referenced by exactly ONE policy (public.team_invitations team_invitations_admin_insert) and by no other function.\n\nIt cannot be pointed at anyone else. It returns FALSE, before taking any lock or reading any row, unless p_user_id IS auth.uid(), the caller is_team_admin of p_team_id, and p_tenant_id is one of the caller's own auth_tenant_id() tenants. Only then does it take the per-tenant advisory transaction lock (lock_team_seat_capacity, which authenticated cannot execute) and return one BOOLEAN: whether members plus live pending invitations are below the tenant's latest subscription seat_count. No row data leaves the function.",
    "review": "Re-justify if the signature changes (objects match by full signature), if any policy other than team_invitations_admin_insert or any function starts calling it, or if the early-return checks on auth.uid(), is_team_admin and auth_tenant_id() are ever loosened."
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Applied 2026-09-19 by supabase-migrate dispatch 35446935771; the functions were designed in the migrations that landed on the app mains and sit in the same classes this file already carries. auth_staff_tenant_id() is the RLS helper crm7#2641 portal guest policies evaluate in the caller's context (20261207010000) — revoking EXECUTE from authenticated breaks every policy that calls it. tenant_link_directory(p_tenant_id) is the crm7#2618 JODIE tool RPC: SECURITY DEFINER is load-bearing (indirect reads need the catalog the caller cannot see), and the p_tenant_id overload binds the tool read to the chat tenant and 42501s on mismatch. r7_user_has_tenant_role + data_grant_explicit_table_row_permit are the conduit#229 write-predicate helpers (20260910010000) — the authority contract is operator-approved 2026-09-11 and the predicates ARE the authorization, callable so an RPC can return its denial. r7_enqueue_rejection_optin_email(p_candidate_id) is deliberately the ONLY authenticated write onto r7_automation_queue (20260909230000): it takes no subject/body/link params so the tenant gate cannot become an arbitrary send. anon is not granted on any of these.",
+   "added": "2026-09-19",
+   "objects": [
+    "auth_staff_tenant_id()",
+    "tenant_link_directory(p_tenant_id uuid)",
+    "r7_user_has_tenant_role(p_tenant_id uuid, p_required_portal_roles text[])",
+    "data_grant_explicit_table_row_permit(p_tenant_id uuid, p_table_schema text, p_table_name text, p_row jsonb)",
+    "r7_enqueue_rejection_optin_email(p_candidate_id uuid)"
+   ]
+  },
+  {
+   "lint": "security_definer_view",
+   "object_type": "view",
+   "mode": "accepted",
+   "reason": "report_templates_portal_ref is the portal-facing projection of report templates behind the crm7#2641 guest RLS work: the view exists so portal sessions see only the shared/portal-safe template rows through a pinned definition — the underlying table's grants stay closed to portal roles. SECURITY DEFINER is the mechanism, same class as the portal SECDEF helpers already in this file. Applied via the 2026120702 portal migration set (dispatch 35446935771).",
+   "added": "2026-09-19",
+   "objects": [
+    "report_templates_portal_ref"
+   ]
   }
  ],
  "entries": [
