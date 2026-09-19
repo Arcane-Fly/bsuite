@@ -73,8 +73,47 @@
  * USAGE
  *   node scripts/supabase/rehearse-migrations.mjs --plan
  *   node scripts/supabase/rehearse-migrations.mjs --self-test --db-url URL
+ *   node scripts/supabase/rehearse-migrations.mjs --self-test-selection
  *   node scripts/supabase/rehearse-migrations.mjs --apply --db-url URL \
  *        [--changed <path,path>] [--baseline-max 20260807110000]
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ * THE IN-BASELINE RULE IS MEMBERSHIP, NOT MAGNITUDE (bsuite#3147, 2026-09-19)
+ * ─────────────────────────────────────────────────────────────────────────────
+ * A migration is `in-baseline` — its objects already inside the baseline dump —
+ * IFF its version is recorded in the applied-versions artefact that ships
+ * beside the dump (`crm7/supabase/migrations/baseline/applied-versions-*.txt`,
+ * newest by name, exactly one required, fail-closed when absent, empty or
+ * malformed). It used to be `version <= BASELINE_MAX`, a magnitude test that
+ * equals "already applied" only while the ledger holds no version dated after
+ * the baseline's cut. Production's ledger does not satisfy that (823 applied
+ * versions, 64 future-dated, max 20261121000000 at issue time), so the day
+ * anyone refreshed the dump and raised BASELINE_MAX, every migration written
+ * before that date reclassified as in-baseline and the rehearsal selected and
+ * replayed ZERO files — green CI with no subject, for two months.
+ *
+ * crm7/scripts/replay-schema-diff.sh already selects by membership (it asks
+ * the replay database's ledger) and is the reference implementation.
+ *
+ * Consequences, deliberate:
+ *   - BASELINE_MAX is demoted to a SANITY BOUND. Still parsed (both callers
+ *     keep passing it), used only to WARN when the artefact's newest recorded
+ *     version disagrees with it. It never discriminates.
+ *   - The substrate and the skip-set must describe the same posture, so
+ *     rehearsal-bootstrap.sh seeds supabase_migrations.schema_migrations from
+ *     the SAME artefact after applying the dump. A recorded-applied migration
+ *     has its objects in the dump; replaying it would fail on "already
+ *     exists" — an instrument failure that reads like a migration defect.
+ *   - Zero selection against a non-empty discovery set is a HARD FAIL. "0
+ *     selected" can never again read as "all green".
+ *   - `--self-test-selection` exercises the selector without a database: the
+ *     planted control (below a refreshed max, absent from the artefact → must
+ *     replay), the future boundary, membership skips at any magnitude, the
+ *     fail-closed loader, and the zero-selection guard.
+ *
+ * The dump refresh itself is NOT licensed by this change — a refreshed
+ * public-only baseline loses the 97-of-178 migrations building storage/auth/
+ * cron/vault objects and fails 18 pgTAP suites. That is bsuite#3136.
  *
  * The rehearsal database is DISPOSABLE and holds NO production credential.
  * This script must never be pointed at production. --db-url is refused if it
@@ -363,6 +402,86 @@ function collectMigrations(root, scopes) {
     return a.basename < b.basename ? -1 : 1;
   });
   return { migrations: found, missingScopes, manifestDrift };
+}
+
+/* ───────────────────────── the applied-versions artefact ─────────────────────────
+ * bsuite#3147: the in-baseline rule is MEMBERSHIP. This loader resolves the
+ * applied-versions artefact the way rehearsal-bootstrap.sh resolves the dump
+ * (newest by name under crm7/supabase/migrations/baseline/, exactly one
+ * candidate required) and fails CLOSED: zero files, an empty set, or a
+ * malformed entry stops the run. A missing artefact must not degrade to
+ * "nothing is in baseline" (which replays the world) nor to "everything is"
+ * (which replays nothing) — both are silent mis-measurements, so neither is
+ * an available default.
+ */
+function parseAppliedVersionsText(rawText) {
+  const set = new Set();
+  let malformed = 0;
+  let blank = 0;
+  for (const rawLine of rawText.split('\n')) {
+    const line = rawLine.trim();
+    if (line.length === 0) {
+      blank += 1;
+      continue;
+    }
+    // The production ledger keys on `version text` and predates the 14-digit
+    // convention: the real artefact legitimately carries four 8-digit legacy
+    // versions (20250601 … 20260423). Malformed is therefore a NON-DIGIT line,
+    // not a wrong length — strictness that rejects the estate's own data
+    // would fail-closed every run.
+    if (!allDigits(line)) {
+      malformed += 1;
+      continue;
+    }
+    set.add(line);
+  }
+  return { set, malformed, blank };
+}
+
+function loadAppliedVersions(root) {
+  const baselineDir = path.join(root, 'crm7', 'supabase', 'migrations', 'baseline');
+  let candidates = [];
+  try {
+    candidates = fs
+      .readdirSync(baselineDir, { withFileTypes: true })
+      .filter((e) => e.isFile() && e.name.startsWith('applied-versions-') && e.name.endsWith('.txt'))
+      .map((e) => e.name)
+      .sort();
+  } catch {
+    console.error(`::error::cannot read ${baselineDir} — the applied-versions artefact is required (bsuite#3147). Is the crm7 submodule checked out?`);
+    process.exit(2);
+  }
+  if (candidates.length === 0) {
+    console.error(`::error::no applied-versions-*.txt found under ${baselineDir} — the in-baseline rule is membership (bsuite#3147) and refuses to run without the artefact. A missing artefact must not degrade to "nothing is in baseline" (replays the world) or "everything is" (replays nothing).`);
+    process.exit(2);
+  }
+  if (candidates.length > 1) {
+    console.error(`::error::${candidates.length} applied-versions artefacts found under ${baselineDir} — refusing to guess which is production's:`);
+    for (const c of candidates) console.error(`  ${c}`);
+    console.error('Remove the stale one(s) or resolve the collision before rehearsing.');
+    process.exit(2);
+  }
+  const relArtefact = path.posix.join('crm7/supabase/migrations/baseline', candidates[0]);
+  const raw = fs.readFileSync(path.join(baselineDir, candidates[0]), 'utf8');
+  const { set, malformed, blank } = parseAppliedVersionsText(raw);
+  if (set.size === 0) {
+    console.error(`::error::applied-versions artefact ${relArtefact} parsed to an EMPTY set — refusing to treat "nothing recorded" as a rule. Was the artefact truncated?`);
+    process.exit(2);
+  }
+  if (malformed > 0) {
+    console.error(`::error::applied-versions artefact ${relArtefact} holds ${malformed} malformed line(s) (expected bare digit versions) — refusing to guess which entries are real versions.`);
+    process.exit(2);
+  }
+  const versions = [...set].sort();
+  return {
+    file: relArtefact,
+    set,
+    count: set.size,
+    malformed,
+    blank,
+    max: versions[versions.length - 1],
+    min: versions[0],
+  };
 }
 
 /* ───────────────────────── psql plumbing ───────────────────────── */
@@ -848,27 +967,275 @@ function runSelfTest(dbUrl, tmpDir) {
   return outcomes;
 }
 
+/* ───────────────────────── the selection rule (bsuite#3147) ─────────────────────────
+ * PURE functions — no filesystem, no database, no clock — so
+ * `--self-test-selection` can exercise them against synthetic inputs in CI
+ * without a database, and the planted control can be asserted both ways.
+ */
+function baselineMaxDrift(artefactMax, baselineMax) {
+  if (artefactMax === null || baselineMax === null) return { drifted: false, artefactMax, baselineMax };
+  return { drifted: artefactMax !== baselineMax, artefactMax, baselineMax };
+}
+
+/**
+ * Classify ONE migration. Order mirrors the old replay loop exactly: floor
+ * first, then baseline membership, then quarantine. Only the in-baseline test
+ * changed — it is MEMBERSHIP in the applied set, never a magnitude comparison.
+ * A version above every recorded version replays; so does one below a
+ * refreshed BASELINE_MAX whose application the artefact does not record (the
+ * planted control, bsuite#3147 acceptance #2).
+ */
+function classifyMigration(migration, context) {
+  if (migration.version < context.floor) {
+    return { status: 'below-floor' };
+  }
+  if (context.appliedSet.has(migration.version)) {
+    // Recorded applied on production, so the baseline dump already carries its
+    // objects. Not a defect; not evidence either.
+    return { status: 'in-baseline' };
+  }
+  if (migration.quarantined) {
+    return { status: 'quarantined' };
+  }
+  return { status: 'selected' };
+}
+
+/**
+ * The single place the estate decides what replays. Returns the selected list
+ * (global order preserved) and the full classification for reporting.
+ */
+function selectForReplay(migrations, context) {
+  const classified = migrations.map((m) => ({ migration: m, ...classifyMigration(m, context) }));
+  return {
+    selected: classified.filter((c) => c.status === 'selected').map((c) => c.migration),
+    classified,
+  };
+}
+
+/* ───────────────────────── selection self-test (no database) ─────────────────────────
+ * bsuite#3147 acceptance #1/#2, positive-control doctrine: the existing
+ * `--self-test` exercises the EXECUTOR (it writes SQL and replays it); the
+ * SELECTOR was the part nobody had ever seen discriminate. These cases run
+ * against synthetic migration lists and a synthetic applied set — no
+ * database, so CI can run them as a fast step before the 45-minute replay.
+ * Each case asserts the expected-pass direction AND the reverted-code-fail
+ * direction where the old magnitude rule would have disagreed.
+ */
+function runSelectionSelfTest() {
+  const FLOOR = '20260611000000';
+  // A refreshed BASELINE_MAX — the exact value that would have blinded the
+  // old magnitude rule (production's ledger max at issue time).
+  const REFRESHED_MAX = '20261121000000';
+  const mk = (version, extra = {}) => ({
+    version,
+    basename: `${version}_synthetic.sql`,
+    rel: `synthetic/${version}_synthetic.sql`,
+    quarantined: false,
+    ...extra,
+  });
+  const outcomes = [];
+  const record = (name, ok, detail) => {
+    outcomes.push({ name, ok, expected: ok ? 'pass' : 'fail', actual: ok ? 'pass' : 'fail', detail });
+  };
+
+  // 1. THE PLANTED CONTROL (acceptance #2). Version BELOW a refreshed
+  //    BASELINE_MAX, ABSENT from the applied set: the old magnitude rule
+  //    skipped it; membership must SELECT it. Assert both directions.
+  {
+    const planted = mk('20260908999999');
+    const appliedSet = new Set([REFRESHED_MAX]);
+    const oldRuleStatus = planted.version <= REFRESHED_MAX ? 'in-baseline' : 'selected';
+    const newStatus = classifyMigration(planted, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    const ok = newStatus === 'selected' && oldRuleStatus === 'in-baseline';
+    record(
+      'PLANTED CONTROL — below refreshed max, absent from artefact: membership SELECTS where magnitude skipped',
+      ok,
+      `oldRule=${oldRuleStatus} newRule=${newStatus} (control must replay; the old rule skipped it)`,
+    );
+  }
+
+  // 2. FUTURE BOUNDARY (acceptance #1). A version after the newest recorded
+  //    version still replays.
+  {
+    const newest = '20261121000000';
+    const future = mk('20261201010500');
+    const appliedSet = new Set([newest, '20250601', '20260423']);
+    const status = classifyMigration(future, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    record(
+      'FUTURE BOUNDARY — after the newest recorded version: replays',
+      status === 'selected',
+      `status=${status} (newest applied ${newest})`,
+    );
+  }
+
+  // 3. MEMBERSHIP SKIP. Present in the applied set at ANY magnitude above
+  //    the floor is in-baseline — including a pre-2026-08 version and the
+  //    refreshed max itself.
+  {
+    const appliedSet = new Set([REFRESHED_MAX, '20260701000000']);
+    const recorded = mk(REFRESHED_MAX);
+    const mid = mk('20260701000000');
+    const a = classifyMigration(recorded, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    const b = classifyMigration(mid, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    record(
+      'MEMBERSHIP SKIP — present in the artefact at any magnitude above the floor: in-baseline',
+      a === 'in-baseline' && b === 'in-baseline',
+      `atMax=${a} mid2026=${b}`,
+    );
+  }
+
+  // 4. BELOW-FLOOR STILL FIRST. The floor keeps precedence over membership —
+  //    a version both below the floor and recorded applied stays below-floor
+  //    (same verdict as the old rule, which tested floor before baseline).
+  {
+    const appliedSet = new Set(['20260423']);
+    const below = mk('20260101000000');
+    const status = classifyMigration(below, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    record(
+      'FLOOR PRECEDENCE — below floor: below-floor even when recorded applied',
+      status === 'below-floor',
+      `status=${status}`,
+    );
+  }
+
+  // 5. QUARANTINE PRESERVED. A selected-by-membership file that is
+  //    quarantined stays quarantined (estate debt, unchanged by this issue).
+  {
+    const quarantined = mk('20260908999999', { quarantined: true });
+    const status = classifyMigration(quarantined, { appliedSet: new Set(), baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    record('QUARANTINE PRESERVED — quarantined and not applied: quarantined', status === 'quarantined', `status=${status}`);
+  }
+
+  // 6. DIVERGENCE MAP — the two rules disagree in exactly one shape, and the
+  //    self-test pins BOTH directions of it. (a) Recorded applied above the
+  //    pre-issue max: magnitude replayed it, membership skips it — this is
+  //    the measured 259 files on today's tree (post-dump-date applications).
+  //    (b) Unrecorded below ANY bound: magnitude skipped it, membership
+  //    replays it — the planted control's shape. Every other combination
+  //    agrees, and that agreement is what keeps the change scoped.
+  {
+    const oldMax = '20260807110000';
+    const appliedSet = new Set(['20260815000000', '20260901000000']);
+    const recordedAboveOldMax = mk('20260815000000');
+    const a = classifyMigration(recordedAboveOldMax, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    const unrecordedBelowOldMax = mk('20260701000000');
+    const b = classifyMigration(unrecordedBelowOldMax, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    const unrecordedAboveOldMax = mk('20260820000000');
+    const c = classifyMigration(unrecordedAboveOldMax, { appliedSet, baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    const ok =
+      a === 'in-baseline' &&
+      b === 'selected' &&
+      c === 'selected' &&
+      recordedAboveOldMax.version > oldMax &&
+      unrecordedBelowOldMax.version <= oldMax &&
+      unrecordedAboveOldMax.version > oldMax;
+    record(
+      'DIVERGENCE — recorded-above-max skipped (membership only); unrecorded-below-any-max replayed; unrecorded-above-max replayed by both',
+      ok,
+      `recordedAboveMax=${a} unrecordedBelowMax=${b} unrecordedAboveMax=${c}`,
+    );
+  }
+
+  // 7. ZERO-SELECTION GUARD (acceptance #3). The pure predicate flags a
+  //    mocked 0-selected run against a non-empty discovery set; selected>0
+  //    and empty-discovery are clear.
+  {
+    const maskedFlagged = isSelectionMasked(0, 948);
+    const selectedClear = !isSelectionMasked(5, 948);
+    const emptyDiscoveryClear = !isSelectionMasked(0, 0);
+    record(
+      'ZERO-SELECTION GUARD — 0 of 948 is masked; selected>0 is clear; 0 of 0 is clear',
+      maskedFlagged && selectedClear && emptyDiscoveryClear,
+      `maskedFlagged=${maskedFlagged} selectedClear=${selectedClear} emptyDiscoveryClear=${emptyDiscoveryClear}`,
+    );
+  }
+
+  // 8. DRIFT SIGNAL. baselineMaxDrift fires on inequality in either
+  //    direction and stays silent on equality or a null bound.
+  {
+    const a = baselineMaxDrift('20260807110000', '20261121000000').drifted;
+    const b = baselineMaxDrift('20261121000000', '20260807110000').drifted;
+    const c = baselineMaxDrift('20260807110000', '20260807110000').drifted;
+    const d = baselineMaxDrift('20261121000000', null).drifted;
+    record('DRIFT SIGNAL — unequal bounds drift, equal/null do not', a && b && !c && !d, `gt=${a} lt=${b} eq=${c} null=${d}`);
+  }
+
+  // 9. PARSE — fail-closed loader inputs. All-digit lines (including the
+  //    estate's four legacy 8-digit versions) parse; a non-digit line is
+  //    malformed; blank lines are tolerated; dedupe is a property.
+  {
+    const good = parseAppliedVersionsText('20250601\n20260807110000\n20261121000000\n');
+    const withJunk = parseAppliedVersionsText('20260807110000\nnot-a-version\n20261121000000\n');
+    const dedupes = parseAppliedVersionsText('20260807110000\n20260807110000\n');
+    const empty = parseAppliedVersionsText('\n\n');
+    const ok =
+      good.set.size === 3 &&
+      good.malformed === 0 &&
+      withJunk.set.size === 2 &&
+      withJunk.malformed === 1 &&
+      dedupes.set.size === 1 &&
+      empty.set.size === 0;
+    record(
+      'PARSE — digit versions (incl. legacy 8-digit) parse; junk counts as malformed; empty stays empty',
+      ok,
+      `good=${good.set.size}/${good.malformed} junk=${withJunk.set.size}/${withJunk.malformed} dup=${dedupes.set.size} empty=${empty.set.size}`,
+    );
+  }
+
+  // 10. CLASSIFICATION ORDER — floor beats membership, membership beats
+  //     quarantine. A file that is below floor AND recorded applied AND
+  //     quarantined must come out below-floor.
+  {
+    const allThree = mk('20260101000000', { quarantined: true });
+    const status = classifyMigration(allThree, { appliedSet: new Set(['20260101000000']), baselineMax: REFRESHED_MAX, floor: FLOOR }).status;
+    record('CLASSIFICATION ORDER — floor > membership > quarantine', status === 'below-floor', `status=${status}`);
+  }
+
+  console.log('Selection self-test (no database) — the selector must discriminate, in both directions:\n');
+  let allOk = true;
+  for (const o of outcomes) {
+    const mark = o.ok ? 'OK  ' : 'BAD ';
+    if (!o.ok) allOk = false;
+    console.log(`  ${mark} ${o.name}`);
+    console.log(`       ${o.detail}`);
+  }
+  if (!allOk) {
+    console.error('\n::error::selection self-test did not reproduce its expected verdicts — the SELECTION RULE is broken, not the tree.');
+    return 1;
+  }
+  console.log('\nSelection self-test passed: membership selects the unrecorded (planted control), skips the recorded, keeps floor and quarantine, and 0-selected cannot read as green.');
+  return 0;
+}
+
+/**
+ * bsuite#3147 acceptance #3, as functions so --self-test-selection can prove
+ * them: a selection rule that skips the entire estate is a failure, never a
+ * quiet "nothing to do". A 0-selected run must exit non-zero.
+ */
+const ZERO_SELECTION_ERROR =
+  '0 migrations selected for replay — the selection rule skipped the entire estate; this gate must never read "nothing to do" as "all green"';
+
+/** PURE predicate — no printing, so the self-test can probe it silently. */
+function isSelectionMasked(selectedCount, discoveredCount) {
+  return selectedCount === 0 && discoveredCount > 0;
+}
+
+function assertSelectionNotMasked(selectedCount, discoveredCount) {
+  if (isSelectionMasked(selectedCount, discoveredCount)) {
+    console.error(`::error::${ZERO_SELECTION_ERROR}`);
+    return false;
+  }
+  return true;
+}
+
 /* ───────────────────────── replay ───────────────────────── */
 
 function replay(dbUrl, migrations, options) {
-  const { baselineMax, changedSet, floor } = options;
+  const { appliedSet, changedSet, floor } = options;
   const results = [];
+  const { selected } = selectForReplay(migrations, { appliedSet, floor });
 
-  for (const migration of migrations) {
-    if (migration.version < floor) {
-      results.push({ ...migration, status: 'below-floor' });
-      continue;
-    }
-    if (baselineMax !== null && migration.version <= baselineMax) {
-      // Captured by the baseline dump — the objects are already present, so a
-      // replay would fail on "already exists". Not a defect; not evidence either.
-      results.push({ ...migration, status: 'in-baseline' });
-      continue;
-    }
-    if (migration.quarantined) {
-      results.push({ ...migration, status: 'quarantined' });
-      continue;
-    }
+  for (const migration of selected) {
 
     const isChanged = changedSet.has(migration.rel);
     // Census is expensive (9 queries over the whole catalog). Only the
@@ -946,6 +1313,7 @@ function parseArgs(argv) {
     else if (arg === '--plan') { options.mode = 'plan'; }
     else if (arg === '--apply') { options.mode = 'apply'; }
     else if (arg === '--self-test') { options.mode = 'self-test'; }
+    else if (arg === '--self-test-selection') { options.mode = 'self-test-selection'; }
     else if (arg === '--prove-env') { options.mode = 'prove-env'; }
     else if (arg === '--json') { options.json = true; }
     else if (arg === '-h' || arg === '--help') { options.mode = 'help'; }
@@ -961,6 +1329,13 @@ function main() {
     return 0;
   }
 
+  // --self-test-selection needs no repository, no artefact and no database: it
+  // proves the SELECTION RULE on synthetic inputs, dispatching before the
+  // repository scan below.
+  if (options.mode === 'self-test-selection') {
+    return runSelectionSelfTest();
+  }
+
   const scopes = loadScopes(options.root);
   const { migrations, missingScopes, manifestDrift } = collectMigrations(options.root, scopes);
   for (const scopeId of manifestDrift) {
@@ -970,27 +1345,61 @@ function main() {
     );
   }
 
-  if (options.mode === 'plan') {
-    const eligible = migrations.filter(
-      (m) => m.version >= options.floor && (options.baselineMax === null || m.version > options.baselineMax),
+  // bsuite#3147: the artefact drives selection in EVERY mode. Load it once,
+  // before any branching, so plan/apply share one source of truth.
+  const applied = loadAppliedVersions(options.root);
+  // --plan --json keeps its old stdout contract: JSON ONLY on stdout. The
+  // artefact rides inside the payload as `applied`; prose goes to stderr.
+  const jsonOnly = options.mode === 'plan' && options.json;
+  const drift = baselineMaxDrift(applied.max, options.baselineMax);
+  if (jsonOnly) {
+    if (drift.drifted) {
+      console.error(
+        `::warning::BASELINE_MAX ${options.baselineMax} does not equal the applied-versions artefact's newest recorded version ${applied.max} — BASELINE_MAX no longer discriminates (bsuite#3147).`,
+      );
+    }
+  } else {
+    console.log(
+      `Applied-versions artefact: ${applied.file} — ${applied.count} version(s) recorded ` +
+        `(newest ${applied.max}, oldest ${applied.min}).`,
     );
+    if (drift.drifted) {
+      console.log(
+        `::warning::BASELINE_MAX ${options.baselineMax} does not equal the applied-versions artefact's newest recorded version ${applied.max} ` +
+          '— the two describe the same fact and disagree. BASELINE_MAX no longer discriminates (bsuite#3147); ' +
+          'this warning exists so the drift is SEEN. If the artefact is the stale half, refresh it; if BASELINE_MAX is the stale half, update the env in supabase-migration-rehearsal.yml and rehearse-local.sh.',
+      );
+    }
+  }
+
+  if (options.mode === 'plan') {
+    const { selected, classified } = selectForReplay(migrations, { appliedSet: applied.set, floor: options.floor });
     if (options.json) {
-      console.log(JSON.stringify({ total: migrations.length, eligible, missingScopes }, null, 2));
+      console.log(JSON.stringify({ total: migrations.length, eligible: selected, missingScopes, applied }, null, 2));
       return 0;
     }
+    const inBaselineCount = classified.filter((c) => c.status === 'in-baseline').length;
     console.log(`Scopes with a migrations directory present: ${scopes.length - missingScopes.length}/${scopes.length}`);
     if (missingScopes.length > 0) {
       console.log(`  NOT CHECKED OUT (cannot rehearse): ${missingScopes.join(', ')}`);
     }
     console.log(`Migrations discovered: ${migrations.length}`);
-    console.log(`Eligible for replay (>= floor ${options.floor}${options.baselineMax ? `, > baseline ${options.baselineMax}` : ''}): ${eligible.length}`);
+    console.log(
+      `Selected for replay (>= floor ${options.floor}, NOT recorded in the applied-versions artefact ${applied.file}): ${selected.length}`,
+    );
+    console.log(`  (in-baseline by membership: ${inBaselineCount} — recorded applied, their objects are already in the baseline dump)`);
     const byScope = {};
-    for (const m of eligible) byScope[m.scope] = (byScope[m.scope] || 0) + 1;
+    for (const m of selected) byScope[m.scope] = (byScope[m.scope] || 0) + 1;
     for (const [scope, count] of Object.entries(byScope).sort()) {
       console.log(`    ${scope}: ${count}`);
     }
+    // bsuite#3147 acceptance #3: 0 selected against a non-empty discovery set
+    // can never again read as "all green" — plan mode says so too.
+    if (!assertSelectionNotMasked(selected.length, migrations.length)) {
+      return 2;
+    }
     console.log('\nGlobal replay order (first 20):');
-    for (const m of eligible.slice(0, 20)) {
+    for (const m of selected.slice(0, 20)) {
       console.log(`  ${m.version}  ${m.scope.padEnd(24)} ${m.basename}${m.quarantined ? '  [QUARANTINED]' : ''}`);
     }
     return 0;
@@ -1039,12 +1448,20 @@ function main() {
     return 2;
   }
 
+  const { selected } = selectForReplay(migrations, { appliedSet: applied.set, floor: options.floor });
+  console.log(`Selected for replay: ${selected.length} (of ${migrations.length} discovered — the rest are below the floor, recorded applied, or quarantined).`);
+  // bsuite#3147 acceptance #3: a selection rule that skips the entire estate
+  // must fail loudly, not print a summary of a replay that never happened.
+  if (!assertSelectionNotMasked(selected.length, migrations.length)) {
+    return 2;
+  }
+
   const before = proveEnvironment(options.dbUrl, BASE_PROBES);
   console.log('\nEnvironment BEFORE replay:');
   for (const probe of before) console.log(`  ${probe.label.padEnd(28)} = ${probe.value}`);
 
   const results = replay(options.dbUrl, migrations, {
-    baselineMax: options.baselineMax,
+    appliedSet: applied.set,
     changedSet,
     floor: options.floor,
   });

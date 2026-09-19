@@ -75,9 +75,10 @@ Five phases, in this order. The order matters — the instrument is checked befo
 |---|---|
 | **Preflight** | Counts the migrations in each of the six apps, and the baseline. If an app is missing it stops. A rehearsal missing an app is not a rehearsal — it would find nothing wrong and call that a pass. |
 | **Port check** | Makes sure it is about to talk to *its own* database and not one of yours. See "If you see..." below. |
+| **Selection self-test** | Proves the *selector* can discriminate — that a migration absent from the applied-versions artefact is replayed even when it sits below `BASELINE_MAX`, and that 0-selected can never read as green (bsuite#3147). Needs no database. |
 | **Positive control** | Feeds the checker a good migration, a broken one, and a silent no-op, and requires it to get all three right. **If this step fails, stop** — the instrument is broken and nothing below it means anything. |
-| **Substrate** | Builds the production baseline: ~363 tables, ~983 security policies, Postgres 17.6 — the same major version production runs. |
-| **Rehearse** | Replays all ~780 migrations in global version order, then reports on the ones you changed. |
+| **Substrate** | Builds the production baseline: ~363 tables, ~983 security policies, Postgres 17.6 — the same major version production runs. Since bsuite#3147 it also seeds `supabase_migrations.schema_migrations` from the applied-versions artefact, so the substrate and the replay skip-set describe the same posture. |
+| **Rehearse** | Replays every migration the tree still needs in global version order, then reports on the ones you changed. |
 
 The verdict for each migration you changed:
 
@@ -86,7 +87,11 @@ The verdict for each migration you changed:
   Fix it, or if the migration genuinely only moves *data* rather than changing shape, mark it with a
   line reading exactly `-- rehearsal: data-only`.
 - **FAILED** — it errored. The first few lines of the database's complaint are printed.
-- **in-baseline / below-floor** — already inside the production baseline, or older than the cutoff.
+- **in-baseline / below-floor** — already recorded in the applied-versions artefact that ships beside
+  the baseline dump (`crm7/supabase/migrations/baseline/applied-versions-*.txt`), or older than the
+  cutoff. Since bsuite#3147 the in-baseline rule is **membership**, not version arithmetic: a
+  migration whose version is below `BASELINE_MAX` but which the artefact does not record is
+  *replayed*, not skipped — that is the planted control that caught the old rule going blind.
   Not judged; nothing to do.
 
 The script exits non-zero and says **"this would not have been safe to ship"** if anything you
@@ -127,6 +132,20 @@ Without them the rehearsal would replay 22 of 780 migrations and cheerfully repo
 
 **"baseline dump missing"**
 Same cause — the baseline lives inside the crm7 app directory. Same fix.
+
+**"no applied-versions-*.txt found"** or **"N applied-versions artefacts found"**
+The in-baseline rule is **membership** (bsuite#3147): the rehearsal skips only migrations recorded
+in `applied-versions-*.txt` beside the dump, so that artefact is required, and exactly one of it.
+Missing means the submodules are not checked out; more than one means a stale artefact was left
+behind after a baseline refresh. Remove the stale one(s) — the engine fails closed rather than
+guessing which file is production's.
+
+**"0 migrations selected for replay"**
+The selection rule skipped the entire estate and the run refuses to read that as "nothing to do".
+This is a hard stop added by bsuite#3147: a refreshed baseline with a raised `BASELINE_MAX` used to
+silently select zero migrations for two months while CI stayed green. If you see it, the
+applied-versions artefact and the tree have come apart — check which migrations the artefact
+records versus what the scopes actually contain.
 
 **"the docker daemon is not reachable"**
 Docker isn't running. Start it.
