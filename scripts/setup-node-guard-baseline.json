@@ -1,17 +1,4 @@
 {
-  "_comment": "Baseline ratchet for the cross-repo setup-node guard (bsuite#3150, --scope mode). These are the KNOWN unguarded setup-node@v5 steps on the PINNED app-main gitlinks while their fixes (crm7#5fc97b0aa, business-suite-unified#72ad87b — both on app development) wait for promotion. The ratchet bites in BOTH directions: any violation not listed here fails the guard, and any entry here that no longer matches a live violation ALSO fails the guard — meaning the app promoted and the entry must be deleted now. Never edit an entry's numbers to make a failure go away.",
-  "entries": [
-    {
-      "app": "crm7",
-      "file": ".github/workflows/control-boundary-contrast.yml",
-      "steps": 1,
-      "guards": 0
-    },
-    {
-      "app": "business-suite-unified",
-      "file": ".github/workflows/control-boundary-contrast.yml",
-      "steps": 1,
-      "guards": 0
-    }
-  ]
+  "_comment": "Baseline ratchet for the cross-repo setup-node guard (bsuite#3150, --scope mode). These are the KNOWN unguarded setup-node@v5 steps on the PINNED app-main gitlinks while their fixes (crm7#5fc97b0aa, business-suite-unified#72ad87b \u2014 both on app development) wait for promotion. The ratchet bites in BOTH directions: any violation not listed here fails the guard, and any entry here that no longer matches a live violation ALSO fails the guard \u2014 meaning the app promoted and the entry must be deleted now. Never edit an entry's numbers to make a failure go away.",
+  "entries": []
 }
