@@ -1,3 +1,14 @@
+---
+kind: plan
+authority: engineering
+owner: bsuite
+evidence:
+  - scripts/supabase/rehearse-migrations.mjs
+  - scripts/supabase/rehearsal-bootstrap.sh
+  - scripts/supabase/rehearse-local.sh
+  - .github/workflows/supabase-migration-rehearsal.yml
+---
+
 # Rehearsing a database change on your own machine
 
 **Status:** v1.00W · Added 2026-08-13 · Audience: the platform operator and anyone about to ship a
