@@ -66,8 +66,7 @@
   --color-bg-surface:    var(--role-bg-surface);
   --color-bg-panel:      var(--role-bg-panel);
   --color-bg-input:      var(--role-bg-input);
-  --color-bg-sunken:     var(--role-bg-sunken);
-  --color-border-strong: var(--role-border-strong);
+  --color-bg-sunken: var(--role-bg-sunken);
   /* `--role-border-interactive` was minted for bsuite#1958 and bound to
      shadcn's `--input` in vars.css, but never given a Tailwind utility here —
      so `border-interactive` did not exist and anything reaching for it fell

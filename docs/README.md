@@ -82,6 +82,7 @@ Top-level documentation for the BSuite multi-project workspace. Contains cross-p
 | `20260731-agent-engineering-patterns-v1.00W.md` | AI SDK standards, multi-file refactor tooling (FF-TOOLING-PATTERNS), reusable code patterns (FF-CODE-PATTERNS) |
 | `20260731-frontend-layout-zindex-standards-v1.00W.md` | Layout rules, suite-wide z-index scale, 3-prompt DOM autopsy system |
 | `20260731-supabase-verification-gates-v1.00W.md` | FF-SUPABASE-GATES-20260610 policy/consumer/live-UX gates, definition of done, database rules |
+| `20260919-visual-dod-gate-standard-v1.00W.md` | **Visual DoD gate standard (bsuite#3138)** — promotion gate blocks NEW visual fails, not any fail; pre-existing FAIL passes only when named by issue number with pointer-style no-touch evidence; UNKNOWN still blocks (V-3); positive-control requirement. Authority for `.github/workflows/promotion-gate.yml` and the `bsuite-ship-visual-promote` rule. |
 
 ### Auth & security references
 

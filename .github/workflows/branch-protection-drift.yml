@@ -21,6 +21,16 @@
 # scripts/check-required-contexts-producible.mjs had already named this exact gap in
 # its own header and placed it in "a nightly lane" — which did not exist. This is it.
 #
+# WHY ALL SEVEN REPOS (bsuite#3141, finding 3)
+#
+# Until 2026-09-19 this workflow watched two of the estate's fourteen protected
+# branches and rendered as green over all fourteen. The dumps are now namespaced
+# per repo (docs/security/branch-protection/<repo>/), the checker derives the repo
+# list from .gitmodules plus the parent, and a repo×branch with no committed dump
+# FAILS (dump-missing) rather than silently checking nothing. The nightly job below
+# runs one node process over the whole estate: 14 `gh api` calls, each cheap, every
+# failure carrying its repo name in the message.
+#
 # WHY THE SELF-TEST RUNS FIRST
 #
 # A drift result is only worth as much as the instrument that produced it, and this
@@ -44,6 +54,13 @@ on:
   schedule:
     - cron: '23 5 * * *'
   workflow_dispatch:
+    # Bisect cheaply: dispatch with repo=crm7 to re-run one repo's comparison
+    # instead of the whole estate.
+    inputs:
+      repo:
+        description: 'Optional single repo slug to compare (default: the whole estate)'
+        required: false
+        default: ''
   pull_request:
     paths:
       - 'scripts/check-branch-protection-drift.mjs'
@@ -75,12 +92,23 @@ jobs:
       # On a pull_request the token is not expected to carry administration read, and
       # a PR must not be blocked by that. The self-test above is what a PR proves;
       # the live comparison is the scheduled lane's job.
+      #
+      # The dispatch input reaches the script through the ENVIRONMENT, never by
+      # string interpolation into the run block: `${{ inputs.repo }}` pasted into
+      # shell is a command-injection sink (semgrep run-shell-injection, flagged on
+      # this file's first multi-repo revision) — an input value is data, not code.
       - name: Compare live protection against the committed dumps
         if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          DISPATCH_REPO: ${{ github.event.inputs.repo }}
         run: |
-          node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
+          if [ -n "$DISPATCH_REPO" ]; then
+            echo "Comparing a single repo: $DISPATCH_REPO"
+            PROTECTION_REPOS="$DISPATCH_REPO" node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
+          else
+            node scripts/check-branch-protection-drift.mjs | tee /tmp/drift.txt
+          fi
         continue-on-error: false
 
       - name: Summary
@@ -95,6 +123,6 @@ jobs:
               echo 'The live comparison produced no output — treat this as UNKNOWN, not clean.'
             fi
             echo
-            echo 'Restore from the newest dump in `docs/security/branch-protection/`;'
+            echo 'Restore from the newest dump in `docs/security/branch-protection/<repo>/`;'
             echo 'the procedure is in the README beside them.'
           } >> "$GITHUB_STEP_SUMMARY"
