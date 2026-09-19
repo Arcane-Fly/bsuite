@@ -53,8 +53,6 @@
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
 
-BEGIN;
-
 -- 1. Audit log table — one row per attempted schema mutation (dry-run or wet-run).
 CREATE TABLE IF NOT EXISTS public.schema_mutations_audit (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -89,7 +87,15 @@ CREATE INDEX IF NOT EXISTS idx_sma_entity
   ON public.schema_mutations_audit (entity_id)
   WHERE entity_id IS NOT NULL;
 
+CREATE INDEX IF NOT EXISTS idx_sma_actor
+  ON public.schema_mutations_audit (actor_id);
+
 ALTER TABLE public.schema_mutations_audit ENABLE ROW LEVEL SECURITY;
+
+-- Data API grants (bsuite#964): authenticated clients read their own tenant's
+-- audit rows through the SELECT policy; service_role manages the table.
+GRANT SELECT ON public.schema_mutations_audit TO authenticated;
+GRANT ALL ON public.schema_mutations_audit TO service_role;
 
 -- SELECT: authenticated users see rows for tenants they belong to.
 DROP POLICY IF EXISTS schema_mutations_audit_select ON public.schema_mutations_audit;
@@ -332,4 +338,3 @@ comment on function public.rename_physical_column(uuid, uuid, text, boolean) is
   'false, reason: ''no_physical_table'' } when the entity has no matching '
   'public.<name> table. See docs/20260504-schema-builder-phase-3-plan-v1.00W.md §3.B.';
 
-COMMIT;
