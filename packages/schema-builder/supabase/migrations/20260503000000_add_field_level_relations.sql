@@ -12,7 +12,6 @@
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
 
-BEGIN;
 
 -- 1. Field-level FK columns (nullable — entity-to-entity rows stay valid)
 --    FK constraints are managed explicitly in a DO block below to guarantee
@@ -167,4 +166,3 @@ BEGIN
   END IF;
 END $$;
 
-COMMIT;
