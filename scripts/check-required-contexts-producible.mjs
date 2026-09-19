@@ -19,7 +19,7 @@
  *      and PUT REPLACES the whole context list. Appending one context by PUT
  *      has erased the other twenty-nine here before. The contexts are therefore
  *      appended with POST, and the before-state is dumped to
- *      docs/security/branch-protection/<branch>-<date>.json in the same PR so
+ *      docs/security/branch-protection/<repo>/<branch>-<date>.json in the same PR so
  *      the rollback is in history rather than in someone's terminal scrollback.
  *
  * This gate reads those COMMITTED DUMPS — not the live API — and asserts, for
@@ -76,6 +76,12 @@ import { compareRatchet, writeBaseline } from './lib/ratchet.mjs';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..');
 const BASELINE = path.join(REPO_ROOT, '.github', 'required-contexts-baseline.json');
+// The dumps are namespaced per repo under branch-protection/<repo>/ (bsuite#3141
+// finding 3). This gate reads the BSUITE namespace only: its job index is this
+// repo's workflows, so other repos' required contexts are unanswerable here —
+// they would false-fail as "unproducible" even though their own repos produce
+// them. bsuite is the parent repo the workflows in .github/workflows/ serve.
+const DUMPS_DIR = path.join(REPO_ROOT, 'docs', 'security', 'branch-protection', 'bsuite');
 
 /**
  * Contexts reported by a GitHub App rather than by a workflow in this repo
@@ -474,15 +480,15 @@ function main(argv) {
 
   const result = evaluate({
     workflowsDir: path.join(REPO_ROOT, '.github', 'workflows'),
-    dumpsDir: path.join(REPO_ROOT, 'docs', 'security', 'branch-protection'),
+    dumpsDir: DUMPS_DIR,
   });
 
   if (result.dumps.length === 0) {
-    console.error('[required-contexts] no committed protection dump under docs/security/branch-protection/.');
+    console.error('[required-contexts] no committed protection dump under docs/security/branch-protection/bsuite/.');
     console.error('  This gate reads the COMMITTED dump, never the live API — with no dump it has');
     console.error('  checked nothing, which is not the same as having found nothing. Dump both');
     console.error('  branches before requiring anything:');
-    console.error('    gh api repos/GaryOcean428/bsuite/branches/development/protection > docs/security/branch-protection/development-$(date +%Y%m%d).json');
+    console.error('    gh api repos/GaryOcean428/bsuite/branches/development/protection > docs/security/branch-protection/bsuite/development-$(date +%Y%m%d).json');
     return 1;
   }
 

@@ -61,7 +61,16 @@ const APPS = [
     scanRoots: ['src'],
     cardTags: ['Card', 'StatCard', 'ServiceCard', 'MagicCard'],
   },
-  { app: 'conduit', scanRoots: ['src'], cardTags: ['Card', 'SummaryCard', 'CounterCard'] },
+  // conduit's PageGridLayout runs the post-inversion default `itemChrome = false`:
+  // the grid item paints no chrome, so the app Card inside a widget slot IS the
+  // painted surface, not a nested frame. canvas-appearance.spec.ts proves it —
+  // flattening those cards removed the only surface and broke e2e.
+  {
+    app: 'conduit',
+    scanRoots: ['src'],
+    cardTags: ['Card', 'SummaryCard', 'CounterCard'],
+    gridItemPaintsChrome: false,
+  },
   { app: 'braden', scanRoots: ['src'], cardTags: ['Card', 'StatCard'] },
   { app: 'throughput', scanRoots: ['src'], cardTags: ['Card', 'StatCard'] },
   { app: 'R80.4', scanRoots: ['src'], cardTags: ['Card', 'StatCard'] },
@@ -83,6 +92,7 @@ for (const cfg of APPS) {
       projectRoot,
       scanRoots: cfg.scanRoots,
       cardTags: cfg.cardTags,
+      gridItemPaintsChrome: cfg.gridItemPaintsChrome,
       extensions: ['.tsx', '.ts'],
     });
   } catch (err) {

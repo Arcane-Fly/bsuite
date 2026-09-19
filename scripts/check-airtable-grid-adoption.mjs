@@ -774,13 +774,29 @@ for (const app of APPS) {
   const exceptionStillMissing = [];
   const contradictions = [];
   const priorExceptionPaths = new Set((existingBaseline?.dataGridOnRowClick?.[app]?.exceptions ?? []).map((e) => e.path));
+  /*
+   * Hand-rolled render-site exceptions — same recorded-judgement pattern as
+   * dataGridOnRowClick above. A `<table>` that is not a data grid at all
+   * (Plate's document-table DOM, an email-layout table) is not convertible
+   * and not a conversion debt; a documented reason excludes it from the
+   * count the same way. An exception naming a file that no longer renders a
+   * `<table>` is stale and fails like the onRowClick contradictions.
+   */
+  const handRolledExceptions = existingBaseline?.handRolledExceptions?.[app] ?? [];
+  const priorHandRolledExceptionPaths = new Set(handRolledExceptions.map((e) => e.path));
+  const handRolledExceptionStale = [];
   for (const file of files) {
     const text = readFileSync(file, 'utf8');
     const t = countTables(text);
     const d = countDataGrid(text);
-    handRolled += t;
+    const rel = relative(ROOT, file);
+    if (priorHandRolledExceptionPaths.has(rel)) {
+      if (t === 0) handRolledExceptionStale.push(rel);
+    } else {
+      handRolled += t;
+      if (t > 0) sites.push(rel);
+    }
     dataGrid += d;
-    if (t > 0) sites.push(relative(ROOT, file));
     if (hasRowLevelClickThrough(text)) clickThrough.push(relative(ROOT, file));
     if (usesDataGrid(text)) {
       const rel = relative(ROOT, file);
@@ -798,7 +814,7 @@ for (const app of APPS) {
       }
     }
   }
-  measured[app] = { handRolled, dataGrid, files: sites.length, filesScanned: files.length };
+  measured[app] = { handRolled, dataGrid, files: sites.length, filesScanned: files.length, handRolledExceptionStale: handRolledExceptionStale.sort() };
   clickThroughByApp[app] = clickThrough.sort();
   /*
    * `missing` EXCLUDES documented exceptions — a file with a recorded reason
@@ -956,6 +972,14 @@ if (updating) {
         exceptions: existingBaseline?.dataGridOnRowClick?.[a]?.exceptions ?? [],
       },
     ])),
+    /* Hand-curated, like dataGridOnRowClick.exceptions: a `<table>` that is
+     * not a data grid (Plate's document-table DOM, a mail-layout table) is
+     * excluded from the hand-rolled count by recorded reason, and the entry
+     * is carried forward verbatim on re-bank. */
+    handRolledExceptions: Object.fromEntries(APPS.map((a) => [
+      a,
+      existingBaseline?.handRolledExceptions?.[a] ?? [],
+    ])),
     _schedule: {
       unit: SCHEDULE_UNIT,
       origin_count: priorSchedule?.origin_count ?? totalNow,
@@ -1074,6 +1098,33 @@ for (const app of APPS) {
   // expected, PASSING state — that is the entire point of an exception. It
   // is excluded from `missing` in the measurement loop already; nothing to
   // check here.
+
+  /*
+   * handRolledExceptions — the same recorded-judgement discipline: a real
+   * reason is required, the file must exist, and it must still render a
+   * `<table>` (an exception whose file no longer renders one is stale —
+   * either the file was converted and the entry is dead, or the `<table>`
+   * was swapped for a `role="table"` div to route around this gate).
+   */
+  for (const ex of baseline.handRolledExceptions?.[app] ?? []) {
+    if (!ex.reason || ex.reason.trim().length < 15) {
+      problems.push(`${app} handRolledExceptions: ${ex.path} has no real reason recorded (need 15+ characters).`);
+    }
+    try {
+      statSync(join(ROOT, ex.path));
+    } catch {
+      problems.push(
+        `${app} handRolledExceptions: ${ex.path} does not exist. The exception is stale — ` +
+          'the file was deleted or renamed. Remove the entry (or update the path) with --update-baseline.',
+      );
+    }
+  }
+  for (const rel of now.handRolledExceptionStale ?? []) {
+    problems.push(
+      `${rel} is a documented hand-rolled-table exception but renders no <table>. ` +
+        'The exception is stale — remove it with --update-baseline.',
+    );
+  }
 }
 
 /*

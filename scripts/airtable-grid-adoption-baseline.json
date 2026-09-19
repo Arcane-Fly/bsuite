@@ -105,7 +105,16 @@
     "conduit": {
       "ceiling": 0,
       "total": 0,
-      "exceptions": []
+      "exceptions": [
+        {
+          "path": "conduit/src/app/(dashboard)/candidates/_gridColumns.tsx",
+          "reason": "Row click was deliberately removed: it fired while editing cells and hijacked the editable-cell interaction. Record navigation is an explicit per-row \"Open\" action instead."
+        },
+        {
+          "path": "conduit/src/app/(dashboard)/candidates/_view.tsx",
+          "reason": "Row click was deliberately removed: it fired while editing cells and hijacked the editable-cell interaction. Record navigation is an explicit per-row \"Open\" action instead."
+        }
+      ]
     },
     "braden": {
       "ceiling": 0,
@@ -126,5 +135,13 @@
     "current_date": "2026-09-04",
     "scanned": 1504,
     "per_week": 6
+  },
+  "handRolledExceptions": {
+    "crm7": [
+      {
+        "path": "crm7/src/components/common/DocumentEditor/TableElements.tsx",
+        "reason": "PlateJS rich-text document-table DOM \u2014 a WYSIWYG editor surface, not a record grid; there is no DataGrid conversion target."
+      }
+    ]
   }
 }
