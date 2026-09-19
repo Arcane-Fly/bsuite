@@ -82,20 +82,67 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const REPO = process.env.PROTECTION_REPO || 'GaryOcean428/bsuite';
 
-/** Newest committed dump per branch: `<branch>-<YYYYMMDD>.json`. */
+/**
+ * The estate, as `.gitmodules` plus the parent declare it. The dumps are
+ * namespaced per repo under docs/security/branch-protection/<repo>/ — every
+ * repo has a `main`, so the old flat `<branch>-<date>.json` scheme collided
+ * across repos (bsuite#3141 finding 3). The first path segment under
+ * `branch-protection/` is the repo slug; `GaryOcean428/<slug>` is the repo the
+ * dump is compared against.
+ */
+const DEFAULT_REPOS = {
+  'GaryOcean428/bsuite': '.',
+  'GaryOcean428/crm7': 'crm7',
+  'GaryOcean428/business-suite-unified': 'business-suite-unified',
+  'GaryOcean428/conduit': 'conduit',
+  'GaryOcean428/braden': 'braden',
+  'GaryOcean428/throughput': 'throughput',
+  'GaryOcean428/R80.4': 'R80.4',
+};
+
+/** Repo slug -> the checkout path of that repo (the parent itself for bsuite). */
+export const REPOS = (() => {
+  // `PROTECTION_REPOS` overrides the derived map entirely — "repos=A,B" or
+  // "repos=A@checkout-path,…" for a bisect run over a subset. Absent, the
+  // estate is read from .gitmodules + the parent, so a new submodule is
+  // picked up without editing this file (the parent is always included).
+  const override = process.env.PROTECTION_REPOS;
+  if (override !== undefined) {
+    const map = {};
+    for (const part of override.split(',').map((s) => s.trim()).filter(Boolean)) {
+      const [slug, dir] = part.split('@');
+      map[slug.startsWith('GaryOcean428/') ? slug : `GaryOcean428/${slug}`] = dir || slug;
+    }
+    return map;
+  }
+  try {
+    const mods = fs.readFileSync(path.join(REPO_ROOT, '.gitmodules'), 'utf8');
+    const map = { 'GaryOcean428/bsuite': '.' };
+    for (const m of mods.matchAll(/^\s*path\s*=\s*(\S+)$/gm)) map[`GaryOcean428/${m[1]}`] = m[1];
+    return map;
+  } catch {
+    return { ...DEFAULT_REPOS };
+  }
+})();
+
+/** Newest committed dump per repo×branch: `<repo>/<branch>-<YYYYMMDD>.json`. */
 export function newestDumps(dumpsDir) {
   if (!fs.existsSync(dumpsDir)) return [];
-  const byBranch = new Map();
-  for (const file of fs.readdirSync(dumpsDir)) {
-    const m = /^(.+)-(\d{8})\.json$/.exec(file);
-    if (!m) continue;
-    const [, branch, date] = m;
-    const prev = byBranch.get(branch);
-    if (!prev || date > prev.date) byBranch.set(branch, { branch, date, file: path.join(dumpsDir, file) });
+  const byRepoBranch = new Map();
+  for (const entry of fs.readdirSync(dumpsDir, { withFileTypes: true })) {
+    if (!entry.isDirectory() || entry.name === 'rulesets') continue; // per-repo namespace only
+    const repoDir = path.join(dumpsDir, entry.name);
+    for (const file of fs.readdirSync(repoDir)) {
+      const m = /^(.+)-(\d{8})\.json$/.exec(file);
+      if (!m) continue;
+      const [, branch, date] = m;
+      const key = `${entry.name}/${branch}`;
+      const prev = byRepoBranch.get(key);
+      if (!prev || date > prev.date) byRepoBranch.set(key, { branch, date, file: path.join(repoDir, file), repoDir: entry.name });
+    }
   }
-  return [...byBranch.values()].sort((a, b) => a.branch.localeCompare(b.branch));
+  return [...byRepoBranch.values()].sort((a, b) => a.repoDir.localeCompare(b.repoDir) || a.branch.localeCompare(b.branch));
 }
 
 const enabled = (v) => Boolean(v && typeof v === 'object' ? v.enabled : v);
@@ -107,10 +154,12 @@ const enabled = (v) => Boolean(v && typeof v === 'object' ? v.enabled : v);
  *   { kind: 'unprotected' }        404, and the branch object says protected=false
  *   { kind: 'ambiguous', detail }  404, but the branch object says protected=true
  *   { kind: 'unreadable', detail } the call failed for any other reason
+ * `dump.repo` is `GaryOcean428/<slug>`; `at` renders as `<slug>@<branch>` so a
+ * finding names the repo it belongs to.
  */
 export function compareBranch(dump, live) {
   const out = [];
-  const at = dump.branch;
+  const at = `${dump.repo.split('/')[1]}@${dump.branch}`;
 
   if (live.kind === 'unprotected') {
     out.push({ severity: 'fail', branch: at, code: 'protection-absent',
@@ -162,21 +211,52 @@ export function compareBranch(dump, live) {
   return out;
 }
 
-export function evaluate({ dumpsDir, read }) {
+/** The branches whose protection defines the estate's posture — both on every repo. */
+export const PROTECTED_BRANCHES = ['main', 'development'];
+
+/**
+ * Walk every committed dump (each namespaced under `<repo>/`) and compare it
+ * against the live protection of `GaryOcean428/<repo>` via `read(slug, branch)`.
+ * `repos` defaults to the derived estate map; the self-test pins its own so the
+ * fixture's two repos are the whole universe. A repo×branch with no committed
+ * dump is a finding, not a silent skip — a gate that checked 2 of 14 estate
+ * branches must not render as green over 14.
+ */
+export function evaluate({ dumpsDir, read, repos = REPOS, reposExplicit = false }) {
   const dumps = newestDumps(dumpsDir);
   const findings = [];
+  const seen = new Set(dumps.map((d) => `${d.repoDir}/${d.branch}`));
+  for (const repoDir of Object.keys(repos).map((r) => r.split('/')[1]).sort()) {
+    for (const branch of PROTECTED_BRANCHES) {
+      if (!seen.has(`${repoDir}/${branch}`)) {
+        findings.push({ severity: 'fail', branch: `${repoDir}/${branch}`, code: 'dump-missing',
+          message: `${repoDir}/${branch}: no committed dump under docs/security/branch-protection/${repoDir}/ — this gate has checked nothing for that branch, which is not the same as having found nothing. Dump it (gh api repos/GaryOcean428/${repoDir}/branches/${branch}/protection).` });
+      }
+    }
+  }
   for (const d of dumps) {
+    const repo = Object.keys(repos).find((r) => r.split('/')[1] === d.repoDir);
+    if (!repo) {
+      // A dump directory outside the repo set: on the DERIVED estate map that is
+      // a rogue directory compared against nothing (fail). Under an explicit
+      // PROTECTION_REPOS subset it is simply out of scope for this run (warn) —
+      // failing a deliberate bisect over repos it did not ask about would make
+      // the subset unusable.
+      findings.push({ severity: reposExplicit ? 'warn' : 'fail', branch: `${d.repoDir}@${d.branch}`, code: 'unknown-repo',
+        message: `${d.repoDir}: dump directory is not part of ${reposExplicit ? 'the PROTECTION_REPOS set of this run' : '.gitmodules (plus the parent)'} and would be compared against nothing.` });
+      continue;
+    }
     let body;
     try {
       body = JSON.parse(fs.readFileSync(d.file, 'utf8'));
     } catch (err) {
       // Fail closed: an unparseable dump means this gate checked nothing for that
       // branch, which must never render as green.
-      findings.push({ severity: 'fail', branch: d.branch, code: 'dump-unparseable',
-        message: `${d.branch}: committed dump ${path.basename(d.file)} does not parse — ${err.message}` });
+      findings.push({ severity: 'fail', branch: `${d.repoDir}@${d.branch}`, code: 'dump-unparseable',
+        message: `${d.repoDir}@${d.branch}: committed dump ${path.basename(d.file)} does not parse — ${err.message}` });
       continue;
     }
-    findings.push(...compareBranch({ ...d, body }, read(d.branch)));
+    findings.push(...compareBranch({ ...d, repo, body }, read(d.repoDir, d.branch)));
   }
   return { dumps, findings };
 }
@@ -187,16 +267,18 @@ function gh(args) {
   return execFileSync('gh', args, { encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] });
 }
 
-function readLive(branch) {
+function readLive(slug, branch) {
+  const repo = Object.keys(REPOS).find((r) => r.split('/')[1] === slug);
+  if (!repo) return { kind: 'unreadable', detail: `${slug} is not a repo this gate knows (not the parent and not in .gitmodules).` };
   try {
-    return { kind: 'protection', body: JSON.parse(gh(['api', `repos/${REPO}/branches/${branch}/protection`])) };
+    return { kind: 'protection', body: JSON.parse(gh(['api', `repos/${repo}/branches/${branch}/protection`])) };
   } catch (err) {
     const blob = `${err.stdout || ''}${err.stderr || ''}`;
     const is404 = /HTTP 404|Branch not protected|"status": *"404"/.test(blob);
     if (!is404) return { kind: 'unreadable', detail: blob.trim().split('\n')[0] || String(err.message) };
     // 404 is not conclusive. Ask the branch object whether it believes it is protected.
     try {
-      const b = JSON.parse(gh(['api', `repos/${REPO}/branches/${branch}`]));
+      const b = JSON.parse(gh(['api', `repos/${repo}/branches/${branch}`]));
       return b.protected
         ? { kind: 'ambiguous', detail: `branch object reports protected=true.` }
         : { kind: 'unprotected' };
@@ -212,7 +294,10 @@ function readLive(branch) {
 function selfTest() {
   const os = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP || '/tmp', 'bpd-'));
   const dumpsDir = path.join(os, 'dumps');
-  fs.mkdirSync(dumpsDir, { recursive: true });
+  const bsuiteDir = path.join(dumpsDir, 'bsuite');
+  const crm7Dir = path.join(dumpsDir, 'crm7');
+  fs.mkdirSync(bsuiteDir, { recursive: true });
+  fs.mkdirSync(crm7Dir, { recursive: true });
   const STRONG = {
     required_status_checks: { strict: false, contexts: ['build-and-test', 'gates'] },
     enforce_admins: { enabled: true },
@@ -220,51 +305,94 @@ function selfTest() {
     allow_deletions: { enabled: false },
     required_pull_request_reviews: { required_approving_review_count: 0 },
   };
-  fs.writeFileSync(path.join(dumpsDir, 'main-20260101.json'), JSON.stringify(STRONG));
+  fs.writeFileSync(path.join(bsuiteDir, 'main-20260101.json'), JSON.stringify(STRONG));
+  fs.writeFileSync(path.join(bsuiteDir, 'development-20260101.json'), JSON.stringify(STRONG));
   // An OLDER dump for the same branch must be ignored in favour of the newest.
-  fs.writeFileSync(path.join(dumpsDir, 'main-20250101.json'), JSON.stringify({ required_status_checks: { contexts: ['ancient-context'] } }));
+  fs.writeFileSync(path.join(bsuiteDir, 'main-20250101.json'), JSON.stringify({ required_status_checks: { contexts: ['ancient-context'] } }));
+  // A SECOND repo with the SAME branch name — the collision the flat layout
+  // could not express (bsuite#3141 finding 3): crm7/main-….json must never be
+  // compared against bsuite's main. crm7's dumps sit in their own directory.
+  fs.writeFileSync(path.join(crm7Dir, 'main-20260101.json'), JSON.stringify(STRONG));
+  fs.writeFileSync(path.join(crm7Dir, 'development-20260101.json'), JSON.stringify(STRONG));
+  // The `rulesets/` sibling holds RULESET dumps (a different mechanism) whose
+  // filenames — bsu-development-20260919.json — also match <branch>-<date>.json
+  // with branch=bsu-development. It must stay invisible to this scan.
+  const rulesetsDir = path.join(dumpsDir, 'rulesets');
+  fs.mkdirSync(rulesetsDir, { recursive: true });
+  fs.writeFileSync(path.join(rulesetsDir, 'bsu-development-20260919.json'), JSON.stringify(STRONG));
 
   const clone = (m) => JSON.parse(JSON.stringify(m));
+  /** read(slug, branch) keyed by `<slug>@<branch>`; unset keys read identical-green. */
+  const mkRead = (overrides) => (slug, branch) => {
+    const v = overrides[`${slug}@${branch}`];
+    if (v === undefined) return { kind: 'protection', body: clone(STRONG) };
+    return typeof v === 'function' ? v() : v;
+  };
+  const weaken = (path_, fn) => () => { const b = clone(STRONG); fn(b); return { kind: 'protection', body: b }; };
   const cases = [
-    ['identical live and banked passes', () => ({ kind: 'protection', body: clone(STRONG) }), { fail: 0, warn: 0 }],
-    ['protection deleted fails', () => ({ kind: 'unprotected' }), { fail: 1, warn: 0, code: 'protection-absent' }],
-    ['404 with protected=true is ambiguous, not "removed"', () => ({ kind: 'ambiguous', detail: 'x' }), { fail: 1, warn: 0, code: 'protection-ambiguous' }],
-    ['unreadable is its own answer', () => ({ kind: 'unreadable', detail: 'boom' }), { fail: 1, warn: 0, code: 'protection-unreadable' }],
-    ['a removed context fails', () => { const b = clone(STRONG); b.required_status_checks.contexts = ['build-and-test']; return { kind: 'protection', body: b }; }, { fail: 1, warn: 0, code: 'contexts-removed' }],
-    ['an added context only warns', () => { const b = clone(STRONG); b.required_status_checks.contexts.push('new-gate'); return { kind: 'protection', body: b }; }, { fail: 0, warn: 1, code: 'dump-stale' }],
-    ['enforce_admins switched off fails', () => { const b = clone(STRONG); b.enforce_admins.enabled = false; return { kind: 'protection', body: b }; }, { fail: 1, warn: 0, code: 'enforce-admins-off' }],
-    ['force pushes switched on fails', () => { const b = clone(STRONG); b.allow_force_pushes.enabled = true; return { kind: 'protection', body: b }; }, { fail: 1, warn: 0, code: 'force-pushes-on' }],
-    ['deletions switched on fails', () => { const b = clone(STRONG); b.allow_deletions.enabled = true; return { kind: 'protection', body: b }; }, { fail: 1, warn: 0, code: 'deletions-on' }],
-    ['removing PR reviews fails', () => { const b = clone(STRONG); delete b.required_pull_request_reviews; return { kind: 'protection', body: b }; }, { fail: 1, warn: 0, code: 'pr-reviews-removed' }],
-    ['the 2026-09-07 incident, end to end', () => ({ kind: 'unprotected' }), { fail: 1, warn: 0, code: 'protection-absent' }],
+    ['identical live and banked passes', mkRead({}), { fail: 0, warn: 0 }],
+    ['protection deleted fails, and names its repo', mkRead({ 'bsuite@main': { kind: 'unprotected' } }), { fail: 1, warn: 0, code: 'protection-absent', at: 'bsuite@main' }],
+    ['404 with protected=true is ambiguous, not "removed"', mkRead({ 'crm7@main': { kind: 'ambiguous', detail: 'x' } }), { fail: 1, warn: 0, code: 'protection-ambiguous', at: 'crm7@main' }],
+    ['unreadable is its own answer', mkRead({ 'bsuite@main': { kind: 'unreadable', detail: 'boom' } }), { fail: 1, warn: 0, code: 'protection-unreadable', at: 'bsuite@main' }],
+    ['a removed context fails', mkRead({ 'bsuite@main': weaken(null, (b) => { b.required_status_checks.contexts = ['build-and-test']; }) }), { fail: 1, warn: 0, code: 'contexts-removed', at: 'bsuite@main' }],
+    ['an added context only warns', mkRead({ 'bsuite@main': weaken(null, (b) => { b.required_status_checks.contexts.push('new-gate'); }) }), { fail: 0, warn: 1, code: 'dump-stale' }],
+    ['enforce_admins switched off fails', mkRead({ 'bsuite@main': weaken(null, (b) => { b.enforce_admins.enabled = false; }) }), { fail: 1, warn: 0, code: 'enforce-admins-off', at: 'bsuite@main' }],
+    ['force pushes switched on fails', mkRead({ 'bsuite@main': weaken(null, (b) => { b.allow_force_pushes.enabled = true; }) }), { fail: 1, warn: 0, code: 'force-pushes-on' }],
+    ['deletions switched on fails', mkRead({ 'bsuite@main': weaken(null, (b) => { b.allow_deletions.enabled = true; }) }), { fail: 1, warn: 0, code: 'deletions-on' }],
+    ['removing PR reviews fails', mkRead({ 'bsuite@main': weaken(null, (b) => { delete b.required_pull_request_reviews; }) }), { fail: 1, warn: 0, code: 'pr-reviews-removed' }],
+    ['the 2026-09-07 incident, end to end', mkRead({ 'bsuite@main': { kind: 'unprotected' } }), { fail: 1, warn: 0, code: 'protection-absent' }],
+    // bsuite#3141 plan case (a): weakening only repo 2 fails while repo 1 stays green.
+    ['a weakening on repo 2 fails while repo 1 stays green', mkRead({ 'crm7@main': weaken(null, (b) => { b.enforce_admins.enabled = false; }) }), { fail: 1, warn: 0, code: 'enforce-admins-off', at: 'crm7@main' }],
   ];
 
   let bad = 0;
+  const REPOS2 = { 'GaryOcean428/bsuite': '.', 'GaryOcean428/crm7': 'crm7' }; // the fixture's universe
   for (const [label, read, want] of cases) {
-    const { findings } = evaluate({ dumpsDir, read });
+    const { findings } = evaluate({ dumpsDir, read, repos: REPOS2 });
     const fail = findings.filter((f) => f.severity === 'fail').length;
     const warn = findings.filter((f) => f.severity === 'warn').length;
     const codes = findings.map((f) => f.code);
     // Assert the MESSAGE the gate must produce, not only its counts: a gate whose
     // new path is silent passes a count-only self-test while telling nobody anything.
     const spoke = findings.every((f) => typeof f.message === 'string' && f.message.includes(f.branch) && f.message.length > 40);
-    const ok = fail === want.fail && warn === want.warn && (!want.code || codes.includes(want.code)) && spoke;
+    // `want.at`: the finding must name the REPO it belongs to — a count-only test
+    // would pass with every finding mislabelled as another repo's branch.
+    const atOk = want.at === undefined || findings.some((f) => f.branch === want.at);
+    const ok = fail === want.fail && warn === want.warn && (!want.code || codes.includes(want.code)) && spoke && atOk;
     if (!ok) bad++;
-    console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}  [fail=${fail} warn=${warn} codes=${codes.join(',') || '-'} spoke=${spoke}]`);
+    console.log(`  ${ok ? 'ok  ' : 'FAIL'} ${label}  [fail=${fail} warn=${warn} codes=${codes.join(',') || '-'} at=${[...new Set(findings.map((f) => f.branch))].join(',') || '-'} spoke=${spoke}]`);
   }
 
   // The newest-dump rule needs its own bite: if the older dump were read, the
-  // identical-live case above would report 'ancient-context' as removed.
+  // identical-live case above would report 'ancient-context' as removed. Four
+  // dumps are covered — both repos, both branches.
   const newest = newestDumps(dumpsDir);
-  const newestOk = newest.length === 1 && newest[0].date === '20260101';
+  const newestOk = newest.length === 4
+    && newest.find((n) => n.repoDir === 'bsuite' && n.branch === 'main')?.date === '20260101'
+    && newest.every((n) => ['bsuite', 'crm7'].includes(n.repoDir));
   if (!newestOk) bad++;
-  console.log(`  ${newestOk ? 'ok  ' : 'FAIL'} newest dump per branch wins  [${newest.map((n) => n.date).join(',')}]`);
+  console.log(`  ${newestOk ? 'ok  ' : 'FAIL'} newest dump per repo×branch wins  [${newest.map((n) => `${n.repoDir}/${n.branch}@${n.date}`).join(', ')}]`);
+
+  // The 2026-09-19 layout migration: a repo×branch with NO committed dump
+  // (the mini fixture holds only bsuite/main) is a FAIL (dump-missing), never
+  // a silent skip — this gate checked 2 of 14 estate branches the day it was
+  // built, and only naming the gap stops the other 12 from rendering as green.
+  const miniDir = path.join(os, 'mini');
+  fs.mkdirSync(path.join(miniDir, 'bsuite'), { recursive: true });
+  fs.writeFileSync(path.join(miniDir, 'bsuite', 'main-20260101.json'), JSON.stringify(STRONG));
+  const missing = evaluate({ dumpsDir: miniDir, read: mkRead({}), repos: REPOS2 });
+  const missingOk = missing.findings.some((f) => f.severity === 'fail' && f.code === 'dump-missing' && f.branch === 'bsuite/development')
+    && missing.findings.some((f) => f.severity === 'fail' && f.code === 'dump-missing' && f.branch === 'crm7/main');
+  if (!missingOk) bad++;
+  console.log(`  ${missingOk ? 'ok  ' : 'FAIL'} a branch with no dump is dump-missing, not silent  [${missing.findings.filter((f) => f.code === 'dump-missing').map((f) => f.branch).join(', ') || '-'}]`);
 
   // An unparseable dump must FAIL, never silently skip.
   const badDir = fs.mkdtempSync(path.join(process.env.RUNNER_TEMP || '/tmp', 'bpd-bad-'));
-  fs.writeFileSync(path.join(badDir, 'main-20260101.json'), '{not json');
-  const broken = evaluate({ dumpsDir: badDir, read: () => ({ kind: 'protection', body: {} }) });
-  const brokenOk = broken.findings.some((f) => f.severity === 'fail' && f.code === 'dump-unparseable');
+  const badRepoDir = path.join(badDir, 'bsuite');
+  fs.mkdirSync(badRepoDir, { recursive: true });
+  fs.writeFileSync(path.join(badRepoDir, 'main-20260101.json'), '{not json');
+  const broken = evaluate({ dumpsDir: badDir, read: mkRead({}), repos: REPOS2 });
+  const brokenOk = broken.findings.some((f) => f.severity === 'fail' && f.code === 'dump-unparseable' && f.branch === 'bsuite@main');
   if (!brokenOk) bad++;
   console.log(`  ${brokenOk ? 'ok  ' : 'FAIL'} an unparseable dump fails closed`);
 
@@ -275,15 +403,17 @@ function selfTest() {
   // pass" is indistinguishable from a run that executed no cases at all, and the
   // estate's watcher-of-watchers rejects exactly that — as it did to this guard on
   // its first registration, which is why this line names a number.
-  const total = cases.length + 2; // + newest-dump-wins + unparseable-fails-closed
+  const total = cases.length + 3; // + newest-dump-wins + dump-missing floor + unparseable-fails-closed
   console.log(
     bad === 0
       ? `[protection-drift] self-test: ${total}/${total} pass — ${total} case(s) exercised ` +
-        `(${cases.length} comparison verdicts covering an identical read, a deleted ` +
-        `protection object, an ambiguous 404, an unreadable one, a removed context, an ` +
-        `added context that must only WARN, enforce_admins off, force pushes on, ` +
-        `deletions on and removed PR reviews; plus newest-dump-per-branch and an ` +
-        `unparseable dump that must fail closed)`
+        `(${cases.length} comparison verdicts across TWO repos — bsuite and crm7, each with ` +
+        `their own main dump — covering an identical read, a deleted protection object, an ` +
+        `ambiguous 404, an unreadable one, a removed context, an added context that must only ` +
+        `WARN, enforce_admins off, force pushes on, deletions on, removed PR reviews, and a ` +
+        `weakening on repo 2 that fails while repo 1 stays green; plus newest-dump-per-repo-branch, ` +
+        `a branch with no committed dump that must FAIL dump-missing, and an unparseable dump that ` +
+        `must fail closed; the rulesets/ sibling of a different mechanism stays invisible)`
       : `[protection-drift] self-test: ${total - bad}/${total} pass — ${bad} case(s) FAILED`,
   );
   return bad === 0 ? 0 : 1;
@@ -302,19 +432,22 @@ function main(argv) {
   if (flags.has('--self-test')) return selfTest();
 
   const dumpsDir = path.join(REPO_ROOT, 'docs', 'security', 'branch-protection');
-  const { dumps, findings } = evaluate({ dumpsDir, read: readLive });
+  const reposExplicit = process.env.PROTECTION_REPOS !== undefined;
+  const { dumps, findings } = evaluate({ dumpsDir, read: readLive, reposExplicit });
 
   if (dumps.length === 0) {
-    console.error('[protection-drift] no committed dump under docs/security/branch-protection/.');
+    console.error('[protection-drift] no committed dump under docs/security/branch-protection/<repo>/.');
     console.error('  With no dump this gate has checked nothing, which is not the same as having');
-    console.error('  found nothing. Dump each protected branch before relying on this gate.');
+    console.error('  found nothing. Dump each protected branch of each estate repo before relying');
+    console.error('  on this gate (the README beside the dumps has the command).');
     return 1;
   }
 
   if (flags.has('--json')) {
-    console.log(JSON.stringify({ scanned: dumps.map((d) => `${d.branch}@${d.date}`), findings }, null, 2));
+    console.log(JSON.stringify({ repos: Object.keys(REPOS), scanned: dumps.map((d) => `${d.repoDir}/${d.branch}@${d.date}`), findings }, null, 2));
   } else {
-    console.log(`[protection-drift] compared live protection against ${dumps.length} committed dump(s): ${dumps.map((d) => `${d.branch}@${d.date}`).join(', ')}`);
+    const compared = new Set(dumps.filter((d) => Object.keys(REPOS).some((r) => r.split('/')[1] === d.repoDir)).map((d) => d.repoDir));
+    console.log(`[protection-drift] compared live protection against ${dumps.length} committed dump(s) across ${compared.size} repo(s)${reposExplicit ? ` (PROTECTION_REPOS subset: ${[...compared].join(', ')})` : ''}: ${dumps.map((d) => `${d.repoDir}/${d.branch}@${d.date}`).join(', ')}`);
     for (const f of findings) console.log(`  ${f.severity === 'fail' ? '::error::' : '::warning::'}${f.message}`);
     if (!findings.length) console.log('  no drift.');
   }
