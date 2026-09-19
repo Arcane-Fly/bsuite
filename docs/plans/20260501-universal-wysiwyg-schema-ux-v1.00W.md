@@ -173,6 +173,7 @@ Per user direction (2026-05-01): *"we have these skills already and the base. we
 | Backend + Auth + Realtime + RLS | Supabase + `@supabase/ssr` | ✅ Used (all 6 apps) | `supabase`, `supabase-postgres-best-practices` |
 | UI primitives | shadcn/ui on Radix + Tailwind | ✅ Mandated by BSuite brand system | `shadcn-ui`, `ui-styling` |
 | Animation + gestures | Framer Motion v12 | ✅ Used (modals, kanban, micro-interactions) | `framer-motion` |
+| Tailwind v4 animation utilities | `tw-animate-css` | ➕ **New addition (2026-09)** — the Tailwind v4-native successor to `tailwindcss-animate` (which requires the v3 plugin API; Tailwind v4 has `plugins: []` so neither import nor plugin route exists). Imported as a plain CSS file from `crm7/src/index.css` and `conduit/src/app/globals.css`; no JS API, no config surface | `ui-styling` |
 | Global UI state (undo/redo, edit-mode) | Zustand v5 | ✅ Used (R80.3, FormLayoutStore) | `zustand` |
 | CSV / XLSX / PDF export | xlsx + papaparse + pdf-lib + jspdf | ✅ Used (R80.3 imports, crm7 reports) | `data-export` |
 | tRPC bridges (when needed) | `@trpc/tanstack-react-query` | ✅ Available | `trpc-tanstack-react-query` |
@@ -1040,6 +1041,7 @@ As of 2026-05-01 the confirmed mutually-compatible versions are:
 | `cmdk` | ships with `pnpm dlx shadcn@latest add command` — **not a separate `package.json` entry** | shadcn Command primitive. Already present in crm7 + braden; BSU / conduit / R80.3 install it via the shadcn CLI in Phase 1a (from an isolated dir per AGENTS.md pnpm-workspace lockfile rules). Never add `"cmdk": "…"` manually to any `package.json` — it's a shadcn-transitive dep. |
 | `tailwind-merge` | `^2.x \|\| ^3.x` | Already installed everywhere via shadcn's `cn()` helper. Critical for the "edit borders" requirement (§3.5) |
 | `clsx` | `^2.x` | Companion to tailwind-merge in shadcn's `cn()` helper |
+| `tw-animate-css` | `^1.4.0` | Tailwind v4 CSS-only animation utilities (`animate-in`, `fade-in`, `slide-in-*`). Adopted 2026-09 in crm7 + conduit; the v3 `tailwindcss-animate` plugin is inert under Tailwind v4 — see §2.5 |
 
 ### 6.1 WYSIWYG primitive contract — mandatory implementation split
 
