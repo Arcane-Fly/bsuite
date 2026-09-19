@@ -10,7 +10,6 @@
 -- @sync-boundary-below
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 
-BEGIN;
 
 DROP INDEX IF EXISTS public.idx_ter_source_field;
 DROP INDEX IF EXISTS public.idx_ter_target_field;
@@ -26,4 +25,3 @@ ALTER TABLE public.tenant_entity_relations
   DROP COLUMN IF EXISTS on_delete,
   DROP COLUMN IF EXISTS on_update;
 
-COMMIT;
