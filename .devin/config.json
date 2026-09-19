@@ -1,0 +1,106 @@
+{
+  "name": "bsuite-370-closeout",
+  "owner": "devin-bsuite-closeout-20260919",
+  "description": "BSuite 370-prompt remediation closeout: continuous loop, subagent lanes, accountability hooks.",
+  "hooks": {
+    "sessionStart": [
+      {
+        "name": "model-proxy-ensure",
+        "command": "python3 /home/braden/.agents/hooks/model-proxy-ensure.py",
+        "timeout": 15,
+        "required": false
+      },
+      {
+        "name": "bsuite-loop-state-restore",
+        "command": "/home/braden/.agents/scripts/bsuite-status",
+        "timeout": 30,
+        "required": false
+      },
+      {
+        "name": "bsuite-accountability-repoint",
+        "command": "python3 /home/braden/.agents/hooks/accountability-repoint.py",
+        "timeout": 5,
+        "required": false
+      }
+    ],
+    "preToolUse": [
+      {
+        "name": "pre-destructive-git",
+        "command": "python3 /home/braden/.agents/hooks/pre-destructive-git.py",
+        "timeout": 60,
+        "required": true
+      },
+      {
+        "name": "session-context",
+        "command": "python3 /home/braden/.agents/hooks/session-context.py hook",
+        "timeout": 5,
+        "required": false
+      },
+      {
+        "name": "context-hook",
+        "command": "python3 /home/braden/.agents/hooks/context-hook.py",
+        "timeout": 5,
+        "required": false
+      }
+    ],
+    "postToolUse": [
+      {
+        "name": "session-context",
+        "command": "python3 /home/braden/.agents/hooks/session-context.py hook",
+        "timeout": 5,
+        "required": false
+      },
+      {
+        "name": "context-hook",
+        "command": "python3 /home/braden/.agents/hooks/context-hook.py",
+        "timeout": 5,
+        "required": false
+      }
+    ],
+    "userPromptSubmit": [
+      {
+        "name": "steer-signal",
+        "command": "python3 /home/braden/.agents/hooks/steer-signal.py",
+        "timeout": 5,
+        "required": false
+      }
+    ],
+    "stop": [
+      {
+        "name": "dod-gate",
+        "command": "python3 /home/braden/.agents/hooks/dod-gate.py",
+        "timeout": 10,
+        "required": false
+      },
+      {
+        "name": "loop-gate",
+        "command": "/home/braden/.agents/scripts/bsuite-loop-gate-check.sh",
+        "timeout": 10,
+        "required": false
+      }
+    ],
+    "sessionEnd": [
+      {
+        "name": "bsuite-memory-sync",
+        "command": "/home/braden/.agents/hooks/bsuite-memory-sync-hook.sh /home/braden/Desktop/Dev/bsuite/.playwright-mcp",
+        "timeout": 60,
+        "required": false
+      }
+    ]
+  },
+  "commands": {
+    "bsuite-status": "/home/braden/.agents/scripts/bsuite-status",
+    "bsuite-loop": "/home/braden/.agents/scripts/bsuite-overnight-loop.sh",
+    "bsuite-monitor": "/home/braden/.agents/scripts/bsuite-pr-monitor.sh",
+    "bsuite-plan": "/home/braden/.agents/hooks/bsuite-planning-lane.sh",
+    "bsuite-implement": "/home/braden/.agents/hooks/bsuite-implementation-lane.sh",
+    "bsuite-review": "/home/braden/.agents/hooks/bsuite-accountability-lane.sh"
+  },
+  "closeout": {
+    "contract": "/home/braden/.agents/state/loop-contracts/bsuite-370-closeout-contract.json",
+    "goals": "/home/braden/.agents/state/loop-contracts/bsuite-goals.json",
+    "armed_record": "/home/braden/.agents/state/loop-armed/devin-bsuite-closeout-20260919.json",
+    "cron_wakeup": "*/10 * * * * /home/braden/.agents/scripts/bsuite-overnight-loop.sh",
+    "log_dir": "/home/braden/Desktop/Dev/bsuite/.playwright-mcp"
+  }
+}
