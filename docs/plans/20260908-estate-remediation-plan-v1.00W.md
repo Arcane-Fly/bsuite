@@ -448,3 +448,11 @@ Command-backed progress:
 - Updated `bsuite_project_truth_index.current_coordination.owner` to `devin-bsuite-closeout-20260919` via authenticated REST read-modify-write with length/sha256 verification.
 
 Next: merge promotion PRs, verify `version.json` on production hosts, run CRM7 migrations in order through the merge pipeline, then return to the ledger pending items.
+
+## Maintenance pass — 2026-09-20 (Actions cost containment)
+
+The operator reports approximately $2,000 in prior-month Actions costs. Hosted reruns and publication are on hold while local verification and an isolated self-hosted runner are prepared; required checks and security thresholds remain unchanged.
+
+The hourly pointer workflow now calls `scripts/check-pointer-refresh.mjs` before creating a commit. An existing open, development-targeted, same-repository PR with the same desired tree and a verified head retains its commit and check runs. Other candidates follow the existing signed refresh path; unreadable or malformed API responses fail closed. The separate full-rollup merge gate remains unchanged.
+
+Verification: `node scripts/check-pointer-refresh.mjs --self-test` passes 23 cases, including the actual YAML guard under the Actions Bash flags; `node --check scripts/check-pointer-refresh.mjs` and `git diff --check` pass. The guard is registered in `scripts/guard-registry.mjs`. This is local implementation evidence, not a deployed cost-saving claim. The estate ledger and development-to-production acceptance remain open.

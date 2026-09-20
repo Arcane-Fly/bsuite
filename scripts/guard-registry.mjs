@@ -1801,6 +1801,17 @@ export const GUARDS = [
   },
 
   {
+    id: 'pointer-refresh-dedup',
+    label: 'Unchanged signed pointer PRs retain their head and check runs',
+    repo: '.',
+    command: ['node', 'scripts/check-pointer-refresh.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/advance-submodule-pointers.yml',
+    mode: 'run',
+    notes: 'Preserves an open same-repository development PR when its verified head already contains the desired tree. API failures fail closed; missing, closed, changed or unsigned candidates retain the existing refresh path and full-rollup gate.',
+    evidence: 'Local 2026-09-20: check-pointer-refresh --self-test: OK (23 cases), including actual workflow guard execution under bash -e -o pipefail. Hosted rollout and cost savings are not yet verified.',
+  },
+
+  {
     id: 'required-contexts-producible',
     label: 'Every required status check is one some PR can actually report',
     repo: '.',
