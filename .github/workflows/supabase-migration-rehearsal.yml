@@ -140,11 +140,38 @@ jobs:
       # intent in the file rather than relying on a platform default, and on a fork
       # the checkout falls to GITHUB_TOKEN and the assertion below fails LOUDLY
       # instead of rehearsing a fraction of the estate quietly.
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - name: Checkout (with submodules — a rehearsal missing a scope is not a rehearsal)
         uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
           persist-credentials: false
 
@@ -317,7 +344,7 @@ jobs:
           # submodules would classify as "not fetched" and every promotion PR
           # would go spuriously red. Same expression as the checkout above:
           # never on a fork, PAT preferred over GITHUB_TOKEN (bsuite#1781).
-          SUBMODULE_TOKEN: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
+          SUBMODULE_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
           if [ "${{ github.event_name }}" != "pull_request" ]; then

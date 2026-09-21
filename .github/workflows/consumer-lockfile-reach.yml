@@ -80,19 +80,10 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
-        # The App path runs once the operator has registered the App and set
-        # vars.BSUITE_GITHUB_APP_CLIENT_ID + secrets.BSUITE_GITHUB_APP_PRIVATE_KEY on
-        # this repository (docs/security/20260903-github-app-for-estate-automation-v1.00W.md). Until then the
-        # step is skipped and the token expressions below fall through to the PAT;
-        # the fallback is deleted once the first App-authored commit reads
-        # verification.verified=true (the guard further down proves it).
+      - name: Mint the GitHub App installation token
+        # Estate writes must stop when the selected App is missing a grant;
+        # they never fall back to a long-lived cross-repository PAT.
         id: app-token
-        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
-        # A half-configured App (client id set, private key missing or wrong)
-        # must not take the job down: the step is non-fatal and the next step
-        # says so loudly; the token expressions then fall through to the PAT.
-        continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
@@ -110,20 +101,15 @@ jobs:
           permission-pull-requests: write
           permission-metadata: read
 
-      - name: Say so if the App token could not be minted (falling through to the PAT)
-        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && steps.app-token.outcome != 'success' }}
-        run: |
-          echo "::warning title=GitHub App token not minted::BSUITE_GITHUB_APP_CLIENT_ID is set but the token step did not succeed (outcome: ${{ steps.app-token.outcome }}). Check secrets.BSUITE_GITHUB_APP_PRIVATE_KEY and the App installation; this run falls through to the PAT (D-169)."
-
       - name: Checkout parent + submodules
         uses: actions/checkout@v5
         with:
           submodules: recursive
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 0
           # `token:` is what makes checkout install a credential inside EVERY
           # submodule, which is what lets the push below work at all. Same
           # mechanism advance-submodule-pointers.yml relies on.
-          token: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           persist-credentials: true
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
@@ -204,7 +190,7 @@ jobs:
 
       - name: Open one PR per app whose lockfile moved
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -uo pipefail
           owner=$(git remote get-url origin | sed -n 's|.*github.com[:/]\([^/]*\)/.*|\1|p')
@@ -340,7 +326,7 @@ jobs:
                  --body-file /tmp/reach-body.md; then
               opened=$((opened+1))
             else
-              echo "::error title=$app: branch pushed but PR not created::The change is on '$br' and is correct; only 'gh pr create' failed. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', BSUITE_CROSS_REPO_PAT is missing or expired."
+              echo "::error title=$app: branch pushed but PR not created::The change is on '$br' and is correct; only 'gh pr create' failed. Verify the GitHub App installation has Pull requests: Read and write."
               exit 1
             fi
             # `--auto` weakens no required checks and is idempotent; it only removes
