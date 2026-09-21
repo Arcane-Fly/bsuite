@@ -503,10 +503,11 @@ jobs:
       #
       # A DROP + CREATE restores the default, so this is drift, not a one-time
       # fix. It runs here, after the replay, against the same disposable database
-      # the replay just built — with `--substrate replay`, which runs the three
-      # GROWTH checks (did this change introduce a PUBLIC-executable function, an
-      # unlisted anon grant, or a 15th RLS-no-policy table?) and deliberately does
-      # NOT run the converged-STATE check.
+      # the replay just built — with `--substrate replay`, which runs the two
+      # GROWTH checks (did this change introduce a PUBLIC-executable function or
+      # an unlisted anon grant?) and deliberately does NOT infer RLS policy or
+      # grant state from the partial baseline/replay. The live catalog scan owns
+      # those converged-state checks.
       #
       # A partial replay cannot answer that one. Measured 2026-09-03 on this very
       # job (run 33727868315): it reported 13 client grants on

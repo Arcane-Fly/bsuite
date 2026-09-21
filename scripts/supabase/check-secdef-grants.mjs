@@ -75,7 +75,7 @@
  *   node scripts/supabase/check-secdef-grants.mjs --db-url URL --self-test-tx   # safe anywhere; BEGIN/ROLLBACK
  *
  *   --substrate live    (default) all four checks; for production or any converged database
- *   --substrate replay            checks 1-3 only; for the rehearsal's partial replay
+ *   --substrate replay            checks 1-2 only; for the rehearsal's partial replay
  */
 
 import { execFileSync } from 'node:child_process';
@@ -330,21 +330,34 @@ function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet =
     if (!namedAnon.includes(a)) notes.push(`allowlisted anon function not present on this database: ${a}`);
   }
 
-  /* 3 — the RLS-no-policy set may not grow */
-  const observed = rows(dbUrl, SQL_RLS_NO_POLICY).map((r) => r[0]);
   const banked = new Set(bank.entries.map((e) => e.payload));
-  const grown = observed.filter((t) => !banked.has(t));
-  say(`check 3 (RLS enabled, zero policies): {findings: ${grown.length}, scanned: ${observed.length} of ${scannedTables} banked ${banked.size}}`);
-  for (const t of grown) {
-    failures.push(
-      `table has RLS enabled and ZERO policies, and is not banked: public.${t}\n` +
-      `    RLS with no policy denies every non-superuser row. Either add the policy it is ` +
-      `missing, or — if it is deliberately unreachable and served only through SECURITY ` +
-      `DEFINER functions — bank it in ${path.relative(REPO, RLS_BANK)} with the reason.`,
-    );
-  }
-  for (const t of banked) {
-    if (!observed.includes(t)) notes.push(`banked RLS-no-policy table not present on this database: public.${t}`);
+  let observed = [];
+  if (substrate === 'live') {
+    /* 3 — the RLS-no-policy set may not grow.
+     *
+     * This is a converged-state assertion, not a replay assertion. The rehearsal
+     * starts from a dated schema dump and replays only a selected migration set;
+     * it can therefore retain an old table definition while omitting the later
+     * policy that production has already converged on. Treating that artefact as
+     * a new unbanked table would turn a correct live policy into a false CI
+     * failure. The live catalog check below remains the enforcing gate.
+     */
+    observed = rows(dbUrl, SQL_RLS_NO_POLICY).map((r) => r[0]);
+    const grown = observed.filter((t) => !banked.has(t));
+    say(`check 3 (RLS enabled, zero policies): {findings: ${grown.length}, scanned: ${observed.length} of ${scannedTables} banked ${banked.size}}`);
+    for (const t of grown) {
+      failures.push(
+        `table has RLS enabled and ZERO policies, and is not banked: public.${t}\n` +
+        `    RLS with no policy denies every non-superuser row. Either add the policy it is ` +
+        `missing, or — if it is deliberately unreachable and served only through SECURITY ` +
+        `DEFINER functions — bank it in ${path.relative(REPO, RLS_BANK)} with the reason.`,
+      );
+    }
+    for (const t of banked) {
+      if (!observed.includes(t)) notes.push(`banked RLS-no-policy table not present on this database: public.${t}`);
+    }
+  } else {
+    say(`check 3 (RLS enabled, zero policies): SKIPPED on substrate=${substrate} — the partial baseline/replay cannot prove production's converged policy set. The live catalog scan asserts it.`);
   }
 
   /* 4 — none of them may carry an anon/authenticated/PUBLIC grant.
@@ -352,10 +365,9 @@ function runChecks(dbUrl, { minFunctions, minTables, substrate = 'live', quiet =
    * LIVE SUBSTRATE ONLY, and this is not a loophole — it is the difference
    * between a question the substrate can answer and one it cannot.
    *
-   * Checks 1-3 are GROWTH questions ("did this change introduce a
-   * PUBLIC-executable function / an unlisted anon grant / a 15th RLS-no-policy
-   * table?"), and a partial replay answers those honestly: anything it DOES
-   * build, it builds correctly.
+   * Checks 1-2 are growth questions ("did this change introduce a
+   * PUBLIC-executable function or an unlisted anon grant?"), and a partial
+   * replay answers those honestly: anything it DOES build, it builds correctly.
    *
    * Check 4 is a STATE question ("does this table's grant set match the one
    * production converged on?"), and a partial replay cannot answer it. Measured
