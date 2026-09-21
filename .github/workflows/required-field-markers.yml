@@ -119,12 +119,14 @@ jobs:
         run: node scripts/check-required-field-markers.mjs --self-test
 
       # --require-fields is the positive control against a silently unscanned tree.
-      # The scan currently matches 177 fields to a schema across the estate; if it
-      # finds far fewer, the submodule checkout did not populate and a "clean"
-      # result would be meaningless rather than clean. A scan that examines nothing
-      # also reports zero findings, and that has read as a pass here before.
+      # The current, fully populated tree matches 139 fields to a schema: this was
+      # re-measured after crm7 moved from 34ebcfb3 (150) to 04891bce (139), while
+      # every app tree was present and the marker scan reported zero findings. Keep
+      # a nine-field margin for legitimate form consolidation, but fail well above
+      # the count an incomplete checkout could produce. A scan that examines
+      # nothing also reports zero findings, and that has read as a pass here before.
       - name: Check every schema-backed form marks its fields consistently
         run: |
           node scripts/check-required-field-markers.mjs \
             crm7/src business-suite-unified/src conduit/src braden/src \
-            --require-fields=150
+            --require-fields=130

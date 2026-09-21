@@ -1,11 +1,11 @@
 {
   "crm7": {
-    "dead": 876,
+    "dead": 875,
     "total": 1253,
     "worst": [
       {
         "barrel": "src/schemas/index.ts",
-        "dead": 349,
+        "dead": 348,
         "of": 392
       },
       {
