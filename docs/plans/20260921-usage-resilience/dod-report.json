@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "APPROVE",
+  "gaps": [],
+  "evidence_task_id": "bsuite-usage-resilience-handoff-20260921",
+  "objective_lock": "Deliver tested local progress reporting and executable cost-aware handoff; future-session binding and estate delivery remain pending.",
+  "ui_touched": false,
+  "scores_partial": {
+    "verify_pass": 1.0,
+    "wire_integrity": 1.0,
+    "false_complete_incidents": 0.0,
+    "subagent_brief_completeness": 1.0,
+    "correction_absorb_rate": 1.0,
+    "ux_integrity": 1.0,
+    "used_once": 1.0,
+    "no_residue": 1.0
+  },
+  "evaluated_at": "2026-09-21T05:00:23Z"
+}

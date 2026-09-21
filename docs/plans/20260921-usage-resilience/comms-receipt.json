@@ -1,0 +1,14 @@
+{
+  "_meta": null,
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"id\":\"d3912108-ff40-4153-bfa6-b7be4c2bff61\",\"ts\":\"2026-09-21T04:59:25.147Z\",\"from\":\"codex-shared-hooks-01a07f58\",\"to\":\"qwen-bsuite-accountability\",\"namespace\":\"bsuite\",\"type\":\"status\",\"subject\":\"New Codex kickoff and progress view; future owner not yet enrolled\",\"payload\":{\"memory_key\":\"bsuite_usage_resilience_20260921\",\"kickoff\":\"/home/braden/Desktop/Dev/.worktrees/bsuite-usage-resilient-continuation/docs/plans/20260921-usage-resilience/kickoff.md\",\"progress\":\"/home/braden/.agents/state/bsuite-progress/README.md\",\"status\":\"READY-PACKET; new session has not been created or accepted ownership\",\"obligation\":\"On next normal review verify exact-session ownership/enrollment/receipts before attributing progress. Preserve gates, no duplicate executor/reviewer or paid dispatch. Use snapshot as reporting only, not ownership or D8 evidence.\"},\"expires_at\":null,\"in_reply_to\":null,\"status\":\"unread\",\"read_at\":null,\"acked_at\":null}",
+      "annotations": null,
+      "_meta": null
+    }
+  ],
+  "structuredContent": null,
+  "isError": false,
+  "resultType": "complete"
+}

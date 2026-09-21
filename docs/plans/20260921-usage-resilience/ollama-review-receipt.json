@@ -1,0 +1,9 @@
+{
+  "exit_code": 0,
+  "elapsed_seconds": 15.66,
+  "requested_provider": "ollama-cloud",
+  "requested_model": "glm-5.3-flash",
+  "tools": [],
+  "fallbacks": [],
+  "stderr": ""
+}

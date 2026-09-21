@@ -1,0 +1,67 @@
+{
+  "task_id": "bsuite-usage-resilience-handoff-20260921",
+  "objective_lock": "Deliver tested local progress reporting and executable cost-aware handoff; future-session binding and estate delivery remain pending.",
+  "index_key": "docs/plans/README.md#20260921-usage-resilience",
+  "ui_touched": false,
+  "D1_wired_current": {
+    "ok": true,
+    "notes": "Plan index links runbook; kickoff links canonical queue, report and memory. Live report generated; 14 workflow edits comments only. No application/hook runtime changed."
+  },
+  "D2_evidence_pack": {
+    "ok": true,
+    "notes": "evidence.md, Ollama usage/execution receipts, comms-receipt.json; 13 snapshot and 62 hook tests passed."
+  },
+  "D3_context_complete": {
+    "ok": true,
+    "brief_has_index_key": true,
+    "brief_has_objective_lock": true,
+    "notes": "Ownership census and actual future-session hook enrollment are explicit pending bootstrap, not claimed done. Current migration PR4/publisher404 carried forward."
+  },
+  "D4_memory": {
+    "ok": true,
+    "notes": "bsuite_usage_resilience_20260921 written and read back using OAuth MCP; inbox d3912108-ff40-4153-bfa6-b7be4c2bff61 delivered, not acknowledged."
+  },
+  "D5_correction_absorb": {
+    "ok": true,
+    "notes": "Independent SEND_BACK corrected history, deltas, incomplete coverage, lock, bounded handoff assertions; reviewer approved. Additional ambiguous URL refusal tested."
+  },
+  "D6_children": {
+    "ok": true,
+    "notes": "Luna review complete; bounded Hermes no-tool review exited0; no new application worker or scheduler."
+  },
+  "D7_no_false_complete": {
+    "ok": true,
+    "notes": "No package publication, production acceptance, future-session binding, credential repair or full estate completion claimed."
+  },
+  "D9_used_once": {
+    "kind": "engine",
+    "ok": true,
+    "proof": {
+      "query": "python3 scripts/estate-progress-snapshot.py --output /home/braden/.agents/state/bsuite-progress",
+      "result": "384 rows, 350 pending,21 in_progress,13 completed claims; cached run zero changes; sources collected."
+    }
+  },
+  "ephemera": {
+    "created": [
+      "docs/plans/20260921-usage-resilience",
+      "/home/braden/.agents/state/bsuite-progress"
+    ],
+    "retained": [
+      {
+        "path": "docs/plans/20260921-usage-resilience",
+        "why": "Versioned runbook, kickoff, evidence and durable receipts"
+      },
+      {
+        "path": "/home/braden/.agents/state/bsuite-progress",
+        "why": "Requested central report with cache and history"
+      }
+    ]
+  },
+  "children_gates": [
+    {
+      "status": "APPROVE",
+      "scope": "bounded reporting and handoff review",
+      "agent": "continuity_publish_review"
+    }
+  ]
+}
