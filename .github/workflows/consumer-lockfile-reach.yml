@@ -191,7 +191,7 @@ jobs:
               # before. Covered by scripts/test-reach-rc-precedence.sh, wired
               # in above as its own "Self-test the per-app rc-precedence
               # line" step.
-              if [ "$iter_rc" = "1" ] || [ "$rc" = "0" ]; then rc=$iter_rc; fi
+              if [ "$iter_rc" != "0" ] || [ "$rc" = "0" ]; then rc=$iter_rc; fi
             done
           fi
           cat /tmp/reach.json

@@ -1,0 +1,44 @@
+{
+  "observed_date": "2026-09-20",
+  "boundary": "Local pre-registration preparation only; no GitHub job executed",
+  "runner_registered": false,
+  "vm": {
+    "vcpus": 4,
+    "memory_mib": 8192,
+    "disk_virtual_gib": 32,
+    "qemu_exit": 0,
+    "state_after_preparation": "powered off",
+    "shared_host_folders": false,
+    "host_forwards": false,
+    "autostart": false
+  },
+  "network_evidence": "../network-preflight/evidence.json: corrected_run_c and negative_control; earlier runs invalidated",
+  "downloads": {
+    "node": {
+      "version": "24.14.0",
+      "sha256": "41cd79bb7877c81605a9e68ec4c91547774f46a40c67a17e34d7179ef11729df",
+      "checksum_log_lines": [1967, 1968]
+    },
+    "runner": {
+      "version_asserted_before_marker": "2.337.0",
+      "sha256": "70920811a4f8ad4328818682bca5c6469c1c942fab52448868071d0063816613",
+      "checksum_log_lines": [1977, 1978]
+    }
+  },
+  "reported_versions": {
+    "node": "v24.14.0",
+    "corepack": "0.34.6",
+    "pnpm_default": "11.24.0",
+    "git": "2.43.0",
+    "gh": "2.45.0 (2025-07-18 Ubuntu 2.45.0-1ubuntu0.3)",
+    "docker": "29.1.3, build 29.1.3-0ubuntu3~24.04.2",
+    "python": "3.12.3"
+  },
+  "marker": "BSUITE_CI_TOOLING_PREPARED_UNREGISTERED",
+  "marker_log_line": 1999,
+  "log": "boot-tooling.log",
+  "no_registration_assertions": ["/opt/actions-runner/.credentials absent", "/opt/actions-runner/.runner absent"],
+  "review": "Independent Devin CLI read-only review approved the pre-registration boundary; parent reviewed configuration and receipts",
+  "next_gate": "Operator confirmation before ephemeral runner registration and a controlled real-check pilot",
+  "cost_savings_verified": false
+}

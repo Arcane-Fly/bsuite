@@ -1,0 +1,39 @@
+{
+  "task_id": "bsuite-local-runner-pilot-20260920",
+  "parent_task_id": "devin-bsuite-closeout-20260919",
+  "silo": "bsuite",
+  "index_key": "bsuite_project_truth_index",
+  "objective_lock": "Complete only the operator-approved single-use local runner pilot: one unchanged existing read-only check, then report before any broader migration.",
+  "waivers": [],
+  "children_gates": [
+    {"task_id": "vm-pre-registration-review", "status": "APPROVE"},
+    {"task_id": "pilot-launch-review", "status": "APPROVE"}
+  ],
+  "D1_wired_current": {"ok": true, "packages": [], "overrides_respected": [], "notes": "Existing gitleaks workflow executed unchanged on local JIT runner 21. Only pilot branch runner selector changed. Node 24.14 matches repository CI; runner 2.337.0 matched GitHub runner download API and release checksum. No application dependency changes."},
+  "D2_evidence_pack": {"ok": true, "commands": [
+    {"cmd": "gh api repos/GaryOcean428/bsuite/actions/runs/35509467632/jobs", "exit": 0, "snippet": "job 106074741532 gitleaks success; runner_id 21; label bsuite-local-pilot-20260920; every step success"},
+    {"cmd": "gh api repos/GaryOcean428/bsuite/actions/runs/35509467632/timing", "exit": 0, "snippet": "billable: {}; run_duration_ms: 40000"},
+    {"cmd": "gh run view 35509467632 --repo GaryOcean428/bsuite --log", "exit": 0, "snippet": "4 passed, 0 failed; 32 commit(s), 138 file(s) touched; no leaks found"},
+    {"cmd": "gh api repos/GaryOcean428/bsuite/actions/runners", "exit": 0, "snippet": "total_count: 0; runners: [] after the one job"},
+    {"cmd": "python3 -B .devin/ci-runner/launch-pilot.py --self-test", "exit": 0, "snippet": "valid JIT metadata; 9 rejected inputs; private cloud config, Bash syntax, VM/proxy boundaries. Disabling validation separately made the negative control fail."}
+  ]},
+  "D3_context_complete": {"ok": true, "authority_files_read": ["/home/braden/Desktop/Dev/bsuite/AGENTS.md", "/home/braden/Desktop/Dev/bsuite/.agents/rules/remediation-execution.md", "/home/braden/.devin/plans/plan-c6458b1c965aad1d.md"], "brief_has_index_key": true, "brief_has_objective_lock": true, "reask_violations": [], "notes": "Operator expressly selected Pilot only after setup confirmation; broader rollout is not authorized."},
+  "D4_memory": {"ok": true, "keys_read": ["bsuite_project_truth_index", "bsuite_skill_mcp_pairings", "bsuite_session_latest_v2"], "keys_written": ["bsuite_ci_runner_pilot_authorization_20260920", "bsuite_ci_pilot_prelaunch_20260920", "bsuite_ci_pilot_live_20260920", "bsuite_ci_pilot_result_20260920"], "skipped": false},
+  "D5_correction_absorb": {"ok": true, "corrections": ["Reduce recurring Actions cost instead of raising spend limits", "Honor pilot-only boundary", "Guest readiness marker must depend on every check", "Cleanup only a container ID owned by this invocation"], "promoted": ["bsuite_actions_cost_policy_20260920", "bsuite_ci_runner_pilot_authorization_20260920", "network-preflight/user-data single fail-fast block and deliberate-failure control", "launch-pilot.py owned-ID cleanup", "/home/braden/.devin/plans/plan-c6458b1c965aad1d.md"]},
+  "D6_children": {"ok": true, "notes": "Native quota and headless execution blocks were superseded by parent execution. All resulting code/configuration reviewed. Guest evidence SEND_BACK resolved by corrected run c and a genuine negative control. Independent scoped reviews approved preparation and launch."},
+  "D7_no_false_complete": {"ok": true, "integration_points_checked": ["GitHub JIT registration", "restricted VM networking", "actual Actions runner assignment", "real gitleaks self-tests and scan", "runner automatic deregistration", "VM/proxy stop", "owned credential/disk disposal"], "notes": "Approval covers this one pilot only. No full CI rollout, invoice reconciliation, Lighthouse fix, SMS issue acceptance, production promotion or estate completion is claimed. The pilot branch remains experimental and unmerged."},
+  "ui_touched": false,
+  "D9_used_once": {"ok": true, "kind": "engine", "proof": {"query": "gh api repos/GaryOcean428/bsuite/actions/runs/35509467632/jobs", "result": "One real successful gitleaks job 106074741532 on local runner 21 at a6f71151b2e0cec865dd03bd19b1e70c17c7a57d", "at": "2026-09-20T12:02:43Z"}},
+  "ephemera": {
+    "declared": true,
+    "created": ["/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/user-data", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/meta-data", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/network-config", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/seed.img", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/console.log", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w", ".devin/ci-runner/pilot-job-a6f71151.qcow2", ".devin/ci-runner/preflight.qcow2", ".devin/ci-runner/seed.img", ".devin/ci-runner/tooling/seed-tooling.img", ".devin/ci-runner/network-preflight/network-preflight.qcow2", ".devin/ci-runner/network-preflight/network-preflight-b.qcow2", ".devin/ci-runner/network-preflight/network-preflight-c.qcow2", ".devin/ci-runner/network-preflight/network-preflight-neg.qcow2", ".devin/ci-runner/network-preflight/seed-net.img", ".devin/ci-runner/network-preflight/seed-net-b.img", ".devin/ci-runner/network-preflight/seed-net-c.img", ".devin/ci-runner/network-preflight/seed-net-neg.img"],
+    "disposed": ["/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/user-data", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/meta-data", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/network-config", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/seed.img", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w/console.log", "/run/user/1000/devin-bsuite-pilot-a6f71151-z7nku2_w", ".devin/ci-runner/pilot-job-a6f71151.qcow2", ".devin/ci-runner/preflight.qcow2", ".devin/ci-runner/seed.img", ".devin/ci-runner/tooling/seed-tooling.img", ".devin/ci-runner/network-preflight/network-preflight.qcow2", ".devin/ci-runner/network-preflight/network-preflight-b.qcow2", ".devin/ci-runner/network-preflight/network-preflight-c.qcow2", ".devin/ci-runner/network-preflight/network-preflight-neg.qcow2", ".devin/ci-runner/network-preflight/seed-net.img", ".devin/ci-runner/network-preflight/seed-net-b.img", ".devin/ci-runner/network-preflight/seed-net-c.img", ".devin/ci-runner/network-preflight/seed-net-neg.img"],
+    "disposed_by": "python3 -B /home/braden/Desktop/Dev/bsuite/.devin/ci-runner/dispose-pilot.py --dry-run && python3 -B /home/braden/Desktop/Dev/bsuite/.devin/ci-runner/dispose-pilot.py --apply; python3 -B /home/braden/Desktop/Dev/bsuite/.devin/ci-runner/dispose-preflight-images.py",
+    "retained": [
+      {"path": ".devin/ci-runner/tooling/tooling.qcow2", "why": "Verified reusable golden VM explicitly prepared for the operator; backing source used by launch-pilot.py, with no registration credentials."},
+      {"path": ".devin/ci-runner/ubuntu-24.04-server-cloudimg-amd64.img", "why": "Verified signed backing image required by the reusable golden VM."},
+      {"path": ".devin/ci-runner", "why": "Owned runtime configuration, source templates, public-key verification material and nonsecret evidence receipts; retained for reproducibility and recovery. Disposable VM disks and private job credentials were removed."},
+      {"path": "fix/devin-local-runner-pilot-20260920", "why": "Signed experimental branch is the authoritative source of the successful real pilot. Retained unmerged for explicit operator disposition, not treated as production-ready routing."}
+    ]
+  }
+}

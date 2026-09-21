@@ -1,0 +1,59 @@
+{
+  "date": "2026-09-20",
+  "proxy": {
+    "base_image": "ubuntu/squid@sha256:94f844158e12b52f51b4ae996515e37e8fb3e8d85e1c86caba1a297376e4ec4f",
+    "built_image": "bsuite-ci-egress:local",
+    "built_image_id": "sha256:a9a73d18a51aada57dc535452f67e514f473eb4e2847c0927316e49243c97d93",
+    "squid_version_after_upgrade": "6.14",
+    "config_parse": "squid -k parse: exit 0, all ACLs processed",
+    "container": {
+      "name": "bsuite-ci-egress-preflight",
+      "network": "host (loopback 127.0.0.1:43128 only, no published ports)",
+      "flags": "--user proxy --cap-drop ALL --security-opt no-new-privileges --read-only --tmpfs /tmp:rw,nosuid,noexec,size=16m --memory 128m --cpus 0.5 --pids-limit 64 --mount config readonly",
+      "post_test_state": "removed (image retained)"
+    },
+    "host_tests": {
+      "https://github.com/robots.txt": 200,
+      "http://archive.ubuntu.com/ubuntu/dists/noble/Release": 200,
+      "http://127.0.0.1:80/": 403,
+      "http://169.254.169.254/": 403,
+      "http://192.168.1.1/": 403,
+      "http://example.com/": 403
+    }
+  },
+  "vm": {
+    "name": "bsuite-ci-netpreflight",
+    "machine": "q35,accel=kvm, cpu host, smp 4, mem 8192",
+    "netdev": "user,id=net0,restrict=on,ipv6=off,guestfwd=tcp:10.0.2.100:3128-cmd:nc 127.0.0.1 43128",
+    "device": "virtio-net-pci,netdev=net0,mac=52:54:00:26:09:20",
+    "nic_isolation": "restrict=on blocks all host/LAN; only guestfwd to loopback proxy",
+    "invalidated_runs": {
+      "network-preflight-b.qcow2 / boot-net-b.log": "INVALIDATED: user-data used 7 separate runcmd entries, so failure in one entry did not prevent a later entry from printing the marker. This run already had the quoted MAC and no netplan traceback. Marker alone is not evidence of all assertions.",
+      "network-preflight.qcow2 / boot-net.log": "INVALIDATED: same split-runcmd gating flaw plus netplan MAC traceback."
+    },
+    "corrected_run_c": {
+      "disk": "network-preflight-c.qcow2",
+      "seed": "seed-net-c.img",
+      "log": "boot-net-c.log",
+      "gate": "single sh -ec runcmd block; every check must pass before marker; negated curls use explicit if/exit-1 (errexit-safe)",
+      "observed_serial_lines": [
+        "PASS github proxy",
+        "PASS localhost denied",
+        "PASS metadata denied",
+        "PASS unapproved domain denied",
+        "PASS direct host denied",
+        "PASS direct public denied",
+        "BSUITE_VM_RESTRICTED_NETWORK_READY"
+      ],
+      "qemu_exit": 0,
+      "guest_poweroff": "natural"
+    },
+    "negative_control": {
+      "disk": "network-preflight-neg.qcow2",
+      "seed": "seed-net-neg.img",
+      "log": "boot-net-neg.log",
+      "modification": "literal `false` as first line of the same sh -ec block; all later checks/marker left intact",
+      "result": "0 PASS lines, no READY marker, cloud-init cc_scripts_user WARNING 'Failed to run module scripts_user'; qemu exit 0 (poweroff only)"
+    }
+  }
+}
