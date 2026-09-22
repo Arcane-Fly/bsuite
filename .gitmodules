@@ -1,23 +1,23 @@
 [submodule "crm7"]
         path = crm7
-        url = https://github.com/GaryOcean428/crm7.git
+        url = https://github.com/Arcane-Fly/crm7.git
         branch = development
 [submodule "braden"]
         path = braden
-        url = https://github.com/GaryOcean428/braden.git
+        url = https://github.com/Arcane-Fly/braden.git
         branch = development
 [submodule "business-suite-unified"]
         path = business-suite-unified
-	url = https://github.com/GaryOcean428/business-suite-unified.git
+	url = https://github.com/Arcane-Fly/business-suite-unified.git
         branch = development
 [submodule "conduit"]
         path = conduit
-        url = https://github.com/GaryOcean428/conduit.git
+        url = https://github.com/Arcane-Fly/conduit.git
         branch = development
 [submodule "throughput"]
         path = throughput
-        url = https://github.com/GaryOcean428/throughput.git
+        url = https://github.com/Arcane-Fly/throughput.git
         branch = development
 [submodule "R80.4"]
 	path = R80.4
-	url = https://github.com/GaryOcean428/R80.4.git
+	url = https://github.com/Arcane-Fly/R80.4.git

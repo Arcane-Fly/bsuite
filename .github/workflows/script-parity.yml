@@ -38,6 +38,30 @@ jobs:
   parity:
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a read-only GitHub App token for crm7 parity
+        id: app-token
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+          permission-contents: read
+          permission-metadata: read
+
+      - name: Refuse an incomplete crm7 parity checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private crm7 parity.'; exit 1; }
+
+      - name: Refuse a crm7 parity check from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private crm7 parity does not run for non-canonical pull-request origins.' && exit 1
+
       - name: Checkout parent
         uses: actions/checkout@v5
         with:
@@ -48,8 +72,8 @@ jobs:
       # whole job if any single one fails to clone.
       #
       # The submodules are private, so the default GITHUB_TOKEN cannot read
-      # them. Same token chain the other cross-repo workflows use
-      # (secret-naming-drift, migration-version-collision-lint).
+      # them. A short-lived App token is scoped only to the two repositories
+      # this parity check reads.
       #
       # If every token in the chain fails, this checkout leaves crm7/ empty and
       # check-script-parity.sh exits 2 — a harness error, NOT a parity pass.
@@ -83,11 +107,11 @@ jobs:
       - name: Checkout crm7 (gated submodule, at the gitlink)
         uses: actions/checkout@v5
         with:
-          repository: GaryOcean428/crm7
+          repository: Arcane-Fly/crm7
           path: crm7
           ref: ${{ steps.gitlink.outputs.sha }}
           fetch-depth: 1
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - uses: actions/setup-node@v5
         with:

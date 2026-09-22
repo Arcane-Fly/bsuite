@@ -20,7 +20,7 @@ Every count below is a MEASUREMENT, not a default. Generation refuses to write t
 
 | App | Read | Local component files |
 |---|---|---|
-| crm7 | yes | 461 |
+| crm7 | yes | 463 |
 | business-suite-unified | yes | 119 |
 | conduit | yes | 101 |
 | braden | yes | 209 |

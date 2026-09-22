@@ -24,12 +24,11 @@
 #
 # THIS TEST DOES NOT HOLD A SECOND COPY OF THE LOGIC TO DRIFT. It greps the
 # real line verbatim out of the workflow file and `eval`s it inside a
-# throwaway loop over synthetic iter_rc values, so it is exercising the
+# throwaway loop over synthetic exit codes, so it is exercising the
 # ACTUAL shell code the workflow runs, not a hand-copied lookalike. If the
 # real line is ever edited, this either keeps testing the new behaviour (both
 # run identical code) or the grep below stops matching and this script fails
 # LOUDLY rather than silently validating a copy nobody is running anymore.
-#
 # Usage: scripts/test-reach-rc-precedence.sh
 set -uo pipefail
 cd "$(dirname "$0")/.."
@@ -43,7 +42,7 @@ WORKFLOW=".github/workflows/consumer-lockfile-reach.yml"
 # means a `#` (or anything else) ahead of `if` breaks the match. It must also
 # match EXACTLY ONCE: a duplicated live line is drift too, and `eval` must
 # never execute multiple newline-separated matches.
-PATTERN='^[[:space:]]+if \[ "\$iter_rc" = "1" \] \|\| \[ "\$rc" = "0" \]; then rc=\$iter_rc; fi$'
+PATTERN='^[[:space:]]+if \[ "\$iter_rc" != "0" \] \|\| \[ "\$rc" = "0" \]; then rc=\$iter_rc; fi$'
 match_count=$(grep -cE "$PATTERN" "$WORKFLOW" || true)
 if [ "$match_count" -ne 1 ]; then
   if [ "$match_count" -eq 0 ]; then
@@ -92,6 +91,9 @@ run_case "0 2" "2"
 
 # ── 4. All clean: must stay 0.
 run_case "0 0" "0"
+
+# ── 5. Lone signal kill (137): must be reported as the final rc
+run_case "137" "137"
 
 if [ "$fail" -ne 0 ]; then
   echo "rc-precedence self-test FAILED — the loop is not prioritising a genuine verification failure over an earlier code."
