@@ -1,0 +1,185 @@
+name: Migration symbol gates
+#
+# bsuite#3136 — a migration can reference an object that no replay path
+# creates. It applies cleanly on production (the object already exists there)
+# and fails only when the tree is rebuilt from scratch, which in this estate
+# is the parent pointer-bump PR, days later. The rehearsal (45-min, DB-backed)
+# catches it there. This gate catches it at AUTHORING time: no database, the
+# checker self-test first (a gate never seen to fail is not a gate), then gate
+# mode over the PR's changed migrations, then a NON-BLOCKING audit over the
+# whole tree as the estate's rebuildability census.
+#
+# WHY A SEPARATE WORKFLOW, NOT A STEP IN supabase-migration-rehearsal.yml
+# ──────────────────────────────────────────────────────────────────────────
+# The rehearsal workflow is mid-flight in bsuite#3147 (PR #3295, same day).
+# Two lanes editing one CI file is a collision hotspot; a standalone workflow
+# keeps this PR self-contained and #3295's diff clean. Once both land, a
+# follow-up can fold these steps into the rehearsal workflow's existing
+# "Determine changed migrations" step.
+#
+# WHY THE CHECKER IS PARENT-OWNED. The symbol universe spans all eight scopes
+# (they share one public schema) and resolves against the crm7 baseline
+# artefacts — both live in the parent tree. An app-repo PR's changed list
+# still resolves here: this workflow runs on the parent for every PR branch
+# that touches migration paths, and --changed paths are repo-relative to the
+# parent tree root (the same strings resolve-changed-migrations.sh emits and
+# rehearse-migrations.mjs matches on — bsuite#1964's contract).
+#
+# WHAT BLOCKS AND WHAT DOES NOT
+# ─────────────────────────────
+#   self-test        — blocking. If the instrument cannot fail by name, every
+#                      verdict below is void.
+#   gate (--changed) — blocking. A referenced symbol no replay path creates
+#                      fails the PR with the symbol and its creator named.
+#   audit            — NON-blocking (::warning). The tree's known gaps are
+#                      estate debt; this step makes them VISIBLE and counts
+#                      them, without converting existing debt into a new
+#                      PR's red. It must never be read as a pass.
+#
+# This job holds NO credential of any kind — no database, no secrets, no
+# network. It reads the checked-out tree and exits.
+
+on:
+  pull_request:
+    branches: [development, main]
+    paths:
+      - 'supabase/migrations/**'
+      - 'crm7/supabase/migrations/**'
+      - 'R80.4/supabase/migrations/**'
+      - 'braden/supabase/migrations/**'
+      - 'business-suite-unified/supabase/migrations/**'
+      - 'conduit/supabase/migrations/**'
+      - 'throughput/supabase/migrations/**'
+      - 'packages/schema-builder/supabase/migrations/**'
+      # The checker, this file, and the artefacts it resolves (a baseline
+      # refresh or quarantine edit changes the universe and must re-gate).
+      - 'scripts/check-migration-symbol-gaps.mjs'
+      - 'scripts/supabase/resolve-changed-migrations.sh'
+      - '.github/workflows/migration-symbol-gates.yml'
+      # Bare submodule GITLINKS — a pointer bump is the only way app migrations
+      # reach the parent diff (same trap as the rehearsal workflow, T1-01).
+      - 'crm7'
+      - 'R80.4'
+      - 'braden'
+      - 'business-suite-unified'
+      - 'conduit'
+      - 'throughput'
+  workflow_dispatch:
+    inputs:
+      changed:
+        description: 'Comma-separated migration paths to gate (blank = audit only)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: migration-symbol-gates-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  symbol-gates:
+    name: Migration symbols resolve on a rebuild
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: github.event.pull_request.draft == false || github.event_name != 'pull_request'
+    steps:
+      # Submodules are PRIVATE; the default token gets "Repository not found"
+      # for every one and the job dies at checkout (bsuite#1781). PAT preferred
+      # over GITHUB_TOKEN, never on a fork — same expression as the rehearsal.
+      - uses: actions/checkout@v5
+        with:
+          submodules: recursive
+          token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      # Same fail-loud assertion the rehearsal workflow carries: a checkout
+      # that missed the submodules would seed the universe from nothing and
+      # report a false pass — the exact "checked nothing vs found nothing"
+      # shape this estate keeps paying for.
+      - name: Assert every migration scope actually checked out
+        run: |
+          set -euo pipefail
+          missing=""
+          for a in crm7 R80.4 braden business-suite-unified conduit throughput; do
+            [ -e "$a/.git" ] || missing="$missing $a"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Submodules did not check out:$missing"
+            echo "The symbol universe would be built from nothing and every verdict below is void."
+            echo "Set the BSUITE_CROSS_REPO_PAT secret (Contents: read on each app repo) — see bsuite#1781."
+            exit 1
+          fi
+          echo "all six submodules present"
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: '.node-version'
+          package-manager-cache: false
+
+      # THE POSITIVE CONTROL. Run before the gate is trusted: if the checker
+      # cannot fail by name on a planted missing symbol, an ordering defect and
+      # a quarantined creator, its PASS below proves nothing.
+      - name: Self-test the checker (proves it can fail, by name)
+        run: |
+          set -o pipefail
+          node scripts/check-migration-symbol-gaps.mjs --self-test | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Determine changed migrations
+        id: changed
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          DISPATCH_CHANGED: ${{ github.event.inputs.changed }}
+          # persist-credentials: false stripped the submodule auth header; the
+          # selector's recovery fetch needs it handed back explicitly.
+          SUBMODULE_TOKEN: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" != "pull_request" ]; then
+            echo "list=${DISPATCH_CHANGED}" >> "$GITHUB_OUTPUT"
+            echo "Gating (dispatch): ${DISPATCH_CHANGED:-<none>}"
+            exit 0
+          fi
+          CHANGED_LIST=$(
+            bash scripts/supabase/resolve-changed-migrations.sh \
+              --changed "$BASE_SHA" "$HEAD_SHA" | paste -sd, -
+          )
+          echo "list=${CHANGED_LIST}" >> "$GITHUB_OUTPUT"
+          echo "Gating: ${CHANGED_LIST:-<none>}"
+
+      - name: Gate the PR's changed migrations (fail by name)
+        env:
+          CHANGED_LIST: ${{ steps.changed.outputs.list }}
+        run: |
+          set -o pipefail
+          # Empty list = this PR touches no migration; the audit step below
+          # still runs so the census stays current in the summary.
+          if [ -z "$CHANGED_LIST" ]; then
+            echo "No changed migrations in this PR — gate mode skips (audit below still runs)."
+            exit 0
+          fi
+          node scripts/check-migration-symbol-gaps.mjs \
+            --changed "$CHANGED_LIST" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Audit the whole tree (NON-blocking rebuildability census)
+        run: |
+          set -o pipefail
+          # Reporting, never gating: pre-existing tree debt must be VISIBLE
+          # (counted in the step summary) without failing a PR that did not
+          # cause it. A rising count on a PR that DOES add a gap is caught by
+          # the blocking gate step above; this step is the estate census.
+          if node scripts/check-migration-symbol-gaps.mjs --audit \
+              | tee -a "$GITHUB_STEP_SUMMARY"; then
+            echo "audit: no unresolvable symbols in the replayable set"
+          else
+            rc=$?
+            if [ "$rc" -eq 1 ]; then
+              echo "::warning::audit found unresolvable symbol(s) in the replayable set — pre-existing tree debt, NOT introduced by this PR. See the summary; this census must trend to zero."
+            else
+              echo "::error::audit failed with instrument error rc=$rc"
+              exit "$rc"
+            fi
+          fi
