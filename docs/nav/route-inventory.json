@@ -592,7 +592,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:390",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:391",
       "note": "→ /"
     },
     {
@@ -619,7 +619,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:272",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:273",
       "note": null
     },
     {
@@ -646,7 +646,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:556",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:562",
       "note": null
     },
     {
@@ -673,7 +673,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:305",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:306",
       "note": null
     },
     {
@@ -700,7 +700,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:337",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:338",
       "note": null
     },
     {
@@ -727,7 +727,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:314",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:315",
       "note": null
     },
     {
@@ -754,7 +754,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:323",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:324",
       "note": null
     },
     {
@@ -781,7 +781,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:306",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:307",
       "note": null
     },
     {
@@ -808,7 +808,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:362",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:363",
       "note": "→ /developer/platform-kit"
     },
     {
@@ -835,7 +835,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:365",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:366",
       "note": "→ /developer/platform-kit/auth"
     },
     {
@@ -862,7 +862,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:367",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:368",
       "note": "→ /developer/database"
     },
     {
@@ -889,7 +889,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:368",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:369",
       "note": "→ /developer/database"
     },
     {
@@ -916,7 +916,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:363",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:364",
       "note": "→ /developer/platform-kit/logs"
     },
     {
@@ -943,7 +943,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:364",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:365",
       "note": "→ /developer/platform-kit/secrets"
     },
     {
@@ -970,7 +970,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:366",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:367",
       "note": "→ /developer/platform-kit/storage"
     },
     {
@@ -997,7 +997,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:324",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:325",
       "note": null
     },
     {
@@ -1024,7 +1024,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:325",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:326",
       "note": null
     },
     {
@@ -1051,7 +1051,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:327",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:328",
       "note": null
     },
     {
@@ -1078,7 +1078,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:498",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:504",
       "note": null
     },
     {
@@ -1105,7 +1105,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:492",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:498",
       "note": null
     },
     {
@@ -1132,7 +1132,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:525",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:531",
       "note": null
     },
     {
@@ -1159,7 +1159,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:284",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:285",
       "note": null
     },
     {
@@ -1186,7 +1186,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:333",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:334",
       "note": null
     },
     {
@@ -1213,7 +1213,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:386",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:387",
       "note": "→ /developer/pages"
     },
     {
@@ -1240,7 +1240,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:375",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:376",
       "note": null
     },
     {
@@ -2108,7 +2108,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:540",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:546",
       "note": null
     },
     {
@@ -2135,7 +2135,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:541",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:547",
       "note": null
     },
     {
@@ -2162,7 +2162,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:330",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:331",
       "note": null
     },
     {
@@ -2189,7 +2189,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:546",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:552",
       "note": null
     },
     {
@@ -2216,7 +2216,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:547",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:553",
       "note": null
     },
     {
@@ -2243,7 +2243,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:329",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:330",
       "note": null
     },
     {
@@ -2270,7 +2270,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:328",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:329",
       "note": null
     },
     {
@@ -2297,7 +2297,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:369",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:370",
       "note": null
     },
     {
@@ -2324,7 +2324,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:371",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:372",
       "note": null
     },
     {
@@ -2351,7 +2351,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:370",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:371",
       "note": null
     },
     {
@@ -2378,7 +2378,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:479",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:485",
       "note": null
     },
     {
@@ -2405,7 +2405,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:528",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:534",
       "note": null
     },
     {
@@ -2432,7 +2432,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:292",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:293",
       "note": null
     },
     {
@@ -2459,7 +2459,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:374",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:375",
       "note": null
     },
     {
@@ -2486,7 +2486,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:380",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:381",
       "note": null
     },
     {
@@ -2513,7 +2513,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:293",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:294",
       "note": null
     },
     {
@@ -2540,7 +2540,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:538",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:544",
       "note": null
     },
     {
@@ -2567,7 +2567,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:524",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:530",
       "note": null
     },
     {
@@ -2594,7 +2594,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:280",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:281",
       "note": null
     },
     {
@@ -2621,7 +2621,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:299",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:300",
       "note": "→ /branding"
     },
     {
@@ -2648,7 +2648,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:373",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:374",
       "note": null
     },
     {
@@ -2675,7 +2675,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:326",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:327",
       "note": null
     },
     {
@@ -2702,7 +2702,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:372",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:373",
       "note": null
     },
     {
@@ -2729,7 +2729,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:539",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:545",
       "note": null
     },
     {
