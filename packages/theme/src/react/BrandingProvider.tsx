@@ -58,6 +58,9 @@ import { createContext, useCallback, useEffect, useMemo, useRef, useState } from
 import {
     sanitizeBrandingUrl,
     sanitizeFontFamilyForCss,
+    sanitizeTypeItalic,
+    sanitizeTypeScale,
+    sanitizeTypeWeight,
     toCssUrl,
 } from './branding-sanitize.js'
 
@@ -84,6 +87,14 @@ export interface TenantBranding {
   company_name?: string
   /** Optional CSS font-family stack string */
   font_stack?: string | null
+  /** Tenant type-scale multiplier (bsuite#3155). Bounded 0.85–1.25. */
+  type_scale?: number | string | null
+  /** Heading font-weight override (100–900). */
+  heading_weight?: number | string | null
+  /** Body font-weight override (100–900). */
+  body_weight?: number | string | null
+  /** Emphasis style for <em>/<i>/<cite>: true = italic, false = normal. */
+  emphasis_italic?: boolean | string | null
 }
 
 export interface BrandingContextValue {
@@ -154,6 +165,14 @@ const BRANDING_CSS_MAP: Record<keyof TenantBranding, string> = {
   favicon_url: '--favicon-url',
   company_name: '',
   font_stack: '--font-stack',
+  // Typography tokens (bsuite#3155). Values are NOT written directly from
+  // these entries — applyBrandingToRoot routes each through its bounded
+  // sanitizer below. The map entries exist so the null-cleanup loop removes
+  // every var apply can set (cleanup must mirror apply).
+  type_scale: '--type-scale',
+  heading_weight: '--weight-heading',
+  body_weight: '--weight-body',
+  emphasis_italic: '--style-emphasis',
 }
 
 function applyBrandingToRoot(branding: TenantBranding | null): void {

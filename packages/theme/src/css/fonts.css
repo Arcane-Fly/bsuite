@@ -30,8 +30,8 @@
  *
  * WHAT THIS SHIPS, AND WHAT IT DELIBERATELY DOES NOT
  * ─────────────────────────────────────────────────
- * Four faces: Geist Variable and Geist Mono Variable, latin and latin-ext, woff2
- * only, upright only.
+ * Six faces: Geist Variable (upright + italic) and Geist Mono Variable
+ * (upright), latin and latin-ext, woff2 only.
  *
  *   - **woff2 only.** Every app targets es2022 / chrome100 / edge100 /
  *     firefox100 / safari15.4. woff2 has shipped in all of them since 2016, so a
@@ -45,10 +45,14 @@
  *     conduit and throughput are paying for Cyrillic today. An app that genuinely
  *     needs another subset should add that face itself and say why.
  *
- *   - **upright only.** No italic face is declared, so italic text synthesises.
- *     Verified before deciding: no D2C surface in the estate sets an italic
- *     `font-family` against these tokens. If one ever does, add the italic file
- *     here rather than importing the whole package again.
+ *   - **upright only — superseded 2026-09-19 by bsuite#3155.** No italic face
+ *     was declared while nothing consumed italic against these tokens; italic
+ *     text synthesised instead. `--style-emphasis: italic` (bsuite#3155) is
+ *     now consumed by every <em>/<i>/<cite> in every consumer, so the Geist
+ *     Variable italic faces are shipped below — same vendored discipline:
+ *     woff2, latin + latin-ext, variable 100–900. Geist Mono stays upright
+ *     only: no mono token names italic, and nothing consumes it. If one ever
+ *     does, add the file here rather than importing the whole package again.
  *
  *   - **variable, not static weights.** One file per subset covers 100–900. The
  *     eight discrete weights it replaces were eight separate downloads.
@@ -147,6 +151,45 @@
   font-display: swap;
   font-weight: 100 900;
   src: url('./fonts/geist-mono-latin-ext-wght-normal.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,
+    U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F,
+    U+A720-A7FF;
+}
+
+/* ── Geist Variable — ITALIC (bsuite#3155) ────────────────────────────────── */
+/*
+ * Supersedes the "upright only" decision recorded in the header above. That
+ * decision was correct when written — nothing consumed italic against these
+ * tokens. bsuite#3155 adds --style-emphasis: italic, which every <em>/<i>/<cite>
+ * in every consumer resolves to, so the italic face is now load-bearing and
+ * ships with the token (a style token naming a face that does not exist is
+ * the exact false-complete class this file's header documents).
+ *
+ * Same discipline as the upright faces: vendored woff2, latin + latin-ext
+ * only, variable weight 100–900. Sourced from @fontsource-variable/geist
+ * 5.3.0 (SIL OFL 1.1, licence unchanged).
+ */
+
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-latin-wght-italic.woff2')
+    format('woff2-variations');
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329,
+    U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-latin-ext-wght-italic.woff2')
     format('woff2-variations');
   unicode-range:
     U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329,

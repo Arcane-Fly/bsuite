@@ -181,6 +181,68 @@
   --track-body:    0em;
   --track-eyebrow: 0.09em;
 
+  /* ═══ TYPOGRAPHY TOKENS (bsuite#3155 / D-176) — size, weight, line-height,
+     and emphasis style as TOKENS, so a tenant change propagates to every
+     surface through the cascade instead of being re-typed per page.
+
+     SHAPE OF THE LAYER —
+       --type-scale    the tenant knob. A single multiplier every size token
+                       is expressed through, so ONE value rescales the whole
+                       ramp coherently (headings and body move together).
+       --text-*        size tokens, expressed as calc(<base> * var(--type-scale)).
+                       Base values are the pixel sizes the base element rules
+                       have always rendered (h1 25px … h6 11px, body 14px =
+                       Tailwind text-sm), so the default render is PIXEL-
+                       IDENTICAL to before. The scale factor is applied to a
+                       1rem reference so the calc resolves at :root font-size.
+       --leading-*     line-height companions (unitless, as line-height wants).
+       --weight-*      weight tokens. The shipped Geist faces are VARIABLE
+                       100–900, so any value in that range renders without
+                       synthetic bolding.
+       --style-emphasis emphasis style for <em>/<i>/<cite>. Non-normal values
+                       are backed by the shipped Geist italic @font-face
+                       (fonts.css) — the token and its face land together.
+
+     WHY A MULTIPLIER AND NOT N px PER STEP — the failure mode this issue is
+     written against is a hard-coded per-page list. Six sizes as flat values
+     would re-create exactly that at token level: a tenant wanting larger text
+     would need six coordinated edits. calc(base * scale) keeps the ramp
+     internally consistent by construction. */
+
+  /* Tenant-rescaled global type scale. Range 0.85–1.25, checked at the
+     persistence boundary (sanitizeTypeScale); 1 = the estate default. */
+  --type-scale: 1;
+
+  /* Size tokens — calc(base * var(--type-scale)) with a 1rem reference. */
+  --text-h1:      calc(25rem / 16 * var(--type-scale));
+  --text-h2:      calc(19rem / 16 * var(--type-scale));
+  --text-h3:      calc(16rem / 16 * var(--type-scale));
+  --text-h4:      calc(14rem / 16 * var(--type-scale));
+  --text-h5:      calc(13rem / 16 * var(--type-scale));
+  --text-h6:      calc(11rem / 16 * var(--type-scale));
+  --text-body:    calc(14rem / 16 * var(--type-scale));
+  --text-small:   calc(13rem / 16 * var(--type-scale));
+  --text-caption: calc(12rem / 16 * var(--type-scale));
+
+  /* Line-height companions — unitless, matching Tailwind v4 preflight
+     (`text-sm` → 1.4285714; body defaults to normal ≈1.5). At the default
+     scale the rendered line boxes are pixel-identical to the pre-token
+     estate, so adoption is visually inert until a tenant moves the knob. */
+  --leading-body: 1.5;
+  --leading-heading: 1.35;
+  --leading-caption: 1.45;
+
+  /* Weight tokens — Geist ships variable 100–900. */
+  --weight-body: 400;
+  --weight-heading: 700;
+  --weight-strong: 700;
+
+  /* Emphasis style for <em>/<i>/<cite>. `italic` is backed by the shipped
+     Geist italic @font-face (fonts.css); set to `normal` only if the italic
+     faces are removed — a style token naming a face that does not exist is
+     the false-complete class fonts.css's header documents. */
+  --style-emphasis: italic;
+
   /* ═══ INFORMATIONAL SCALE — categorical, NOT semantic ═══
      Added 2026-08-03 by operator ruling: "informational hues might be handy
      to stand out against the style colour palette."
@@ -831,19 +893,56 @@
      to set itself, which is how crm7 ran Inter against a Geist contract and
      the estate ran four families at once. Same defect as the heading ramp:
      a token nobody applies is not a font, it is a variable. */
-  body { font-family: var(--font-body); }
+  /* Typography tokens (bsuite#3155) — sizes/weights/line-heights read the
+     token layer, not literals. Every value a tenant can change resolves
+     through --type-scale, --weight-* and --leading-* at render time; a
+     tenant change propagates to every surface through the cascade. */
+  body {
+    font-family: var(--font-body);
+    font-size: var(--text-body);
+    line-height: var(--leading-body);
+    font-weight: var(--weight-body);
+  }
   code, kbd, samp, pre { font-family: var(--font-mono); }
+  em, i, cite { font-style: var(--style-emphasis); }
 
-  h1 { color: var(--heading-color, var(--role-h1)); font-size: 25px; font-weight: 700; letter-spacing: var(--track-display); }
-  h2 { color: var(--heading-color, var(--role-h2)); font-size: 19px; }
-  h3 { color: var(--heading-color, var(--role-h3)); font-size: 16px; }
-  h4 { color: var(--heading-color, var(--role-h4)); font-size: 14px; }
-  h5 { color: var(--heading-color, var(--role-h5)); font-size: 13px; }
+  h1 {
+    color: var(--heading-color, var(--role-h1));
+    font-size: var(--text-h1);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+    letter-spacing: var(--track-display);
+  }
+  h2 {
+    color: var(--heading-color, var(--role-h2));
+    font-size: var(--text-h2);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+  }
+  h3 {
+    color: var(--heading-color, var(--role-h3));
+    font-size: var(--text-h3);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+  }
+  h4 {
+    color: var(--heading-color, var(--role-h4));
+    font-size: var(--text-h4);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+  }
+  h5 {
+    color: var(--heading-color, var(--role-h5));
+    font-size: var(--text-h5);
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
+  }
   h6 {
     color: var(--heading-color, var(--role-h6));
-    font-size: 11px;
+    font-size: var(--text-h6);
     text-transform: uppercase;
     letter-spacing: var(--track-eyebrow);
-    font-weight: 700;
+    font-weight: var(--weight-heading);
+    line-height: var(--leading-heading);
   }
 }

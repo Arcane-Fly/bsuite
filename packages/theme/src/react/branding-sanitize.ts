@@ -221,3 +221,81 @@ export function sanitizeFontFamilyForCss(raw: string | null | undefined): string
 
   return `${withResolvedFace}, ${FONT_FALLBACK_CHAIN}`
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Typography token sanitizers (bsuite#3155).
+//
+// The tenant-controlled branding row now carries numeric/boolean typography
+// values (type_scale, heading_weight, body_weight, emphasis_italic). These
+// arrive from semi-trusted admin rows, so they are bounded AT THE DOM-APPLY
+// BOUNDARY like every other branding value: a value outside its band is
+// rejected (→ null) and the caller leaves the theme's own default in place.
+// The CSS custom properties these feed are declared with fixed defaults in
+// vars.css, so "reject" can never mean "unset a variable to something
+// unbounded" — the :root fallback applies.
+//
+// Regex-free, pure, exercised in ./branding-sanitize.test.ts.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Lower bound of the tenant type scale — below this, text becomes unreadable. */
+export const TYPE_SCALE_MIN = 0.85
+
+/** Upper bound of the tenant type scale — above this, layouts overflow. */
+export const TYPE_SCALE_MAX = 1.25
+
+/** Default type scale — the estate's pre-token render. */
+export const TYPE_SCALE_DEFAULT = 1
+
+/**
+ * Validate a tenant type-scale multiplier. Accepts a finite number in
+ * [0.85, 1.25]; accepts numeric strings (the DB column is NUMERIC, which
+ * supabase-js returns as number, but stored JSON may round-trip as string).
+ * Anything else — non-finite, out of band, wrong type — returns null and the
+ * caller leaves `--type-scale` untouched (vars.css default 1 applies).
+ */
+export function sanitizeTypeScale(raw: unknown): number | null {
+  let value: unknown = raw
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    // Numeric strings only — `Number('')` is 0 and would smuggle an empty
+    // cell through as a real (out-of-band) value.
+    if (trimmed === '') return null
+    value = Number(trimmed)
+  }
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  if (value < TYPE_SCALE_MIN || value > TYPE_SCALE_MAX) return null
+  return value
+}
+
+/**
+ * Validate a font-weight value. Accepts an integer (or numeric string) in the
+ * 100–900 range the shipped Geist variable faces cover — anything outside
+ * would fall back to synthetic bolding/bolding-free rendering that never
+ * matches the face. Returns null otherwise.
+ */
+export function sanitizeTypeWeight(raw: unknown): number | null {
+  let value: unknown = raw
+  if (typeof value === 'string') {
+    const trimmed = value.trim()
+    if (trimmed === '') return null
+    value = Number(trimmed)
+  }
+  if (typeof value !== 'number' || !Number.isFinite(value)) return null
+  const rounded = Math.round(value)
+  if (rounded !== value) return null
+  if (rounded < 100 || rounded > 900) return null
+  return rounded
+}
+
+/**
+ * Validate an emphasis-style toggle. The stored column is BOOLEAN; a boolean
+ * maps straight through. `null`/absent means "not set" — the caller leaves
+ * the theme default (`--style-emphasis: italic`) in place. The legacy string
+ * forms are accepted for rows written before the boolean column existed.
+ */
+export function sanitizeTypeItalic(raw: unknown): boolean | null {
+  if (typeof raw === 'boolean') return raw
+  if (raw === 'italic' || raw === 'true') return true
+  if (raw === 'normal' || raw === 'false') return false
+  return null
+}
