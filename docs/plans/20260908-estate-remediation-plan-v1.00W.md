@@ -448,3 +448,46 @@ Command-backed progress:
 - Updated `bsuite_project_truth_index.current_coordination.owner` to `devin-bsuite-closeout-20260919` via authenticated REST read-modify-write with length/sha256 verification.
 
 Next: merge promotion PRs, verify `version.json` on production hosts, run CRM7 migrations in order through the merge pipeline, then return to the ledger pending items.
+
+## 23 September 2026 — wave 3 status for the forms lane (#3208)
+
+**Ownership.** For the #3208 forms lane, this supersedes the 19 September statement that ownership moved to
+Devin. The forms writer is Claude session `ef2aae85`. Maker Codex task `01a0c25e` is the sole dispatch and
+release owner, under reservation `futurebuild_forms_3208_claude_reservation_20260922`. The #3208 lane edits
+this plan, the [capability register](../20260908-customization-capability-register-v1.00W.md) and the
+[remediation README](20260908-remediation/README.md) under that reservation's `owned_document_paths`. Other
+lanes' ownership is not changed here.
+
+**Wave 3's exit condition is unmet.** Wave 3 requires an admin to visually author and modify both forms and
+workflows, with real authorised users then completing them. The requirement is now read together with
+Braden's 23 September 12:03 clarification (see the register's 23 September section).
+
+**What exists (code evidence only).** [crm7 PR #2699](https://github.com/Arcane-Fly/crm7/pull/2699) is open
+and unmerged, at head `35109fbc5`. Its pgTAP runs were on a local, isolated test lease. There is no deployed,
+manual or release claim.
+
+- Form-builder user-interface fixes.
+- The template-level `requires_confidential` setting.
+- A render-parity visibility gate.
+- `form_submissions` and signatory security work. This includes the 23 September author save-and-finish
+  ruling, precedent `people_can_always_save_and_finish_their_own_core_work`.
+
+**Blocking ruling (maker).** The store reconciliation in
+[FRM matrix §8](https://github.com/Arcane-Fly/crm7/blob/35109fbc5/docs/20260922-frm-source-to-live-matrix-v1.00W.md)
+recommends:
+
+- `custom_pages` with immutable revisions as the definition store;
+- `document_records` for completed copies, including an author widening of Phase A;
+- `signature_requests` as the one signing pipeline;
+- splitting PR #2699, so the two table migrations are held.
+
+New persistence and user-interface slices on `form_submissions` are paused until the maker rules.
+
+**Continuing independent work**
+
+- Keep confidential form content out of `audit_events` and `tasks`. These are design v2 review findings
+  HIGH 1 and HIGH 2.
+- Add a draft store that only template managers can read (review finding M2).
+
+**Sibling class.** [crm7#2702](https://github.com/Arcane-Fly/crm7/issues/2702) covers guests who can create
+rows but never edit them, on five tables outside this lane. It is queued as `crm7-2702` (P1).
