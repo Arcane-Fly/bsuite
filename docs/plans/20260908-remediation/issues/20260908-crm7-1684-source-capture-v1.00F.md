@@ -1,0 +1,31 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# `/engagements/create` — AVETMISS funding framed against training instead of the employer
+
+https://github.com/GaryOcean428/crm7/issues/1684
+
+Snapshot updatedAt: 2026-09-06T09:16:01Z. Open at capture; re-read live.
+
+Operator observed: `/engagements/create` — AVETMISS funding framing is wrong. A GTO (Group Training Organisation) records funding available to EMPLOYERS, not to training. The current framing conflates the two.
+
+**Route/surface:** `/engagements/create`
+
+Directive: D-80 (2026-08-13)
+
+## Acceptance criteria
+- On `/engagements/create`, the AVETMISS funding field(s) are framed and labelled as funding available to the EMPLOYER for the engagement, not as funding attached to a training activity.
+- Domain review confirms the corrected framing matches how a GTO actually records AVETMISS-linked funding (employer-side, not training-side) per the gto domain glossary.
+- No downstream report or claim-generation logic that reads this field silently continues to assume the old (training-side) framing.
+
+## Mandatory before merge
+- **Validation loop:** §9.1 output-equivalence — the field's stored meaning/shape must match employer-side funding semantics, verified against how downstream funding/claim logic consumes it.
+- **Equivalence target:** Funding entered on `/engagements/create` reads correctly as employer-attached funding everywhere it is subsequently displayed or claimed against.
+- **Cross red-team:** bsuite-user-advocate
+- **Skills to load:** biz-au-apprenticeship, general-dry-one-shot-architecture
+
+---
+*Filed under operator directive D-80 (2026-08-13). Filing is not addressing (D-59) — no fix is implied or claimed by this issue.*

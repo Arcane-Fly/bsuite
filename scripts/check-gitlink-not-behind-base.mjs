@@ -40,9 +40,14 @@
  *
  * Usage:
  *   node scripts/check-gitlink-not-behind-base.mjs <base-ref> [head-ref]
+ *   node scripts/check-gitlink-not-behind-base.mjs <base-ref> :staged   # the INDEX, before committing
  *   node scripts/check-gitlink-not-behind-base.mjs --self-test
  */
 import { execFileSync } from 'node:child_process';
+
+import { gitlinkAt, gitlinkParserCases } from './lib/gitlink-at.mjs';
+
+export { gitlinkAt };
 
 export const SUBMODULES = [
   'crm7',
@@ -57,17 +62,6 @@ function git(args, cwd) {
   return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim();
 }
 
-/** The gitlink a ref records for one submodule, or null when the path is absent. */
-export function gitlinkAt(ref, path) {
-  let out;
-  try {
-    out = git(['ls-tree', ref, '--', path]);
-  } catch {
-    return null;
-  }
-  const m = out.match(/^160000 commit ([0-9a-f]{40})\t/);
-  return m ? m[1] : null;
-}
 
 /**
  * Classify one pointer move. PURE, so the self-test can exercise every branch without
@@ -114,6 +108,8 @@ function selfTest() {
   t('advanced does NOT refuse', REFUSE.has('advanced'), false);
   t('unchanged does NOT refuse', REFUSE.has('unchanged'), false);
   t('added does NOT refuse', REFUSE.has('added'), false);
+
+  cases.push(...gitlinkParserCases());
 
   const bad = cases.filter((c) => !c.ok);
   for (const b of bad) console.error(`FAIL ${b.n}: expected ${JSON.stringify(b.want)}, got ${JSON.stringify(b.got)}`);

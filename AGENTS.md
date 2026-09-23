@@ -1,3 +1,10 @@
+<!-- bsuite-remediation-rules:start -->
+## Remediation execution rules (2026-09-09)
+
+Read [.agents/rules/remediation-execution.md](.agents/rules/remediation-execution.md) before remediation work.
+This current contract governs remediation execution where older workflow defaults conflict.
+<!-- bsuite-remediation-rules:end -->
+
 # BSuite — agent rulebook
 
 Canonical instructions for every AI agent working in this repo (Claude Code, Copilot, Cursor,

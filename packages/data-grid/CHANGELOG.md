@@ -7,6 +7,12 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ---
 
+## [3.0.4] — 2026-09-17 — Release of the 3.0.4-next line
+
+No source difference from 3.0.4-next.2; only the version is finalised, so npm's
+`latest` moves off 3.0.3 and consumers stop having to pin a prerelease to get
+the per-cell persistence outcomes and retry precision below.
+
 ## [3.0.4-next.2] — 2026-09-09 — Superseded apply receipt + retry precision
 
 - Preserve `applyCells` failure receipts per invocation when a later call supersedes cells in that original attempt.

@@ -86,6 +86,8 @@ export const GENERATED_MARKER =
  * meaning for freshness.
  */
 const HAND_WRITTEN = {
+  'docs/plans/20260908-remediation/README.md':
+    'Curated remediation authority, routing and provenance for 370 issue prompts; its acceptance and ownership guidance is not a generated directory listing.',
   'docs/README.md':
     'The estate documentation hub. 90 curated entries over 124 files, several annotated with why a document was archived and what replaced it.',
   'docs/plans/README.md':

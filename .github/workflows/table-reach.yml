@@ -42,7 +42,7 @@ jobs:
     name: Tables created with no application reach
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
@@ -53,9 +53,10 @@ jobs:
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # 27 self-tests, of which 13 are regressions for false positives and false
       # negatives this detector produced on its own first four runs. The count moved

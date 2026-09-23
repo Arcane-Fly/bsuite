@@ -47,9 +47,10 @@ jobs:
 
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24.14.0'
+          package-manager-cache: false
 
       # Run the classifier's own tests before trusting its verdict. Its first
       # version reported OK over 12 genuinely-wrong filenames because it never

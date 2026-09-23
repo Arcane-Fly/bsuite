@@ -111,9 +111,10 @@ jobs:
           fetch-depth: 1
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # The parser decides which issues get closed automatically. Running its
       # self-test here means a broken parser fails the run BEFORE it is pointed

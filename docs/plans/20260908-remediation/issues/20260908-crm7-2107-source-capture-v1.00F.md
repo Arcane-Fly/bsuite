@@ -1,0 +1,43 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# 6+ other *Store edit pages share the stale-error-blanks-the-form bug fixed for placements in #2060
+
+https://github.com/GaryOcean428/crm7/issues/2107
+
+Snapshot updatedAt: 2026-08-27T01:57:10Z. Open at capture; re-read live.
+
+## What #2060 / #2105 found and fixed for ONE page
+
+`placements/[id]/edit.tsx` destructures `{ selectedItem, error, errorCode, update }` from `usePlacementStore()` (a `createEntityStore` instance). Two fields, one mechanism:
+
+- The record-load guard: `if (error || !placement) { return <Placement not found /> }`
+- A failed `update()` call sets that SAME store's `error`/`errorCode` fields (`createEntityStore.ts`'s `update()` action: `set({ error: message, errorCode: extractErrorCode(err), ... })`)
+
+So a **rejected save** (wrong data, a CHECK constraint, RLS, anything) sets `error`, and on the very next render the page replaces the entire edit form with "Placement not found" — even though the record loaded fine and is sitting right there in `selectedItem`. #2060 quoted this exact symptom: *"her placements come back as 'not found'"* after a save the constraint rejected, not a missing record.
+
+PR #2105 fixed this for placements specifically: the save-failure branch now reads `error`/`errorCode` to build an actionable toast, then explicitly clears them (`usePlacementStore.setState({ error: null, errorCode: null })`) before the next render, so the "not found" guard can't fire off stale write-path state.
+
+## The same shape exists elsewhere
+
+`createEntityStore` backs **93 stores** (`src/stores/*Store.ts`). A grep for the guard shape (`if (error || !X)`) across `src/pages` found 35 matches; cross-referencing against `{ selectedItem, error, update }` destructuring + an `await update(...)` call in the same component confirms at least these six ALSO have the identical mechanism (unverified beyond this pair-check — a proper fix needs to read each one, not just grep):
+
+- `src/pages/contracts/training/[id]/edit.tsx` (`useTrainingContractStore`)
+- `src/pages/mentors/[id]/edit.tsx`
+- `src/pages/communications/template-edit.tsx` (`useCommunicationTemplateStore`)
+- `src/pages/vet/training-packages/[id]/edit.tsx`
+- `src/pages/hosts/[id]/edit.tsx` (`useHostEmployerStore`)
+- `src/pages/progress-reviews/reviews/[id]/edit.tsx` (`usePerformanceReviewStore`)
+
+**One wrinkle that rules out a single blanket fix at the store level**: at least three OTHER consumers (`src/pages/field-officers/actions/index.tsx`, `src/pages/communications/template-create.tsx`, `src/pages/communications/template-edit.tsx`) already read the store's `error` field directly as their OWN save-failure toast description (`description: error || 'Failed to update template.'`). So `error` is currently doing double duty across the estate — some consumers correctly use it as "did the record fail to LOAD", others already (ab)use it as "did the last WRITE fail" for their own messaging. Retargeting `error`/`errorCode` to load-only in `createEntityStore.ts` would fix the guard-tripping bug for everyone in one place, but would silently degrade the save-error specificity for those consumers unless each one is migrated to a new field (e.g. `mutationError`/`mutationErrorCode`) at the same time.
+
+## Why this wasn't done as part of #2105
+
+#2105 is scoped to crm7#2060 (the placements charge-rate constraint). A central fix in `createEntityStore.ts` touches all 93 stores and needs every consumer that reads `error` for a write-path message audited and migrated in the same change — that's a proper standalone piece of work with its own review, not a rider on a single-page bug fix. Filing this so it doesn't get lost.
+
+## Suggested fix shape
+
+Add `mutationError` / `mutationErrorCode` to `EntityState<T>`, set them (not `error`/`errorCode`) from `create`/`update`/`remove`/`bulkUpdate`/`bulkDelete` on failure, leave `error`/`errorCode` set only by `fetch`/`fetchById`. Migrate the ~3 known consumers that read `error` for a save message today, then the six edit pages above (and whatever the exhaustive audit turns up) get the "not found" fix for free with zero page-level changes.

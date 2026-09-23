@@ -57,7 +57,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (with submodules — the collision is BETWEEN submodules)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
           # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a
@@ -71,9 +71,10 @@ jobs:
         run: scripts/assert-app-trees-present.sh
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # A gate whose pass and no-op states are indistinguishable hides defects.
       # Run the checker's own self-test FIRST so a pass below is known to come
@@ -107,7 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (with submodules — the configs being checked live inside them)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
@@ -116,9 +117,10 @@ jobs:
         run: scripts/assert-app-trees-present.sh
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       - name: Self-test the checker
         run: node scripts/check-stale-lint-exemptions.mjs --self-test

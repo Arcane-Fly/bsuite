@@ -49,7 +49,7 @@ jobs:
     name: Dangling links, source paths and supersession
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # The submodules are PRIVATE repos. The default GITHUB_TOKEN cannot
           # clone them — a 404, not a permission error — so every cross-app
@@ -82,9 +82,10 @@ jobs:
       - name: Refuse to scan an empty tree (shared guard)
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # scripts/assert-app-trees-present.sh passes an app whose src/ checked
       # out even if its docs/ did not. Every gate below reads docs/

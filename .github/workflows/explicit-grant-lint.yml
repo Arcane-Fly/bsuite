@@ -44,11 +44,11 @@ jobs:
       BASE_REF: ${{ github.base_ref || github.ref_name }}
     steps:
       - name: Checkout (full history required for diff)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
-      # actions/checkout@v4 with fetch-depth: 0 already fetches
+      # actions/checkout@v5 with fetch-depth: 0 already fetches
       # `+refs/heads/*:refs/remotes/origin/*`, so `origin/<base>` normally
       # resolves. "Normally" is not a guarantee to build a required gate on:
       # the old step here fetched `main:main` (a LOCAL branch) while the script

@@ -56,9 +56,14 @@
  *
  * Usage:
  *   node scripts/check-gitlink-in-app-main.mjs [head-ref]     # defaults to HEAD
+ *   node scripts/check-gitlink-in-app-main.mjs :staged        # the INDEX: run before committing
  *   node scripts/check-gitlink-in-app-main.mjs --self-test
  */
 import { execFileSync } from 'node:child_process'
+
+import { gitlinkAt, gitlinkParserCases, STAGED } from './lib/gitlink-at.mjs'
+
+export { gitlinkAt }
 
 export const SUBMODULES = [
   'crm7',
@@ -73,17 +78,6 @@ function git(args, cwd) {
   return execFileSync('git', args, { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }).trim()
 }
 
-/** The gitlink a ref records for one submodule, or null when the path is absent. */
-export function gitlinkAt(ref, path) {
-  let out
-  try {
-    out = git(['ls-tree', ref, '--', path])
-  } catch {
-    return null
-  }
-  const m = out.match(/^160000 commit ([0-9a-f]{40})\t/)
-  return m ? m[1] : null
-}
 
 /**
  * Classify one gitlink against the app's own live main tip. PURE — isAncestor is
@@ -133,6 +127,8 @@ function selfTest() {
   t('a fully clean batch refuses nothing', cleanRows.filter((r) => REFUSE.has(r.verdict)).length, 0)
   t('a fully clean batch scans all six', cleanRows.length, SUBMODULES.length)
 
+  cases.push(...gitlinkParserCases())
+
   const bad = cases.filter((c) => !c.ok)
   for (const b of bad) console.error(`FAIL ${b.n}: expected ${JSON.stringify(b.want)}, got ${JSON.stringify(b.got)}`)
   console.log(`\ncheck-gitlink-in-app-main self-test: ${cases.length - bad.length}/${cases.length} pass`)
@@ -146,7 +142,14 @@ const headRef = process.argv[2] || 'HEAD'
 const rows = []
 let unreadable = 0
 for (const sub of SUBMODULES) {
-  const gitlink = gitlinkAt(headRef, sub)
+  let gitlink
+  try {
+    gitlink = gitlinkAt(headRef, sub)
+  } catch {
+    rows.push({ sub, gitlink: null, appMain: null, verdict: 'UNREADABLE' })
+    unreadable++
+    continue
+  }
   if (gitlink === null) {
     rows.push({ sub, gitlink, appMain: null, verdict: 'absent' })
     continue
@@ -188,7 +191,7 @@ const onMain = rows.filter((r) => r.verdict === 'on-main').length
 const absent = rows.filter((r) => r.verdict === 'absent').length
 const refused = rows.filter((r) => REFUSE.has(r.verdict) || r.verdict === 'UNREADABLE')
 console.log(
-  `check-gitlink-in-app-main: ${rows.length} submodule(s) examined against ${headRef}; ` +
+  `check-gitlink-in-app-main: ${rows.length} submodule(s) examined against ${headRef === STAGED ? 'the index (staged)' : headRef}; ` +
     `${onMain} on their app's main; ${absent} absent at this ref; ${refused.length} refused.`,
 )
 for (const r of rows) {

@@ -1,6 +1,6 @@
 {
   "name": "@bsuite/workflow-canvas",
-  "version": "0.3.0-rc.3",
+  "version": "0.3.0",
   "description": "Process-shaped xyflow canvas for BSuite: a generic node-type registry (step / decision / terminator / handoff), swimlanes as xyflow parent nodes, LOOP-PERMISSIVE connection validation, and a controller + RPC-backed service persisting xyflow's native {nodes,edges,viewport} into workflow_definition_versions.graph. Architecture copied from @bsuite/schema-builder; dagre auto-layout REUSED from it rather than re-bundled \u2014 this package adds ZERO runtime dependencies.",
   "type": "module",
   "license": "UNLICENSED",

@@ -36,8 +36,6 @@
 -- Everything below this line MUST be byte-identical with the BSU canonical copy.
 -- CI parity check (.github/workflows/schema-builder-migration-parity.yml) enforces it.
 
-BEGIN;
-
 -- 1. Backfill any NULL or default-0 sort_order values deterministically per entity.
 --    We scope the backfill to rows whose sort_order is either NULL or 0, to avoid
 --    clobbering any sort_order values already set by consumers that implemented
@@ -244,5 +242,3 @@ comment on function public.reorder_entity_fields(uuid, uuid[]) is
 -- ---------------------------------------------------------------------------
 REVOKE EXECUTE ON FUNCTION public.reorder_entity_fields(uuid, uuid[]) FROM anon;
 REVOKE EXECUTE ON FUNCTION public.reorder_entity_fields(uuid, uuid[]) FROM public;
-
-COMMIT;

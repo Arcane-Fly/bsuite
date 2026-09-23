@@ -141,7 +141,24 @@
 --
 -- NOT APPLIED BY THIS CHANGE. Authored only; the estate applies migrations
 -- through its merge pipeline.
+--
+-- WHY THIS COPY CARRIES A REHEARSAL MARKER. The rehearsal replays every scope
+-- into ONE disposable database in global version order, breaking ties by scope
+-- name (rehearse-migrations.mjs: `a.scope < b.scope`). "business-suite-unified"
+-- sorts before "crm7", so BSU's byte-identical copy always applies first and
+-- this one always finds the objects already there — the census does not move
+-- and the rehearsal reports NOOP. That is the intended behaviour recorded three
+-- paragraphs above and pinned as `20261103000000 n=3 intentional-duplicate,
+-- CROSS-SCOPE` in scripts/migration-collision-allowlist.txt, not a defect. The
+-- marker is that claim made machine-readable so a reviewer can check it, which
+-- is the only thing the prose above was missing. `already-enforced` is the
+-- accurate one of the four: not data-only (this creates relations, not rows),
+-- not declared-absence — an EARLIER migration in this same replay established
+-- the effect. CREATE TABLE is now to_regclass-guarded (crm7#2572): IF NOT
+-- EXISTS still 23505s on pg_type when the relation already exists.
 -- =============================================================================
+
+-- rehearsal: already-enforced
 
 BEGIN;
 
@@ -149,6 +166,11 @@ BEGIN;
 -- 1. workflow_definitions — the identity of a workflow
 -- ============================================================================
 
+-- IF NOT EXISTS still 23505s on pg_type_typname_nsp_index when the relation
+-- already exists (crm7#2572). Guard on to_regclass.
+DO $wfdef_tbl$
+BEGIN
+  IF to_regclass('public.workflow_definitions') IS NULL THEN
 CREATE TABLE IF NOT EXISTS public.workflow_definitions (
   id           uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -183,6 +205,9 @@ CREATE TABLE IF NOT EXISTS public.workflow_definitions (
   CONSTRAINT workflow_definitions_tenant_key_unique
     UNIQUE NULLS NOT DISTINCT (tenant_id, key)
 );
+  END IF;
+END
+$wfdef_tbl$;
 
 COMMENT ON TABLE public.workflow_definitions IS
   'The identity of a workflow, separate from any one drawing of it. One row per
@@ -242,6 +267,11 @@ $guard$;
 -- 2. workflow_definition_versions — the graph, one row per version
 -- ============================================================================
 
+-- IF NOT EXISTS still 23505s on pg_type_typname_nsp_index when the relation
+-- already exists (crm7#2572). Guard on to_regclass.
+DO $wfver_tbl$
+BEGIN
+  IF to_regclass('public.workflow_definition_versions') IS NULL THEN
 CREATE TABLE IF NOT EXISTS public.workflow_definition_versions (
   id                     uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
 
@@ -324,6 +354,9 @@ CREATE TABLE IF NOT EXISTS public.workflow_definition_versions (
     REFERENCES public.workflow_definitions (id, tenant_id)
     ON DELETE CASCADE
 );
+  END IF;
+END
+$wfver_tbl$;
 
 COMMENT ON TABLE public.workflow_definition_versions IS
   'One row per version of one workflow''s graph. Draft rows are edited freely;

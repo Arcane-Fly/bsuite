@@ -1,0 +1,44 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# A card declaring w below the DEFAULT minW is widened by a value not in its source
+
+https://github.com/GaryOcean428/crm7/issues/2491
+
+Snapshot updatedAt: 2026-09-06T04:00:57Z. Open at capture; re-read live.
+
+Found while fixing card density (#2487), and it matters more than the fix that surfaced it.
+
+## A card can declare a width it does not get
+
+`/clients`' stat cards declare `w={3}` — four across a twelve-column grid. They render at **4** columns, three across, which is what orphaned the fourth stat onto a row of its own.
+
+The cause: `CanvasCard`'s default `minW` is 4, and `buildCanvasCardLayout` clamps `w` **up** to `minW`. A card asking for 3 silently gets 4. Nothing warns, nothing logs, and the source reads as though the author's number were honoured.
+
+## Why this is the interesting one
+
+Every consequence of the width is now wrong in the same direction, silently:
+
+- Any `w={2}` or `w={3}` card estate-wide renders wider than declared.
+- A row that should hold four three-column cards holds three, and orphans the fourth.
+- Someone reading the source to work out why a layout looks wrong will find a number that is not the number in effect.
+- Anyone fixing density by setting `w={3}` will believe they have done it, measure a page that did not change, and conclude the grid is broken.
+
+That last one is not hypothetical — it is exactly what happened on `/clients`, and it was only caught because the fix was verified by measuring rendered geometry rather than by reading the diff.
+
+## Fix
+
+Either honour the declared width — clamping up to a default minimum is a strange thing for a default to do — or refuse the combination loudly, so `w={3}` with an unset `minW` of 4 is a build-time or dev-time error rather than a silent widening.
+
+If the clamp is deliberate, the default `minW` should be at most the smallest `w` any card legitimately uses, and the reason should be stated where the default is set.
+
+## Acceptance
+
+A card declaring `w={3}` renders at three columns, or the combination fails loudly enough that nobody ships it believing otherwise. A test asserting the rendered column span against the declared one, for `w` values of 2, 3, 4 and 6 — asserting the *rendered geometry*, not the props, because the props are what already looks right.
+
+## Scope
+
+Unknown and worth measuring: how many cards estate-wide declare `w` below the default `minW` and are therefore rendering wider than they say. That count is the real size of this, and it should be in the fix rather than assumed small.

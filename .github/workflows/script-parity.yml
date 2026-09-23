@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout parent
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
@@ -81,7 +81,7 @@ jobs:
           echo "crm7 gitlink: $SHA"
 
       - name: Checkout crm7 (gated submodule, at the gitlink)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: GaryOcean428/crm7
           path: crm7
@@ -89,9 +89,10 @@ jobs:
           fetch-depth: 1
           token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # Parity alone only proves the two copies are identical — identical and
       # broken is still broken. The self-test proves the surviving copy still

@@ -54,7 +54,7 @@ jobs:
     name: Type-check every edge function
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           # The submodules are PRIVATE. Without this the default GITHUB_TOKEN gets
@@ -84,9 +84,10 @@ jobs:
         with:
           deno-version: v2.x
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # The script self-tests first: it synthesises an undeclared identifier and
       # asserts `deno check` rejects it, refusing to report at all if that passes.

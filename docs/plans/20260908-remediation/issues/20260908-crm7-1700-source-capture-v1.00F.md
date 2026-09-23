@@ -1,0 +1,31 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# Most recent entry per qualification type should be the authoritative, importable source for R8 rate calculation
+
+https://github.com/GaryOcean428/crm7/issues/1700
+
+Snapshot updatedAt: 2026-08-13T05:59:51Z. Open at capture; re-read live.
+
+Operator observed: The most recent entry per qualification type is authoritative and should be importable into R8 during rate calculation.
+
+**Route/surface:** qualification records → R80.4 rate-calculation import
+
+Directive: D-80 (2026-08-13)
+
+## Acceptance criteria
+- For any qualification type with multiple entries over time, the system identifies the most recent entry as authoritative (not ambiguous, not requiring the user to manually determine which is current).
+- The authoritative (most recent) entry per qualification type is importable directly into R80.4 during rate calculation, via the existing crm7↔R80.4 deep-link/handoff mechanism.
+- Superseded (non-most-recent) entries remain visible/auditable but are not offered as the default import candidate.
+
+## Mandatory before merge
+- **Validation loop:** §9.1 output-equivalence — the qualification data imported into R80.4 must match the authoritative crm7 record used to derive it.
+- **Equivalence target:** The qualification data R80.4 receives via import matches the most-recent qualification-type entry in crm7, byte-for-byte on the fields that matter to the calculation.
+- **Cross red-team:** bsuite-user-advocate
+- **Skills to load:** biz-au-apprenticeship, biz-au-award-modelling
+
+---
+*Filed under operator directive D-80 (2026-08-13). Filing is not addressing (D-59) — no fix is implied or claimed by this issue.*

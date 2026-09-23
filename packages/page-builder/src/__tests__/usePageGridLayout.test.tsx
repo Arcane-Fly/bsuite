@@ -1,12 +1,96 @@
-import { act, renderHook } from '@testing-library/react';
+import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { startTransition, StrictMode, Suspense } from 'react';
 import { describe, expect, it } from 'vitest';
-import { usePageGridLayout } from '../usePageGridLayout.js';
+import { PAGE_GRID_EDITING_EVENT, usePageGridLayout } from '../usePageGridLayout.js';
 import type { GridLayouts, PageGridPreferenceFactory } from '../types.js';
 
 const noopPreferenceAdapter: PageGridPreferenceFactory = (_key, fallback) => ({
   value: fallback,
   setValue: () => {},
   loaded: true,
+});
+
+const editorLayouts: GridLayouts = { lg: [{ i: 'test', x: 0, y: 0, w: 12, h: 4 }] };
+const pendingEditor = new Promise<void>(() => {});
+
+function CommittedEditorFixture({ suspendOpen = false }: { suspendOpen?: boolean }) {
+  const { isEditing, setIsEditing } = usePageGridLayout({
+    pageKey: 'committed-editor',
+    defaultLayouts: editorLayouts,
+    preferenceAdapter: noopPreferenceAdapter,
+  });
+  if (suspendOpen && isEditing) throw pendingEditor;
+  return (
+    <>
+      <output data-testid="committed-editing">{String(isEditing)}</output>
+      <button onClick={() => startTransition(() => setIsEditing(true))}>Open canvas</button>
+      {isEditing && (
+        <button onClick={() => startTransition(() => setIsEditing(false))}>Exit canvas</button>
+      )}
+      <button onClick={() => setIsEditing((previous) => previous)}>Keep current mode</button>
+    </>
+  );
+}
+
+describe('committed editor notifications', () => {
+  it.each([false, true])(
+    'notifies once per committed change after its DOM updates (StrictMode=%s)',
+    async (strict) => {
+      const observations: Array<{
+        editing: boolean;
+        rendered: string | null;
+        exitPresent: boolean;
+      }> = [];
+      const observe = (event: Event) => {
+        const { editing } = (event as CustomEvent<{ editing: boolean }>).detail;
+        observations.push({
+          editing,
+          rendered: screen.getByTestId('committed-editing').textContent,
+          exitPresent: screen.queryByRole('button', { name: 'Exit canvas' }) !== null,
+        });
+      };
+      window.addEventListener(PAGE_GRID_EDITING_EVENT, observe);
+      const fixture = <CommittedEditorFixture />;
+      const view = render(strict ? <StrictMode>{fixture}</StrictMode> : fixture);
+      try {
+        expect(observations).toEqual([]);
+        fireEvent.click(screen.getByRole('button', { name: 'Open canvas' }));
+        const exit = await screen.findByRole('button', { name: 'Exit canvas' });
+        exit.focus();
+        fireEvent.click(exit);
+        fireEvent.click(screen.getByRole('button', { name: 'Keep current mode' }));
+        expect(observations).toEqual([
+          { editing: true, rendered: 'true', exitPresent: true },
+          { editing: false, rendered: 'false', exitPresent: false },
+        ]);
+      } finally {
+        view.unmount();
+        window.removeEventListener(PAGE_GRID_EDITING_EVENT, observe);
+      }
+    }
+  );
+
+  it('does not announce an abandoned transition that never renders its editor', async () => {
+    const observations: unknown[] = [];
+    const observe = (event: Event) => observations.push((event as CustomEvent).detail);
+    window.addEventListener(PAGE_GRID_EDITING_EVENT, observe);
+    const view = render(
+      <Suspense fallback={<p>Loading editor</p>}>
+        <CommittedEditorFixture suspendOpen />
+      </Suspense>
+    );
+    try {
+      await act(async () => {
+        screen.getByRole('button', { name: 'Open canvas' }).click();
+      });
+      expect(screen.getByTestId('committed-editing').textContent).toBe('false');
+      view.unmount();
+      expect(observations).toEqual([]);
+    } finally {
+      view.unmount();
+      window.removeEventListener(PAGE_GRID_EDITING_EVENT, observe);
+    }
+  });
 });
 
 describe('usePageGridLayout', () => {

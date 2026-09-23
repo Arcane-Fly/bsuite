@@ -1,0 +1,29 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# 24 surfaces call useQuery with no queryFn, so they have never loaded — case notes, incidents and competency lists show an error toast on every render in production
+
+https://github.com/GaryOcean428/crm7/issues/2483
+
+Snapshot updatedAt: 2026-09-07T06:49:52Z. Open at capture; re-read live.
+
+**Observed on production** (`crm.crm7.app` serving `c3c37b3`, read-only Playwright signed in as the seeded e2e identity, 2026-09-06 00:4x–00:5xZ): `/field-officers/case-notes` renders the destructive toast "Error loading case notes — There was a problem loading the case notes data." on every render and never shows a list. Evidence: `~/.claude/projects/-home-braden-Desktop-Dev-bsuite/evidence/2026-09-06/visual-gate-3102/` (cells `crm7 /field-officers/case-notes` at 1024/768/390 both themes; `shots/crm7_field-officers-case-notes_*.png`; the probe's `contrast` findings quote the toast text on screen).
+
+**Why it can never work.** [case-notes/index.tsx:93](src/pages/field-officers/case-notes/index.tsx#L93) calls `useQuery({ queryKey: ['/api/field-officers/case-notes'] })` with no `queryFn`, and [queryClient.ts](src/lib/queryClient.ts) sets no default `queryFn` in `defaultOptions.queries` (only `retry`, `staleTime`, `refetchOnWindowFocus`). TanStack Query rejects such a query with "Missing queryFn", so `error` is set and the render-time `if (error) toast(...)` at [index.tsx:99-105](src/pages/field-officers/case-notes/index.tsx#L99-L105) fires on every render. It would not work even with a default fetcher: `GET https://crm.crm7.app/api/field-officers/case-notes` returns `404 text/plain` (also `/incidents`, `/competency-reviews`).
+
+**The class, enumerated.** A scan of every `useQuery(` call in `crm7/src` (370 calls; argument block parsed to the matching parenthesis; a call whose options object contains neither `queryFn` nor `queryOptions` is a hit; positive control: this page is in the list) finds **25 hits, 24 of them real surfaces** (the 25th is `QueryErrorState.tsx`, a forwarding wrapper):
+
+- field-officers: `case-notes/index.tsx:93`, `incidents/index.tsx:95`, `competency/index.tsx:76`
+- whs components: `incident-details-view.tsx:82`, `enhanced-reporting-manager.tsx:108/114/120`, `inspection-schedule-manager.tsx:99/113`, `inspections-list.tsx:78`, `training-module-manager.tsx:76`, `training-dashboard.tsx:75`, `host-employer-whs-manager.tsx:203/210`
+- awards: `awards/[id]/index.tsx:35/39/44/49`, `awards/[id]/edit.tsx:49`
+- enrichment: `programs/index.tsx:29`
+- vet: `qualifications/[id].tsx:154`, `units/[id]/index.tsx:56`, `units/[id]/edit.tsx:111`, `training-packages/[id]/index.tsx:87`
+
+Every one keys on an `/api/...` path that has no route in `crm7/api/` (only `ai`, `db`, `rpc`, `error-report`, `config.ts`). These pages are the same class as crm7#2464 ("has never worked"): built, type-checked, routed, and unable to load.
+
+**Done means:** each surface reads through a real data path (Supabase query or an existing RPC) with the failing case first — a test that renders the page and asserts the list, which today fails with "Missing queryFn"; no render-time `toast()` (it belongs in the query's `onError` or an effect); and the deployed `d.crm.crm7.app` page shows records for the e2e tenant, screenshot on the PR. D8: this is user-facing on 24 routes; state the round-trip.
+
+Filed by the accountability lane from the 2026-09-06 production visual gate; PI names the owner.
