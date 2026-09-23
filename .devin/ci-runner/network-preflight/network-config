@@ -1,0 +1,6 @@
+version: 2
+ethernets:
+  ci:
+    match:
+      macaddress: "52:54:00:26:09:20"
+    dhcp4: true

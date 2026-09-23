@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "status": "APPROVE",
+  "gaps": [],
+  "evidence_task_id": "bsuite-local-runner-pilot-20260920",
+  "objective_lock": "Complete only the operator-approved single-use local runner pilot: one unchanged existing read-only check, then report before any broader migration.",
+  "ui_touched": false,
+  "scores_partial": {
+    "verify_pass": 1.0,
+    "wire_integrity": 1.0,
+    "false_complete_incidents": 0.0,
+    "subagent_brief_completeness": 1.0,
+    "correction_absorb_rate": 1.0,
+    "ux_integrity": 1.0,
+    "used_once": 1.0,
+    "no_residue": 1.0
+  },
+  "evaluated_at": "2026-09-20T12:17:06Z"
+}
