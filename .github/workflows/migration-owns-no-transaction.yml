@@ -34,7 +34,7 @@ jobs:
     name: Migrations do not open their own transaction
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           # Submodules are PRIVATE; the default token gets "Repository not found"
@@ -44,9 +44,10 @@ jobs:
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # Run the checker's own tests before trusting its verdict. The cases that
       # matter are the PL/pgSQL ones: `DO $g$ BEGIN … END $g$;` must NOT count,

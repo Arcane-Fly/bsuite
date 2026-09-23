@@ -79,9 +79,10 @@ jobs:
           done
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # `parent-check-own-package-freshness` needs a real YAML parser and a
       # real semver implementation, and REFUSES to run without them rather

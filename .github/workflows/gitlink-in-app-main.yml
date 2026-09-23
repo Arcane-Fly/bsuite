@@ -54,7 +54,7 @@ jobs:
       # fetch-depth: 0 because the check runs `git merge-base --is-ancestor`
       # inside each submodule, and a shallow clone cannot answer an ancestry
       # question.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           fetch-depth: 0

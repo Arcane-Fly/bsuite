@@ -39,14 +39,15 @@ jobs:
       BASE_REF: ${{ github.base_ref }}
     steps:
       - name: Checkout (full history required for diff)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       - name: Ensure base ref is available
         run: git fetch origin "${BASE_REF}:${BASE_REF}" || true

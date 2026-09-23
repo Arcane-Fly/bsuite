@@ -29,9 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # The self-test runs FIRST and independently of the network. If the API
       # call fails, the classifier has still been proven to reject an unsigned

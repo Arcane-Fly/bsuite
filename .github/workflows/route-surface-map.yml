@@ -55,9 +55,10 @@ jobs:
 
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24.14.0'
+          package-manager-cache: false
 
       # Run the gate's own tests before trusting its verdict. Three known-bad
       # fixtures — an unmapped route, a blank verdict, a missing input file — and

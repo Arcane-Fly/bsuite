@@ -32,7 +32,7 @@ jobs:
     name: Retry skeleton survives the runner's own shell
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       # No `shell:` override — this is the exact default every fixed
       # corepack/pnpm step in this repo also gets: `bash --noprofile --norc

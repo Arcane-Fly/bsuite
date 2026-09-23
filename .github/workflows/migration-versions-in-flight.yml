@@ -39,7 +39,7 @@ jobs:
     name: Migration versions in flight
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           # The checker reads <root>/supabase/migrations for all seven roots, so the
           # apps must be present. They are PRIVATE submodules and the default
@@ -55,9 +55,10 @@ jobs:
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # Watched to catch a planted collision AND watched not to flag a version
       # that only looks like one. Both, or it cannot tell found-nothing from

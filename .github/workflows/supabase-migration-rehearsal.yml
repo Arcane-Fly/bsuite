@@ -106,15 +106,15 @@ concurrency:
 
 env:
   SUPABASE_NO_ANALYTICS: '1'
-  # The high-water mark of the production baseline dump under
-  # crm7/supabase/migrations/baseline/ (resolved by rehearsal-bootstrap.sh —
-  # newest *_prod_baseline_schema_dump.sql by name; crm7 has already renamed
-  # this file once, 20260807 -> 20260907 in crm7#2533, with no forwarding path,
-  # so this value is NOT the filename and must not be read as one).
+  # Sanity bound only, since bsuite#3147. The in-baseline rule is MEMBERSHIP
+  # in crm7/supabase/migrations/baseline/applied-versions-*.txt (resolved
+  # newest-by-name, exactly one required — same contract the dump below uses).
   # That dump is a dump of the SHARED public schema — 364 tables, including
   # conduit's r7_candidates and the platform's user_tenants — so it is the
-  # estate's baseline, not crm7's. Everything at or below this version is
-  # already inside it and must not be replayed on top.
+  # estate's baseline, not crm7's. BASELINE_MAX never discriminates; the
+  # engine WARNs when it disagrees with the artefact's newest recorded version
+  # and derives it here so the two cannot drift silently again. Keep in
+  # lockstep with rehearse-local.sh (its fallback when derivation fails).
   BASELINE_MAX: '20260807110000'
   MIGRATION_FLOOR: '20260611000000'
   REHEARSAL_DB_URL: 'postgresql://postgres:postgres@127.0.0.1:54322/postgres'
@@ -231,6 +231,42 @@ jobs:
         uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
         with:
           version: 2.116.0
+
+      - name: Selection self-test — the selector must discriminate (bsuite#3147)
+        # Runs BEFORE any database exists: the selection rule is pure and its
+        # controls are synthetic. Covers the planted control (a version below
+        # a refreshed BASELINE_MAX but absent from the applied-versions
+        # artefact must be SELECTED — the magnitude rule skipped it and a
+        # refreshed max would have replayed zero files for two months), the
+        # future boundary, membership skips, floor/quarantine precedence, the
+        # fail-closed parse, and the zero-selection guard. A gate never seen
+        # to fail is not a gate; the reverted-rule bite is recorded on
+        # bsuite#3147's evidence.
+        run: |
+          # Same pipefail lesson as every other guard in this file: GitHub
+          # Actions' DEFAULT shell is `bash -e`, WITHOUT pipefail, so a
+          # pipeline exits with the status of its LAST command and a guard
+          # piped through `tee` can fail while the step reports success.
+          set -o pipefail
+          node scripts/supabase/rehearse-migrations.mjs --self-test-selection \
+            | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Derive BASELINE_MAX from the applied-versions artefact
+        # bsuite#3147 demoted BASELINE_MAX to a sanity bound: the engine never
+        # uses it to discriminate, only to WARN when it disagrees with the
+        # artefact. Deriving it here means the bound tracks the artefact
+        # automatically instead of drifting one env edit at a time. The
+        # hardcoded env value remains as the fallback if the artefact is
+        # somehow absent, and the engine fails closed on a missing artefact
+        # before this value could matter.
+        run: |
+          set -euo pipefail
+          ARTEFACT="$(find crm7/supabase/migrations/baseline -maxdepth 1 -name 'applied-versions-*.txt' | sort | tail -1)"
+          [ -n "$ARTEFACT" ] || { echo "::error::no applied-versions-*.txt under crm7/supabase/migrations/baseline — the membership rule requires it"; exit 1; }
+          DERIVED="$(grep -E '^[0-9]+$' "$ARTEFACT" | sort | tail -1)"
+          [ -n "$DERIVED" ] || { echo "::error::artefact $(basename "$ARTEFACT") holds no digit version lines"; exit 1; }
+          echo "BASELINE_MAX=$DERIVED" >> "$GITHUB_ENV"
+          echo "BASELINE_MAX derived from $(basename "$ARTEFACT"): $DERIVED (env fallback: ${{ env.BASELINE_MAX }})"
 
       - name: Install psql client
         run: |

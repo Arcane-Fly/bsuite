@@ -98,7 +98,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (with submodules)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         # The default GITHUB_TOKEN is scoped to bsuite only and will 404 when
         # recursive submodule checkout tries to clone the 6 private sibling
         # repos (business-suite-unified, crm7, R80.4, braden, conduit,

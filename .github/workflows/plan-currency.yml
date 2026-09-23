@@ -44,7 +44,7 @@ jobs:
           # commit against the last merge to main.
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
           package-manager-cache: false

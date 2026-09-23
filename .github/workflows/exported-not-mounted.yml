@@ -31,7 +31,7 @@ jobs:
     name: Every exported component is mounted somewhere
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
           # The consumer apps ARE the submodules. Without them the scan finds no
@@ -42,9 +42,10 @@ jobs:
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # 20 cases, and the three that matter are the three parsing bugs this
       # checker had during its own construction: multi-line JSX, a single indexOf
