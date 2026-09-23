@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-09-21T02:50:01.233627+00:00",
+  "owner": "devin-bsuite-closeout-20260919",
+  "ledger_total": 384,
+  "counts": {
+    "in_progress": 21,
+    "pending": 350,
+    "completed": 13
+  },
+  "source": "/home/braden/.codex/visualizations/2026/09/08/01a07f58-73a6-71f2-a57d-5cf3b6b148dc/bsuite-remediation/hermes-queue.json",
+  "complete": false,
+  "estate_complete": false,
+  "provider": "Devin CLI",
+  "model": "gpt-5-6-sol-medium",
+  "mode": "lead-gated",
+  "note": "Ledger statuses are claims, not acceptance. No automatic merge, closure or disarm."
+}

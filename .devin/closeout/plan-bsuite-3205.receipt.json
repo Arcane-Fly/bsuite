@@ -1,0 +1,14 @@
+{
+  "row": "bsuite-3205",
+  "stage": "plan",
+  "attempt": 1,
+  "owner": "devin-bsuite-closeout-20260919",
+  "started_at": "2026-09-20T06:50:01.648447+00:00",
+  "pid": 132928,
+  "state": "awaiting_lead_review",
+  "model": "gpt-5-6-sol-medium",
+  "finished_at": "2026-09-20T06:52:35.208687+00:00",
+  "exit_code": 0,
+  "artifact": "/home/braden/Desktop/Dev/bsuite/.devin/closeout/plan-bsuite-3205.md",
+  "artifact_exists": true
+}
