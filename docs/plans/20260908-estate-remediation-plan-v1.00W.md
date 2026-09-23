@@ -472,7 +472,14 @@ manual or release claim.
 - `form_submissions` and signatory security work. This includes the 23 September author save-and-finish
   ruling, precedent `people_can_always_save_and_finish_their_own_core_work`.
 
-**Blocking ruling (maker).** The store reconciliation in
+**Store ruled, 16:11 AWST: no longer blocking.** Braden (15:37): a design choice is the team's to make,
+not a blocker. Fable 5.1 ruled `form_layouts` (extended with named forms, a designer-only draft,
+immutable revisions and a publish function) for form definitions, and `form_submissions` for filled
+copies. The receipt is `bsuite_receipt_20260923_3208_form_store_ruling`. The reasoning is in the
+register's "Store ruling" subsection. The paragraph below is the superseded recommendation, kept as
+history. The only hold left is the signing-pipeline port to `signature_requests`.
+
+*Superseded:* the store reconciliation in
 [FRM matrix §8](https://github.com/Arcane-Fly/crm7/blob/35109fbc5/docs/20260922-frm-source-to-live-matrix-v1.00W.md)
 recommends:
 
@@ -481,7 +488,7 @@ recommends:
 - `signature_requests` as the one signing pipeline;
 - splitting PR #2699, so the two table migrations are held.
 
-New persistence and user-interface slices on `form_submissions` are paused until the maker rules.
+*Superseded:* ~~New persistence and user-interface slices on `form_submissions` are paused until the maker rules.~~ Resumed under the ruling.
 
 **Continuing independent work**
 

@@ -177,7 +177,41 @@ acceptance.
 - On another host, obtain all three from the maker.
 - The design supplies requirements. Rejected implementation details are not reinstated.
 
-### Store reconciliation (recommendation awaiting the maker's ruling)
+### Store ruling (23 September, 16:11 AWST)
+
+This supersedes the recommendation in the next subsection, which is kept as the record of what was
+recommended and reviewed.
+
+Braden (15:37 AWST): choosing between existing designs is an engineering decision the team makes,
+not a blocker. The ruling is Fable 5.1, read-only, verdict APPROVE_WITH_CHANGES, **store ruling
+`form_layouts`**. The receipt is qig-memory `bsuite_receipt_20260923_3208_form_store_ruling`. The
+reasoning is in
+[FRM matrix §8.5](https://github.com/Arcane-Fly/crm7/blob/codex/crm7-3208-futurebuild-visual-forms/docs/20260922-frm-source-to-live-matrix-v1.00W.md).
+
+- **Form definitions stay in `form_layouts`, extended.** Uniqueness becomes
+  `(tenant_id, entity_type, context, name)`, `NULLS NOT DISTINCT`, so several named forms can share
+  one context. The draft is readable only by designers. Revisions are immutable, in
+  `form_layout_revisions`. A publish function writes them. New delegable capabilities `forms.design`
+  and `forms.publish` mean designing is not owner/admin-only.
+- **Pages stay in `custom_pages`** (ADR-0001). Every destination (page, card, reusable form, section
+  schedule) embeds a form by reference to its published revision. None copies it.
+- **Filled copies stay in `form_submissions`,** each bound to the published revision it was started
+  on. The `document_records` port and its Phase A author widening are dropped.
+- **One signing pipeline, `signature_requests`,** as recommended below. It is the only remaining hold
+  on the `form_submissions` half of crm7 PR #2699.
+
+Why the recommendation below was reversed:
+
+1. Live policy `anon_read_published_custom_pages` (bsuite#2004 P0-3, the public CMS surface) makes
+   every published `custom_pages` row readable without signing in. That is no place for confidential
+   HR form designs.
+2. The only approved plan that names a table names `form_layouts`
+   ([2026-07-03 plan](plans/20260703-unified-authoring-surface-plan-v1.03A.md), lines 56-59).
+3. `custom_page_revisions` is not immutable either
+   ([crm7#2451](https://github.com/Arcane-Fly/crm7/issues/2451)). Revisions had to be built on either
+   path.
+
+### Store reconciliation (recommendation, superseded 23 September 16:11 by the ruling above)
 
 The full reasoning, measured against source, is §8 of the
 [CRM7 FRM source-to-live matrix](https://github.com/Arcane-Fly/crm7/blob/35109fbc5/docs/20260922-frm-source-to-live-matrix-v1.00W.md).
@@ -229,8 +263,9 @@ In this register's vocabulary: proposed, source-confirmed, deployed-tested, acce
   - [crm7 PR #2699](https://github.com/Arcane-Fly/crm7/pull/2699) is open and unmerged, at head `35109fbc5`.
   - It holds code evidence only: pgTAP on a local, isolated test lease; no database lease beyond it; no
     deployed, manual or release claim.
-  - Its `form_submissions` and signatory migrations are held until the maker rules. The branch's user-interface
-    fixes, the `requires_confidential` template setting and the evaluator can merge separately.
+  - Its `form_submissions` half is held only for the signing-pipeline port to `signature_requests` (store ruling
+    above). The branch's user-interface fixes, the `requires_confidential` template setting and the evaluator
+    can merge separately, as can the form-definition lifecycle (migration `20261207250000`).
   - The Margin workspace, the four destinations, comments, workspace settings, Jodie actions, lossless
     SkillHire and GTO starters, and output parity are not built.
 - **C14** ([crm7#2587](https://github.com/Arcane-Fly/crm7/issues/2587), FRM_010) and **C16**
