@@ -1815,6 +1815,46 @@ export const GUARDS = [
   },
 
   {
+    id: 'ruleset-drift',
+    label: 'Live rulesets have not drifted below their committed dumps; linear history stays OFF',
+    repo: '.',
+    // The ruleset comparison needs a token that can read rulesets on all seven
+    // repos; only the comparator and its cases run here. `--self-test` is what
+    // this registry can verify locally. The live comparison runs nightly in
+    // .github/workflows/branch-protection-drift.yml beside the classic gate.
+    command: ['node', 'scripts/check-ruleset-drift.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/branch-protection-drift.yml',
+    mode: 'run',
+    notes:
+      'Rulesets are the SECOND, independent branch-protection mechanism: an edit ' +
+      'to one leaves no diff in the classic dumps one directory up, and the ' +
+      '2026-09-07 incident touched both layers in one window. The bsuite default ' +
+      'ruleset carried required_linear_history, which forbids merge commits while ' +
+      'the estate promotes with gh pr merge --merge — every development → main ' +
+      'promotion was structurally unmergeable and finished with --admin ' +
+      '(bsuite#3165). The rule was removed 2026-09-07 and ratified OFF in ADR-0012 ' +
+      'item 1; this gate fails if it reappears live on any banked ruleset — even ' +
+      'when a stale dump agrees, because a dump that banks it is itself stale. ' +
+      'Same asymmetry as the classic gate: weakening fails, strengthening warns. ' +
+      'Dumps live in docs/security/branch-protection/rulesets/ (every repo-level ' +
+      'ruleset: 6 default, 5 development; throughput has no default and R80.4 no ' +
+      'development ruleset — verified absences), and the ' +
+      'directory is invisible to the classic gate scan, which reads one level.',
+    evidence:
+      '"[ruleset-drift] self-test: 15/15 pass — 15 case(s) exercised (13 comparison ' +
+      'verdicts over 1 fixture repo holding default and development rulesets — ' +
+      'identical read, linear history added live, linear history present in BOTH ' +
+      'bank and live, linear history on a development ruleset, linear history ' +
+      'removed (the ratified warn), a protection rule removed, a rule added that ' +
+      'must only warn, a deleted ruleset, an unreadable API, enforcement weakened, ' +
+      'a lost ref pattern, a re-created ruleset id, newest-dump-wins over an older ' +
+      'banked linear-history dump — plus 2 structural cases: both fail-closed dump ' +
+      'shapes and an absent dumps directory)". Against live rulesets 2026-09-24, after ' +
+      're-dumping every repo ruleset under Arcane-Fly: "[ruleset-drift] compared live ' +
+      'rulesets against 11 committed dump(s) … no drift." exit 0.',
+  },
+
+  {
     id: 'pointer-refresh-dedup',
     label: 'Unchanged signed pointer PRs retain their head and check runs',
     repo: '.',
