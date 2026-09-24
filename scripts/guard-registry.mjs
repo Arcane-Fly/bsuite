@@ -1002,11 +1002,11 @@ export const GUARDS = [
     ciWorkflow: '.github/workflows/development-merge-issue-closer.yml',
     mode: 'run',
     evidence:
-      'Seven tests exercise the actual closer with mocked GitHub responses: ' +
+      'Nine tests exercise the actual closer with mocked GitHub responses: ' +
       'full-scope and unreceipted issues stay open; an exact trusted receipt ' +
       'closes a bounded implementation issue; a prior closure marker protects ' +
       'a reopened issue while a failed PATCH retries. Eligibility tests reject conflicting labels, stale ' +
-      'issue/PR/SHA identity, untrusted authors and non-HTTPS evidence.',
+      'issue/PR/SHA identity, pre-merge or untrusted authors, quoted receipts and non-HTTPS evidence.',
   },
   {
     id: 'parent-verify-esm-imports',
