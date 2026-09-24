@@ -1852,6 +1852,9 @@ export const GUARDS = [
       'shapes and an absent dumps directory)". Against live rulesets 2026-09-24, after ' +
       're-dumping every repo ruleset under Arcane-Fly: "[ruleset-drift] compared live ' +
       'rulesets against 11 committed dump(s) … no drift." exit 0.',
+  },
+
+  {
     id: 'pointer-refresh-dedup',
     label: 'Unchanged signed pointer PRs retain their head and check runs',
     repo: '.',
