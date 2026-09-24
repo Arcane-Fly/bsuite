@@ -260,7 +260,29 @@ export function callSites(source) {
  */
 export function claimKeys(sql) {
   const claims = claimedObjects(sql);
-  return [...claims.tables, ...claims.functions];
+  return [...claims.tables, ...claims.functions, ...claimedViews(sql)];
+}
+
+/**
+ * Views a migration creates. The same class as the function half above: a
+ * view added on `development` with the code that reads it does not exist live
+ * until promotion, and without this the gate BLOCKED that promotion. Found
+ * 2026-09-24 on bsuite#3302: crm7 20261207250000 creates
+ * `public.form_layouts_published` (a view) and three call sites read it; its
+ * sibling tables and functions from the same migrations were excused as lag,
+ * the view alone was reported a phantom. Line comments are stripped first,
+ * as claimedObjects does, so prose naming a view is not read as creating one.
+ */
+function claimedViews(sql) {
+  const code = sql.replace(/--[^\n]*/g, '');
+  const out = [];
+  const re = /CREATE\s+(?:OR\s+REPLACE\s+)?(?:(?:TEMP|TEMPORARY)\s+)?(?:MATERIALIZED\s+)?VIEW\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"?([a-z_][a-z0-9_]*)"?\s*\.\s*)?"?([a-z_][a-z0-9_]*)"?/gi;
+  for (const m of code.matchAll(re)) {
+    const schema = (m[1] || 'public').toLowerCase();
+    if (schema === 'pg_temp') continue;
+    out.push(`${schema}.${m[2].toLowerCase()}`);
+  }
+  return out;
 }
 
 // A migration creating a FUNCTION must be excused exactly as one creating a
@@ -280,6 +302,21 @@ const CLAIM_TESTS = [
     name: 'a function only MENTIONED in a comment is NOT claimed',
     sql: '-- create or replace function public.not_real()\nselect 1;',
     expect: (k) => !k.includes('public.not_real'),
+  },
+  {
+    name: 'a CREATE VIEW is claimed (the bsuite#3302 form_layouts_published block)',
+    sql: 'DROP VIEW IF EXISTS public.form_layouts_published;\nCREATE VIEW public.form_layouts_published WITH (security_invoker = true) AS SELECT 1;',
+    expect: (k) => k.includes('public.form_layouts_published'),
+  },
+  {
+    name: 'a CREATE OR REPLACE MATERIALIZED VIEW is claimed, schema-defaulted',
+    sql: 'create or replace materialized view "rollup_daily" as select 1;',
+    expect: (k) => k.includes('public.rollup_daily'),
+  },
+  {
+    name: 'a view only MENTIONED in a comment is NOT claimed',
+    sql: '-- create view public.not_a_view as select 1\nselect 1;',
+    expect: (k) => !k.includes('public.not_a_view'),
   },
   {
     name: 'a migration claiming neither yields nothing',

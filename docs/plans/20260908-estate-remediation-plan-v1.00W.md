@@ -448,3 +448,135 @@ Command-backed progress:
 - Updated `bsuite_project_truth_index.current_coordination.owner` to `devin-bsuite-closeout-20260919` via authenticated REST read-modify-write with length/sha256 verification.
 
 Next: merge promotion PRs, verify `version.json` on production hosts, run CRM7 migrations in order through the merge pipeline, then return to the ledger pending items.
+
+## 23 September 2026 — wave 3 status for the forms lane (#3208)
+
+**Ownership.** For the #3208 forms lane, this supersedes the 19 September statement that ownership moved to
+Devin. The forms writer is Claude session `ef2aae85`. Maker Codex task `01a0c25e` is the sole dispatch and
+release owner, under reservation `futurebuild_forms_3208_claude_reservation_20260922`. The #3208 lane edits
+this plan, the [capability register](../20260908-customization-capability-register-v1.00W.md) and the
+[remediation README](20260908-remediation/README.md) under that reservation's `owned_document_paths`. Other
+lanes' ownership is not changed here.
+
+**Wave 3's exit condition is unmet.** Wave 3 requires an admin to visually author and modify both forms and
+workflows, with real authorised users then completing them. The requirement is now read together with
+Braden's 23 September 12:03 clarification (see the register's 23 September section).
+
+**What exists (code evidence only).** [crm7 PR #2699](https://github.com/Arcane-Fly/crm7/pull/2699) is open
+and unmerged, at head `35109fbc5`. Its pgTAP runs were on a local, isolated test lease. There is no deployed,
+manual or release claim.
+
+- Form-builder user-interface fixes.
+- The template-level `requires_confidential` setting.
+- A render-parity visibility gate.
+- `form_submissions` and signatory security work. This includes the 23 September author save-and-finish
+  ruling, precedent `people_can_always_save_and_finish_their_own_core_work`.
+
+**Store ruled, 16:11 AWST: no longer blocking.** Braden (15:37): a design choice is the team's to make,
+not a blocker. Fable 5.1 ruled `form_layouts` (extended with named forms, a designer-only draft,
+immutable revisions and a publish function) for form definitions, and `form_submissions` for filled
+copies. The receipt is `bsuite_receipt_20260923_3208_form_store_ruling`. The reasoning is in the
+register's "Store ruling" subsection. The paragraph below is the superseded recommendation, kept as
+history. The only hold left is the signing-pipeline port to `signature_requests`.
+
+*Superseded:* the store reconciliation in
+[FRM matrix §8](https://github.com/Arcane-Fly/crm7/blob/35109fbc5/docs/20260922-frm-source-to-live-matrix-v1.00W.md)
+recommends:
+
+- `custom_pages` with immutable revisions as the definition store;
+- `document_records` for completed copies, including an author widening of Phase A;
+- `signature_requests` as the one signing pipeline;
+- splitting PR #2699, so the two table migrations are held.
+
+*Superseded:* ~~New persistence and user-interface slices on `form_submissions` are paused until the maker rules.~~ Resumed under the ruling.
+
+**Continuing independent work**
+
+- Keep confidential form content out of `audit_events` and `tasks`. These are design v2 review findings
+  HIGH 1 and HIGH 2.
+- Add a draft store that only template managers can read (review finding M2).
+
+**Sibling class.** [crm7#2702](https://github.com/Arcane-Fly/crm7/issues/2702) covers guests who can create
+rows but never edit them, on five tables outside this lane. It is queued as `crm7-2702` (P1).
+
+## 9 September — documentation validation and two-stage archival
+
+Operator requirement: validate docs/ and docs/plans/ across the parent and all six apps;
+consolidate relevant overlapping guidance, preserve unimplemented requirements, and organize
+BSuite's existing archive. This work is outstanding, not validated by the earlier intake.
+Use agent-skl-find, check-documentation, check-docs-vs-code, check-documentation's paired
+completion-enforcer, and general-iso27001-docs. Keep the existing bsuite#3198 coverage lane
+and bsuite#3204 programme rather than creating another competing plan.
+
+Acceptance:
+- Inventory active documentation and plans plus BSuite archive holdings. Exclude generated
+  dependencies, agent worktrees and unrelated projects; reconcile docs links, tracked files
+  and actual directory listings. Preserve original path/repo, document purpose and version.
+- Classify each document VALIDATED, OUTSTANDING, PARTIAL, STALE, ARCHIVE or UNVERIFIABLE
+  with evidence, canonical replacement where applicable, and linked implementation issue.
+  Validate claims against source and live behavior/schema where relevant. A completed label,
+  file age, or migration file on disk is not proof. Do not discard unmet requirements.
+- Consolidate current guidance into the existing canonical document; carry unique valid
+  content forward, fix inbound links/indexes/skill references, and preserve historical
+  reports as dated evidence. An old R80.3 reference in a historical report is not itself rot.
+- Interim archive: each repository's docs/archive/. Permanent archive:
+  /home/braden/Desktop/Dev/archived-repos-docs. Inventory the external structure before
+  choosing BSuite-specific destinations, grouped coherently by project/repo and topic/date.
+  Do not reorganize QIG, personal or other unrelated archive holdings under this task.
+- Every move retains a manifest with original path, destination, reason, replacement,
+  date and content hash. Verify the destination hash before removing the source; retain
+  redirect/index entries where needed. No bulk delete, overwrite or duplicate archive trees.
+  Transfer to permanent storage only after classification, links and integrity checks pass.
+- Validate links and counts after consolidation/moves; reconcile every inventoried document's
+  disposition. Report unresolved documents honestly and obtain independent review. Document
+  cleanup does not establish that the associated product feature is complete.
+
+Handover update: the Codex automation was verified PAUSED after the operator paused it.
+Claude may claim supervision after proving local access and recording its identity in the
+existing queue; do not restart the old schedule. Pausing that schedule does not stop Hermes
+or an already running CLI worker. Inspect and collect them before issuing new work.
+Last supervisor checkpoint found trigger_config metadata loss in the visual trigger editor;
+re-read current review/HEAD because correction may have advanced. Preserve local uncommitted
+instruction/plan changes and arrange their own signed PRs rather than staging them into the
+SMS feature PR. Maintain the full release contract and criterion ledger.
+
+
+## 9 September — BSuite workspace recovery and disk cleanup
+
+Operator adds BSuite/submodule-related directories under `/home/braden/Desktop/Dev` and
+`/home/braden`, including redundant node_modules, to the existing cleanup/coverage lane.
+These roots overlap: inventory each physical location once. This is scoped to BSuite and
+its six apps, not permission to clean unrelated projects or the whole home directory.
+Use `agent-skl-find`, `check-cleanup-scope-safety`, `check-codebase-cleanup`,
+`bsuite-pnpm-monorepo` and `agent-definition-of-done`.
+
+Required sequence and acceptance:
+- Inventory related clones, worktrees, abandoned agent checkouts, lock-generation directories,
+  recovery/salvage copies, build outputs and dependency trees. Attribute ownership using Git
+  remotes, worktree registrations, package metadata and source content; names alone are clues.
+  Record canonical path, symlink target, size, owner, activity and proposed disposition.
+- Before removing anything, inspect dirty/untracked files, branches, stashes, reflogs,
+  unique commits, PR/merge ancestry and running processes/worker cwd. An old directory or
+  identical Git author does not prove abandonment. Never prune an active maker's worktree.
+- Recover unique useful work first: preserve a recoverable ref/patch including untracked
+  source, document provenance, compare with current implementation, and route needed work
+  through its owning issue and signed feature→development→production process. Do not blindly
+  replay stale code, resurrect obsolete features or call a backup equivalent to integration.
+- Classify KEEP_ACTIVE, RECOVER, CONSOLIDATE, ARCHIVE or REMOVE_REGENERABLE with evidence.
+  Preserve secrets locally without printing them or copying them into committed manifests.
+  Preserve the protected remediation queue/evidence and active agent configuration.
+- Remove node_modules/build caches only for confirmed inactive, redundant BSuite trees after
+  proving regeneration from the correct manifest, lockfile and package-manager version.
+  Inspect symlinks and pnpm store ownership; do not follow links into shared or unrelated
+  trees or indiscriminately remove global stores. Do not regenerate submodule lockfiles by
+  running pnpm install inside the parent workspace; use the documented isolated procedure.
+- Recover/archive irreplaceable source and evidence before removing redundant directories.
+  Use the two-stage archive policy above and integrity-checked move manifests. Verify each
+  destination before source removal; do not overwrite existing archive content.
+- Re-measure disk use, validate worktree registrations and canonical repo status, check
+  affected build/test commands and links, and report recovered work, retained paths,
+  removed regenerable data, reclaimed space and unresolved ownership. Uncertain candidates
+  remain untouched with a reason; no unsupported claim that the entire home is clean.
+
+This is added execution scope for Claude's handover. Inventory/recovery/cleanup itself has
+not yet been performed. The paused Codex schedule must remain paused.

@@ -9,6 +9,8 @@
 
 Implementation plans for BSuite features and enhancements. Each plan follows the `YYYYMMDD-descriptive-name-type-vMAJOR.MINOR[STATUS].md` naming convention.
 
+> Current human work status belongs in the [BSuite Linear project](https://linear.app/braden-pty-ltd/project/bsuite-delivery-and-roadmap-806afbd51657), under the [work-tracking contract](../20260924-linear-work-tracking-v1.00W.md). [BRA-46](https://linear.app/braden-pty-ltd/issue/BRA-46/centralize-bsuite-work-in-linear-and-retire-conflicting-tracking) retains unmapped sources. Plans below provide technical context and dated evidence; restore active local ownership before dispatch.
+
 **Note:** The bulk of historical implementation plans live in the top-level `docs/` folder (not in this subdirectory). This `plans/` folder contains the most recent active plans.
 
 **Status codes:** W=Working, D=Draft, R=Review, A=Approved, F=Frozen
@@ -21,7 +23,7 @@ Implementation plans for BSuite features and enhancements. Each plan follows the
 > repository, including the one labelled "Active phase-ordered queue". An agent opening this index
 > to find the queue found nothing.
 
-- Archived August remaining-work register (`/home/braden/Desktop/Dev/archived-repos-docs/20260831-bsuite-docs-archive-pass/docs/20260814-estate-remaining-work-register-v2.00F.md`) — **Historical August remaining-work register.** Preserve its acceptance and evidence; current dispatch/status authority is the [370-row pack](20260908-remediation/README.md) and live issue evidence.
+- Archived August remaining-work register (`/home/braden/Desktop/Dev/archived-repos-docs/20260831-bsuite-docs-archive-pass/docs/20260814-estate-remaining-work-register-v2.00F.md`) — **Historical August remaining-work register.** Preserve its criteria and dated evidence; use the linked Linear outcome for current human lifecycle and the local checkpoint for dispatch ownership.
 - [`../20260504-bsuite-documentation-hub-v1.00W.md`](../20260504-bsuite-documentation-hub-v1.00W.md) — Cross-submodule documentation hub (top-level index)
 - [`../../AGENTS.md`](../../AGENTS.md) — Stack floor and the ten tripwires (replaces the archived tech-stack-alignment doc)
 - [`../20260731-platform-operations-reference-v1.00W.md`](../20260731-platform-operations-reference-v1.00W.md) — Shared `@bsuite/*` package matrix, env vars, lockfile rules
@@ -36,8 +38,8 @@ into one agent run. Once that run happens the prompt is a historical artifact: i
 describe a job that is finished, half-finished, or was overtaken — and nothing in the file records
 which. They sit in this folder for provenance only.
 
-**Do not pick one of these up and execute it.** If you want the work, get it from the canonical
-register above, which is re-measured. Fifteen prompt-shaped documents currently live in
+**Do not pick one of these up and execute it.** If you want the work, use the linked Linear
+outcome after source reconciliation, then restore its current lease. Fifteen prompt-shaped documents live in
 `docs/plans/`:
 
 | File | Written |

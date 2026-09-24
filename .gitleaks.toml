@@ -42,6 +42,10 @@ regexes = [
   # BS OAuth 2.1 client IDs (additional — Throughput + Conduit)
   '''35f0db49-ef62-4115-baba-7b961f034cc3''',
   '''da925c19-8f32-40a0-b74d-4eb9540c422f''',
+
+  # OpenPGP signing-key fingerprints identify public verification keys; the
+  # preflight evidence records one only after verifying an Ubuntu image.
+  '''D2EB44626FDDC30B513D5BB71A5D6C4C7DB87C81''',
 ]
 
 # ---------- Custom detection rules ----------

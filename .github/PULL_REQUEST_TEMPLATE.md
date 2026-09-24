@@ -13,7 +13,8 @@
 ## Closing issues
 
 <!--
-  WRITE `Closes #123` NORMALLY. IT NOW WORKS. Do not close by hand.
+  Use `Refs #123` for the GitHub implementation link and add the Linear outcome
+  URL. A development merge is not full product acceptance.
 
   Why this section exists: GitHub only auto-closes an issue when a pull request
   merges into the repository's DEFAULT branch. Every repository in this estate
@@ -21,9 +22,11 @@
   2026-08-17, every `Closes #N` ever written here did NOTHING, and fifteen
   issues sat fixed-and-open because their authors reasonably believed otherwise.
 
-  `.github/workflows/development-merge-issue-closer.yml` now honours the keyword
-  on a `development` merge: it comments on the issue naming the merge SHA, then
-  closes it. Nothing to opt into.
+  `.github/workflows/development-merge-issue-closer.yml` parses a closing keyword
+  on a `development` merge, but only closes an issue labelled `scope:implementation`
+  with a trusted acceptance receipt for the exact issue, PR and merge SHA.
+  See `docs/20260924-linear-work-tracking-v1.00W.md` for the receipt contract.
+  Full product outcomes remain open until deployed and accepted by their owner.
 
   WHAT IT HONOURS — the same rule GitHub uses:
     Closes #123 · Fixes #123 · Resolves #123   (also closed/fixed/resolved,
@@ -42,7 +45,9 @@
   those by hand and say so below.
 -->
 
-Closes #
+Refs #
+
+Linear outcome:
 
 ## Evidence
 

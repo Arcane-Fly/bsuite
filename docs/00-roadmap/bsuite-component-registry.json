@@ -18,14 +18,14 @@
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 1579,
-      "componentFiles": 461
+      "sourceFiles": 1593,
+      "componentFiles": 467
     },
     "business-suite-unified": {
       "available": true,
       "reason": "ok",
       "detail": null,
-      "sourceFiles": 341,
+      "sourceFiles": 342,
       "componentFiles": 119
     },
     "conduit": {
@@ -132,7 +132,7 @@
   "sharedComponents": 203,
   "unusedSharedComponents": 174,
   "localComponentFiles": {
-    "crm7": 461,
+    "crm7": 467,
     "business-suite-unified": 119,
     "conduit": 101,
     "braden": 209,

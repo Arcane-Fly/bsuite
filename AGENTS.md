@@ -41,8 +41,8 @@ are Vite.
    by an external dependency, file an issue and keep going.
 2. **Finish the whole ask.** Don't silently narrow scope. If you drop part of it, say so explicitly.
 3. **Evidence, not assertion.** "Done" requires: the command you ran plus its output; a live check on
-   the `d.*` domain for anything user-facing; the tracking issue and dashboard updated in the same
-   session. Never mark your own work done on a code-trace alone.
+   the `d.*` domain for anything user-facing; the linked Linear outcome and technical evidence
+   updated in the same session. Never mark your own work done on a code-trace alone.
 4. **Latest wins.** On conflicting docs, take the newest, most complete, highest-quality option — and
    fix or delete the stale one rather than leaving both.
 5. **Clean up behind you.** Remove superseded code when you supersede it. No dead or duplicate paths.
@@ -191,7 +191,7 @@ Read the destination before your first edit in that area. Do not re-derive from 
 | Layout, z-index scale, DOM autopsy | [`docs/20260731-frontend-layout-zindex-standards-v1.00W.md`](docs/20260731-frontend-layout-zindex-standards-v1.00W.md) |
 | Design judgment — priorities, the known answers, why a rule exists | [`DESIGN.md`](./DESIGN.md) — layer 1; values live in `packages/theme`, enforcement in `scripts/theme-gates.sh` |
 | Theme tokens, both brands | `packages/theme/README.md` + the `bsuite-brand-system` skill |
-| Status: what is open, shipped, applied | Ask the live source — `gh issue list`, `gh pr list`, `schema_migrations`. The plan dashboard was **retired 2026-08-10**: [`docs/20260810-plan-dashboard-retirement-v1.00F.md`](docs/20260810-plan-dashboard-retirement-v1.00F.md) |
+| Work lifecycle and current status | [Linear work tracking contract](docs/20260924-linear-work-tracking-v1.00W.md) and [BSuite project](https://linear.app/braden-pty-ltd/project/bsuite-delivery-and-roadmap-806afbd51657). Migration coverage is tracked by [BRA-46](https://linear.app/braden-pty-ltd/issue/BRA-46/centralize-bsuite-work-in-linear-and-retire-conflicting-tracking). Verify technical evidence at `gh issue list`, `gh pr list`, deployments and `schema_migrations`; the plan dashboard was [retired](docs/20260810-plan-dashboard-retirement-v1.00F.md). |
 | E2E testing status | [`docs/testing/README.md`](docs/testing/README.md) |
 | Dependency bumps | [`docs/20260506-dependency-bump-checklist-v1.00A.md`](docs/20260506-dependency-bump-checklist-v1.00A.md) |
 | Anything else | [`docs/README.md`](docs/README.md) → `docs/20260504-bsuite-documentation-hub-v1.00W.md` |
@@ -201,17 +201,13 @@ Read the destination before your first edit in that area. Do not re-derive from 
 Commits: `type(scope): description` — types `feat|fix|docs|style|refactor|test|chore|perf`, scopes
 `bsu|crm7|conduit|braden|r80|throughput|shared|docs|deploy`.
 
-**Write `Closes #123` in the PR body and leave it alone — it works now, and closing by hand is no
-longer the workaround.** It did not work before 2026-08-17: GitHub auto-closes only on a merge to a
-repository's DEFAULT branch, all seven repos here default to `main`, and every PR targets
-`development`, so every closing keyword ever written in this estate was inert. Fifteen issues sat
-fixed-and-open because of it. `.github/workflows/development-merge-issue-closer.yml` now honours the
-keyword on a `development` merge — it comments on the issue naming the merge SHA, then closes it —
-and sweeps all seven repos hourly, so submodule PRs are covered too. It ignores a keyword that
-appears in a blockquote, a checklist item, a code fence, an inline code span, an HTML comment, or
-after a negation, so quoting a review comment cannot close live work. Cross-repo references
-(`GaryOcean428/crm7#123`) are reported, never closed — close those by hand. If any of this changes,
-`scripts/parse-closing-keywords.mjs --self-test` is the contract, and it is a registered guard.
+**Use `Refs #123` for ordinary PRs.** A `development` merge is implementation evidence, not full
+product acceptance. The [work-tracking contract](docs/20260924-linear-work-tracking-v1.00W.md)
+defines the only automatic GitHub closure path: an explicitly bounded implementation issue with
+an exact, trusted two-line acceptance receipt posted after the merge. A quoted example or text
+surrounding the receipt is not acceptance. The development-merge closer still parses closing keywords,
+but leaves unreceipted and full-scope issues open. Cross-repository references are reported, never
+closed by this workflow. The parser self-test and closer eligibility tests are both required gates.
 
 throughput's AI stack is the Jodie setup (migrated off Groq `gpt-oss-120b` 2026-08-05): same-origin
 `/api/llm/*` Vercel routes over the Vercel AI Gateway — `xai/grok-4.3` primary, `zai/glm-5.2`

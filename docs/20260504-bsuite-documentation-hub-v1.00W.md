@@ -53,6 +53,11 @@ bsuite/                          ← parent repo
 
 ---
 
+> **Work-lifecycle update, 24 September 2026:** the [Linear work-tracking contract](20260924-linear-work-tracking-v1.00W.md)
+> supersedes status and dispatch claims below. The [BSuite project](https://linear.app/braden-pty-ltd/project/bsuite-delivery-and-roadmap-806afbd51657)
+> owns human lifecycle, while [BRA-46](https://linear.app/braden-pty-ltd/issue/BRA-46/centralize-bsuite-work-in-linear-and-retire-conflicting-tracking)
+> retains migration gaps. Historical registers remain sources; local runtime checkpoints retain leases.
+
 ## 2. Parent Canonical Documents (bsuite/docs/)
 
 Full list in `docs/README.md`. Canonical sources are split into **Living Authority** (actively maintained) and **Archived Reference Snapshots** (reference-complete, superseded by code or newer docs).
@@ -64,9 +69,9 @@ Full list in `docs/README.md`. Canonical sources are split into **Living Authori
 | `../AGENTS.md` | Living | Agent/developer guide — project-wide conventions, auth topology, OAuth allowlist (ADR-0004 SSoT), pnpm lockfile recipe, AI Implementation Standards, Frontend Layout & Z-Index Standards |
 | `../CLAUDE.md` | Living | Claude-facing agent brief — mirrors AGENTS.md content |
 | `../MEMORY_PROTOCOL.md` | Living | QIG Memory API persistent session protocol |
-| `00-roadmap/20260112-master-roadmap-v1.00F.md` | W (authoritative) | Master roadmap — SSoT for planning and delivery *(repointed 2026-07-28; previous v5 file archived 2026-07-08)* |
+| `00-roadmap/20260112-master-roadmap-v1.00F.md` | Historical source | Dated scope and IDs for the Linear crosswalk; no longer a current status writer. |
 | `20260425-bsuite-finish-line-roadmap-v1.00W.md` | W | Finish-line roadmap — 154-item P0/P1/P2 execution order |
-| `20260501-merged-execution-backlog-v1.00W.md` | W (active queue) | Active phase-ordered queue post-Phase-0 ratification — single execution queue |
+| `20260501-merged-execution-backlog-v1.00W.md` | Historical source | Dated phase ordering; reconcile remaining obligations under BRA-46. |
 | `20260227-contributing-standards-guide-v1.01W.md` | W | Universal quality + doc standards (supersedes v1.00A) |
 | `20260227-dry-one-shot-architecture-v1.04A.md` | A | DRY one-shot policy — single owning app per entity |
 | `archive/2026-06/20260317-bsuite-gap-report-v2.00W.md` | W | Gap report v2 — current authority (with §11 finish-line reconciliation) |
@@ -365,7 +370,7 @@ Full standards in `docs/20260227-contributing-standards-guide-v1.01W.md`. Essent
 - **Cross-link from submodule → parent for shared concerns** (tech stack, DRY, governance)
 - **Never duplicate parent canonical content** in a submodule — link to it instead
 - **Archive, do not delete.** When content is superseded, move to `docs/archive/[<scope>/]<date>-<reason>/` with an archive note. Scope segment is optional — use `parent` for parent-level archives, `<app>` for app-scoped archives, or omit if the sweep spans scopes (e.g., `docs/archive/2026-05-04-doc-unification/`).
-- **Update roadmaps + execution backlog in the same PR** that ships the work — do not let roadmap and code drift apart. Items shipped from `docs/20260501-merged-execution-backlog-v1.00W.md` must be struck through in the same PR, and only then eligible for archival in the next quarterly pass.
+- **Update the linked Linear outcome and technical evidence in the same task** that ships work. Preserve stable IDs and source mappings in registries; do not manually write a second lifecycle verdict into a historical backlog.
 
 ---
 
@@ -447,7 +452,8 @@ Fast navigation for agents and contributors. Bookmark this section.
 
 ### Governance
 
-- [Master roadmap (SSoT)](./00-roadmap/20260112-master-roadmap-v1.00F.md) *(repointed 2026-07-28; previous v5 file archived 2026-07-08)*
+- [Linear work-tracking contract](./20260924-linear-work-tracking-v1.00W.md) and [BSuite project](https://linear.app/braden-pty-ltd/project/bsuite-delivery-and-roadmap-806afbd51657) for current human lifecycle
+- Master roadmap source `00-roadmap/20260112-master-roadmap-v1.00F.md` is archived outside this repository; use the source crosswalk under BRA-46 for its IDs.
 - [Finish-line roadmap](archive/README.md) *(archived — was `20260425-bsuite-finish-line-roadmap-v1.00W.md`)*
 - [Active execution backlog](archive/README.md) *(archived — was `20260501-merged-execution-backlog-v1.00W.md`)*
 - [Tech-stack baseline](archive/README.md) *(archived — was `20260504-bsuite-tech-stack-alignment-v1.00W.md`)*
@@ -473,9 +479,9 @@ Fast navigation for agents and contributors. Bookmark this section.
 - [Env var rules](./20260424-env-var-contributing-rules-v1.00W.md)
 - [Phase-0 completion report](archive/README.md) *(archived — was `20260501-phase-0-completion-report-v1.00W.md`)*
 
-### Living trackers
+### Current work and source ledgers
 
-- [Parent OUTSTANDING](./OUTSTANDING.md)
+- [BSuite Linear project](https://linear.app/braden-pty-ltd/project/bsuite-delivery-and-roadmap-806afbd51657) for current human lifecycle
 - [New issues found](./NEW_ISSUES_FOUND.md)
 - [Plans index](./plans/README.md)
 

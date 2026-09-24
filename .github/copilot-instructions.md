@@ -1,5 +1,10 @@
 # Universal AI Agent Instructions
 
+> BSuite work lifecycle is governed by [the Linear work-tracking contract](../docs/20260924-linear-work-tracking-v1.00W.md).
+> The [project](https://linear.app/braden-pty-ltd/project/bsuite-delivery-and-roadmap-806afbd51657)
+> holds human outcome status; [BRA-46](https://linear.app/braden-pty-ltd/issue/BRA-46/centralize-bsuite-work-in-linear-and-retire-conflicting-tracking)
+> tracks migration gaps. GitHub remains implementation evidence, and local checkpoints retain writer leases.
+
 This document serves as the **canonical rulebook** for all AI coding agents (Manus, Claude Code, Copilot, Cursor, Windsurf, etc.) operating within this project.
 
 These instructions override any default agent behaviors. You must read, understand, and strictly adhere to these rules before executing any task.
@@ -74,7 +79,7 @@ When concluding a development cycle or major task, follow this strict sequence:
 4. Adapt contributing guidelines from external sources and enforce them via CI.
 5. Plan the implementation of suggested next steps.
 6. Run the QA sub-agents for comprehensive quality assurance.
-7. Update the project roadmap with the progress made.
+7. Update the linked Linear outcome with verified progress and evidence; preserve source-ID mappings in technical registries.
 8. Incorporate and address any issues identified during this process (including failing tests).
 
 ---

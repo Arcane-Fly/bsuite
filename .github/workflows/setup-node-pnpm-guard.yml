@@ -160,15 +160,42 @@ jobs:
     name: setup-node pnpm guard (app scopes, pinned gitlinks)
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - uses: actions/checkout@v5
         with:
           # Pinned gitlinks only — the parent tree's own truth.
           submodules: recursive
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 1
           # Every app is a PRIVATE submodule: the default GITHUB_TOKEN gets a
           # bare "Repository not found". House pattern is the cross-repo PAT
           # with a GITHUB_TOKEN fallback (estate-alignment.yml idiom).
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Assert the submodules actually checked out
         shell: bash
@@ -185,14 +212,24 @@ jobs:
 
       - name: Prove the app-scope checker can fail before trusting what it says
         shell: bash
-        # Planted-omission positive control, app form: strip the explicit
-        # `cache: 'pnpm'` line from crm7/ci.yml (present at BOTH the pinned
-        # main and development shapes of that file), which leaves an
-        # install-bearing job with no explicit cache and must fail the guard.
+        # Planted-omission positive control, app form: strip EVERY guard from
+        # crm7/ci.yml — the explicit `cache: 'pnpm'` key line AND the
+        # `package-manager-cache: false` flag — which leaves install-bearing
+        # setup-node@v5 steps with no guard in either form and must fail.
+        # Stripping only one form stopped biting on 2026-09-24 when crm7#2727
+        # gave its first step BOTH forms: the step stayed guarded, the checker
+        # rightly passed, and the control reported the checker broken. The
+        # cmp below refuses a plant that changed nothing, so a control that no
+        # longer applies fails as a control, not as a verdict on the checker.
         run: |
           set -euo pipefail
           cp crm7/.github/workflows/ci.yml /tmp/ci-backup.yml
-          sed -i "/^[[:space:]]*cache:[[:space:]]*'pnpm'/d" crm7/.github/workflows/ci.yml
+          sed -i -e "/^[[:space:]]*cache:[[:space:]]*'pnpm'/d" \
+                 -e "/^[[:space:]]*package-manager-cache:[[:space:]]*false/d" crm7/.github/workflows/ci.yml
+          if cmp -s /tmp/ci-backup.yml crm7/.github/workflows/ci.yml; then
+            echo "::error::APP-SCOPE POSITIVE CONTROL DID NOT PLANT — crm7/ci.yml has neither guard line any more. Re-point the plant at a file that still carries a guard."
+            exit 1
+          fi
           if node scripts/check-setup-node-pnpm-guard.mjs \
               --scope crm7 --scope conduit --scope business-suite-unified \
               --scope throughput --scope braden --scope R80.4; then

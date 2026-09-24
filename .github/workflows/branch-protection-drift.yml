@@ -79,11 +79,12 @@ jobs:
     name: Branch protection drift
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # The instrument before the measurement. Hermetic: no network, no token.
       - name: Prove the reader

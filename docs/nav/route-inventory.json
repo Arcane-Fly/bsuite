@@ -592,7 +592,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:390",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:391",
       "note": "→ /"
     },
     {
@@ -619,7 +619,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:272",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:273",
       "note": null
     },
     {
@@ -646,7 +646,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:556",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:562",
       "note": null
     },
     {
@@ -673,7 +673,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:305",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:306",
       "note": null
     },
     {
@@ -700,7 +700,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:337",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:338",
       "note": null
     },
     {
@@ -727,7 +727,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:314",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:315",
       "note": null
     },
     {
@@ -754,7 +754,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:323",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:324",
       "note": null
     },
     {
@@ -781,7 +781,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:306",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:307",
       "note": null
     },
     {
@@ -808,7 +808,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:362",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:363",
       "note": "→ /developer/platform-kit"
     },
     {
@@ -835,7 +835,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:365",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:366",
       "note": "→ /developer/platform-kit/auth"
     },
     {
@@ -862,7 +862,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:367",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:368",
       "note": "→ /developer/database"
     },
     {
@@ -889,7 +889,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:368",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:369",
       "note": "→ /developer/database"
     },
     {
@@ -916,7 +916,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:363",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:364",
       "note": "→ /developer/platform-kit/logs"
     },
     {
@@ -943,7 +943,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:364",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:365",
       "note": "→ /developer/platform-kit/secrets"
     },
     {
@@ -970,7 +970,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:366",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:367",
       "note": "→ /developer/platform-kit/storage"
     },
     {
@@ -997,7 +997,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:324",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:325",
       "note": null
     },
     {
@@ -1024,7 +1024,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:325",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:326",
       "note": null
     },
     {
@@ -1051,7 +1051,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:327",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:328",
       "note": null
     },
     {
@@ -1078,7 +1078,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:498",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:504",
       "note": null
     },
     {
@@ -1105,7 +1105,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:492",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:498",
       "note": null
     },
     {
@@ -1132,7 +1132,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:525",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:531",
       "note": null
     },
     {
@@ -1159,7 +1159,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:284",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:285",
       "note": null
     },
     {
@@ -1186,7 +1186,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:333",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:334",
       "note": null
     },
     {
@@ -1213,7 +1213,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:386",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:387",
       "note": "→ /developer/pages"
     },
     {
@@ -1240,7 +1240,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:375",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:376",
       "note": null
     },
     {
@@ -2108,7 +2108,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:540",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:546",
       "note": null
     },
     {
@@ -2135,7 +2135,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:541",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:547",
       "note": null
     },
     {
@@ -2162,7 +2162,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:330",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:331",
       "note": null
     },
     {
@@ -2189,7 +2189,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:546",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:552",
       "note": null
     },
     {
@@ -2216,7 +2216,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:547",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:553",
       "note": null
     },
     {
@@ -2243,7 +2243,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:329",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:330",
       "note": null
     },
     {
@@ -2270,7 +2270,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:328",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:329",
       "note": null
     },
     {
@@ -2297,7 +2297,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:369",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:370",
       "note": null
     },
     {
@@ -2324,7 +2324,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:371",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:372",
       "note": null
     },
     {
@@ -2351,7 +2351,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:370",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:371",
       "note": null
     },
     {
@@ -2378,7 +2378,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:479",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:485",
       "note": null
     },
     {
@@ -2405,7 +2405,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:528",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:534",
       "note": null
     },
     {
@@ -2432,7 +2432,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:292",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:293",
       "note": null
     },
     {
@@ -2459,7 +2459,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:374",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:375",
       "note": null
     },
     {
@@ -2486,7 +2486,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:380",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:381",
       "note": null
     },
     {
@@ -2513,7 +2513,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:293",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:294",
       "note": null
     },
     {
@@ -2540,7 +2540,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:538",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:544",
       "note": null
     },
     {
@@ -2567,7 +2567,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:524",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:530",
       "note": null
     },
     {
@@ -2594,7 +2594,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:280",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:281",
       "note": null
     },
     {
@@ -2621,7 +2621,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:299",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:300",
       "note": "→ /branding"
     },
     {
@@ -2648,7 +2648,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:373",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:374",
       "note": null
     },
     {
@@ -2675,7 +2675,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:326",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:327",
       "note": null
     },
     {
@@ -2702,7 +2702,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:372",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:373",
       "note": null
     },
     {
@@ -2729,7 +2729,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "business-suite-unified/src/components/AppContent.tsx:539",
+      "evidence": "business-suite-unified/src/components/AppContent.tsx:545",
       "note": null
     },
     {
@@ -3809,7 +3809,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1254",
+      "evidence": "crm7/src/App.tsx:1257",
       "note": null
     },
     {
@@ -3836,7 +3836,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:2621",
+      "evidence": "crm7/src/App.tsx:2627",
       "note": "→ /dashboard"
     },
     {
@@ -3863,7 +3863,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2615",
+      "evidence": "crm7/src/App.tsx:2621",
       "note": null
     },
     {
@@ -3890,7 +3890,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2013",
+      "evidence": "crm7/src/App.tsx:2019",
       "note": null
     },
     {
@@ -3917,7 +3917,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2031",
+      "evidence": "crm7/src/App.tsx:2037",
       "note": null
     },
     {
@@ -3937,14 +3937,14 @@
         "group": "Settings",
         "label": "Enterprise Data Console",
         "icon": "Settings",
-        "order": 115
+        "order": 116
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3226",
+      "evidence": "crm7/src/App.tsx:3232",
       "note": null
     },
     {
@@ -3971,7 +3971,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3244",
+      "evidence": "crm7/src/App.tsx:3250",
       "note": null
     },
     {
@@ -3998,7 +3998,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2025",
+      "evidence": "crm7/src/App.tsx:2031",
       "note": null
     },
     {
@@ -4025,7 +4025,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2019",
+      "evidence": "crm7/src/App.tsx:2025",
       "note": null
     },
     {
@@ -4052,7 +4052,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3666",
+      "evidence": "crm7/src/App.tsx:3679",
       "note": null
     },
     {
@@ -4072,14 +4072,14 @@
         "group": "AI & Automation",
         "label": "AI Plugins",
         "icon": "Sparkles",
-        "order": 104
+        "order": 105
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3641",
+      "evidence": "crm7/src/App.tsx:3654",
       "note": null
     },
     {
@@ -4106,7 +4106,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1753",
+      "evidence": "crm7/src/App.tsx:1759",
       "note": null
     },
     {
@@ -4133,7 +4133,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1766",
+      "evidence": "crm7/src/App.tsx:1772",
       "note": null
     },
     {
@@ -4160,7 +4160,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1760",
+      "evidence": "crm7/src/App.tsx:1766",
       "note": null
     },
     {
@@ -4187,7 +4187,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1772",
+      "evidence": "crm7/src/App.tsx:1778",
       "note": null
     },
     {
@@ -4207,14 +4207,14 @@
         "group": "My Workforce",
         "label": "Workers on Site",
         "icon": "Building2",
-        "order": 127
+        "order": 128
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1586",
+      "evidence": "crm7/src/App.tsx:1592",
       "note": null
     },
     {
@@ -4241,7 +4241,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1580",
+      "evidence": "crm7/src/App.tsx:1586",
       "note": null
     },
     {
@@ -4268,7 +4268,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1550",
+      "evidence": "crm7/src/App.tsx:1556",
       "note": null
     },
     {
@@ -4295,7 +4295,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1566",
+      "evidence": "crm7/src/App.tsx:1572",
       "note": null
     },
     {
@@ -4322,7 +4322,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1574",
+      "evidence": "crm7/src/App.tsx:1580",
       "note": null
     },
     {
@@ -4349,7 +4349,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1558",
+      "evidence": "crm7/src/App.tsx:1564",
       "note": null
     },
     {
@@ -4376,7 +4376,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1597",
+      "evidence": "crm7/src/App.tsx:1603",
       "note": "→ /people/completion"
     },
     {
@@ -4403,7 +4403,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1594",
+      "evidence": "crm7/src/App.tsx:1600",
       "note": "→ /people/new"
     },
     {
@@ -4430,7 +4430,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1542",
+      "evidence": "crm7/src/App.tsx:1548",
       "note": null
     },
     {
@@ -4457,7 +4457,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1600",
+      "evidence": "crm7/src/App.tsx:1606",
       "note": "→ /people/progress"
     },
     {
@@ -4484,7 +4484,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1603",
+      "evidence": "crm7/src/App.tsx:1609",
       "note": "→ /people"
     },
     {
@@ -4511,7 +4511,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1618",
+      "evidence": "crm7/src/App.tsx:1624",
       "note": "→ /people/recruitment"
     },
     {
@@ -4538,7 +4538,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1612",
+      "evidence": "crm7/src/App.tsx:1618",
       "note": "→ /people/onboarding"
     },
     {
@@ -4565,7 +4565,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1615",
+      "evidence": "crm7/src/App.tsx:1621",
       "note": "→ /people/recruitment"
     },
     {
@@ -4592,7 +4592,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1609",
+      "evidence": "crm7/src/App.tsx:1615",
       "note": "→ /people"
     },
     {
@@ -4619,7 +4619,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1606",
+      "evidence": "crm7/src/App.tsx:1612",
       "note": "→ /training/plans/create"
     },
     {
@@ -4646,7 +4646,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1261",
+      "evidence": "crm7/src/App.tsx:1264",
       "note": null
     },
     {
@@ -4673,7 +4673,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1255",
+      "evidence": "crm7/src/App.tsx:1258",
       "note": null
     },
     {
@@ -4700,7 +4700,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1262",
+      "evidence": "crm7/src/App.tsx:1265",
       "note": null
     },
     {
@@ -4727,7 +4727,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1264",
+      "evidence": "crm7/src/App.tsx:1267",
       "note": "→ /auth/reset-password"
     },
     {
@@ -4754,7 +4754,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1263",
+      "evidence": "crm7/src/App.tsx:1266",
       "note": null
     },
     {
@@ -4781,7 +4781,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1256",
+      "evidence": "crm7/src/App.tsx:1259",
       "note": null
     },
     {
@@ -4808,7 +4808,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1257",
+      "evidence": "crm7/src/App.tsx:1260",
       "note": null
     },
     {
@@ -4835,7 +4835,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1268",
+      "evidence": "crm7/src/App.tsx:1271",
       "note": null
     },
     {
@@ -4862,7 +4862,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2007",
+      "evidence": "crm7/src/App.tsx:2013",
       "note": null
     },
     {
@@ -4889,7 +4889,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2001",
+      "evidence": "crm7/src/App.tsx:2007",
       "note": null
     },
     {
@@ -4916,7 +4916,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1995",
+      "evidence": "crm7/src/App.tsx:2001",
       "note": null
     },
     {
@@ -4943,7 +4943,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1989",
+      "evidence": "crm7/src/App.tsx:1995",
       "note": null
     },
     {
@@ -4970,7 +4970,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:2050",
+      "evidence": "crm7/src/App.tsx:2056",
       "note": "→ /financial/invoicing"
     },
     {
@@ -4997,7 +4997,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:2044",
+      "evidence": "crm7/src/App.tsx:2050",
       "note": "→ /financial/invoicing/generate"
     },
     {
@@ -5024,7 +5024,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2624",
+      "evidence": "crm7/src/App.tsx:2630",
       "note": null
     },
     {
@@ -5051,7 +5051,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2102",
+      "evidence": "crm7/src/App.tsx:2108",
       "note": null
     },
     {
@@ -5078,7 +5078,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2096",
+      "evidence": "crm7/src/App.tsx:2102",
       "note": null
     },
     {
@@ -5105,7 +5105,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2078",
+      "evidence": "crm7/src/App.tsx:2084",
       "note": null
     },
     {
@@ -5132,7 +5132,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2090",
+      "evidence": "crm7/src/App.tsx:2096",
       "note": null
     },
     {
@@ -5159,7 +5159,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2084",
+      "evidence": "crm7/src/App.tsx:2090",
       "note": null
     },
     {
@@ -5186,7 +5186,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2156",
+      "evidence": "crm7/src/App.tsx:2162",
       "note": null
     },
     {
@@ -5213,7 +5213,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2150",
+      "evidence": "crm7/src/App.tsx:2156",
       "note": null
     },
     {
@@ -5240,7 +5240,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2128",
+      "evidence": "crm7/src/App.tsx:2134",
       "note": null
     },
     {
@@ -5267,7 +5267,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2110",
+      "evidence": "crm7/src/App.tsx:2116",
       "note": null
     },
     {
@@ -5294,7 +5294,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2116",
+      "evidence": "crm7/src/App.tsx:2122",
       "note": null
     },
     {
@@ -5321,7 +5321,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2122",
+      "evidence": "crm7/src/App.tsx:2128",
       "note": null
     },
     {
@@ -5348,7 +5348,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1414",
+      "evidence": "crm7/src/App.tsx:1420",
       "note": "Clients"
     },
     {
@@ -5375,7 +5375,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1408",
+      "evidence": "crm7/src/App.tsx:1414",
       "note": "Client Details"
     },
     {
@@ -5402,7 +5402,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1402",
+      "evidence": "crm7/src/App.tsx:1408",
       "note": null
     },
     {
@@ -5429,7 +5429,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1396",
+      "evidence": "crm7/src/App.tsx:1402",
       "note": null
     },
     {
@@ -5456,7 +5456,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1635",
+      "evidence": "crm7/src/App.tsx:1641",
       "note": "→ /communications"
     },
     {
@@ -5483,7 +5483,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1390",
+      "evidence": "crm7/src/App.tsx:1396",
       "note": null
     },
     {
@@ -5510,7 +5510,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1360",
+      "evidence": "crm7/src/App.tsx:1366",
       "note": null
     },
     {
@@ -5537,7 +5537,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1384",
+      "evidence": "crm7/src/App.tsx:1390",
       "note": null
     },
     {
@@ -5564,7 +5564,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1378",
+      "evidence": "crm7/src/App.tsx:1384",
       "note": null
     },
     {
@@ -5591,7 +5591,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1372",
+      "evidence": "crm7/src/App.tsx:1378",
       "note": null
     },
     {
@@ -5618,7 +5618,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1366",
+      "evidence": "crm7/src/App.tsx:1372",
       "note": null
     },
     {
@@ -5638,14 +5638,14 @@
         "group": "VET & Training",
         "label": "Competency Progress",
         "icon": "BookOpen",
-        "order": 103
+        "order": 104
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2798",
+      "evidence": "crm7/src/App.tsx:2804",
       "note": null
     },
     {
@@ -5672,7 +5672,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2792",
+      "evidence": "crm7/src/App.tsx:2798",
       "note": null
     },
     {
@@ -5699,7 +5699,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2786",
+      "evidence": "crm7/src/App.tsx:2792",
       "note": null
     },
     {
@@ -5726,7 +5726,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2389",
+      "evidence": "crm7/src/App.tsx:2395",
       "note": null
     },
     {
@@ -5753,7 +5753,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2383",
+      "evidence": "crm7/src/App.tsx:2389",
       "note": null
     },
     {
@@ -5780,7 +5780,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2323",
+      "evidence": "crm7/src/App.tsx:2329",
       "note": null
     },
     {
@@ -5807,7 +5807,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2303",
+      "evidence": "crm7/src/App.tsx:2309",
       "note": null
     },
     {
@@ -5834,7 +5834,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2297",
+      "evidence": "crm7/src/App.tsx:2303",
       "note": null
     },
     {
@@ -5861,7 +5861,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2377",
+      "evidence": "crm7/src/App.tsx:2383",
       "note": null
     },
     {
@@ -5888,7 +5888,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2365",
+      "evidence": "crm7/src/App.tsx:2371",
       "note": null
     },
     {
@@ -5915,7 +5915,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2279",
+      "evidence": "crm7/src/App.tsx:2285",
       "note": null
     },
     {
@@ -5942,7 +5942,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2353",
+      "evidence": "crm7/src/App.tsx:2359",
       "note": null
     },
     {
@@ -5969,7 +5969,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2371",
+      "evidence": "crm7/src/App.tsx:2377",
       "note": null
     },
     {
@@ -5996,7 +5996,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2291",
+      "evidence": "crm7/src/App.tsx:2297",
       "note": null
     },
     {
@@ -6023,7 +6023,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2335",
+      "evidence": "crm7/src/App.tsx:2341",
       "note": null
     },
     {
@@ -6050,7 +6050,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2329",
+      "evidence": "crm7/src/App.tsx:2335",
       "note": null
     },
     {
@@ -6077,7 +6077,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2359",
+      "evidence": "crm7/src/App.tsx:2365",
       "note": null
     },
     {
@@ -6104,7 +6104,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2285",
+      "evidence": "crm7/src/App.tsx:2291",
       "note": null
     },
     {
@@ -6131,7 +6131,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2347",
+      "evidence": "crm7/src/App.tsx:2353",
       "note": null
     },
     {
@@ -6158,7 +6158,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2341",
+      "evidence": "crm7/src/App.tsx:2347",
       "note": null
     },
     {
@@ -6185,7 +6185,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1354",
+      "evidence": "crm7/src/App.tsx:1360",
       "note": "Contacts"
     },
     {
@@ -6212,7 +6212,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1348",
+      "evidence": "crm7/src/App.tsx:1354",
       "note": null
     },
     {
@@ -6239,7 +6239,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1342",
+      "evidence": "crm7/src/App.tsx:1348",
       "note": null
     },
     {
@@ -6266,7 +6266,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1306",
+      "evidence": "crm7/src/App.tsx:1312",
       "note": null
     },
     {
@@ -6293,7 +6293,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1330",
+      "evidence": "crm7/src/App.tsx:1336",
       "note": null
     },
     {
@@ -6320,7 +6320,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1324",
+      "evidence": "crm7/src/App.tsx:1330",
       "note": null
     },
     {
@@ -6347,7 +6347,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1318",
+      "evidence": "crm7/src/App.tsx:1324",
       "note": null
     },
     {
@@ -6374,7 +6374,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1312",
+      "evidence": "crm7/src/App.tsx:1318",
       "note": null
     },
     {
@@ -6401,7 +6401,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1300",
+      "evidence": "crm7/src/App.tsx:1306",
       "note": "Modern Contacts"
     },
     {
@@ -6428,7 +6428,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1336",
+      "evidence": "crm7/src/App.tsx:1342",
       "note": null
     },
     {
@@ -6455,7 +6455,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2780",
+      "evidence": "crm7/src/App.tsx:2786",
       "note": null
     },
     {
@@ -6482,7 +6482,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2774",
+      "evidence": "crm7/src/App.tsx:2780",
       "note": null
     },
     {
@@ -6509,7 +6509,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2751",
+      "evidence": "crm7/src/App.tsx:2757",
       "note": null
     },
     {
@@ -6536,7 +6536,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2745",
+      "evidence": "crm7/src/App.tsx:2751",
       "note": null
     },
     {
@@ -6563,7 +6563,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2739",
+      "evidence": "crm7/src/App.tsx:2745",
       "note": null
     },
     {
@@ -6590,7 +6590,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2727",
+      "evidence": "crm7/src/App.tsx:2733",
       "note": null
     },
     {
@@ -6617,7 +6617,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2733",
+      "evidence": "crm7/src/App.tsx:2739",
       "note": null
     },
     {
@@ -6644,7 +6644,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3340",
+      "evidence": "crm7/src/App.tsx:3353",
       "note": null
     },
     {
@@ -6664,14 +6664,14 @@
         "group": "Dashboard",
         "label": "Dashboard",
         "icon": "LayoutDashboard",
-        "order": 130
+        "order": 131
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1297",
+      "evidence": "crm7/src/App.tsx:1303",
       "note": "Dashboard"
     },
     {
@@ -6698,7 +6698,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1831",
+      "evidence": "crm7/src/App.tsx:1837",
       "note": null
     },
     {
@@ -6725,7 +6725,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1825",
+      "evidence": "crm7/src/App.tsx:1831",
       "note": null
     },
     {
@@ -6752,7 +6752,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1746",
+      "evidence": "crm7/src/App.tsx:1752",
       "note": null
     },
     {
@@ -6779,7 +6779,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1740",
+      "evidence": "crm7/src/App.tsx:1746",
       "note": null
     },
     {
@@ -6799,14 +6799,14 @@
         "group": "Developer",
         "label": "Platform data",
         "icon": "Terminal",
-        "order": 123
+        "order": 124
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3234",
+      "evidence": "crm7/src/App.tsx:3240",
       "note": null
     },
     {
@@ -6826,14 +6826,14 @@
         "group": "Developer",
         "label": "Observability",
         "icon": "Terminal",
-        "order": 122
+        "order": 123
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3250",
+      "evidence": "crm7/src/App.tsx:3256",
       "note": null
     },
     {
@@ -6860,7 +6860,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2697",
+      "evidence": "crm7/src/App.tsx:2703",
       "note": null
     },
     {
@@ -6887,7 +6887,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2691",
+      "evidence": "crm7/src/App.tsx:2697",
       "note": null
     },
     {
@@ -6914,7 +6914,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2678",
+      "evidence": "crm7/src/App.tsx:2684",
       "note": null
     },
     {
@@ -6941,7 +6941,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2659",
+      "evidence": "crm7/src/App.tsx:2665",
       "note": null
     },
     {
@@ -6968,7 +6968,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2631",
+      "evidence": "crm7/src/App.tsx:2637",
       "note": null
     },
     {
@@ -6995,7 +6995,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2671",
+      "evidence": "crm7/src/App.tsx:2677",
       "note": null
     },
     {
@@ -7022,7 +7022,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2665",
+      "evidence": "crm7/src/App.tsx:2671",
       "note": null
     },
     {
@@ -7049,7 +7049,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2647",
+      "evidence": "crm7/src/App.tsx:2653",
       "note": null
     },
     {
@@ -7076,7 +7076,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2641",
+      "evidence": "crm7/src/App.tsx:2647",
       "note": null
     },
     {
@@ -7103,7 +7103,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2653",
+      "evidence": "crm7/src/App.tsx:2659",
       "note": null
     },
     {
@@ -7130,7 +7130,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3140",
+      "evidence": "crm7/src/App.tsx:3146",
       "note": null
     },
     {
@@ -7157,7 +7157,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3134",
+      "evidence": "crm7/src/App.tsx:3140",
       "note": null
     },
     {
@@ -7184,7 +7184,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3128",
+      "evidence": "crm7/src/App.tsx:3134",
       "note": null
     },
     {
@@ -7211,7 +7211,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2812",
+      "evidence": "crm7/src/App.tsx:2818",
       "note": null
     },
     {
@@ -7238,7 +7238,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2806",
+      "evidence": "crm7/src/App.tsx:2812",
       "note": null
     },
     {
@@ -7265,7 +7265,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:2826",
+      "evidence": "crm7/src/App.tsx:2832",
       "note": "→ /people"
     },
     {
@@ -7292,7 +7292,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:2820",
+      "evidence": "crm7/src/App.tsx:2826",
       "note": "→ /people"
     },
     {
@@ -7319,7 +7319,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:2823",
+      "evidence": "crm7/src/App.tsx:2829",
       "note": "→ /people"
     },
     {
@@ -7346,7 +7346,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3681",
+      "evidence": "crm7/src/App.tsx:3694",
       "note": null
     },
     {
@@ -7373,7 +7373,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2933",
+      "evidence": "crm7/src/App.tsx:2939",
       "note": null
     },
     {
@@ -7400,7 +7400,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2843",
+      "evidence": "crm7/src/App.tsx:2849",
       "note": null
     },
     {
@@ -7427,7 +7427,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2837",
+      "evidence": "crm7/src/App.tsx:2843",
       "note": null
     },
     {
@@ -7454,7 +7454,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2831",
+      "evidence": "crm7/src/App.tsx:2837",
       "note": null
     },
     {
@@ -7474,14 +7474,14 @@
         "group": "Field Officers",
         "label": "Link Login Accounts",
         "icon": "MapPin",
-        "order": 98
+        "order": 99
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2939",
+      "evidence": "crm7/src/App.tsx:2945",
       "note": null
     },
     {
@@ -7508,7 +7508,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2861",
+      "evidence": "crm7/src/App.tsx:2867",
       "note": null
     },
     {
@@ -7535,7 +7535,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2855",
+      "evidence": "crm7/src/App.tsx:2861",
       "note": null
     },
     {
@@ -7562,7 +7562,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2849",
+      "evidence": "crm7/src/App.tsx:2855",
       "note": null
     },
     {
@@ -7589,7 +7589,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2945",
+      "evidence": "crm7/src/App.tsx:2951",
       "note": null
     },
     {
@@ -7616,7 +7616,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2885",
+      "evidence": "crm7/src/App.tsx:2891",
       "note": null
     },
     {
@@ -7643,7 +7643,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2873",
+      "evidence": "crm7/src/App.tsx:2879",
       "note": null
     },
     {
@@ -7670,7 +7670,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2879",
+      "evidence": "crm7/src/App.tsx:2885",
       "note": null
     },
     {
@@ -7697,7 +7697,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2897",
+      "evidence": "crm7/src/App.tsx:2903",
       "note": null
     },
     {
@@ -7724,7 +7724,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2891",
+      "evidence": "crm7/src/App.tsx:2897",
       "note": null
     },
     {
@@ -7751,7 +7751,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2867",
+      "evidence": "crm7/src/App.tsx:2873",
       "note": null
     },
     {
@@ -7778,7 +7778,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2915",
+      "evidence": "crm7/src/App.tsx:2921",
       "note": null
     },
     {
@@ -7805,7 +7805,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2909",
+      "evidence": "crm7/src/App.tsx:2915",
       "note": null
     },
     {
@@ -7832,7 +7832,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2903",
+      "evidence": "crm7/src/App.tsx:2909",
       "note": null
     },
     {
@@ -7859,7 +7859,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2927",
+      "evidence": "crm7/src/App.tsx:2933",
       "note": null
     },
     {
@@ -7886,7 +7886,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2921",
+      "evidence": "crm7/src/App.tsx:2927",
       "note": null
     },
     {
@@ -7906,14 +7906,14 @@
         "group": "Financial",
         "label": "Financial",
         "icon": "DollarSign",
-        "order": 131
+        "order": 132
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1929",
+      "evidence": "crm7/src/App.tsx:1935",
       "note": null
     },
     {
@@ -7940,7 +7940,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1839",
+      "evidence": "crm7/src/App.tsx:1845",
       "note": null
     },
     {
@@ -7967,7 +7967,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1845",
+      "evidence": "crm7/src/App.tsx:1851",
       "note": null
     },
     {
@@ -7987,14 +7987,14 @@
         "group": "Reports & Billing",
         "label": "Invoicing",
         "icon": "BarChart3",
-        "order": 130
+        "order": 131
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1896",
+      "evidence": "crm7/src/App.tsx:1902",
       "note": null
     },
     {
@@ -8021,7 +8021,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1890",
+      "evidence": "crm7/src/App.tsx:1896",
       "note": null
     },
     {
@@ -8048,7 +8048,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1857",
+      "evidence": "crm7/src/App.tsx:1863",
       "note": null
     },
     {
@@ -8075,7 +8075,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1867",
+      "evidence": "crm7/src/App.tsx:1873",
       "note": null
     },
     {
@@ -8102,7 +8102,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1881",
+      "evidence": "crm7/src/App.tsx:1887",
       "note": null
     },
     {
@@ -8129,7 +8129,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1908",
+      "evidence": "crm7/src/App.tsx:1914",
       "note": null
     },
     {
@@ -8156,7 +8156,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1902",
+      "evidence": "crm7/src/App.tsx:1908",
       "note": null
     },
     {
@@ -8183,7 +8183,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1851",
+      "evidence": "crm7/src/App.tsx:1857",
       "note": null
     },
     {
@@ -8210,7 +8210,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1926",
+      "evidence": "crm7/src/App.tsx:1932",
       "note": "→ /reports/financial-summary"
     },
     {
@@ -8237,7 +8237,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1923",
+      "evidence": "crm7/src/App.tsx:1929",
       "note": "→ /reports/financial-summary"
     },
     {
@@ -8264,8 +8264,62 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1920",
+      "evidence": "crm7/src/App.tsx:1926",
       "note": "→ /reports/financial-summary"
+    },
+    {
+      "app": "crm7",
+      "path": "/forms/sign/:token",
+      "route_file": "crm7/src/App.tsx",
+      "component": "FormSignPage",
+      "component_file": "crm7/src/pages/forms/sign/[token].tsx",
+      "layout": "none",
+      "auth": {
+        "type": "public",
+        "permissions": [],
+        "feature_flags": []
+      },
+      "nav": {
+        "surface": "none",
+        "group": null,
+        "label": null,
+        "icon": null,
+        "order": null
+      },
+      "reachable_via": "dynamic_from_list",
+      "portal": null,
+      "owned_entities": [],
+      "data_tables": [],
+      "status": "live",
+      "evidence": "crm7/src/App.tsx:1285",
+      "note": null
+    },
+    {
+      "app": "crm7",
+      "path": "/forms/submissions/:id",
+      "route_file": "crm7/src/App.tsx",
+      "component": "FormSubmissionPage",
+      "component_file": "crm7/src/pages/forms/submission.tsx",
+      "layout": "MainLayout",
+      "auth": {
+        "type": "authenticated",
+        "permissions": [],
+        "feature_flags": []
+      },
+      "nav": {
+        "surface": "none",
+        "group": null,
+        "label": null,
+        "icon": null,
+        "order": null
+      },
+      "reachable_via": "dynamic_from_list",
+      "portal": null,
+      "owned_entities": [],
+      "data_tables": [],
+      "status": "live",
+      "evidence": "crm7/src/App.tsx:3318",
+      "note": null
     },
     {
       "app": "crm7",
@@ -8291,7 +8345,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2182",
+      "evidence": "crm7/src/App.tsx:2188",
       "note": null
     },
     {
@@ -8318,7 +8372,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2176",
+      "evidence": "crm7/src/App.tsx:2182",
       "note": null
     },
     {
@@ -8345,7 +8399,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2170",
+      "evidence": "crm7/src/App.tsx:2176",
       "note": null
     },
     {
@@ -8372,7 +8426,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2164",
+      "evidence": "crm7/src/App.tsx:2170",
       "note": null
     },
     {
@@ -8399,7 +8453,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2144",
+      "evidence": "crm7/src/App.tsx:2150",
       "note": null
     },
     {
@@ -8426,7 +8480,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2493",
+      "evidence": "crm7/src/App.tsx:2499",
       "note": null
     },
     {
@@ -8453,7 +8507,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2433",
+      "evidence": "crm7/src/App.tsx:2439",
       "note": null
     },
     {
@@ -8480,7 +8534,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2481",
+      "evidence": "crm7/src/App.tsx:2487",
       "note": null
     },
     {
@@ -8507,7 +8561,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2439",
+      "evidence": "crm7/src/App.tsx:2445",
       "note": null
     },
     {
@@ -8534,7 +8588,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2487",
+      "evidence": "crm7/src/App.tsx:2493",
       "note": null
     },
     {
@@ -8561,7 +8615,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2475",
+      "evidence": "crm7/src/App.tsx:2481",
       "note": null
     },
     {
@@ -8588,7 +8642,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2469",
+      "evidence": "crm7/src/App.tsx:2475",
       "note": null
     },
     {
@@ -8615,7 +8669,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2451",
+      "evidence": "crm7/src/App.tsx:2457",
       "note": null
     },
     {
@@ -8642,7 +8696,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2457",
+      "evidence": "crm7/src/App.tsx:2463",
       "note": null
     },
     {
@@ -8669,7 +8723,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2445",
+      "evidence": "crm7/src/App.tsx:2451",
       "note": null
     },
     {
@@ -8696,7 +8750,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2463",
+      "evidence": "crm7/src/App.tsx:2469",
       "note": null
     },
     {
@@ -8723,7 +8777,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1638",
+      "evidence": "crm7/src/App.tsx:1644",
       "note": "→ /hosts"
     },
     {
@@ -8743,14 +8797,14 @@
         "group": "Reports & Billing",
         "label": "Monthly Reports",
         "icon": "BarChart3",
-        "order": 129
+        "order": 130
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3698",
+      "evidence": "crm7/src/App.tsx:3711",
       "note": null
     },
     {
@@ -8777,7 +8831,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3053",
+      "evidence": "crm7/src/App.tsx:3059",
       "note": null
     },
     {
@@ -8804,7 +8858,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3047",
+      "evidence": "crm7/src/App.tsx:3053",
       "note": null
     },
     {
@@ -8831,7 +8885,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3041",
+      "evidence": "crm7/src/App.tsx:3047",
       "note": null
     },
     {
@@ -8858,7 +8912,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2992",
+      "evidence": "crm7/src/App.tsx:2998",
       "note": null
     },
     {
@@ -8885,7 +8939,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2986",
+      "evidence": "crm7/src/App.tsx:2992",
       "note": null
     },
     {
@@ -8912,7 +8966,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2980",
+      "evidence": "crm7/src/App.tsx:2986",
       "note": null
     },
     {
@@ -8939,7 +8993,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2971",
+      "evidence": "crm7/src/App.tsx:2977",
       "note": null
     },
     {
@@ -8966,7 +9020,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1276",
+      "evidence": "crm7/src/App.tsx:1279",
       "note": null
     },
     {
@@ -8993,7 +9047,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2965",
+      "evidence": "crm7/src/App.tsx:2971",
       "note": null
     },
     {
@@ -9020,7 +9074,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2953",
+      "evidence": "crm7/src/App.tsx:2959",
       "note": null
     },
     {
@@ -9047,7 +9101,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2959",
+      "evidence": "crm7/src/App.tsx:2965",
       "note": null
     },
     {
@@ -9074,7 +9128,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3017",
+      "evidence": "crm7/src/App.tsx:3023",
       "note": null
     },
     {
@@ -9101,7 +9155,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3035",
+      "evidence": "crm7/src/App.tsx:3041",
       "note": null
     },
     {
@@ -9128,7 +9182,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3029",
+      "evidence": "crm7/src/App.tsx:3035",
       "note": null
     },
     {
@@ -9155,7 +9209,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3023",
+      "evidence": "crm7/src/App.tsx:3029",
       "note": null
     },
     {
@@ -9182,7 +9236,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2529",
+      "evidence": "crm7/src/App.tsx:2535",
       "note": null
     },
     {
@@ -9209,7 +9263,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2505",
+      "evidence": "crm7/src/App.tsx:2511",
       "note": null
     },
     {
@@ -9236,7 +9290,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2499",
+      "evidence": "crm7/src/App.tsx:2505",
       "note": null
     },
     {
@@ -9263,7 +9317,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2517",
+      "evidence": "crm7/src/App.tsx:2523",
       "note": null
     },
     {
@@ -9290,7 +9344,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2511",
+      "evidence": "crm7/src/App.tsx:2517",
       "note": null
     },
     {
@@ -9317,7 +9371,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2523",
+      "evidence": "crm7/src/App.tsx:2529",
       "note": null
     },
     {
@@ -9344,7 +9398,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2415",
+      "evidence": "crm7/src/App.tsx:2421",
       "note": null
     },
     {
@@ -9371,7 +9425,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2409",
+      "evidence": "crm7/src/App.tsx:2415",
       "note": null
     },
     {
@@ -9398,7 +9452,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2403",
+      "evidence": "crm7/src/App.tsx:2409",
       "note": null
     },
     {
@@ -9425,7 +9479,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2397",
+      "evidence": "crm7/src/App.tsx:2403",
       "note": null
     },
     {
@@ -9452,7 +9506,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1815",
+      "evidence": "crm7/src/App.tsx:1821",
       "note": null
     },
     {
@@ -9479,7 +9533,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:3067",
+      "evidence": "crm7/src/App.tsx:3073",
       "note": "→ /people"
     },
     {
@@ -9506,7 +9560,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:3064",
+      "evidence": "crm7/src/App.tsx:3070",
       "note": "→ /people"
     },
     {
@@ -9533,7 +9587,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1673",
+      "evidence": "crm7/src/App.tsx:1679",
       "note": null
     },
     {
@@ -9560,7 +9614,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1667",
+      "evidence": "crm7/src/App.tsx:1673",
       "note": null
     },
     {
@@ -9587,7 +9641,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1661",
+      "evidence": "crm7/src/App.tsx:1667",
       "note": null
     },
     {
@@ -9614,7 +9668,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1643",
+      "evidence": "crm7/src/App.tsx:1649",
       "note": null
     },
     {
@@ -9641,7 +9695,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1649",
+      "evidence": "crm7/src/App.tsx:1655",
       "note": "→ /leads/create"
     },
     {
@@ -9668,7 +9722,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1655",
+      "evidence": "crm7/src/App.tsx:1661",
       "note": null
     },
     {
@@ -9695,7 +9749,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2058",
+      "evidence": "crm7/src/App.tsx:2064",
       "note": null
     },
     {
@@ -9722,7 +9776,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2057",
+      "evidence": "crm7/src/App.tsx:2063",
       "note": null
     },
     {
@@ -9749,7 +9803,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2055",
+      "evidence": "crm7/src/App.tsx:2061",
       "note": null
     },
     {
@@ -9776,7 +9830,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2056",
+      "evidence": "crm7/src/App.tsx:2062",
       "note": null
     },
     {
@@ -9803,7 +9857,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3096",
+      "evidence": "crm7/src/App.tsx:3102",
       "note": null
     },
     {
@@ -9830,7 +9884,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3090",
+      "evidence": "crm7/src/App.tsx:3096",
       "note": null
     },
     {
@@ -9857,7 +9911,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3084",
+      "evidence": "crm7/src/App.tsx:3090",
       "note": null
     },
     {
@@ -9884,7 +9938,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3078",
+      "evidence": "crm7/src/App.tsx:3084",
       "note": null
     },
     {
@@ -9911,7 +9965,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3072",
+      "evidence": "crm7/src/App.tsx:3078",
       "note": null
     },
     {
@@ -9938,7 +9992,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2585",
+      "evidence": "crm7/src/App.tsx:2591",
       "note": null
     },
     {
@@ -9965,7 +10019,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2579",
+      "evidence": "crm7/src/App.tsx:2585",
       "note": null
     },
     {
@@ -9992,7 +10046,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1509",
+      "evidence": "crm7/src/App.tsx:1515",
       "note": null
     },
     {
@@ -10019,7 +10073,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1697",
+      "evidence": "crm7/src/App.tsx:1703",
       "note": null
     },
     {
@@ -10046,7 +10100,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1691",
+      "evidence": "crm7/src/App.tsx:1697",
       "note": null
     },
     {
@@ -10073,7 +10127,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1685",
+      "evidence": "crm7/src/App.tsx:1691",
       "note": null
     },
     {
@@ -10100,7 +10154,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1679",
+      "evidence": "crm7/src/App.tsx:1685",
       "note": null
     },
     {
@@ -10127,7 +10181,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1983",
+      "evidence": "crm7/src/App.tsx:1989",
       "note": null
     },
     {
@@ -10154,7 +10208,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1947",
+      "evidence": "crm7/src/App.tsx:1953",
       "note": null
     },
     {
@@ -10181,7 +10235,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1941",
+      "evidence": "crm7/src/App.tsx:1947",
       "note": null
     },
     {
@@ -10208,7 +10262,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1935",
+      "evidence": "crm7/src/App.tsx:1941",
       "note": null
     },
     {
@@ -10235,7 +10289,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1971",
+      "evidence": "crm7/src/App.tsx:1977",
       "note": null
     },
     {
@@ -10262,7 +10316,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1965",
+      "evidence": "crm7/src/App.tsx:1971",
       "note": null
     },
     {
@@ -10289,7 +10343,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1959",
+      "evidence": "crm7/src/App.tsx:1965",
       "note": null
     },
     {
@@ -10316,7 +10370,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1977",
+      "evidence": "crm7/src/App.tsx:1983",
       "note": null
     },
     {
@@ -10336,14 +10390,14 @@
         "group": "Timesheets",
         "label": "Timesheet History",
         "icon": "Clock",
-        "order": 125
+        "order": 126
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1953",
+      "evidence": "crm7/src/App.tsx:1959",
       "note": null
     },
     {
@@ -10363,14 +10417,14 @@
         "group": "My Workforce",
         "label": "People",
         "icon": "Building2",
-        "order": 128
+        "order": 129
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1534",
+      "evidence": "crm7/src/App.tsx:1540",
       "note": "People"
     },
     {
@@ -10397,7 +10451,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1528",
+      "evidence": "crm7/src/App.tsx:1534",
       "note": "Person Details"
     },
     {
@@ -10424,7 +10478,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1522",
+      "evidence": "crm7/src/App.tsx:1528",
       "note": null
     },
     {
@@ -10451,7 +10505,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1515",
+      "evidence": "crm7/src/App.tsx:1521",
       "note": null
     },
     {
@@ -10478,7 +10532,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1479",
+      "evidence": "crm7/src/App.tsx:1485",
       "note": "People Completion"
     },
     {
@@ -10505,7 +10559,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1467",
+      "evidence": "crm7/src/App.tsx:1473",
       "note": "People Compliance"
     },
     {
@@ -10532,7 +10586,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1461",
+      "evidence": "crm7/src/App.tsx:1467",
       "note": null
     },
     {
@@ -10559,7 +10613,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1443",
+      "evidence": "crm7/src/App.tsx:1449",
       "note": "Add Person"
     },
     {
@@ -10586,7 +10640,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1453",
+      "evidence": "crm7/src/App.tsx:1459",
       "note": null
     },
     {
@@ -10613,7 +10667,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1503",
+      "evidence": "crm7/src/App.tsx:1509",
       "note": null
     },
     {
@@ -10640,7 +10694,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1491",
+      "evidence": "crm7/src/App.tsx:1497",
       "note": null
     },
     {
@@ -10667,7 +10721,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1473",
+      "evidence": "crm7/src/App.tsx:1479",
       "note": "People Progress"
     },
     {
@@ -10694,7 +10748,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1485",
+      "evidence": "crm7/src/App.tsx:1491",
       "note": null
     },
     {
@@ -10721,7 +10775,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1734",
+      "evidence": "crm7/src/App.tsx:1740",
       "note": null
     },
     {
@@ -10748,7 +10802,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1629",
+      "evidence": "crm7/src/App.tsx:1635",
       "note": "→ /pipeline/velocity"
     },
     {
@@ -10775,7 +10829,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1709",
+      "evidence": "crm7/src/App.tsx:1715",
       "note": null
     },
     {
@@ -10802,7 +10856,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1703",
+      "evidence": "crm7/src/App.tsx:1709",
       "note": null
     },
     {
@@ -10829,7 +10883,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1632",
+      "evidence": "crm7/src/App.tsx:1638",
       "note": "→ /deals/new"
     },
     {
@@ -10856,7 +10910,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1715",
+      "evidence": "crm7/src/App.tsx:1721",
       "note": null
     },
     {
@@ -10876,14 +10930,14 @@
         "group": "My Workforce",
         "label": "Placements",
         "icon": "Building2",
-        "order": 128
+        "order": 129
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3120",
+      "evidence": "crm7/src/App.tsx:3126",
       "note": null
     },
     {
@@ -10910,7 +10964,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3114",
+      "evidence": "crm7/src/App.tsx:3120",
       "note": null
     },
     {
@@ -10937,7 +10991,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3108",
+      "evidence": "crm7/src/App.tsx:3114",
       "note": null
     },
     {
@@ -10964,7 +11018,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3102",
+      "evidence": "crm7/src/App.tsx:3108",
       "note": null
     },
     {
@@ -10984,14 +11038,14 @@
         "group": "Portal",
         "label": "Portal",
         "icon": "Globe",
-        "order": 134
+        "order": 135
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3752",
+      "evidence": "crm7/src/App.tsx:3765",
       "note": null
     },
     {
@@ -11018,7 +11072,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1285",
+      "evidence": "crm7/src/App.tsx:1291",
       "note": null
     },
     {
@@ -11038,14 +11092,14 @@
         "group": "Training",
         "label": "My Progress Reports",
         "icon": "GraduationCap",
-        "order": 125
+        "order": 126
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3741",
+      "evidence": "crm7/src/App.tsx:3754",
       "note": null
     },
     {
@@ -11072,7 +11126,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3712",
+      "evidence": "crm7/src/App.tsx:3725",
       "note": null
     },
     {
@@ -11099,7 +11153,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3693",
+      "evidence": "crm7/src/App.tsx:3706",
       "note": null
     },
     {
@@ -11119,14 +11173,14 @@
         "group": "My Documents",
         "label": "My Documents",
         "icon": "FileText",
-        "order": 126
+        "order": 127
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3719",
+      "evidence": "crm7/src/App.tsx:3732",
       "note": null
     },
     {
@@ -11153,7 +11207,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3728",
+      "evidence": "crm7/src/App.tsx:3741",
       "note": null
     },
     {
@@ -11173,14 +11227,14 @@
         "group": "My Documents",
         "label": "Manuals & Policies",
         "icon": "FileText",
-        "order": 127
+        "order": 128
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3735",
+      "evidence": "crm7/src/App.tsx:3748",
       "note": null
     },
     {
@@ -11207,7 +11261,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3688",
+      "evidence": "crm7/src/App.tsx:3701",
       "note": null
     },
     {
@@ -11234,7 +11288,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3703",
+      "evidence": "crm7/src/App.tsx:3716",
       "note": null
     },
     {
@@ -11261,7 +11315,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3747",
+      "evidence": "crm7/src/App.tsx:3760",
       "note": null
     },
     {
@@ -11288,7 +11342,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3674",
+      "evidence": "crm7/src/App.tsx:3687",
       "note": null
     },
     {
@@ -11308,14 +11362,14 @@
         "group": "WHS & Compliance",
         "label": "Progress Reviews",
         "icon": "ShieldCheck",
-        "order": 129
+        "order": 130
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2571",
+      "evidence": "crm7/src/App.tsx:2577",
       "note": null
     },
     {
@@ -11342,7 +11396,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2547",
+      "evidence": "crm7/src/App.tsx:2553",
       "note": null
     },
     {
@@ -11369,7 +11423,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2541",
+      "evidence": "crm7/src/App.tsx:2547",
       "note": null
     },
     {
@@ -11396,7 +11450,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2535",
+      "evidence": "crm7/src/App.tsx:2541",
       "note": null
     },
     {
@@ -11423,7 +11477,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2565",
+      "evidence": "crm7/src/App.tsx:2571",
       "note": null
     },
     {
@@ -11450,7 +11504,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2559",
+      "evidence": "crm7/src/App.tsx:2565",
       "note": null
     },
     {
@@ -11477,7 +11531,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2553",
+      "evidence": "crm7/src/App.tsx:2559",
       "note": null
     },
     {
@@ -11504,7 +11558,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2066",
+      "evidence": "crm7/src/App.tsx:2072",
       "note": null
     },
     {
@@ -11531,7 +11585,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2072",
+      "evidence": "crm7/src/App.tsx:2078",
       "note": null
     },
     {
@@ -11558,7 +11612,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1269",
+      "evidence": "crm7/src/App.tsx:1272",
       "note": null
     },
     {
@@ -11585,7 +11639,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2427",
+      "evidence": "crm7/src/App.tsx:2433",
       "note": null
     },
     {
@@ -11612,7 +11666,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2421",
+      "evidence": "crm7/src/App.tsx:2427",
       "note": null
     },
     {
@@ -11639,7 +11693,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1809",
+      "evidence": "crm7/src/App.tsx:1815",
       "note": null
     },
     {
@@ -11666,7 +11720,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1803",
+      "evidence": "crm7/src/App.tsx:1809",
       "note": null
     },
     {
@@ -11693,7 +11747,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1778",
+      "evidence": "crm7/src/App.tsx:1784",
       "note": null
     },
     {
@@ -11720,7 +11774,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1788",
+      "evidence": "crm7/src/App.tsx:1794",
       "note": null
     },
     {
@@ -11747,7 +11801,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1794",
+      "evidence": "crm7/src/App.tsx:1800",
       "note": null
     },
     {
@@ -11774,7 +11828,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1626",
+      "evidence": "crm7/src/App.tsx:1632",
       "note": "→ /pipeline/forecast"
     },
     {
@@ -11801,7 +11855,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1728",
+      "evidence": "crm7/src/App.tsx:1734",
       "note": null
     },
     {
@@ -11828,7 +11882,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "redirect",
-      "evidence": "crm7/src/App.tsx:1623",
+      "evidence": "crm7/src/App.tsx:1629",
       "note": "→ /pipeline"
     },
     {
@@ -11855,7 +11909,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1721",
+      "evidence": "crm7/src/App.tsx:1727",
       "note": null
     },
     {
@@ -11872,17 +11926,17 @@
       },
       "nav": {
         "surface": "sidebar",
-        "group": "Settings",
+        "group": "Field Officers",
         "label": "Settings",
-        "icon": "Settings",
-        "order": 135
+        "icon": "MapPin",
+        "order": 98
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3473",
+      "evidence": "crm7/src/App.tsx:3486",
       "note": null
     },
     {
@@ -11909,7 +11963,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3421",
+      "evidence": "crm7/src/App.tsx:3434",
       "note": null
     },
     {
@@ -11936,7 +11990,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3397",
+      "evidence": "crm7/src/App.tsx:3410",
       "note": null
     },
     {
@@ -11963,7 +12017,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3202",
+      "evidence": "crm7/src/App.tsx:3208",
       "note": null
     },
     {
@@ -11983,14 +12037,14 @@
         "group": "Settings",
         "label": "Branding",
         "icon": "Settings",
-        "order": 107
+        "order": 108
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3375",
+      "evidence": "crm7/src/App.tsx:3388",
       "note": null
     },
     {
@@ -12017,7 +12071,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3464",
+      "evidence": "crm7/src/App.tsx:3477",
       "note": null
     },
     {
@@ -12044,7 +12098,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3160",
+      "evidence": "crm7/src/App.tsx:3166",
       "note": null
     },
     {
@@ -12071,7 +12125,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3178",
+      "evidence": "crm7/src/App.tsx:3184",
       "note": null
     },
     {
@@ -12098,7 +12152,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3262",
+      "evidence": "crm7/src/App.tsx:3268",
       "note": null
     },
     {
@@ -12118,14 +12172,14 @@
         "group": "Settings",
         "label": "Custom Pages",
         "icon": "Settings",
-        "order": 118
+        "order": 119
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3334",
+      "evidence": "crm7/src/App.tsx:3347",
       "note": null
     },
     {
@@ -12152,7 +12206,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3328",
+      "evidence": "crm7/src/App.tsx:3341",
       "note": null
     },
     {
@@ -12179,7 +12233,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3322",
+      "evidence": "crm7/src/App.tsx:3335",
       "note": null
     },
     {
@@ -12206,7 +12260,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3316",
+      "evidence": "crm7/src/App.tsx:3329",
       "note": null
     },
     {
@@ -12226,14 +12280,14 @@
         "group": "Settings",
         "label": "Data Import & Bulk Update",
         "icon": "Settings",
-        "order": 114
+        "order": 115
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3220",
+      "evidence": "crm7/src/App.tsx:3226",
       "note": null
     },
     {
@@ -12260,7 +12314,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3214",
+      "evidence": "crm7/src/App.tsx:3220",
       "note": null
     },
     {
@@ -12287,7 +12341,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3190",
+      "evidence": "crm7/src/App.tsx:3196",
       "note": null
     },
     {
@@ -12307,14 +12361,14 @@
         "group": "Settings",
         "label": "Document Categories",
         "icon": "Settings",
-        "order": 110
+        "order": 111
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3439",
+      "evidence": "crm7/src/App.tsx:3452",
       "note": null
     },
     {
@@ -12334,14 +12388,14 @@
         "group": "Settings",
         "label": "Email Accounts",
         "icon": "Settings",
-        "order": 120
+        "order": 121
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3381",
+      "evidence": "crm7/src/App.tsx:3394",
       "note": null
     },
     {
@@ -12361,14 +12415,14 @@
         "group": "Settings",
         "label": "Feature Flags",
         "icon": "Settings",
-        "order": 113
+        "order": 114
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3166",
+      "evidence": "crm7/src/App.tsx:3172",
       "note": null
     },
     {
@@ -12388,14 +12442,14 @@
         "group": "Settings",
         "label": "Form Layouts",
         "icon": "Settings",
-        "order": 117
+        "order": 118
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3310",
+      "evidence": "crm7/src/App.tsx:3323",
       "note": null
     },
     {
@@ -12422,7 +12476,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3304",
+      "evidence": "crm7/src/App.tsx:3310",
       "note": null
     },
     {
@@ -12449,7 +12503,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3298",
+      "evidence": "crm7/src/App.tsx:3304",
       "note": null
     },
     {
@@ -12476,7 +12530,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3292",
+      "evidence": "crm7/src/App.tsx:3298",
       "note": null
     },
     {
@@ -12503,7 +12557,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3256",
+      "evidence": "crm7/src/App.tsx:3262",
       "note": null
     },
     {
@@ -12530,7 +12584,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3452",
+      "evidence": "crm7/src/App.tsx:3465",
       "note": null
     },
     {
@@ -12550,14 +12604,14 @@
         "group": "Settings",
         "label": "Integrations",
         "icon": "Settings",
-        "order": 119
+        "order": 120
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3351",
+      "evidence": "crm7/src/App.tsx:3364",
       "note": null
     },
     {
@@ -12584,7 +12638,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3345",
+      "evidence": "crm7/src/App.tsx:3358",
       "note": null
     },
     {
@@ -12604,14 +12658,14 @@
         "group": "Settings",
         "label": "Messaging",
         "icon": "Settings",
-        "order": 108
+        "order": 109
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3391",
+      "evidence": "crm7/src/App.tsx:3404",
       "note": null
     },
     {
@@ -12631,14 +12685,14 @@
         "group": "Settings",
         "label": "Module Visibility",
         "icon": "Settings",
-        "order": 112
+        "order": 113
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3369",
+      "evidence": "crm7/src/App.tsx:3382",
       "note": null
     },
     {
@@ -12658,14 +12712,14 @@
         "group": "Settings",
         "label": "Org Documents",
         "icon": "Settings",
-        "order": 109
+        "order": 110
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3433",
+      "evidence": "crm7/src/App.tsx:3446",
       "note": null
     },
     {
@@ -12692,7 +12746,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3427",
+      "evidence": "crm7/src/App.tsx:3440",
       "note": null
     },
     {
@@ -12719,7 +12773,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3172",
+      "evidence": "crm7/src/App.tsx:3178",
       "note": null
     },
     {
@@ -12746,7 +12800,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3403",
+      "evidence": "crm7/src/App.tsx:3416",
       "note": null
     },
     {
@@ -12773,7 +12827,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3445",
+      "evidence": "crm7/src/App.tsx:3458",
       "note": null
     },
     {
@@ -12793,14 +12847,14 @@
         "group": "Settings",
         "label": "Payroll Remittance Identity",
         "icon": "Settings",
-        "order": 121
+        "order": 122
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1497",
+      "evidence": "crm7/src/App.tsx:1503",
       "note": null
     },
     {
@@ -12827,7 +12881,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3415",
+      "evidence": "crm7/src/App.tsx:3428",
       "note": null
     },
     {
@@ -12854,7 +12908,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3154",
+      "evidence": "crm7/src/App.tsx:3160",
       "note": null
     },
     {
@@ -12881,7 +12935,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3357",
+      "evidence": "crm7/src/App.tsx:3370",
       "note": null
     },
     {
@@ -12908,7 +12962,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3286",
+      "evidence": "crm7/src/App.tsx:3292",
       "note": null
     },
     {
@@ -12935,7 +12989,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3280",
+      "evidence": "crm7/src/App.tsx:3286",
       "note": null
     },
     {
@@ -12962,7 +13016,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3274",
+      "evidence": "crm7/src/App.tsx:3280",
       "note": null
     },
     {
@@ -12989,7 +13043,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3268",
+      "evidence": "crm7/src/App.tsx:3274",
       "note": null
     },
     {
@@ -13016,7 +13070,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3458",
+      "evidence": "crm7/src/App.tsx:3471",
       "note": null
     },
     {
@@ -13036,14 +13090,14 @@
         "group": "Settings",
         "label": "Role Overrides",
         "icon": "Settings",
-        "order": 111
+        "order": 112
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3363",
+      "evidence": "crm7/src/App.tsx:3376",
       "note": null
     },
     {
@@ -13063,14 +13117,14 @@
         "group": "Settings",
         "label": "Schema Builder",
         "icon": "Settings",
-        "order": 116
+        "order": 117
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3184",
+      "evidence": "crm7/src/App.tsx:3190",
       "note": null
     },
     {
@@ -13097,7 +13151,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3208",
+      "evidence": "crm7/src/App.tsx:3214",
       "note": null
     },
     {
@@ -13124,7 +13178,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3196",
+      "evidence": "crm7/src/App.tsx:3202",
       "note": null
     },
     {
@@ -13151,7 +13205,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3409",
+      "evidence": "crm7/src/App.tsx:3422",
       "note": null
     },
     {
@@ -13178,7 +13232,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3148",
+      "evidence": "crm7/src/App.tsx:3154",
       "note": null
     },
     {
@@ -13205,7 +13259,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3481",
+      "evidence": "crm7/src/App.tsx:3494",
       "note": null
     },
     {
@@ -13232,7 +13286,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2609",
+      "evidence": "crm7/src/App.tsx:2615",
       "note": null
     },
     {
@@ -13259,7 +13313,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2603",
+      "evidence": "crm7/src/App.tsx:2609",
       "note": null
     },
     {
@@ -13286,7 +13340,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2597",
+      "evidence": "crm7/src/App.tsx:2603",
       "note": null
     },
     {
@@ -13313,7 +13367,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2591",
+      "evidence": "crm7/src/App.tsx:2597",
       "note": null
     },
     {
@@ -13340,7 +13394,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2721",
+      "evidence": "crm7/src/App.tsx:2727",
       "note": null
     },
     {
@@ -13367,7 +13421,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2715",
+      "evidence": "crm7/src/App.tsx:2721",
       "note": null
     },
     {
@@ -13394,7 +13448,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2709",
+      "evidence": "crm7/src/App.tsx:2715",
       "note": null
     },
     {
@@ -13414,14 +13468,14 @@
         "group": "Timesheets",
         "label": "Submit Timesheet",
         "icon": "Clock",
-        "order": 124
+        "order": 125
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2703",
+      "evidence": "crm7/src/App.tsx:2709",
       "note": null
     },
     {
@@ -13441,14 +13495,14 @@
         "group": "VET & Training",
         "label": "Training",
         "icon": "BookOpen",
-        "order": 104
+        "order": 105
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3633",
+      "evidence": "crm7/src/App.tsx:3646",
       "note": null
     },
     {
@@ -13475,7 +13529,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1432",
+      "evidence": "crm7/src/App.tsx:1438",
       "note": null
     },
     {
@@ -13502,7 +13556,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1426",
+      "evidence": "crm7/src/App.tsx:1432",
       "note": null
     },
     {
@@ -13529,7 +13583,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:1420",
+      "evidence": "crm7/src/App.tsx:1426",
       "note": null
     },
     {
@@ -13556,7 +13610,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3621",
+      "evidence": "crm7/src/App.tsx:3634",
       "note": null
     },
     {
@@ -13583,7 +13637,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3615",
+      "evidence": "crm7/src/App.tsx:3628",
       "note": null
     },
     {
@@ -13610,7 +13664,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3609",
+      "evidence": "crm7/src/App.tsx:3622",
       "note": null
     },
     {
@@ -13637,7 +13691,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3603",
+      "evidence": "crm7/src/App.tsx:3616",
       "note": null
     },
     {
@@ -13664,7 +13718,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3627",
+      "evidence": "crm7/src/App.tsx:3640",
       "note": null
     },
     {
@@ -13684,14 +13738,14 @@
         "group": "VET & Training",
         "label": "VET & Training",
         "icon": "BookOpen",
-        "order": 133
+        "order": 134
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3597",
+      "evidence": "crm7/src/App.tsx:3610",
       "note": null
     },
     {
@@ -13711,14 +13765,14 @@
         "group": "VET & Training",
         "label": "Assessments",
         "icon": "BookOpen",
-        "order": 99
+        "order": 100
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3507",
+      "evidence": "crm7/src/App.tsx:3520",
       "note": null
     },
     {
@@ -13745,7 +13799,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3501",
+      "evidence": "crm7/src/App.tsx:3514",
       "note": null
     },
     {
@@ -13772,7 +13826,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3495",
+      "evidence": "crm7/src/App.tsx:3508",
       "note": null
     },
     {
@@ -13799,7 +13853,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3489",
+      "evidence": "crm7/src/App.tsx:3502",
       "note": null
     },
     {
@@ -13819,14 +13873,14 @@
         "group": "VET & Training",
         "label": "Qualifications",
         "icon": "BookOpen",
-        "order": 100
+        "order": 101
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3543",
+      "evidence": "crm7/src/App.tsx:3556",
       "note": null
     },
     {
@@ -13853,7 +13907,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3537",
+      "evidence": "crm7/src/App.tsx:3550",
       "note": null
     },
     {
@@ -13880,7 +13934,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3525",
+      "evidence": "crm7/src/App.tsx:3538",
       "note": null
     },
     {
@@ -13907,7 +13961,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3531",
+      "evidence": "crm7/src/App.tsx:3544",
       "note": null
     },
     {
@@ -13934,7 +13988,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3513",
+      "evidence": "crm7/src/App.tsx:3526",
       "note": null
     },
     {
@@ -13961,7 +14015,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3519",
+      "evidence": "crm7/src/App.tsx:3532",
       "note": null
     },
     {
@@ -13981,14 +14035,14 @@
         "group": "VET & Training",
         "label": "Training Packages",
         "icon": "BookOpen",
-        "order": 101
+        "order": 102
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3567",
+      "evidence": "crm7/src/App.tsx:3580",
       "note": null
     },
     {
@@ -14015,7 +14069,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3561",
+      "evidence": "crm7/src/App.tsx:3574",
       "note": null
     },
     {
@@ -14042,7 +14096,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3555",
+      "evidence": "crm7/src/App.tsx:3568",
       "note": null
     },
     {
@@ -14069,7 +14123,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3549",
+      "evidence": "crm7/src/App.tsx:3562",
       "note": null
     },
     {
@@ -14089,14 +14143,14 @@
         "group": "VET & Training",
         "label": "Units",
         "icon": "BookOpen",
-        "order": 102
+        "order": 103
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3591",
+      "evidence": "crm7/src/App.tsx:3604",
       "note": null
     },
     {
@@ -14123,7 +14177,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3585",
+      "evidence": "crm7/src/App.tsx:3598",
       "note": null
     },
     {
@@ -14150,7 +14204,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3579",
+      "evidence": "crm7/src/App.tsx:3592",
       "note": null
     },
     {
@@ -14177,7 +14231,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3573",
+      "evidence": "crm7/src/App.tsx:3586",
       "note": null
     },
     {
@@ -14197,14 +14251,14 @@
         "group": "WHS & Compliance",
         "label": "WHS & Compliance",
         "icon": "ShieldCheck",
-        "order": 132
+        "order": 133
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2273",
+      "evidence": "crm7/src/App.tsx:2279",
       "note": null
     },
     {
@@ -14231,7 +14285,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2207",
+      "evidence": "crm7/src/App.tsx:2213",
       "note": null
     },
     {
@@ -14251,14 +14305,14 @@
         "group": "WHS & Compliance",
         "label": "WHS Incidents",
         "icon": "ShieldCheck",
-        "order": 128
+        "order": 129
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2219",
+      "evidence": "crm7/src/App.tsx:2225",
       "note": null
     },
     {
@@ -14285,7 +14339,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2213",
+      "evidence": "crm7/src/App.tsx:2219",
       "note": null
     },
     {
@@ -14312,7 +14366,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2231",
+      "evidence": "crm7/src/App.tsx:2237",
       "note": null
     },
     {
@@ -14339,7 +14393,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2225",
+      "evidence": "crm7/src/App.tsx:2231",
       "note": null
     },
     {
@@ -14366,7 +14420,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2261",
+      "evidence": "crm7/src/App.tsx:2267",
       "note": null
     },
     {
@@ -14393,7 +14447,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2243",
+      "evidence": "crm7/src/App.tsx:2249",
       "note": null
     },
     {
@@ -14420,7 +14474,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2237",
+      "evidence": "crm7/src/App.tsx:2243",
       "note": null
     },
     {
@@ -14447,7 +14501,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2201",
+      "evidence": "crm7/src/App.tsx:2207",
       "note": null
     },
     {
@@ -14474,7 +14528,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2195",
+      "evidence": "crm7/src/App.tsx:2201",
       "note": null
     },
     {
@@ -14501,7 +14555,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2189",
+      "evidence": "crm7/src/App.tsx:2195",
       "note": null
     },
     {
@@ -14521,14 +14575,14 @@
         "group": "WHS & Compliance",
         "label": "Risk Assessments",
         "icon": "ShieldCheck",
-        "order": 128
+        "order": 129
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2267",
+      "evidence": "crm7/src/App.tsx:2273",
       "note": null
     },
     {
@@ -14555,7 +14609,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2255",
+      "evidence": "crm7/src/App.tsx:2261",
       "note": null
     },
     {
@@ -14582,7 +14636,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:2249",
+      "evidence": "crm7/src/App.tsx:2255",
       "note": null
     },
     {
@@ -14602,14 +14656,14 @@
         "group": "AI & Automation",
         "label": "Workflows",
         "icon": "Sparkles",
-        "order": 105
+        "order": 106
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3659",
+      "evidence": "crm7/src/App.tsx:3672",
       "note": null
     },
     {
@@ -14636,7 +14690,7 @@
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3653",
+      "evidence": "crm7/src/App.tsx:3666",
       "note": null
     },
     {
@@ -14656,14 +14710,14 @@
         "group": "AI & Automation",
         "label": "Workflow runs",
         "icon": "Sparkles",
-        "order": 106
+        "order": 107
       },
       "reachable_via": "sidebar",
       "portal": null,
       "owned_entities": [],
       "data_tables": [],
       "status": "live",
-      "evidence": "crm7/src/App.tsx:3647",
+      "evidence": "crm7/src/App.tsx:3660",
       "note": null
     },
     {

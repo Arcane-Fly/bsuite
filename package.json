@@ -21,6 +21,7 @@
     "supabase:rehearse": "bash scripts/supabase/rehearse-local.sh",
     "supabase:rehearse:keep": "bash scripts/supabase/rehearse-local.sh --keep",
     "supabase:rehearse:stop": "bash scripts/supabase/rehearse-local.sh --stop",
+    "supabase:rehearse:self-test-selection": "node scripts/supabase/rehearse-migrations.mjs --self-test-selection",
     "test:all": "for dir in crm7 R80.4 braden business-suite-unified conduit; do echo \"\\n=== Testing $dir ===\"; (cd $dir && pnpm test -- --run) || exit 1; done",
     "build:all": "for dir in crm7 R80.4 braden business-suite-unified conduit; do echo \"\\n=== Building $dir ===\"; (cd $dir && pnpm build) || exit 1; done",
     "typecheck:all": "for dir in crm7 R80.4 braden business-suite-unified conduit; do echo \"\\n=== Typechecking $dir ===\"; (cd $dir && pnpm tsc --noEmit) || exit 1; done",
@@ -28,11 +29,11 @@
     "lint:migration-fk-indexes": "node scripts/check-migration-fk-indexes.mjs"
   },
   "dependencies": {
-    "@types/react": "^19.2.18",
-    "@types/react-dom": "^19.2.5"
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0"
   },
   "devDependencies": {
-    "eslint": "^10.9.1",
-    "typescript-eslint": "^8.68.0"
+    "eslint": "^10.11.0",
+    "typescript-eslint": "^8.70.0"
   }
 }

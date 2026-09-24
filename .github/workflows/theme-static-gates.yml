@@ -41,13 +41,40 @@ jobs:
   gates:
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - uses: actions/checkout@v5
         with:
           submodules: recursive
+          token: ${{ steps.app-token.outputs.token }}
           # The submodules are PRIVATE. Without the PAT `git clone` returns
           # "Repository not found" — a 404, not a permission error — and the
           # checkout aborts. Observed on the first run of this workflow.
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
       # WITHOUT THIS THE GATES BELOW WOULD FALSE-PASS. Every one is a static scan
@@ -85,3 +112,20 @@ jobs:
       # reaches zero it becomes a ban like G12.
       - name: G13 — fill-token-as-text does not grow
         run: bash scripts/check-fill-token-as-text.sh
+
+      # G14 exists because bumping a package pin can LOOK like it worked and
+      # change nothing. Cascade layers rank UNLAYERED styles above every layered
+      # one, so crm7's own `src/index.css:388-426` and BSU's `:1077-1108` beat
+      # @bsuite/theme's `@layer base` scrollbars.css no matter which version was
+      # resolved — and BSU's unlayered `color-scheme: light dark` handed the
+      # native widget's light/dark choice back to the OS on top of that.
+      #
+      # `--require-apps=6` is not decoration: this is a static scan, and over an
+      # absent submodule tree it would find nothing and exit 0. The self-test
+      # runs first for the same reason — a checker that can no longer fail
+      # cannot be trusted when it passes.
+      - name: G14 — the scrollbar gate can still fail
+        run: node scripts/check-no-unlayered-scrollbar-rules.mjs --self-test
+
+      - name: G14 — no scrollbar rule outside a cascade layer, and none hidden
+        run: node scripts/check-no-unlayered-scrollbar-rules.mjs --require-apps=6

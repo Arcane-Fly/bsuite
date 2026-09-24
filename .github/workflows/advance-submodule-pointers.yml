@@ -55,19 +55,10 @@ jobs:
     name: Advance submodule pointers
     runs-on: ubuntu-latest
     steps:
-      - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
-        # The App path runs once the operator has registered the App and set
-        # vars.BSUITE_GITHUB_APP_CLIENT_ID + secrets.BSUITE_GITHUB_APP_PRIVATE_KEY on
-        # this repository (docs/security/20260903-github-app-for-estate-automation-v1.00W.md). Until then the
-        # step is skipped and the token expressions below fall through to the PAT;
-        # the fallback is deleted once the first App-authored commit reads
-        # verification.verified=true (the guard further down proves it).
+      - name: Mint the GitHub App installation token
+        # Estate writes must stop when the selected App is missing a grant;
+        # they never fall back to a long-lived cross-repository PAT.
         id: app-token
-        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
-        # A half-configured App (client id set, private key missing or wrong)
-        # must not take the job down: the step is non-fatal and the next step
-        # says so loudly; the token expressions then fall through to the PAT.
-        continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
@@ -84,11 +75,6 @@ jobs:
           permission-contents: write
           permission-pull-requests: write
           permission-metadata: read
-
-      - name: Say so if the App token could not be minted (falling through to the PAT)
-        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && steps.app-token.outcome != 'success' }}
-        run: |
-          echo "::warning title=GitHub App token not minted::BSUITE_GITHUB_APP_CLIENT_ID is set but the token step did not succeed (outcome: ${{ steps.app-token.outcome }}). Check secrets.BSUITE_GITHUB_APP_PRIVATE_KEY and the App installation; this run falls through to the PAT (D-169)."
 
       - name: Checkout parent AND the submodules it must read
         uses: actions/checkout@v5
@@ -115,7 +101,7 @@ jobs:
           # config too, so the script's own `git fetch` inside them works. Same
           # fallback chain every other submodule-consuming workflow here uses.
           submodules: true
-          token: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           persist-credentials: true
 
       - name: Refuse to scan an empty tree
@@ -168,7 +154,7 @@ jobs:
       - name: Prove the merge gate can fail before trusting what it says
         run: node scripts/check-bot-merge-rollup.mjs --self-test
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
 
@@ -280,7 +266,7 @@ jobs:
           # to github.token keeps the workflow runnable in a fork or wherever the PAT
           # is absent — it will fail the same way there, loudly, rather than silently
           # doing nothing.
-          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           REPO: ${{ github.repository }}
         run: |
           set -euo pipefail
@@ -468,7 +454,7 @@ jobs:
               # whole run as a failure and says nothing about the branch that is sitting
               # there with real, correct advances on it — which is exactly what happened
               # on 2026-08-24. Name it.
-              echo "::error title=Pointers advanced but the PR could not be opened::The gitlink advances are pushed to '$BR' and are correct. Only 'gh pr create' failed — open the PR by hand from that branch. If the message mentions 'GitHub Actions is not permitted to create or approve pull requests', the BSUITE_CROSS_REPO_PAT secret is missing or expired."
+              echo "::error title=Pointers advanced but the PR could not be opened::The gitlink advances are pushed to '$BR' and are correct. Only 'gh pr create' failed — verify the GitHub App installation has Pull requests: Read and write, then open the PR by hand from that branch."
               exit 1
             fi
           fi
@@ -544,7 +530,7 @@ jobs:
       - name: Gate the standing PR on its full check rollup
         if: always()
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || github.token }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -o pipefail
           BR=chore/auto-advance-submodule-pointers

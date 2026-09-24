@@ -127,3 +127,164 @@ Operator-directed implementation owns the record itself (create/edit/detail), di
 **Round-trip proof required before acceptance:** open Callibre from the client list, inspect both original client and host agreements and its linked person; edit an optional field, save and reload; select or create a related record in place, reload to prove its canonical link, remove the link and prove the record survives. Exercise denied writes, concurrent changes, retry, keyboard, narrow viewport and both themes. Record exact deployed SHA, sibling enumeration and action counts. Local suites and the data correction do not establish deployed UI completion.
 
 The broader bsuite#3206 contract remains open for all indexed entities, visual field/layout authoring, tables and workflow inputs. Its 146-row intake denominator is historical inventory evidence, not a claim that all siblings have passed. Full issue closure requires refreshed class-wide evidence.
+
+## 23 September — #3208 forms: integrated authoring contract and store reconciliation
+
+Edited by the #3208 lane (Claude `ef2aae85`) under its reservation's `owned_document_paths`, with maker
+`01a0c25e` as dispatch and release owner. **Nothing in this section is delivered or accepted.**
+
+### Operator requirements (23 September, 12:03 AWST)
+
+Sources: [bsuite#3208 comment](https://github.com/Arcane-Fly/bsuite/issues/3208#issuecomment-5788838950)
+and [bsuite#3204 comment](https://github.com/Arcane-Fly/bsuite/issues/3204#issuecomment-5788839431). They
+supplement the 15 September requirements and rulings; they do not replace them. They are requirements, not
+acceptance.
+
+**The creator**
+
+- One Margin-like creator, built on shared field, picklist, relation, branding, permission, placement and
+  workflow services. No parallel template, schema or signing engine.
+- It opens in context from the current page, card, record or scheduled visit. Items created there return
+  already applied, with draft, cursor, scroll, tabs and filters preserved.
+
+**Publishing**
+
+- Four destinations: an existing page or card, a new discoverable page, a permanent reusable form, and a
+  section's scheduled forms. Each needs a real runtime consumer.
+- "Freeze" means a stable published revision with no editor chrome, whose answer inputs can still be used.
+- Authorised editors create successor drafts. Completed and signed copies and their exports keep their exact
+  version.
+
+**Permissions and data**
+
+- Separate rights to design, publish, place, fill, read, sign and delegate.
+- Keep three things distinct: canonical merge values, submission answers, and intentional business-record
+  write-backs.
+- Personal card arrangement is not organisation publication.
+
+**Acceptance**
+
+- D1–D7, deployed D8, and D9/D10 where applicable.
+
+### Recovered design and its review
+
+- The recovered 15 September Margin design v2 is the local operator artifact
+  `/home/braden/.agents/state/claude-lanes-20260915/bsuite-3208-design/v2/design-3208-v2.md`.
+- Its independent review, `redteam-v2-r1.md` beside it, is **SEND_BACK**, with two HIGH and six MEDIUM
+  findings.
+- The bounded integration contract is
+  `/home/braden/.codex/visualizations/2026/09/23/01a0cc63-a850-77d0-a0e6-d0a62b336669/customization-integration-contract.md`.
+- On another host, obtain all three from the maker.
+- The design supplies requirements. Rejected implementation details are not reinstated.
+
+### Store ruling (23 September, 16:11 AWST)
+
+This supersedes the recommendation in the next subsection, which is kept as the record of what was
+recommended and reviewed.
+
+Braden (15:37 AWST): choosing between existing designs is an engineering decision the team makes,
+not a blocker. The ruling is Fable 5.1, read-only, verdict APPROVE_WITH_CHANGES, **store ruling
+`form_layouts`**. The receipt is qig-memory `bsuite_receipt_20260923_3208_form_store_ruling`. The
+reasoning is in
+[FRM matrix §8.5](https://github.com/Arcane-Fly/crm7/blob/codex/crm7-3208-futurebuild-visual-forms/docs/20260922-frm-source-to-live-matrix-v1.00W.md).
+
+- **Form definitions stay in `form_layouts`, extended.** Uniqueness becomes
+  `(tenant_id, entity_type, context, name)`, `NULLS NOT DISTINCT`, so several named forms can share
+  one context. The draft is readable only by designers. Revisions are immutable, in
+  `form_layout_revisions`. A publish function writes them. New delegable capabilities `forms.design`
+  and `forms.publish` mean designing is not owner/admin-only.
+- **Pages stay in `custom_pages`** (ADR-0001). Every destination (page, card, reusable form, section
+  schedule) embeds a form by reference to its published revision. None copies it.
+- **Filled copies stay in `form_submissions`,** each bound to the published revision it was started
+  on. The `document_records` port and its Phase A author widening are dropped.
+- **One signing pipeline, `signature_requests`,** as recommended below. It is the only remaining hold
+  on the `form_submissions` half of crm7 PR #2699.
+
+Why the recommendation below was reversed:
+
+1. Live policy `anon_read_published_custom_pages` (bsuite#2004 P0-3, the public CMS surface) makes
+   every published `custom_pages` row readable without signing in. That is no place for confidential
+   HR form designs.
+2. The only approved plan that names a table names `form_layouts`
+   ([2026-07-03 plan](plans/20260703-unified-authoring-surface-plan-v1.03A.md), lines 56-59).
+3. `custom_page_revisions` is not immutable either
+   ([crm7#2451](https://github.com/Arcane-Fly/crm7/issues/2451)). Revisions had to be built on either
+   path.
+
+### Store reconciliation (recommendation, superseded 23 September 16:11 by the ruling above)
+
+The full reasoning, measured against source, is §8 of the
+[CRM7 FRM source-to-live matrix](https://github.com/Arcane-Fly/crm7/blob/35109fbc5/docs/20260922-frm-source-to-live-matrix-v1.00W.md).
+It carries a Fable 5.1 read-only review, APPROVE_WITH_CHANGES. The required statements are:
+
+**Survives**
+
+- The store-agnostic security guarantees built on the #3208 branch are **to be ported**:
+  - author-draft write, under the 23 September precedent
+    `people_can_always_save_and_finish_their_own_core_work`;
+  - the confidentiality floor and monotonic latch;
+  - the terminal lock;
+  - the revision pin;
+  - the completion gate;
+  - forged signature-value refusal.
+- The SQL visibility evaluator, which matches the renderer, survives unchanged.
+- The 15 September product requirements survive.
+
+**Superseded (recommended)**
+
+- `form_layouts` as the definition store for authored forms. It returns to record create, edit and view
+  layouts (C06).
+- `form_submissions` as a second completed-record store.
+- `form_submission_signatories` and `document_signatories` as signing tables, in favour of the one
+  `signature_requests` pipeline.
+
+**Why**
+
+- `form_layouts` has `UNIQUE (tenant_id, entity_type, context)` and no revision history.
+- `document_records` already carries the Phase A access predicate.
+- `signature_requests` is the only signing table with runtime callers: 10, including host-agreement and
+  quote dispatch (R80.4#231).
+
+**Multiple named forms per context.** Each authored form is its own `custom_pages` definition row with
+immutable `custom_page_revisions`. Two things are prerequisites and not yet present: a unique
+(page, version) constraint, and a no-update trigger.
+
+**All destinations consume one definition.** Placement rows reference the definition and resolve its current
+published revision. Completed copies are `document_records` pinned to the revision they used.
+
+**Open conflict needing a ruling.** Phase A's `document_records` refuses guest-tier authors. It must widen
+under the 23 September precedent.
+
+### Status of the #3208 rows
+
+In this register's vocabulary: proposed, source-confirmed, deployed-tested, accepted.
+
+- **C05, C12, C13: proposed.**
+  - [crm7 PR #2699](https://github.com/Arcane-Fly/crm7/pull/2699) is open and unmerged, at head `35109fbc5`.
+  - It holds code evidence only: pgTAP on a local, isolated test lease; no database lease beyond it; no
+    deployed, manual or release claim.
+  - Its `form_submissions` half is held only for the signing-pipeline port to `signature_requests` (store ruling
+    above). The branch's user-interface fixes, the `requires_confidential` template setting and the evaluator
+    can merge separately, as can the form-definition lifecycle (migration `20261207250000`).
+  - The Margin workspace, the four destinations, comments, workspace settings, Jodie actions, lossless
+    SkillHire and GTO starters, and output parity are not built.
+- **C14** ([crm7#2587](https://github.com/Arcane-Fly/crm7/issues/2587), FRM_010) and **C16**
+  ([bsuite#3205](https://github.com/Arcane-Fly/bsuite/issues/3205), revisions) are other applicable rows,
+  with owners unchanged.
+- **C01–C04, C06, C08–C11 and C20** keep their existing issues. No new rows or issues are created here.
+
+The per-criterion owner, file and test disposition the contract asks for is
+[matrix §8.3](https://github.com/Arcane-Fly/crm7/blob/35109fbc5/docs/20260922-frm-source-to-live-matrix-v1.00W.md).
+
+### Authoring specification handoff
+
+The applicable specifications, [plans/20260703-unified-authoring-surface-plan-v1.03A.md](plans/20260703-unified-authoring-surface-plan-v1.03A.md)
+and [plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md](plans/20260501-universal-wysiwyg-schema-ux-v1.00W.md),
+are outside this lane's owned paths.
+
+A scoped update for their existing owner was sent to maker `01a0c25e` on 23 September, and it remains open.
+It adds the 12:03 contract and a pointer to this section.
+
+**Standing rule for every C row's write paths:** whoever may start their own core work can save, reload,
+edit and finish it (Braden, 23 September). A create-but-cannot-save path is a defect, not a decision. The
+five-table sibling class is [crm7#2702](https://github.com/Arcane-Fly/crm7/issues/2702).

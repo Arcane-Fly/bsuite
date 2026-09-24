@@ -958,7 +958,7 @@ export const GUARDS = [
   },
 
   {
-    // The parser that decides WHICH ISSUES GET CLOSED AUTOMATICALLY when a
+    // The parser that finds closure CANDIDATES when a
     // pull request merges into `development` (register V-10 — GitHub only
     // auto-closes on a merge to the default branch, and all seven repos
     // default to `main`, so every `Closes #N` in this estate has been inert).
@@ -968,20 +968,20 @@ export const GUARDS = [
     // matching would leave issues open — annoying, visible, cheap. A parser
     // that quietly started matching MENTIONS — a number inside a quoted review
     // comment, a checklist item, a pasted log — closes somebody's live work,
-    // and nothing in CI would notice. 23 of the 35 cases assert that NO issue
+    // and nothing in CI would notice. 27 of the 40 cases assert that NO issue
     // is closed, and because a parser returning nothing at all would satisfy
     // every one of those, the suite carries an explicit positive control that
     // fails when the parser closed nothing anywhere in the table.
     id: 'parent-parse-closing-keywords-selftest',
-    label: 'Closing-keyword parser self-test (which issues a development merge closes)',
+    label: 'Closing-keyword parser self-test (candidate references from development merges)',
     repo: '.',
     command: ['node', 'scripts/parse-closing-keywords.mjs', '--self-test'],
     ciWorkflow: '.github/workflows/development-merge-issue-closer.yml',
     mode: 'run',
     evidence:
-      '"parse-closing-keywords: self-test OK (35 cases executed, 23 of them ' +
-      'asserting NO issue is closed, 14 issue references legitimately ' +
-      'extracted)." Bare plurals, not the estate\'s usual "35 case(s)": that ' +
+      '"parse-closing-keywords: self-test OK (40 cases executed, 27 of them ' +
+      'asserting NO issue is closed, 15 issue references legitimately ' +
+      'extracted)." Bare plurals, not the estate\'s usual "40 case(s)": that ' +
       'form was REJECTED by LANE-WATCHER on first run because its stemmer is ' +
       'asymmetric for nouns ending in `e` (list entry `cases?` stems to `cas`, ' +
       'printed `case(s)` stems to `case`). Fixed additively in ' +
@@ -993,6 +993,20 @@ export const GUARDS = [
       'blockquote skip (exit 1, 2 failing — including a real directive ' +
       'gaining a quoted neighbour); and making the parser inert (exit 1, 15 ' +
       'failing, positive control named explicitly).',
+  },
+  {
+    id: 'parent-development-closure-eligibility',
+    label: 'Development closer requires exact scoped acceptance receipt',
+    repo: '.',
+    command: ['node', '--test', 'scripts/issue-closure-eligibility.test.mjs'],
+    ciWorkflow: '.github/workflows/development-merge-issue-closer.yml',
+    mode: 'run',
+    evidence:
+      'Nine tests exercise the actual closer with mocked GitHub responses: ' +
+      'full-scope and unreceipted issues stay open; an exact trusted receipt ' +
+      'closes a bounded implementation issue; a prior closure marker protects ' +
+      'a reopened issue while a failed PATCH retries. Eligibility tests reject conflicting labels, stale ' +
+      'issue/PR/SHA identity, pre-merge or untrusted authors, quoted receipts and non-HTTPS evidence.',
   },
   {
     id: 'parent-verify-esm-imports',
@@ -1885,7 +1899,7 @@ export function findGuard(id) {
  * be raised — if you remove a guard on purpose, lower it deliberately in the same diff
  * and say why, so a deletion is a decision rather than an accident.
  */
-export const GUARD_FLOOR = 83
+export const GUARD_FLOOR = 86
 
 const REQUIRED_FIELDS = ['id', 'label', 'repo', 'ciWorkflow', 'mode']
 
