@@ -204,7 +204,8 @@ Commits: `type(scope): description` — types `feat|fix|docs|style|refactor|test
 **Use `Refs #123` for ordinary PRs.** A `development` merge is implementation evidence, not full
 product acceptance. The [work-tracking contract](docs/20260924-linear-work-tracking-v1.00W.md)
 defines the only automatic GitHub closure path: an explicitly bounded implementation issue with
-an exact, trusted acceptance receipt. The development-merge closer still parses closing keywords,
+an exact, trusted two-line acceptance receipt posted after the merge. A quoted example or text
+surrounding the receipt is not acceptance. The development-merge closer still parses closing keywords,
 but leaves unreceipted and full-scope issues open. Cross-repository references are reported, never
 closed by this workflow. The parser self-test and closer eligibility tests are both required gates.
 

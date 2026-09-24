@@ -420,6 +420,7 @@ async function surveyScope(scope) {
         await handleIssue(owner, repo, number, {
           number: pr.number,
           merge_commit_sha: pr.merge_commit_sha,
+          merged_at: pr.merged_at,
           user: pr.user,
           matchedKeyword: keyword,
           defaultBranch: meta.default_branch,
