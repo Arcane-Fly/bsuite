@@ -2,6 +2,8 @@
 
 Parent repository for the Business Suite platform. Each application lives in its own submodule with independent version control.
 
+Current work and product acceptance live in the [BSuite Linear project](https://linear.app/braden-pty-ltd/project/bsuite-delivery-and-roadmap-806afbd51657). Read the [work-tracking contract](docs/20260924-linear-work-tracking-v1.00W.md) before interpreting GitHub merges or older roadmaps as completion. [BRA-46](https://linear.app/braden-pty-ltd/issue/BRA-46/centralize-bsuite-work-in-linear-and-retire-conflicting-tracking) tracks migration coverage and remaining source gaps.
+
 ## Submodules
 
 | App | Repo | Description | URL |
