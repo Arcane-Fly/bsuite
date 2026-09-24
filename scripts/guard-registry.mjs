@@ -1886,6 +1886,43 @@ export const GUARDS = [
       'the signature mismatch that failed the first real run (bsuite run ' +
       '33727868315), which is the shape a fixture must match to be evidence.',
   },
+  {
+    id: 'parent-check-migration-symbol-gaps',
+    label: 'Migration symbol gate — authoring-time "no replay path creates this" (bsuite#3136)',
+    repo: '.',
+    command: [
+      'node',
+      'scripts/check-migration-symbol-gaps.mjs',
+      '--changed',
+      'crm7/supabase/migrations/20261123140000_pay_items_xero_chart_mapping.sql',
+    ],
+    ciWorkflow: '.github/workflows/migration-symbol-gates.yml',
+    mode: 'run',
+    diffScoped: true,
+    notes:
+      'Added 2026-09-19 alongside the guard itself — a new guard with no ' +
+      'registry entry is invisible to this survey on day one, which is the ' +
+      "exact blind spot LANE-WATCHER exists to close. No database: reads the " +
+      'checked-out tree and the two crm7 baseline artefacts only. The real CI ' +
+      'invocation runs --self-test FIRST (twelve planted cases, asserted by ' +
+      'name) before this gate mode step; this entry exercises gate mode only, ' +
+      'against one real replayable crm7 migration that is known clean. A ' +
+      'companion --audit run (non-blocking in CI, `::warning::` on findings) ' +
+      "found 2 pre-existing findings on this estate's 17 replayable migrations " +
+      'at authoring time — business-suite-unified/supabase/migrations/' +
+      '20261123010000_org_roster_walks_descendant_user_tenants.sql and its ' +
+      '…020000 sibling call public.descendants_of, whose only creator is ' +
+      'below the rehearsal floor and absent from the baseline dump. That is ' +
+      'filed as estate debt (bsuite#3136), not fixed by this guard, which is ' +
+      'scoped to the detection mechanism.',
+    evidence:
+      '"Symbol gate over 1 changed migration(s) — substrate: ' +
+      'crm7/supabase/migrations/baseline/20260907_prod_baseline_schema_dump.sql ' +
+      '+ 823 recorded applied versions (membership, bsuite#3147). Dump objects ' +
+      'seeded: 896 creates / 1 drops.\\nAll referenced symbols resolve against ' +
+      'the rebuild universe — gate PASSED." — captured 2026-09-19 against the ' +
+      "live tree's crm7 baseline (20260907 dump, 823 applied versions).",
+  },
 ]
 
 export function findGuard(id) {
