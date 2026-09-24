@@ -1,5 +1,5 @@
 ---
-kind: runbook
+kind: standard
 authority: engineering
 owner: bsuite
 status: W
@@ -96,7 +96,7 @@ real-tree run is how you would notice a false-positive rate worth tuning.
 
 **No regular expressions.** Standing estate rule — parsers, not patterns.
 The extractor is a character scanner with a token lookback; there is no
-`RegExp` anywhere in the file (`scripts/lint-sql-migrations.mjs` style).
+`RegExp` anywhere in the file (`crm7/scripts/lint-sql-migrations.mjs` style).
 
 ## Measured on the live tree, 2026-09-19
 
