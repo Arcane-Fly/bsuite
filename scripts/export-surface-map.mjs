@@ -48,7 +48,7 @@ const csv = [cols.join(',')].concat(
   m.rows.map(r => cols.map(c => esc(cell(r[c]))).join(','))).join('\n');
 fs.mkdirSync('docs/nav', { recursive: true });
 fs.writeFileSync('docs/nav/route-surface-map.csv', csv + '\n');
-fs.writeFileSync('docs/nav/route-surface-map.json', JSON.stringify(m) + '\n');
+fs.writeFileSync('docs/nav/route-surface-map.json', JSON.stringify(m, null, 2) + '\n');
 // STATE WHAT WAS EXAMINED, NOT WHAT WAS WRITTEN.
 //
 // This printed "rows written: N", and check-guard-self-reporting.mjs failed it —
