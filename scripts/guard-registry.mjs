@@ -710,7 +710,11 @@ export const GUARDS = [
     //
     // It is a REGENERATOR, not a gate: `mode: 'report'`. The check it makes possible
     // is that re-running it leaves the tree clean — if docs/nav/route-surface-map.csv
-    // differs afterwards, the CSV had drifted from the JSON.
+    // differs afterwards, the CSV had drifted from the JSON. It ALSO rewrites the
+    // JSON, so the JSON must be written in its committed format: until 2026-09-24 it
+    // wrote JSON.stringify(m) (one line) over a pretty-printed file, so every guard
+    // sweep dirtied the tree with a 47,119-line diff of unchanged data, and a
+    // `git add -A` after a sweep committed it.
     id: 'parent-export-surface-map',
     label: 'Route surface map CSV regenerates from the committed JSON (estate-wide)',
     repo: '.',
@@ -725,7 +729,9 @@ export const GUARDS = [
       'It now refuses on zero rows. The regenerated ' +
       'docs/nav/route-surface-map.csv is BYTE-IDENTICAL to the committed one — ' +
       'which is what proves the round trip faithful, since this script also writes ' +
-      'the JSON it now reads. Refuses with exit 2 and a named path when run outside ' +
+      'the JSON it now reads. Since 2026-09-24 the JSON is written 2-space indented ' +
+      'with a trailing newline, and a second run leaves BOTH files byte-identical ' +
+      '(sha1sum -c over csv + json, 566 rows). Refuses with exit 2 and a named path when run outside ' +
       'the repo root, rather than the previous ENOENT on a dead session scratchpad.',
   },
   {

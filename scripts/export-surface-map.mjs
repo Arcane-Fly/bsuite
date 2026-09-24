@@ -25,14 +25,27 @@ const SP = process.env.SP || null;
 const SOURCE = SP
   ? path.join(SP, 'surface/route-surface-map.json')
   : 'docs/nav/route-surface-map.json';
-if (!fs.existsSync(SOURCE)) {
+// Read, then handle absence — not existsSync-then-read: the default SOURCE is the
+// file this script rewrites below, and a separate existence check is a
+// check-then-use race (CodeQL js/file-system-race on bsuite#3335).
+let raw;
+try {
+  raw = fs.readFileSync(SOURCE, 'utf8');
+} catch (err) {
+  if (err?.code !== 'ENOENT') throw err;
   console.error(`export-surface-map: no surface map at ${SOURCE}`);
   console.error(SP
     ? '  SP was set — check that the capture wrote surface/route-surface-map.json under it.'
     : '  Run from the repo root, or set SP=<scratchpad> to render a fresh capture.');
   process.exit(2);
 }
-const m = JSON.parse(fs.readFileSync(SOURCE, 'utf8'));
+const m = JSON.parse(raw);
+// Refuse BEFORE writing. This check used to run after both writes, so "refusing
+// to write an empty surface map" had already written it.
+if (!Array.isArray(m.rows) || m.rows.length === 0) {
+  console.error(`export-surface-map: ${SOURCE} contains 0 rows — refusing to write an empty surface map.`);
+  process.exit(1);
+}
 
 const cols = ['route','app','auth','component','component_file','hooks','tables','rls',
               'tables_via_shared','rpcs','edge_fns','edge_fn_deployed','tenant_scoped',
@@ -48,7 +61,7 @@ const csv = [cols.join(',')].concat(
   m.rows.map(r => cols.map(c => esc(cell(r[c]))).join(','))).join('\n');
 fs.mkdirSync('docs/nav', { recursive: true });
 fs.writeFileSync('docs/nav/route-surface-map.csv', csv + '\n');
-fs.writeFileSync('docs/nav/route-surface-map.json', JSON.stringify(m) + '\n');
+fs.writeFileSync('docs/nav/route-surface-map.json', JSON.stringify(m, null, 2) + '\n');
 // STATE WHAT WAS EXAMINED, NOT WHAT WAS WRITTEN.
 //
 // This printed "rows written: N", and check-guard-self-reporting.mjs failed it —
@@ -56,10 +69,6 @@ fs.writeFileSync('docs/nav/route-surface-map.json', JSON.stringify(m) + '\n');
 // that read an empty object and wrote an empty CSV can still report a number. The
 // count that matters is the one taken from the SOURCE, named alongside it, so a
 // zero denominator is visible instead of being reported as a clean run.
-if (m.rows.length === 0) {
-  console.error(`export-surface-map: ${SOURCE} contains 0 rows — refusing to write an empty surface map.`);
-  process.exit(1);
-}
 console.log(
   `export-surface-map: ${m.rows.length} row(s) read from ${SOURCE} across ` +
   `${cols.length} column(s); wrote docs/nav/route-surface-map.csv and .json.`,
