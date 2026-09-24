@@ -2,9 +2,9 @@
 /**
  * scripts/close-merged-development-issues.mjs
  *
- * Close the issues that a merged `development` pull request said it closed.
+ * Close accepted, bounded implementation issues named by a merged PR.
  *
- * THE DEFECT THIS REPAIRS (register V-10)
+ * WHY THIS EXISTS (register V-10, then Linear lifecycle correction)
  * ---------------------------------------------------------------------------
  * GitHub auto-closes a referenced issue ONLY when the pull request merges into
  * the repository's DEFAULT branch. All seven repositories in this estate
@@ -12,7 +12,10 @@
  * `Closes #N` / `Fixes #N` / `Resolves #N` ever written here has been inert,
  * and authors keep writing them believing they work. Fifteen fixed-and-open
  * issues were closed by hand on 2026-08-17 — a backlog, not a fix. This script
- * is the fix.
+ * originally honoured every directive on a development merge. That closed
+ * full product issues before deployment and acceptance. A directive is now
+ * only a candidate: bounded implementation scope and a trusted exact receipt
+ * are also required. Product lifecycle belongs in Linear.
  *
  * WHY NOT THE OTHER TWO OPTIONS
  * ---------------------------------------------------------------------------
@@ -24,14 +27,11 @@
  *     production. A wrong-shaped fix in the highest-blast-radius setting there
  *     is.
  *
- * (c) Fail the PR when a closing keyword targets `development`. Rejected: it
- *     punishes the author for writing exactly the right thing, teaches the
- *     estate a private dialect that breaks the moment a PR does go to `main`,
- *     and still leaves a human to do the closing by hand every time — which is
- *     the manual step that produced the backlog in the first place.
+ * (c) Fail the PR when a closing keyword targets `development`. Rejected:
+ *     existing PR bodies remain valid links; safe eligibility is decided at
+ *     the issue boundary. Ordinary PRs now use `Refs #N`.
  *
- * (a), implemented here, preserves what authors already write and what every
- * external tool already understands.
+ * (a), implemented here, preserves parsing compatibility while gating closure.
  *
  * SAFETY RULES, ALL LOAD-BEARING
  * ---------------------------------------------------------------------------
@@ -41,9 +41,9 @@
  *    before the state change, so the closure can be traced from the issue
  *    alone. Comment first, then close: if the API call fails between the two,
  *    the issue is left OPEN with an explanation rather than closed silently.
- * 3. NEVER RE-CLOSE. The comment carries a machine marker. If a marker for
- *    this same PR is already on the issue, a human reopened it deliberately
- *    after the closer acted, and the closer does not argue.
+ * 3. NEVER RE-CLOSE AFTER A REOPEN. A prior marker plus a later close event on
+ *    an open issue proves a human reopened it. A marker without a close event
+ *    means the PATCH failed; retry without duplicating the audit comment.
  * 4. NEVER REACH ACROSS REPOSITORIES. Cross-repo references are reported for
  *    manual action, never closed. A merge in one repository is not consent to
  *    mutate another.
@@ -56,6 +56,9 @@
  * 7. SELF-DISABLING. If a repository's default branch already equals the base
  *    branch, GitHub's native mechanism applies and this script stands down for
  *    that scope rather than racing it.
+ * 9. SCOPED ACCEPTANCE. A single scope:implementation label and independent
+ *    trusted receipt for issue, PR and merge SHA are required. Full product
+ *    issues are never closed by this development-merge workflow.
  *
  * Environment:
  *   GITHUB_TOKEN              (required) repo+issues write for every scope
@@ -75,18 +78,19 @@
 
 import fs from 'node:fs'
 import { parseClosingKeywords } from './parse-closing-keywords.mjs'
+import { closureEligibility } from './issue-closure-eligibility.mjs'
 
 const API = 'https://api.github.com'
 
 /** The estate. Kept here rather than derived so a missing repo is visible. */
 const DEFAULT_SCOPES = [
-  'GaryOcean428/bsuite',
-  'GaryOcean428/crm7',
-  'GaryOcean428/business-suite-unified',
-  'GaryOcean428/conduit',
-  'GaryOcean428/braden',
-  'GaryOcean428/throughput',
-  'GaryOcean428/R80.4',
+  'Arcane-Fly/bsuite',
+  'Arcane-Fly/crm7',
+  'Arcane-Fly/business-suite-unified',
+  'Arcane-Fly/conduit',
+  'Arcane-Fly/braden',
+  'Arcane-Fly/throughput',
+  'Arcane-Fly/R80.4',
 ]
 
 const MARKER_PREFIX = '<!-- bsuite-development-merge-closer:v1'
@@ -166,6 +170,16 @@ const report = {
 const lines = []
 const say = (s) => { lines.push(s) }
 
+async function issueRecords(owner, repo, number, kind) {
+  const records = []
+  for (let page = 1; page <= 10; page += 1) {
+    const batch = await gh(`/repos/${owner}/${repo}/issues/${number}/${kind}?per_page=100&page=${page}`)
+    records.push(...batch)
+    if (batch.length < 100) return records
+  }
+  throw new Error(`${kind} paging cap reached before prior-closure checks completed`)
+}
+
 // ---------------------------------------------------------------------------
 // Per-issue handling
 // ---------------------------------------------------------------------------
@@ -193,13 +207,29 @@ async function handleIssue(owner, repo, number, pr) {
     return
   }
 
-  // Rule 3 — never re-close something a human reopened after we closed it.
+  // Rule 3 — distinguish a human reopen from a partial comment-first failure.
   const marker = `${MARKER_PREFIX} pr=${pr.number} -->`
-  const comments = await gh(
-    `/repos/${owner}/${repo}/issues/${number}/comments?per_page=100`,
-  )
-  if (comments.some((c) => typeof c.body === 'string' && c.body.includes(marker))) {
-    report.issuesSkipped.push({ ref, reason: 'reopened-after-a-previous-closure' })
+  const comments = await issueRecords(owner, repo, number, 'comments')
+  const previousMarker = comments.find((c) => typeof c.body === 'string' && c.body.includes(marker))
+  if (previousMarker) {
+    const markerTime = Date.parse(previousMarker.created_at)
+    if (!Number.isFinite(markerTime)) {
+      report.issuesSkipped.push({ ref, reason: 'prior-closure-marker-without-timestamp' })
+      return
+    }
+    const events = await issueRecords(owner, repo, number, 'events')
+    if (events.some((event) => event.event === 'closed' && Date.parse(event.created_at) >= markerTime)) {
+      report.issuesSkipped.push({ ref, reason: 'reopened-after-a-previous-closure' })
+      return
+    }
+  }
+
+  // The directive is a candidate only. A development merge is not a product
+  // acceptance verdict; the issue must declare a bounded implementation scope
+  // and carry a trusted receipt for this exact issue, PR and merge SHA.
+  const eligibility = closureEligibility(issue, comments, pr)
+  if (!eligibility.eligible) {
+    report.issuesSkipped.push({ ref, reason: eligibility.reason })
     return
   }
 
@@ -212,21 +242,28 @@ async function handleIssue(owner, repo, number, pr) {
   // with an explanation rather than closed with none.
   const body =
     `${marker}\n` +
-    `Closed automatically on the merge of ${owner}/${repo}#${pr.number} ` +
+    `Closed bounded implementation scope after the merge of ${owner}/${repo}#${pr.number} ` +
     `(\`${pr.merge_commit_sha}\`) into \`${baseBranch}\`.\n\n` +
+    `Acceptance receipt: ${eligibility.receipt}. Product release and acceptance ` +
+    `remain separate in Linear.\n\n` +
     `The pull request body said **${pr.matchedKeyword} #${number}**. GitHub only ` +
     `auto-closes on a merge to the default branch (\`${pr.defaultBranch}\`), so that ` +
     `keyword did nothing on its own — ` +
     `[\`.github/workflows/development-merge-issue-closer.yml\`]` +
-    `(https://github.com/GaryOcean428/bsuite/blob/main/.github/workflows/development-merge-issue-closer.yml) ` +
+    `(https://github.com/Arcane-Fly/bsuite/blob/main/.github/workflows/development-merge-issue-closer.yml) ` +
     `honours it instead.\n\n` +
     `If this was closed in error, reopen it — the closer records this comment and ` +
     `will not close it again for the same pull request.`
 
-  await gh(`/repos/${owner}/${repo}/issues/${number}/comments`, {
-    method: 'POST',
-    body: JSON.stringify({ body }),
-  })
+  // A prior marker with no later close event means the first PATCH failed.
+  // Retry the close without posting duplicate audit comments. A later close
+  // event on an open issue means a human reopened it, so we never re-close.
+  if (!previousMarker) {
+    await gh(`/repos/${owner}/${repo}/issues/${number}/comments`, {
+      method: 'POST',
+      body: JSON.stringify({ body }),
+    })
+  }
   await gh(`/repos/${owner}/${repo}/issues/${number}`, {
     method: 'PATCH',
     body: JSON.stringify({ state: 'closed', state_reason: 'completed' }),
@@ -269,7 +306,7 @@ async function surveyScope(scope) {
   // RULE 8 — WRITE-READINESS IS ASSERTED EVERY RUN, NOT DISCOVERED ON THE FIRST
   // CLOSURE.
   //
-  // The estate-wide sweep runs from GaryOcean428/bsuite with
+  // The estate-wide sweep runs from Arcane-Fly/bsuite with
   // BSUITE_CROSS_REPO_PAT, and the six submodule scopes are reached with that
   // one credential. READ access is proven every hour by the survey itself.
   // WRITE access was not proven by anything: between this closer being built
@@ -383,6 +420,8 @@ async function surveyScope(scope) {
         await handleIssue(owner, repo, number, {
           number: pr.number,
           merge_commit_sha: pr.merge_commit_sha,
+          merged_at: pr.merged_at,
+          user: pr.user,
           matchedKeyword: keyword,
           defaultBranch: meta.default_branch,
         })

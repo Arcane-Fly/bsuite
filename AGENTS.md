@@ -201,17 +201,19 @@ Read the destination before your first edit in that area. Do not re-derive from 
 Commits: `type(scope): description` — types `feat|fix|docs|style|refactor|test|chore|perf`, scopes
 `bsu|crm7|conduit|braden|r80|throughput|shared|docs|deploy`.
 
-**Write `Closes #123` in the PR body and leave it alone — it works now, and closing by hand is no
-longer the workaround.** It did not work before 2026-08-17: GitHub auto-closes only on a merge to a
-repository's DEFAULT branch, all seven repos here default to `main`, and every PR targets
-`development`, so every closing keyword ever written in this estate was inert. Fifteen issues sat
-fixed-and-open because of it. `.github/workflows/development-merge-issue-closer.yml` now honours the
-keyword on a `development` merge — it comments on the issue naming the merge SHA, then closes it —
-and sweeps all seven repos hourly, so submodule PRs are covered too. It ignores a keyword that
-appears in a blockquote, a checklist item, a code fence, an inline code span, an HTML comment, or
-after a negation, so quoting a review comment cannot close live work. Cross-repo references
-(`GaryOcean428/crm7#123`) are reported, never closed — close those by hand. If any of this changes,
-`scripts/parse-closing-keywords.mjs --self-test` is the contract, and it is a registered guard.
+**Use `Refs #123` for ordinary PR references.** A merge to `development` proves that implementation
+landed, not that the full product outcome was accepted. The hourly closer only closes an issue with
+exactly one `scope:` label, `scope:implementation`, after a trusted repository member other than the
+PR author posts a two-line acceptance receipt on that issue. Its first line must be
+`<!-- bsuite-development-closure:v2 issue=123 pr=456 sha=<full-merge-SHA> scope=implementation -->`;
+its second must be `Evidence: https://...`. The marker must name the exact issue, PR, and merge SHA.
+The receipt must be posted after the merge; no surrounding prose or quoted examples count. A
+`Closes #123` keyword is only a candidate for this
+bounded closure; full product outcomes stay open until their own acceptance. Cross-repo references
+(`GaryOcean428/crm7#123`) are reported, never closed. The candidate parser and acceptance boundary
+are verified by `scripts/parse-closing-keywords.mjs --self-test` and
+`node --test scripts/issue-closure-eligibility.test.mjs`. The active tracking migration is
+[BRA-46](https://linear.app/braden-pty-ltd/issue/BRA-46/centralize-bsuite-work-in-linear-and-retire-conflicting-tracking).
 
 throughput's AI stack is the Jodie setup (migrated off Groq `gpt-oss-120b` 2026-08-05): same-origin
 `/api/llm/*` Vercel routes over the Vercel AI Gateway — `xai/grok-4.3` primary, `zai/glm-5.2`
