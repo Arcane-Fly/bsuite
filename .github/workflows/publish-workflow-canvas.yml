@@ -6,12 +6,12 @@
 # Authentication:
 #   npm Trusted Publishers (OIDC) — configured at npmjs.com → package →
 #     Settings → Trusted Publisher → GitHub Actions, with organization
-#     GaryOcean428, repository bsuite, workflow filename matching this
+#     Arcane-Fly, repository bsuite, workflow filename matching this
 #     file's basename. Requires `id-token: write` (set below); no other
 #     secret is needed.
 #
 # To trigger manually (e.g. after a version bump merged to main):
-#   gh workflow run publish-ui.yml
+#   gh workflow run publish-workflow-canvas.yml
 
 name: Publish @bsuite/workflow-canvas
 

@@ -15,7 +15,7 @@
 #   (set below) and nothing else. Do not add a long-lived token fallback.
 #
 #   Configured at npmjs.com → @bsuite/data-grid → Settings → Trusted Publisher →
-#   GitHub Actions, with organization GaryOcean428, repository bsuite, and
+#   GitHub Actions, with organization Arcane-Fly, repository bsuite, and
 #   workflow filename matching this file's basename.
 #
 #   THE BOOTSTRAP, recorded because it is not obvious and will recur for the next

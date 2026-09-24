@@ -10,14 +10,14 @@ name: OAuth Provider Mandate Check
 #
 # ARCHITECTURE NOTE: The bsuite repo uses git submodules for all 5 apps. All submodule
 # repos are private. This workflow requires a cross-repo PAT stored as BSUITE_CROSS_REPO_PAT
-# with Contents: Read access to GaryOcean428/business-suite-unified, GaryOcean428/crm7,
-# and GaryOcean428/conduit.
+# with Contents: Read access to Arcane-Fly/business-suite-unified, Arcane-Fly/crm7,
+# and Arcane-Fly/conduit.
 #
 # To add the secret:
 #   1. Create a fine-grained PAT at https://github.com/settings/tokens
 #      Permissions: Contents: Read on business-suite-unified, crm7, conduit
 #   2. Add it as BSUITE_CROSS_REPO_PAT at:
-#      https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new
+#      https://github.com/Arcane-Fly/bsuite/settings/secrets/actions/new
 #
 # Until BSUITE_CROSS_REPO_PAT is added, this workflow will emit a clear warning
 # but not fail (to avoid blocking PRs on an infra gap).
@@ -77,13 +77,13 @@ jobs:
             TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+              "https://api.github.com/repos/Arcane-Fly/crm7/contents/src/components/LoginModal.tsx?ref=main")
             echo "Preflight HTTP status: $TEST"
           fi
 
           if [ "$TEST" != "200" ]; then
             echo "::warning::BSUITE_CROSS_REPO_PAT cannot access private submodule repos (HTTP $TEST)."
-            echo "::warning::Ensure the PAT has Contents: Read on GaryOcean428/crm7, business-suite-unified, conduit."
+            echo "::warning::Ensure the PAT has Contents: Read on Arcane-Fly/crm7, business-suite-unified, conduit."
             echo "::warning::See setup instructions at the top of .github/workflows/oauth-provider-check.yml"
 
             {
@@ -93,9 +93,9 @@ jobs:
               echo ""
               echo "### Setup instructions"
               echo "1. Create a fine-grained PAT at https://github.com/settings/tokens"
-              echo "   - Repository access: \`GaryOcean428/business-suite-unified\`, \`GaryOcean428/crm7\`, \`GaryOcean428/conduit\`"
+              echo "   - Repository access: \`Arcane-Fly/business-suite-unified\`, \`Arcane-Fly/crm7\`, \`Arcane-Fly/conduit\`"
               echo "   - Permissions: **Contents: Read**"
-              echo "2. Add as \`BSUITE_CROSS_REPO_PAT\` at https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new"
+              echo "2. Add as \`BSUITE_CROSS_REPO_PAT\` at https://github.com/Arcane-Fly/bsuite/settings/secrets/actions/new"
               echo ""
               echo "Until then, the OAuth provider checks run inside each submodule's own CI via \`.github/workflows/oauth-provider-check.yml\`."
             } >> "$GITHUB_STEP_SUMMARY"
@@ -108,9 +108,9 @@ jobs:
           # ── Configuration ──────────────────────────────────────────────────────
           # Format: "repo:branch:path:description"
           AUTH_FILE_SPECS=(
-            "GaryOcean428/business-suite-unified:main:src/components/AuthForm.tsx:BSU canonical auth entry point"
-            "GaryOcean428/crm7:main:src/components/LoginModal.tsx:CRM7 sign-in modal"
-            "GaryOcean428/crm7:main:src/components/SignupModal.tsx:CRM7 register modal"
+            "Arcane-Fly/business-suite-unified:main:src/components/AuthForm.tsx:BSU canonical auth entry point"
+            "Arcane-Fly/crm7:main:src/components/LoginModal.tsx:CRM7 sign-in modal"
+            "Arcane-Fly/crm7:main:src/components/SignupModal.tsx:CRM7 register modal"
           )
 
           declare -A PROVIDERS=(
@@ -170,7 +170,7 @@ jobs:
             echo "## OAuth Provider Mandate Check"
             echo ""
             echo "All BSuite auth modals must expose Google + Microsoft (azure)."
-            echo "See [AGENTS.md §Mandatory OAuth Providers](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
+            echo "See [AGENTS.md §Mandatory OAuth Providers](https://github.com/Arcane-Fly/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)."
             echo ""
             echo -e "$SUMMARY"
             if [ "$FAILED" = "0" ]; then
@@ -179,7 +179,7 @@ jobs:
               echo "### ❌ One or more providers are missing — see errors above"
               echo ""
               echo "**How to fix:** Add the missing provider button to the flagged file."
-              echo "Reference: \`GaryOcean428/crm7:src/components/LoginModal.tsx\`"
+              echo "Reference: \`Arcane-Fly/crm7:src/components/LoginModal.tsx\`"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -206,7 +206,7 @@ jobs:
 
             A monitored auth modal file is missing one or more of the three mandatory OAuth providers.
 
-            **All BSuite auth entry points must expose all three providers** (see [AGENTS.md §Mandatory OAuth Providers](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)):
+            **All BSuite auth entry points must expose all three providers** (see [AGENTS.md §Mandatory OAuth Providers](https://github.com/Arcane-Fly/bsuite/blob/main/AGENTS.md#mandatory-oauth-providers-all-three--suite-wide)):
 
             | Provider | Supabase ID | Purpose |
             |----------|------------|---------|
@@ -216,7 +216,7 @@ jobs:
 
             Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for which files and providers failed.
 
-            **Reference implementation:** \`GaryOcean428/crm7:src/components/LoginModal.tsx\``
+            **Reference implementation:** \`Arcane-Fly/crm7:src/components/LoginModal.tsx\``
             })
 
   # ─────────────────────────────────────────────────────────────────────────────
@@ -259,7 +259,7 @@ jobs:
             TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/lib/supabase.ts?ref=main")
+              "https://api.github.com/repos/Arcane-Fly/crm7/contents/src/lib/supabase.ts?ref=main")
           fi
 
           if [ "$TEST" != "200" ]; then
@@ -275,16 +275,16 @@ jobs:
 
           # ── Configuration ──────────────────────────────────────────────────
           CLIENT_FILE_SPECS=(
-            "GaryOcean428/business-suite-unified:main:src/lib/supabase.ts:BSU Supabase client"
-            "GaryOcean428/crm7:main:src/lib/supabase.ts:CRM7 Supabase client"
-            "GaryOcean428/conduit:main:src/lib/supabase/client.ts:Conduit browser client"
-            "GaryOcean428/conduit:main:src/lib/supabase/server.ts:Conduit server client"
+            "Arcane-Fly/business-suite-unified:main:src/lib/supabase.ts:BSU Supabase client"
+            "Arcane-Fly/crm7:main:src/lib/supabase.ts:CRM7 Supabase client"
+            "Arcane-Fly/conduit:main:src/lib/supabase/client.ts:Conduit browser client"
+            "Arcane-Fly/conduit:main:src/lib/supabase/server.ts:Conduit server client"
           )
 
           CALLBACK_FILE_SPECS=(
-            "GaryOcean428/business-suite-unified:main:src/pages/auth/AuthCallback.tsx:BSU auth callback"
-            "GaryOcean428/crm7:main:src/pages/auth/callback.tsx:CRM7 auth callback"
-            "GaryOcean428/conduit:main:src/app/auth/callback/page.tsx:Conduit callback handler"
+            "Arcane-Fly/business-suite-unified:main:src/pages/auth/AuthCallback.tsx:BSU auth callback"
+            "Arcane-Fly/crm7:main:src/pages/auth/callback.tsx:CRM7 auth callback"
+            "Arcane-Fly/conduit:main:src/app/auth/callback/page.tsx:Conduit callback handler"
           )
 
           FAILED=0
@@ -385,7 +385,7 @@ jobs:
               echo "\`\`\`ts"
               echo "createClient(url, key, { auth: { flowType: 'pkce', detectSessionInUrl: true } })"
               echo "\`\`\`"
-              echo "Reference: \`GaryOcean428/crm7:src/lib/supabase.ts\`"
+              echo "Reference: \`Arcane-Fly/crm7:src/lib/supabase.ts\`"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -413,7 +413,7 @@ jobs:
 
             Auth callbacks must call \`exchangeCodeForSession(code)\` to complete PKCE.
 
-            References: [\`crm7/src/lib/supabase.ts\`](https://github.com/GaryOcean428/crm7/blob/main/src/lib/supabase.ts) · [\`conduit/src/app/auth/callback/route.ts\`](https://github.com/GaryOcean428/conduit/blob/main/src/app/auth/callback/route.ts)
+            References: [\`crm7/src/lib/supabase.ts\`](https://github.com/Arcane-Fly/crm7/blob/main/src/lib/supabase.ts) · [\`conduit/src/app/auth/callback/route.ts\`](https://github.com/Arcane-Fly/conduit/blob/main/src/app/auth/callback/route.ts)
 
             Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for details.`
             })
@@ -475,7 +475,7 @@ jobs:
             STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
               -H "Authorization: Bearer $BSUITE_PAT" \
               -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/GaryOcean428/crm7/contents/src/components/LoginModal.tsx?ref=main")
+              "https://api.github.com/repos/Arcane-Fly/crm7/contents/src/components/LoginModal.tsx?ref=main")
           else
             STATUS="missing"
           fi
@@ -499,11 +499,11 @@ jobs:
               echo "2. Click **Generate new token**"
               echo "3. Set:"
               echo "   - **Token name:** \`bsuite-ci-cross-repo-read\`"
-              echo "   - **Resource owner:** \`GaryOcean428\`"
+              echo "   - **Resource owner:** \`Arcane-Fly\`"
               echo "   - **Repository access:** Only select repositories → \`business-suite-unified\`, \`crm7\`, \`conduit\`"
               echo "   - **Permissions:** Repository → Contents → **Read-only**"
               echo "4. Copy the token"
-              echo "5. Add it at **[bsuite → Settings → Secrets → Actions → New](https://github.com/GaryOcean428/bsuite/settings/secrets/actions/new)**"
+              echo "5. Add it at **[bsuite → Settings → Secrets → Actions → New](https://github.com/Arcane-Fly/bsuite/settings/secrets/actions/new)**"
               echo "   - **Name:** \`BSUITE_CROSS_REPO_PAT\`"
               echo "   - **Value:** paste the token"
               echo ""

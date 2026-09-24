@@ -6,7 +6,7 @@
 # Authentication:
 #   npm Trusted Publishers (OIDC) is the standard. Configure at npmjs.com →
 #     package → Settings → Trusted Publisher → GitHub Actions:
-#       organization/user: GaryOcean428
+#       organization/user: Arcane-Fly
 #       repository: bsuite
 #       workflow filename: publish-schema-registry.yml
 #       environment name: leave blank (this workflow declares no environment)

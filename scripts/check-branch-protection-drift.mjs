@@ -230,7 +230,7 @@ export function evaluate({ dumpsDir, read, repos = REPOS, reposExplicit = false 
     for (const branch of PROTECTED_BRANCHES) {
       if (!seen.has(`${repoDir}/${branch}`)) {
         findings.push({ severity: 'fail', branch: `${repoDir}/${branch}`, code: 'dump-missing',
-          message: `${repoDir}/${branch}: no committed dump under docs/security/branch-protection/${repoDir}/ — this gate has checked nothing for that branch, which is not the same as having found nothing. Dump it (gh api repos/GaryOcean428/${repoDir}/branches/${branch}/protection).` });
+          message: `${repoDir}/${branch}: no committed dump under docs/security/branch-protection/${repoDir}/ — this gate has checked nothing for that branch, which is not the same as having found nothing. Dump it (gh api repos/Arcane-Fly/${repoDir}/branches/${branch}/protection).` });
       }
     }
   }
