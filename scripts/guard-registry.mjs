@@ -710,7 +710,11 @@ export const GUARDS = [
     //
     // It is a REGENERATOR, not a gate: `mode: 'report'`. The check it makes possible
     // is that re-running it leaves the tree clean — if docs/nav/route-surface-map.csv
-    // differs afterwards, the CSV had drifted from the JSON.
+    // differs afterwards, the CSV had drifted from the JSON. It ALSO rewrites the
+    // JSON, so the JSON must be written in its committed format: until 2026-09-24 it
+    // wrote JSON.stringify(m) (one line) over a pretty-printed file, so every guard
+    // sweep dirtied the tree with a 47,119-line diff of unchanged data, and a
+    // `git add -A` after a sweep committed it.
     id: 'parent-export-surface-map',
     label: 'Route surface map CSV regenerates from the committed JSON (estate-wide)',
     repo: '.',
@@ -725,7 +729,9 @@ export const GUARDS = [
       'It now refuses on zero rows. The regenerated ' +
       'docs/nav/route-surface-map.csv is BYTE-IDENTICAL to the committed one — ' +
       'which is what proves the round trip faithful, since this script also writes ' +
-      'the JSON it now reads. Refuses with exit 2 and a named path when run outside ' +
+      'the JSON it now reads. Since 2026-09-24 the JSON is written 2-space indented ' +
+      'with a trailing newline, and a second run leaves BOTH files byte-identical ' +
+      '(sha1sum -c over csv + json, 566 rows). Refuses with exit 2 and a named path when run outside ' +
       'the repo root, rather than the previous ENOENT on a dead session scratchpad.',
   },
   {
@@ -1815,6 +1821,57 @@ export const GUARDS = [
   },
 
   {
+    id: 'ruleset-drift',
+    label: 'Live rulesets have not drifted below their committed dumps; linear history stays OFF',
+    repo: '.',
+    // The ruleset comparison needs a token that can read rulesets on all seven
+    // repos; only the comparator and its cases run here. `--self-test` is what
+    // this registry can verify locally. The live comparison runs nightly in
+    // .github/workflows/branch-protection-drift.yml beside the classic gate.
+    command: ['node', 'scripts/check-ruleset-drift.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/branch-protection-drift.yml',
+    mode: 'run',
+    notes:
+      'Rulesets are the SECOND, independent branch-protection mechanism: an edit ' +
+      'to one leaves no diff in the classic dumps one directory up, and the ' +
+      '2026-09-07 incident touched both layers in one window. The bsuite default ' +
+      'ruleset carried required_linear_history, which forbids merge commits while ' +
+      'the estate promotes with gh pr merge --merge — every development → main ' +
+      'promotion was structurally unmergeable and finished with --admin ' +
+      '(bsuite#3165). The rule was removed 2026-09-07 and ratified OFF in ADR-0012 ' +
+      'item 1; this gate fails if it reappears live on any banked ruleset — even ' +
+      'when a stale dump agrees, because a dump that banks it is itself stale. ' +
+      'Same asymmetry as the classic gate: weakening fails, strengthening warns. ' +
+      'Dumps live in docs/security/branch-protection/rulesets/ (every repo-level ' +
+      'ruleset: 6 default, 5 development; throughput has no default and R80.4 no ' +
+      'development ruleset — verified absences), and the ' +
+      'directory is invisible to the classic gate scan, which reads one level.',
+    evidence:
+      '"[ruleset-drift] self-test: 15/15 pass — 15 case(s) exercised (13 comparison ' +
+      'verdicts over 1 fixture repo holding default and development rulesets — ' +
+      'identical read, linear history added live, linear history present in BOTH ' +
+      'bank and live, linear history on a development ruleset, linear history ' +
+      'removed (the ratified warn), a protection rule removed, a rule added that ' +
+      'must only warn, a deleted ruleset, an unreadable API, enforcement weakened, ' +
+      'a lost ref pattern, a re-created ruleset id, newest-dump-wins over an older ' +
+      'banked linear-history dump — plus 2 structural cases: both fail-closed dump ' +
+      'shapes and an absent dumps directory)". Against live rulesets 2026-09-24, after ' +
+      're-dumping every repo ruleset under Arcane-Fly: "[ruleset-drift] compared live ' +
+      'rulesets against 11 committed dump(s) … no drift." exit 0.',
+  },
+
+  {
+    id: 'pointer-refresh-dedup',
+    label: 'Unchanged signed pointer PRs retain their head and check runs',
+    repo: '.',
+    command: ['node', 'scripts/check-pointer-refresh.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/advance-submodule-pointers.yml',
+    mode: 'run',
+    notes: 'Preserves an open same-repository development PR when its verified head already contains the desired tree. API failures fail closed; missing, closed, changed or unsigned candidates retain the existing refresh path and full-rollup gate.',
+    evidence: 'Local 2026-09-20: check-pointer-refresh --self-test: OK (23 cases), including actual workflow guard execution under bash -e -o pipefail. Hosted rollout and cost savings are not yet verified.',
+  },
+
+  {
     id: 'required-contexts-producible',
     label: 'Every required status check is one some PR can actually report',
     repo: '.',
@@ -1874,6 +1931,43 @@ export const GUARDS = [
       'parameters deliberately — an earlier bare-type fixture could not reproduce ' +
       'the signature mismatch that failed the first real run (bsuite run ' +
       '33727868315), which is the shape a fixture must match to be evidence.',
+  },
+  {
+    id: 'parent-check-migration-symbol-gaps',
+    label: 'Migration symbol gate — authoring-time "no replay path creates this" (bsuite#3136)',
+    repo: '.',
+    command: [
+      'node',
+      'scripts/check-migration-symbol-gaps.mjs',
+      '--changed',
+      'crm7/supabase/migrations/20261123140000_pay_items_xero_chart_mapping.sql',
+    ],
+    ciWorkflow: '.github/workflows/migration-symbol-gates.yml',
+    mode: 'run',
+    diffScoped: true,
+    notes:
+      'Added 2026-09-19 alongside the guard itself — a new guard with no ' +
+      'registry entry is invisible to this survey on day one, which is the ' +
+      "exact blind spot LANE-WATCHER exists to close. No database: reads the " +
+      'checked-out tree and the two crm7 baseline artefacts only. The real CI ' +
+      'invocation runs --self-test FIRST (twelve planted cases, asserted by ' +
+      'name) before this gate mode step; this entry exercises gate mode only, ' +
+      'against one real replayable crm7 migration that is known clean. A ' +
+      'companion --audit run (non-blocking in CI, `::warning::` on findings) ' +
+      "found 2 pre-existing findings on this estate's 17 replayable migrations " +
+      'at authoring time — business-suite-unified/supabase/migrations/' +
+      '20261123010000_org_roster_walks_descendant_user_tenants.sql and its ' +
+      '…020000 sibling call public.descendants_of, whose only creator is ' +
+      'below the rehearsal floor and absent from the baseline dump. That is ' +
+      'filed as estate debt (bsuite#3136), not fixed by this guard, which is ' +
+      'scoped to the detection mechanism.',
+    evidence:
+      '"Symbol gate over 1 changed migration(s) — substrate: ' +
+      'crm7/supabase/migrations/baseline/20260907_prod_baseline_schema_dump.sql ' +
+      '+ 823 recorded applied versions (membership, bsuite#3147). Dump objects ' +
+      'seeded: 896 creates / 1 drops.\\nAll referenced symbols resolve against ' +
+      'the rebuild universe — gate PASSED." — captured 2026-09-19 against the ' +
+      "live tree's crm7 baseline (20260907 dump, 823 applied versions).",
   },
 ]
 

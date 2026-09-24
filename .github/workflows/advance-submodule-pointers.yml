@@ -244,6 +244,9 @@ jobs:
             echo "::warning title=Vendored route inventory is stale::business-suite-unified/src/data/route-inventory.json differs from the regenerated inventory. It lives inside the submodule, so it needs a BSU-side commit; the parent cannot carry it."
           fi
 
+      - name: Self-test pointer refresh deduplication
+        run: node scripts/check-pointer-refresh.mjs --self-test
+
       - name: Open or refresh the standing PR
         if: steps.advance.outputs.changed == 'true'
         env:
@@ -368,6 +371,11 @@ jobs:
           jq -n --arg base_tree "$base_tree" --slurpfile entries /tmp/pointer-tree.json \
             '{base_tree: $base_tree, tree: $entries[0]}' > /tmp/pointer-tree-body.json
           tree_sha=$(gh api -X POST "repos/$REPO/git/trees" --input /tmp/pointer-tree-body.json --jq .sha)
+          refresh_decision=$(node scripts/check-pointer-refresh.mjs "$REPO" "$BR" "$tree_sha")
+          if [ "$refresh_decision" = unchanged ]; then
+            echo "Standing PR already contains the verified desired tree; keeping its head and check runs."
+            exit 0
+          fi
 
           # NO `author`/`committer` KEY BELOW — see the block comment above. Adding
           # either, even to name the App's own bot explicitly, is documented to turn

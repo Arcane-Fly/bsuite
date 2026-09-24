@@ -1,25 +1,34 @@
-# Ruleset dumps (crm7 + business-suite-unified `development`)
+# Ruleset dumps — the second protection mechanism, banked
 
-This directory banks the **repository rulesets** that govern `development` on the two repos
-whose 2026-09-08 incident enabled a direct push — bsuite#3199. It exists because the classic
-branch-protection dumps one level up cover a different mechanism, and the parent drift gate
-(`scripts/check-branch-protection-drift.mjs`) is hard-scoped to `GaryOcean428/bsuite` branch
-protection: a file named `<branch>-<YYYYMMDD>.json` in the PARENT directory would be read as a
-bsuite dump and compared against bsuite's live development protection, failing the nightly gate
-on a repo it does not own. This subdirectory is invisible to that scan (it reads one level, not
-recursively) and is deliberately not wired into the gate — wiring a second mechanism into the
-same comparator is bsuite#3141 territory, not this change.
+This directory banks the **repository rulesets** that govern default branches across the
+estate, beside the classic-protection dumps one level up. It exists because branch
+protection here is **two independent mechanisms**: a ruleset edit leaves no diff in the
+classic dumps and vice versa, and the 2026-09-07 incident touched both layers in one
+window (it lost `non_fast_forward` and `required_linear_history` from the bsuite `default`
+ruleset while main lost classic protection outright).
+
+This directory was first created by the bsuite#3199 lane for crm7/BSU `development`
+rulesets (that lane's `<repo>-development-<date>.json` files and its README section
+"the write these dumps record" live here too when that work lands). The bsuite#3165 lane
+banks the **default-branch** rulesets of every repo, which is what the ruleset drift gate
+reads.
 
 ## What lives here
 
 | File | What it is |
 |---|---|
-| `crm7-development-20260919.json` | **After-state**: the verbatim GET of `repos/GaryOcean428/crm7/rulesets/20729271` ("development") after the 2026-09-19 write |
-| `bsu-development-20260919.json` | **After-state**: the verbatim GET of `repos/GaryOcean428/business-suite-unified/rulesets/20729281` ("development") after the same write |
-| `crm7-development-20260919-pre.json` | **Before-state**: the same GET immediately before the write — the rollback reference and the no-weakening diff base |
+| `<repo>-default-<YYYYMMDD>.json` | Verbatim GET of each repo's `default` (`~DEFAULT_BRANCH`) ruleset — bsuite 14254675, crm7 12812477, BSU 13700163, conduit 13440333, R80.4 20580638, braden 7299433. Throughput has no default ruleset (verified live) |
+| `<repo>-development-<YYYYMMDD>.json` | Verbatim GET of each repo's `development` ruleset — crm7 20729271, BSU 20729281, conduit 20729275, braden 20729284, throughput 20729286. R80.4 has none (verified live) |
+| `crm7-development-20260919-pre.json` | **Before-state** of the 2026-09-19 bsuite#3199 write — the rollback reference and the no-weakening diff base |
 | `bsu-development-20260919-pre.json` | **Before-state** for BSU |
 
-The bodies carry their own `source` field (`GaryOcean428/crm7` / `GaryOcean428/business-suite-unified`),
+All current dumps were re-taken 2026-09-24 from `repos/Arcane-Fly/<repo>/rulesets/<id>` after the org
+transfer, so their `source` is `Arcane-Fly/<repo>`. The 2026-09-19 after-states (source `GaryOcean428/...`)
+were retired in the same change: the gate keys a dump by its body's `source`, so an old-owner dump beside a
+new one would bank the same ruleset twice. They remain in `git log -p` of this directory. The org-level
+`Basic` ruleset (id 18904242, identical on every repo) is not repo-owned and is not banked here.
+
+The bodies carry their own `source` field (`Arcane-Fly/<repo>`),
 so a file never depends on its filename to say which repo it describes.
 
 ## The write these dumps record (2026-09-19, bsuite#3199)
@@ -81,3 +90,75 @@ unchanged afterwards:
 - Classic branch protection on both repos' `development` (crm7: 15 required contexts,
   `enforce_admins: false`; BSU: 7 contexts, `enforce_admins: true`) is a separate layer and
   was not touched by the 2026-09-19 write.
+
+| `<repo>-default-*.json` / `<repo>-development-*.json` | See "What lives here" above |
+| `<anything>-<YYYYMMDD>-pre.json` | Before-states (rollback references), invisible to the drift scan by filename |
+
+**Throughput has no default-branch ruleset** (its only ruleset governs `development`, id
+20729286) — that absence is the verified live state, not a missing dump; its `development`
+ruleset is banked by the #3199 lane's work when it lands.
+
+The bodies carry their own `source` field (`Arcane-Fly/<repo>`), so a file never depends
+on its filename to say which repo it describes. The filename supplies only the date that
+makes "newest" meaningful.
+
+## The one absolute: linear history is OFF, ratified
+
+`required_linear_history` **must not exist on any ruleset in this estate.** The estate
+promotes with `gh pr merge --merge` (never `--squash`, never rebase — they rewrite SHAs,
+and the promotion PR is the record that a development tree was promoted). A ruleset that
+forbids merge commits makes every promotion structurally unmergeable and pushes people
+toward `--admin`, which is the habit of bypassing protection the drift gates exist to
+end. Removal was performed 2026-09-07 and ratified in **ADR-0012 item 1** (operator
+decision register, 2026-09-16).
+
+`scripts/check-ruleset-drift.mjs` enforces this absolutely: `required_linear_history`
+present **live** fails even when the banked dump agrees — because a dump that banks it is
+itself stale and must be re-dumped after the rule is removed.
+
+## Re-dumping (every repo ruleset)
+
+```sh
+d=$(date +%Y%m%d)
+declare -A SLUG=([bsuite]=bsuite [crm7]=crm7 [business-suite-unified]=bsu [conduit]=conduit [braden]=braden [R80.4]=R80.4 [throughput]=throughput)
+for r in "${!SLUG[@]}"; do
+  gh api repos/Arcane-Fly/$r/rulesets --jq '.[]|select(.source_type=="Repository")|"\(.id) \(.name)"' |
+  while read id name; do
+    gh api repos/Arcane-Fly/$r/rulesets/$id > "docs/security/branch-protection/rulesets/${SLUG[$r]}-$name-$d.json"
+  done
+done
+node scripts/check-ruleset-drift.mjs                  # must be clean
+```
+
+**Two writes on the same day** share one filename; the before-state of the second is the
+previous commit of that file, not a second file (`git log -p docs/security/branch-protection/rulesets/`
+is the record) — the same convention as the classic dumps one level up.
+
+**One ruleset may not carry two dumps of the same date.** The gate fails closed on that
+shape (`dump-ambiguous-date`), because "newest" needs an unambiguous winner.
+
+## The gate
+
+`scripts/check-ruleset-drift.mjs`, run nightly by `.github/workflows/branch-protection-drift.yml`,
+compares each newest dump against the live ruleset, one GET per ruleset (the list endpoint
+returns no rules). **Weakening fails; strengthening warns** — same asymmetry as the classic
+gate, same reason. On top of the asymmetry, one absolute: **`required_linear_history`
+present live fails even when the dump agrees** (see above). It also fails on:
+
+- a banked ruleset deleted live (`ruleset-absent`) — a deleted ruleset protects nothing
+- enforcement `active` → `evaluate`/`disabled` (`enforcement-weakened`)
+- a banked ref pattern no longer covered (`refs-no-longer-covered`) — the malformed-pattern
+  shape of the 2026-09-07 incident
+- unparseable or identity-less dumps (`dump-unparseable`, `dump-missing-identity`) — fail closed
+
+And it warns on: rules/ref patterns/enforcement added live (`dump-stale`, re-dump), linear
+history removed (the ratified direction), and a re-created ruleset id under the same name.
+
+## What a green tick here does NOT say
+
+- **bypass_actors are correct.** Which roles can bypass a ruleset is bsuite#3141
+  territory; this gate watches the rule list, enforcement and ref pattern, not the bypass
+  list.
+- **classic protection is intact.** That is the sibling gate one level up.
+- **a banked dump was ever CORRECT.** It asserts live has not drifted below it, plus the
+  one absolute above.

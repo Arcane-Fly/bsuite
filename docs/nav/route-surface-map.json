@@ -119,7 +119,7 @@
       "unresolved_from": 0,
       "files_walked": 0,
       "verdict": "UNRESOLVED",
-      "note": "component file could not be resolved from braden/src/Routes.tsx \u2014 NOT the same as \"no data path\""
+      "note": "component file could not be resolved from braden/src/Routes.tsx — NOT the same as \"no data path\""
     },
     {
       "route": "/admin/",

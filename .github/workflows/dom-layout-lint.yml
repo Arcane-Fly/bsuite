@@ -30,7 +30,7 @@ permissions:
   # This workflow previously declared no permissions at all and inherited the
   # repository default, which is `read` — so its PR comment could never be
   # written. Confirm the default with:
-  #   gh api repos/GaryOcean428/<repo>/actions/permissions/workflow
+  #   gh api repos/Arcane-Fly/<repo>/actions/permissions/workflow
   issues: write
 
 jobs:
@@ -188,7 +188,7 @@ jobs:
           SUMMARY=""
           if [ ${#ERRORS[@]} -gt 0 ]; then
             SUMMARY+="## DOM Layout Invariant Violations\n\n"
-            SUMMARY+="The following invariants defined in [AGENTS.md §Frontend Layout & Z-Index Standards](https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md) were violated. These must be fixed before merging.\n\n"
+            SUMMARY+="The following invariants defined in [AGENTS.md §Frontend Layout & Z-Index Standards](https://github.com/Arcane-Fly/bsuite/blob/main/AGENTS.md) were violated. These must be fixed before merging.\n\n"
             for err in "${ERRORS[@]}"; do
               SUMMARY+="### ❌ Error\n$err\n\n"
             done
@@ -246,4 +246,4 @@ jobs:
             ${{ env.LINT_SUMMARY }}
 
             ---
-            <sub>DOM Layout Lint · Enforces AGENTS.md §Frontend Layout & Z-Index Standards · <a href="https://github.com/GaryOcean428/bsuite/blob/main/AGENTS.md">View invariants</a></sub>
+            <sub>DOM Layout Lint · Enforces AGENTS.md §Frontend Layout & Z-Index Standards · <a href="https://github.com/Arcane-Fly/bsuite/blob/main/AGENTS.md">View invariants</a></sub>
