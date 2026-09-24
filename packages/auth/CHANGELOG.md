@@ -2,6 +2,13 @@
 
 All notable changes to this package are documented here. This project adheres to [Semantic Versioning](https://semver.org/).
 
+## 1.0.1 — 2026-09-17
+
+Release of the 1.0.1-next line, unchanged. No source difference from
+1.0.1-next.1; only the version is finalised, so npm's `latest` moves off 1.0.0
+and consumers stop having to pin a prerelease to get the session-ownership
+work below.
+
 ## 1.0.1-next.1 — 2026-09-09
 
 ### Added

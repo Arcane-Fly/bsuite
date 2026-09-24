@@ -1,0 +1,42 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# [P2] Host-employer portal offers WHS Upload actions that the host_employer role can never reach
+
+https://github.com/GaryOcean428/crm7/issues/1618
+
+Snapshot updatedAt: 2026-08-24T03:28:23Z. Open at capture; re-read live.
+
+**Found by:** crm7#1597 lane, 2026-08-11. Pre-existing; not caused by #1578 or #1597.
+
+## Problem
+
+`src/pages/portal/host-employer.tsx` offers "WHS Upload" quick actions that navigate to a route the `host_employer` role can never reach:
+
+- L579-580 → `/compliance/whs-audits/create?host_employer_id=...`
+- L907-908 → same
+
+`host_employer` holds `view_compliance_dashboard` but **not** `view_compliance`, and never has. The route is gated (`view_compliance` before #1597, `manage_whs_audits` after), so a host employer clicking this gets the Access Denied card.
+
+## Why the route-coverage guard does not catch this
+
+`src/__tests__/inpage-link-route-coverage.test.ts` (added in #1592) asserts every in-page link resolves to a **registered route**. This link does. It is a *permission* dead-end, not a routing dead-end — a third class, after "no route" (#1578) and "nav-config only" (#1098).
+
+That is a gap in the guard worth closing: a link only the wrong audience can see is the same user-facing failure as a 404, and nothing detects it. A static check is feasible — for each in-page link, compare the route's `permission=` against the permissions held by roles that can reach the *linking* page. Non-trivial, but the data is all in `usePermissions.ts` and `App.tsx`.
+
+## Decide
+
+1. **Should host employers be able to request/upload a WHS audit at all?** If yes, they need a permission that reaches the create surface, and RLS must admit their INSERT (`is_gto_staff()` currently does not include them) — that is a product decision plus a migration, not a UI tweak.
+2. If no, remove the two quick actions. Do not leave a control that always denies.
+
+## Mandatory before merge (FF-SELF-VALIDATION-20260507)
+- **Validation loop**: §9.2 visual-equivalence
+- **Equivalence target**: signed in as a `host_employer`-role user on `d.crm.crm7.app`, the WHS Upload action either completes or is absent — screenshot either way
+- **Cross red-team**: claude-code verifies the role's permission set against `usePermissions.ts` AND the RLS policy, not just the UI
+- **Skills to load**: bsuite-rls-authz-red-team, qa-and-verification
+- **Self-report on divergence**: yes
+
+**Acceptance criteria:** no control in the host-employer portal navigates to a surface that role's permissions cannot reach.

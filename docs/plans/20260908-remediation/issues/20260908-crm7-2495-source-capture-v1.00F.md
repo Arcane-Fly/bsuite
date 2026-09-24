@@ -1,0 +1,60 @@
+---
+kind: record
+authority: none
+owner: bsuite
+---
+
+# AI case-note tool conflates urgency with confidentiality
+
+https://github.com/GaryOcean428/crm7/issues/2495
+
+Snapshot updatedAt: 2026-09-06T09:34:41Z. Open at capture; re-read live.
+
+## What
+
+`src/lib/ai/tools/field-officer-tools.ts:75` writes:
+
+```js
+is_confidential: input.priority === 'urgent',
+```
+
+Urgency and confidentiality are **orthogonal**. An urgent welfare note is not thereby a
+confidential one. Every case note the AI path records as urgent is stored flagged
+confidential, and there is no record of why.
+
+## Severity — stated accurately, because I first overstated it
+
+I initially described this as restricting who can read the note. **That was wrong and I
+checked it after saying it.** Measured:
+
+- No RLS policy on `case_notes` references `is_confidential`. The only policy is
+  `"Tenant isolation for case_notes"` (`20260306000003_wave5_wave10_db_gaps.sql:35`), which
+  scopes by tenant and says nothing about confidentiality.
+- `browse.case_notes` selects the column but does not filter on it.
+- No application code reads it. The only non-type reference in `src/` is this write.
+
+So this is **not** a live visibility failure. It is a data-quality defect that becomes an
+exposure the day anything starts enforcing the column — at which point the wrong rows are
+already marked, historically, and nobody will know the flag meant "was urgent".
+
+## Why it is worth fixing now rather than then
+
+The mislabelling is accumulating silently, and the cost of fixing it rises with row count.
+A column that nothing reads is exactly the kind of thing that later acquires a reader.
+
+## Fix
+
+Drop the mapping. If confidentiality is a real property of a case note, it should be a
+choice the author makes, not a side effect of urgency. If it is not, the column should stop
+being written by this path at all.
+
+Note that the human create form never sends `is_confidential`, so the two writers of this
+table already disagree about the column — see #2464, where the form's payload is being
+rewritten to the table's real shape.
+
+## Acceptance
+
+- No code path infers confidentiality from urgency.
+- Whatever writes `is_confidential` does so from an explicit decision, or not at all.
+- If the existing rows are to be corrected, that is a separate, stated migration — not a
+  silent backfill.

@@ -59,13 +59,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:
-      - name: Mint a GitHub App installation token (D-169; the PAT is legacy)
-        # Same shape as .github/workflows/advance-submodule-pointers.yml —
-        # copy that file's comment for the full rationale. Non-fatal: a
-        # half-configured App must not take the job down.
+      - name: Mint the GitHub App installation token
+        # The sweep can change issues and, only on explicit dispatch, delete
+        # merged branches. It must stop if the App lacks a required grant.
         id: app-token
-        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' }}
-        continue-on-error: true
         uses: actions/create-github-app-token@v3
         with:
           client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
@@ -83,11 +80,6 @@ jobs:
           permission-pull-requests: read
           permission-issues: write
           permission-metadata: read
-
-      - name: Say so if the App token could not be minted (falling through to the PAT)
-        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && steps.app-token.outcome != 'success' }}
-        run: |
-          echo "::warning title=GitHub App token not minted::BSUITE_GITHUB_APP_CLIENT_ID is set but the token step did not succeed (outcome: ${{ steps.app-token.outcome }}). Check secrets.BSUITE_GITHUB_APP_PRIVATE_KEY and the App installation; this run falls through to the PAT (D-169)."
 
       # No submodule checkout needed — this sweep talks to every repo purely
       # through `gh api`, never a git clone of the app itself.
@@ -109,7 +101,7 @@ jobs:
       - name: Run the sweep (always read-only at this step)
         id: sweep
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -127,7 +119,7 @@ jobs:
 
       - name: Open, update or close the standing issue
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           ISSUE_TITLE: 'Work at risk: branches ahead of development with no PR'
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -185,7 +177,7 @@ jobs:
       - name: Delete STALE-MERGED branches (recomputed fresh — never reuses the report above)
         if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.delete == 'true' && github.event.inputs.dry_run == 'false' }}
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           set -euo pipefail
           echo "delete=true and dry_run=false — recomputing the sweep immediately before deleting, so nothing is deleted on a stale read."

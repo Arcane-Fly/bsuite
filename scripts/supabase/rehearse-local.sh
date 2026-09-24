@@ -79,8 +79,13 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 cd "$ROOT"
 
-# Kept in lockstep with supabase-migration-rehearsal.yml's `env:` block. If you
-# change one, change the other — they are the same two facts about the estate.
+# bsuite#3147: BASELINE_MAX is a SANITY BOUND only — the in-baseline rule is
+# MEMBERSHIP in crm7/supabase/migrations/baseline/applied-versions-*.txt, and
+# the engine never uses this value to discriminate. It is derived from that
+# artefact below (after preflight has proven the crm7 checkout) with this
+# hardcoded value kept as the fallback, in lockstep with
+# supabase-migration-rehearsal.yml's `env:` block. If you change one, change
+# the other — they are the same two facts about the estate.
 BASELINE_MAX='20260807110000'
 MIGRATION_FLOOR='20260611000000'
 
@@ -218,6 +223,35 @@ for a in crm7 R80.4 braden business-suite-unified conduit throughput; do
     "$(find "$a/supabase/migrations" -maxdepth 1 -name '*.sql' 2>/dev/null | wc -l)"
 done
 printf '  %-26s %4s CREATE TABLE statements\n' 'baseline' "$(grep -c -F 'CREATE TABLE ' "$BASELINE")"
+
+# bsuite#3147: derive BASELINE_MAX from the applied-versions artefact the
+# selection rule reads, so the sanity bound cannot drift from it. crm7 is
+# proven present above; the artefact resolution is the same
+# newest-by-name/exactly-one contract as the dump and as
+# rehearse-migrations.mjs's loadAppliedVersions().
+APPLIED_DIR="$BASELINE_DIR"
+mapfile -t APPLIED_CANDIDATES < <(find "$APPLIED_DIR" -maxdepth 1 -name 'applied-versions-*.txt' 2>/dev/null | sort)
+case "${#APPLIED_CANDIDATES[@]}" in
+  0)
+    die "no applied-versions-*.txt found under $APPLIED_DIR
+
+The in-baseline rule is MEMBERSHIP (bsuite#3147): the artefact is the skip-set
+and the substrate seeds its ledger from it. Run:
+  git submodule update --init --recursive"
+    ;;
+  1)
+    APPLIED_ARTEFACT="${APPLIED_CANDIDATES[0]}"
+    ;;
+  *)
+    die "${#APPLIED_CANDIDATES[@]} applied-versions artefacts found under $APPLIED_DIR — refusing to guess which is production's:
+$(printf '  %s\n' "${APPLIED_CANDIDATES[@]}")
+Remove the stale one(s) or resolve the collision before rehearsing."
+    ;;
+esac
+DERIVED_MAX="$(grep -E '^[0-9]+$' "$APPLIED_ARTEFACT" | sort | tail -1)"
+[ -n "$DERIVED_MAX" ] || die "applied-versions artefact $(basename "$APPLIED_ARTEFACT") holds no digit version lines — refusing to derive BASELINE_MAX"
+BASELINE_MAX="$DERIVED_MAX"
+printf '  %-26s %s (derived from %s; in-baseline is MEMBERSHIP, this is a sanity bound only)\n' 'BASELINE_MAX' "$BASELINE_MAX" "$(basename "$APPLIED_ARTEFACT")"
 
 # ───────────────────────── the wrong-database guard ─────────────────────────
 say "Checking port ${DB_PORT} is ours"

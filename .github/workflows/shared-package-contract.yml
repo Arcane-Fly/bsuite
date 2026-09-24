@@ -37,13 +37,40 @@ jobs:
   contract:
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - uses: actions/checkout@v5
         with:
           submodules: recursive
+          token: ${{ steps.app-token.outputs.token }}
           # The submodules are private repos; the default GITHUB_TOKEN cannot
           # clone them and fails with "Repository not found". Same pattern and
           # same fallback as theme-conformance.yml.
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
           fetch-depth: 1
 
       - name: Refuse to scan an empty tree

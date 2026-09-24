@@ -1,509 +1,551 @@
 {
-  "schema_version": "1.0",
-  "_doc": "Accepted-by-design / tracked Supabase advisor findings. Consumed by scripts/check-supabase-advisors.mjs (workflow: supabase-advisor-sweep.yml). Matching: lint name + object identity (functions: name(arguments); tables: table name). INFO-level findings never fail regardless of this file. mode=accepted -> finding is expected, never fails, never files; mode=tracked -> finding is known and owned by tracked_in, never fails, not re-filed; removing a rule makes its findings live again.",
-  "rules": [
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "objects": [
-        "acting_tenant_id()",
-        "accept_team_invite(p_token text)",
-        "ancestors_of(leaf_id uuid)",
-        "auth_parent_tenant_id()",
-        "auth_tenant_id()",
-        "auth_tenant_id_with_role(allowed_roles text[])",
-        "bulk_data_import(p_entity_key text, p_tenant_id uuid, p_rows jsonb, p_update_existing boolean, p_dry_run boolean, p_import_job_id uuid)",
-        "bulk_data_undo(p_change_set_id uuid)",
-        "bulk_data_update(p_entity_key text, p_tenant_id uuid, p_row_ids uuid[], p_field_updates jsonb, p_dry_run boolean)",
-        "caller_org_ids()",
-        "can_act_on_colleague_calendar(p_user_id uuid, p_tenant_id uuid, p_write boolean)",
-        "can_write_role_capability(p_tenant_id uuid, p_capability text)",
-        "check_archive_recovery_needed(p_source_table text, p_tenant_id uuid, p_from timestamp with time zone, p_to timestamp with time zone)",
-        "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
-        "check_user_portal_role(p_user_id uuid, p_tenant_id uuid, p_required_roles text[])",
-        "check_user_tenant_access(p_user_id uuid, p_tenant_id uuid)",
-        "cleanup_quote_handoff_tokens()",
-        "clone_tenant_role(p_source_role_id uuid, p_new_key text, p_new_label text, p_tenant_id uuid)",
-        "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb)",
-        "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb, p_owner_email text)",
-        "create_person_with_contact(payload jsonb, p_tenant_id uuid)",
-        "current_user_has_capability(p_tenant_id uuid, p_capability text)",
-        "delete_organization(p_tenant_id uuid, p_confirm_name text)",
-        "descendants_of(root_id uuid)",
-        "effective_user_capabilities(p_user_id uuid, p_tenant_id uuid)",
-        "employers_set_enterprise_root_id()",
-        "find_orphan_owned_tenants_for_caller()",
-        "fn_publish_page(p_draft_id uuid)",
-        "fn_rollback_page(p_page_id uuid)",
-        "get_apprentice_person_id_for_current_user()",
-        "get_descendant_tenant_ids(p_tenant_id uuid)",
-        "get_host_agreement_signing_context(p_token text)",
-        "get_org_deletion_preview(p_tenant_id uuid)",
-        "get_sharing_level(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
-        "get_user_apprentice_id()",
-        "get_user_gto_role()",
-        "get_user_host_employer_id()",
-        "get_user_tenant_context(p_user_id uuid)",
-        "get_visible_fields(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
-        "get_visible_tenant_ids(p_user_id uuid)",
-        "gto_assessment_history(p_tenant_id uuid, p_clause_id uuid, p_limit integer, p_offset integer)",
-        "gto_assessment_summary(p_tenant_id uuid, p_year smallint)",
-        "gto_self_assessment_log_history()",
-        "has_parent_admin_access(target_tenant_id uuid)",
-        "has_tenant_role(p_tenant_id uuid, required_roles text[])",
-        "invite_team_member_guarded(p_team_id uuid, p_email text, p_role text, p_invited_by uuid)",
-        "is_archive_recovery_authorized(p_tenant_id uuid)",
-        "is_demo_write_blocked()",
-        "is_dev_mode()",
-        "is_enterprise_admin()",
-        "is_field_manager(p_tenant_id uuid)",
-        "is_gto_admin()",
-        "is_gto_admin(p_tenant_id uuid)",
-        "is_gto_staff()",
-        "is_gto_staff(p_tenant_id uuid)",
-        "is_platform_admin(uid uuid)",
-        "is_platform_developer()",
-        "is_platform_super_admin()",
-        "is_team_admin(p_team_id uuid, p_user_id uuid)",
-        "mark_recurring_error_fingerprint_closed(p_fingerprint text)",
-        "migration_high_water_mark()",
-        "mint_quote_handoff_token(p_payload jsonb)",
-        "org_roster_for_tenant(p_tenant uuid)",
-        "platform_admin_act_as(target_tenant_id uuid)",
-        "platform_admin_stop_acting()",
-        "platform_is_developer_or_admin()",
-        "platform_oauth_clients()",
-        "portal_invite_accept(p_token text)",
-        "portal_invite_mint(p_person_id uuid)",
-        "r7_candidate_id_for_auth_user()",
-        "rearchive_restored_rows(p_source_table text, p_tenant_id uuid, p_source_ids uuid[], p_reason text)",
-        "redeem_host_agreement_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
-        "redeem_quote_handoff_token(p_token text)",
-        "rename_physical_column(p_entity_id uuid, p_field_id uuid, p_new_name text, p_dry_run boolean)",
-        "reorder_entity_fields(p_entity_id uuid, p_field_ids uuid[])",
-        "report_catalog_approve_entity(p_key text)",
-        "resolve_enterprise_root_id(p_tenant_id uuid)",
-        "restore_archived_rows(p_source_table text, p_tenant_id uuid, p_reason text, p_archive_ids uuid[], p_from timestamp with time zone, p_to timestamp with time zone)",
-        "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
-        "schema_authority_tenant_ids()",
-        "show_demo_data()",
-        "tenant_branding_is_force_overridden(p_tenant_id uuid)",
-        "tenant_subtree_ids(root_tenant_id uuid)",
-        "tenants_recompute_employer_roots_on_reparent()",
-        "training_plan_belongs_to_current_apprentice(p_training_plan_id uuid)",
-        "update_person_with_contact(p_person_id uuid, payload jsonb, p_tenant_id uuid)",
-        "update_platform_entity_label(p_entity_id uuid, p_label text, p_description text)",
-        "user_has_capability(p_user_id uuid, p_tenant_id uuid, p_capability text)",
-        "user_has_org_access(p_user_id uuid, p_tenant_id uuid)"
-      ],
-      "mode": "accepted",
-      "reason": "RLS helper + intentional client-RPC class. These MUST stay executable by authenticated: RLS policies evaluate the helpers in the caller's context, and a prior revoke pass broke production RLS (see crm7 20260521024707/20260527022039 hotfix_restore_rls_helper_grants history). Operator directive 2026-06-11: do NOT blanket-fail this class until replaced by a proven alternative. A SECURITY DEFINER function NOT on this list IS a failure - the list is exhaustive, not a category waiver. Added 2026-08-06: the three bulk_data_* entry points and is_gto_admin(p_tenant_id uuid). The bulk RPCs are the /settings/data API and MUST stay client-callable; what makes them safe is their own gates — a membership guard against auth_tenant_id() before any table is touched, an is_pii/min_role field gate at every admission point, and RLS on every base table underneath. Their seven INTERNAL _bulk_data_* helpers are NOT here: crm7 migration 20260806350000 revokes EXECUTE from anon/authenticated on those, so only the entry points remain reachable. is_gto_admin(p_tenant_id uuid) is an RLS helper of the same class as is_gto_staff(uuid) and auth_tenant_id() already in this list.\n\nADDED 2026-08-11 — the R8 quote handoff (crm7#1604, crm7#1570). The operator ruled that R8 must have a real transport rather than a paste-a-JSON box: 'well it should have the transport.'\n\nNOTE WHAT IS DIFFERENT ABOUT THESE THREE: they are NOT anon-reachable, unlike every other token pair in this estate. R8 mints from the browser using its own already-authenticated Supabase session against the same project, so both RPCs require `authenticated` and anon is revoked by name. There is no shared secret for a SPA to leak in a bundle, and no anonymous surface at all. That is why they sit in this rule and not the anon one.\n\nSECURITY DEFINER is the mechanism: the token table has no SELECT policy for anyone, so the hash is unreadable from the client by construction. Tokens are stored hashed, are single-use, expire in 15 minutes, and minting is rate-limited to 20/hour/user.\n\nVerified by pgTAP suite 74, plan(30), 30/30 — positively controlled, including a valid token redeemed by a DIFFERENT authenticated user than the minter with the payload round-tripping byte-for-byte, and the 21st mint in an hour refused. The anon-revocation assertion is catalog-based rather than a live probe: a runtime probe of the revoked function crashed local Postgres outright, reproducing the hazard documented in crm7#773.\n\nADDED 2026-08-11 — five functions that were APPLIED TO PRODUCTION on 2026-08-10 and never allowlisted. My omission: both authoring lanes reported the exact signatures and were correctly told not to edit this file themselves, and I did not add them. The sweep has been red since the promotion, and the sweep was right.\n\n  portal_invite_mint / portal_invite_accept (crm7#1558) — the portal invite. mint is staff-only, gated on check_user_portal_role(auth.uid(), tenant, owner|admin), returns the raw token once and stores only a hash. accept requires an authenticated caller and returns NULL for every refusal rather than raising, deliberately: it records a rate-limit attempt before it knows the outcome, and a RAISE would roll back that same counter. Also non-enumerating. 37 pgTAP assertions.\n\n  resolve_enterprise_root_id / employers_set_enterprise_root_id / tenants_recompute_employer_roots_on_reparent (crm7#1554) — the enterprise-root machinery behind the ABN uniqueness scope. Two are trigger functions, not client-callable surfaces; resolve_enterprise_root_id walks tenants.parent_tenant_id using tenant_subtree_ids(), the only cycle-safe walker of the four. All three pin search_path and revoke anon by name.\n\nADDED 2026-08-18 — can_write_role_capability(p_tenant_id uuid, p_capability text). It is an RLS helper of exactly the class this rule exists for: the three role_capabilities_admin_{insert,update,delete} policies call it in their USING/WITH CHECK clauses, and a policy expression is evaluated as the CALLING role — so revoking EXECUTE from authenticated would not harden anything, it would break every admin write to role_capabilities. SECURITY DEFINER is load-bearing for the reason the function's own header states: an INVOKER version recurses through user_tenants' RLS.\nWhat makes a direct RPC call safe is that the function answers only about the CALLER — its membership limb is pinned to auth.uid(), so a signed-in user can learn whether THEY may write a capability, which they can already establish by attempting the write. It returns no row data and takes no user_id parameter, so it cannot be aimed at another account.\nVerified live 2026-08-18: capability_catalogue, the only table it reads, has RLS enabled with one policy; anon holds no SELECT/INSERT/UPDATE/DELETE and authenticated is read-only.",
-      "tracked_in": null,
-      "added": "2026-06-11",
-      "review": "Re-justify before adding any new function; shrink the list as helpers migrate to SECURITY INVOKER or out of the exposed schema. 2026-08-24: sync_people_assigned_field_officer() was REMOVED rather than added — a trigger function needs no EXECUTE grant, proven by firing it with the grant revoked. 2026-08-31: rename_physical_column and reorder_entity_fields ADDED, each with the deployed function's own gating measured rather than asserted — see their notes. rename_physical_column ships with an EMPTY allowlist, so it is inert on arrival.",
-      "notes": {
-        "is_platform_developer()": "RLS/authorization helper. SECURITY DEFINER so a policy can evaluate it without the caller holding read access to profiles. Returns a boolean only; leaks nothing about other users. Deliberately narrower than is_platform_super_admin() (developer ONLY, excludes tester).",
-        "schema_authority_tenant_ids()": "RLS helper on tenant_schema_layout. SECURITY DEFINER so the policy can read user_tenants/tenants without granting the caller access to them. Returns only tenant ids the caller already has authority over; while acting-as it NARROWS to that subtree rather than widening.",
-        "tenant_subtree_ids(root_tenant_id uuid)": "Recursive parent_tenant_id walk used by the above. Depth-capped at 10. Takes a tenant id the caller must already be authorized for; returns ids only, no row data.",
-        "update_platform_entity_label(p_entity_id uuid, p_label text, p_description text)": "INTENTIONAL privileged write path, not a helper. It is the ONLY app-level route to a platform-owned tenant_entities row (RLS denies those rows to every user by design). SECURITY DEFINER IS the mechanism; the is_platform_developer() check inside it is the authorization. Restricted to label/description, refuses tenant-owned rows so it cannot become an RLS bypass, and every call is written to platform_schema_audit. Verified live 2026-08-06: a tester and a plain user both get 42501.",
-        "acting_tenant_id()": "RLS helper. Returns the tenant a platform super admin is currently acting as, or nothing. SECURITY DEFINER so policies can read platform_admin_acting_as without granting callers access to it. Gated on is_platform_super_admin() AND expires_at > now(), so a lapsed or unauthorized session yields no rows.",
-        "is_platform_super_admin()": "RLS helper. Boolean only. SECURITY DEFINER so a policy can read profiles without the caller holding access. Admits developer | platform_admin | is_super_admin — the act-as set. Deliberately WIDER than is_platform_developer(), which alone gates platform schema writes.",
-        "platform_admin_act_as(target_tenant_id uuid)": "INTENTIONAL privileged write, not a helper. Starts an acting-as session; SECURITY DEFINER IS the mechanism because platform_admin_acting_as has no write policies at all. Authorization is the is_platform_super_admin() check inside it, the target tenant must exist, and every start is written to platform_admin_act_as_audit. Sessions carry a hard 12h expires_at.",
-        "platform_admin_stop_acting()": "Counterpart to the above; clears the caller's own acting-as row and audits the stop. SECURITY DEFINER for the same reason. Acts only on auth.uid()'s own row.",
-        "report_catalog_approve_entity(p_key text)": "INTENTIONAL privileged write path, not a helper — same class as update_platform_entity_label. It is the developer-approval step of the D3 promotion path (schema-builder entity -> DRAFT catalog row -> developer approves -> active), so it MUST be client-callable: an RPC has to be reachable in order to return its denial. SECURITY DEFINER is the mechanism; the is_platform_developer() check inside it is the authorization. anon is already REVOKED (verified live: has_function_privilege('anon',...) = false). Verified live 2026-08-07 inside a guaranteed rollback: a non-developer (owner of Lookn, platform_role='user') calling it is DENIED with 'only a platform developer may approve a proposed entity into the catalog'. Added by the supervisor lane while unblocking bsuite#1796; the implementing lane owns the function.",
-        "migration_high_water_mark()": "INTENTIONAL client-readable surface, and the authenticated grant IS the feature. It exposes the APPLIED-migration high-water mark to the Settings -> System Information panel so a signed-in user can tell 'merged but not applied' apart from a defect. There is ONE Supabase project: d.crm.crm7.app serves `development` CODE against a `main`-STATE database, and the applier runs on main only, so a merged, correct, migration-dependent feature renders EMPTY on dev with nothing in the app distinguishing that from a bug. The CODE half of the comparison (__BUILD_COMMIT__) was already in the browser; this is the DATABASE half. Revoking it does not harden anything, it deletes the feature.\n\nSECURITY DEFINER is the only route, verified live rather than assumed: supabase_migrations has nspacl = NULL and the ledger table relacl = NULL, so NO PostgREST role reaches it -- service_role included. A SECURITY INVOKER function would return nothing, and granting direct SELECT would hand callers statements[] and rollback[], i.e. the full DDL of every migration.\n\nWHAT LEAVES THE SCHEMA IS THE WHOLE ARGUMENT, and it is narrow by construction: the return type is TABLE(high_water_mark text, applied_count bigint) and the body selects only max(version) and count(*). Verified live 2026-08-17: returns ('20260821010000', 703). No statements[] or rollback[] is reachable through it.\n\nanon is already revoked BY NAME -- confirmed live, has_function_privilege('anon', ...) = false, ACL {postgres=X, service_role=X, authenticated=X}. Both revoke routes matter here: a postgres-created function arrives with a built-in EXECUTE TO PUBLIC that ALTER DEFAULT PRIVILEGES does not remove, so REVOKE FROM PUBLIC and REVOKE FROM anon are not substitutes for one another.",
-        "platform_oauth_clients()": "INTENTIONAL privileged READ path, and the authenticated grant IS the feature. It is the only route to the OAuth client registry for the Developer Portal, replacing a HARDCODED list of five clients that was duplicated across two pages and had already drifted from reality (real names 'R8' vs the literal's 'R8 Calculator'/'R80.4'; real hosts www.crm7.app and r8-c.vercel.app vs the literal's crm.crm7.app and r8.crm7.app). All five hardcoded ids were real and none soft-deleted, so the defect was asserted status and drift, not invented rows.\n\nSECURITY DEFINER is the mechanism: auth.oauth_clients is not readable by any PostgREST role, so a SECURITY INVOKER function would return nothing. The authorization is the gate INSIDE the function, which mirrors canUsePlatformKit exactly — platform_role IN ('platform_admin','developer'). Deliberately NOT is_platform_developer(), which is developer-only and would lock out platform_admin, making the page gate and the data source disagree; that mismatch is exactly the RC2 class this estate has already been bitten by.\n\nWHAT LEAVES THE FUNCTION IS THE ARGUMENT: identity metadata only. It never returns client_secret_hash, grant_types or token_endpoint_auth_method. And it RAISES SQLSTATE 42501 on refusal rather than filtering to zero rows — a refusal that returns an empty set is indistinguishable from an empty registry, which would read as 'no OAuth clients exist' to an unauthorised viewer.\n\nanon is revoked BY NAME and via PUBLIC, then the ACL is asserted back in a DO block that RAISEs. Both revoke routes are needed and neither covers the other.",
-        "clone_tenant_role(p_source_role_id uuid, p_new_key text, p_new_label text, p_tenant_id uuid)": "Writes tenant_roles + role_capabilities. SECURITY DEFINER because INVOKER cannot read a PLATFORM source role's grants through RLS. It checks its own authority against schema_authority_tenant_ids() before writing, so the grant does not decide who may call it — the body does.",
-        "current_user_has_capability(p_tenant_id uuid, p_capability text)": "Self-scoped: it passes auth.uid() and cannot be asked about anyone else. The subject is not a parameter, so there is nothing for a caller to point elsewhere.",
-        "is_field_manager(p_tenant_id uuid)": "Takes only a tenant and answers about the CALLER. Returns a boolean; reveals nothing about any other user.",
-        "effective_user_capabilities(p_user_id uuid, p_tenant_id uuid)": "Arbitrary subject, so the grant alone was NOT sufficient — until 20260906000000 any signed-in user could resolve any user's capabilities in any tenant, which is cross-tenant disclosure of who can do what. The right to ASK is now checked by caller_may_read_capabilities_of() (self, tenant owner/admin, or platform developer), which is SECURITY INVOKER so it answers for the caller. Fails closed as zero rows. Stays executable because BSU's permissions editor (src/lib/admin/userCapabilityOverrides.ts) legitimately resolves ANOTHER user for a tenant admin; revoking would close the hole by breaking the feature.",
-        "user_has_capability(p_user_id uuid, p_tenant_id uuid, p_capability text)": "Thin wrapper over effective_user_capabilities() and inherits its caller check, so the same reasoning applies. Kept SECURITY DEFINER so 20260905000000's fail-closed boolean contract holds: it answers a boolean question with a boolean rather than a NOT FOUND callers must interpret.",
-        "reorder_entity_fields(p_entity_id uuid, p_field_ids uuid[])": "Schema Builder client RPC. SECURITY DEFINER so one caller can rewrite every tenant_field_definitions.sort_order for an entity atomically — INVOKER cannot hold that row set stable under RLS, and a partial reorder leaves duplicate or gapped sort_order the UI reads as lost fields. Measured on the deployed function 2026-08-31: reads auth.uid(), checks user_tenants membership, raises on failure. anon is NOT granted. Called by SchemaCanvas, which crm7 (1 site) and BSU (3 sites) render, so authenticated EXECUTE is the intended reach.",
-        "rename_physical_column(p_entity_id uuid, p_field_id uuid, p_new_name text, p_dry_run boolean)": "Schema Builder client RPC. SECURITY DEFINER because it runs ALTER TABLE ... RENAME COLUMN, which INVOKER cannot do under RLS-scoped roles. This is the hardened replacement for the privilege-escalation shape: the previous version took its ALTER target from caller-controlled tenant_entities.name, so any tenant admin could rename a column on any public table including user_tenants.role. Measured on the deployed function 2026-08-31: constrained by the schema_builder_physical_tables allowlist (which ships EMPTY, so the RPC is inert until a table is explicitly opted in), reads auth.uid(), checks user_tenants membership, raises on failure, and writes every attempt to schema_mutations_audit. anon is NOT granted."
-      }
-    },
-    {
-      "lint": "auth_db_connections_absolute",
-      "object_type": "any",
-      "objects": [
-        "*"
-      ],
-      "mode": "accepted",
-      "reason": "INFO-level operator-side Auth pool sizing; relevant only at instance scale-up.",
-      "added": "2026-06-11"
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "conduit#229 talent-community consent RPCs. r7_issue_talent_pool_consent_token mints a single-use token (re-checks caller tenant membership when auth.uid() is non-null); r7_redeem_talent_pool_consent validates a SHA-256-hashed single-use 30-day token and sets consent. SECURITY DEFINER is required to write across tenant RLS with token-gated authz inside the function. Intentional, live-verified on prod 2026-06-24.",
-      "added": "2026-06-24",
-      "objects": [
-        "r7_issue_talent_pool_consent_token(p_candidate_id uuid)",
-        "r7_redeem_talent_pool_consent(p_token text)"
-      ]
-    },
-    {
-      "lint": "anon_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "conduit#229 public talent-community opt-in. r7_redeem_talent_pool_consent is the ONLY anon-reachable write in conduit by design: it is token-gated (32-byte raw token, SHA-256 hash compare), single-use, 30-day expiry, non-enumerating, returns no PII. Equivalent to a magic-link. Live-verified on prod 2026-06-24 (consent flip + token consumed).",
-      "added": "2026-06-24",
-      "objects": [
-        "r7_redeem_talent_pool_consent(p_token text)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "2026-07-02 Qodo-fix RPCs. search_profiles_by_name: throughput team-member selector — profiles RLS is self-only, so a narrow SECDEF search returning ONLY (id, full_name, company), auth-required, pinned search_path (throughput PR#232 finding 1). r7_submit_public_application: conduit public apply handler — replaced four unsafe anon INSERT policies with one fail-closed SECDEF entrypoint (rate-limited 3/hr rolling window per IP/job, consent-gated sensitive demographics, tenant derived from the job row); authenticated grant is transitive via anon->authenticated inheritance of the public apply path (conduit PR#348 findings 2-4). SIGNATURE CHANGED 2026-08-12 (conduit#433 / conduit#434, applied to production the same day): p_ip_hash moved from position 2 to LAST and gained a DEFAULT — the expand step of Expand->Migrate->Contract, so the old and new browser call shapes both resolve. The function no longer reads x-forwarded-for at all; the throttle keys on cf-connecting-ip, which Cloudflare rejects when a client supplies it (verified empirically, not from documentation: a spoofed header returns Cloudflare error code 1000 before reaching PostgREST). Entries are REPLACED, not added alongside — the pre-fix signature no longer exists in production (one overload, confirmed via to_regprocedure), and carrying a dead entry is exactly the stale-waiver problem this file's own tooling now self-reports. Contraction tracked at conduit#435.",
-      "added": "2026-07-02",
-      "objects": [
-        "search_profiles_by_name(p_query text)",
-        "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text, p_ip_hash text)"
-      ]
-    },
-    {
-      "lint": "anon_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "conduit#348 public careers apply form — anon-reachable BY DESIGN (job applicants have no account). Fail-closed SECDEF: verifies job is open+published, rolling-window rate limit (3/hr per IP-hash/job), dedupes candidates, consent-gates sensitive demographics at the DB layer, derives tenant from the job row (no caller-supplied tenant). Strictly safer than the four direct anon INSERT policies it replaced (dropped same migration). Applied+catalog-verified 2026-07-02. SIGNATURE CHANGED 2026-08-12 (conduit#433 / conduit#434, applied to production the same day): p_ip_hash moved from position 2 to LAST and gained a DEFAULT — the expand step of Expand->Migrate->Contract, so the old and new browser call shapes both resolve. The function no longer reads x-forwarded-for at all; the throttle keys on cf-connecting-ip, which Cloudflare rejects when a client supplies it (verified empirically, not from documentation: a spoofed header returns Cloudflare error code 1000 before reaching PostgREST). Entries are REPLACED, not added alongside — the pre-fix signature no longer exists in production (one overload, confirmed via to_regprocedure), and carrying a dead entry is exactly the stale-waiver problem this file's own tooling now self-reports. Contraction tracked at conduit#435.",
-      "added": "2026-07-02",
-      "objects": [
-        "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text, p_ip_hash text)"
-      ]
-    },
-    {
-      "lint": "anon_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "Charge-rate-quote signing workflow — anon-reachable BY DESIGN for external signers (host employers, site contacts) who may not have authenticated sessions. Token-gated: validates p_token is a valid signing token, enforces signing context, logs audit trail. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.\n\nADDED 2026-08-11 — the host agreement signing pair, crm7#1594. Same shape and same justification as the charge-rate quote pair above, because it is deliberately the same mechanism generalised rather than a second one: the operator ruled that host agreements are generated by the GTO in CRM7 and issued for e-signing (bsuite#1885), and the quote path was already doing exactly that job for an external party with no login.\n\nANON-REACHABLE BY NECESSITY. The signer is a host employer representative who has no account and never will — requiring one would mean asking every host to register before they can sign an agreement. get_host_agreement_signing_context reads only what the signing page must render; redeem_host_agreement_signature is the only write path.\n\nFAIL-CLOSED REGARDLESS OF THE GRANT: the token is stored as a HASH and never in the clear, is single-use, expires, and is rate-limited. anon cannot read the hash table at all. Verified by pgTAP suite 69 with plan(47), 47/47 passing — and positively controlled in both directions, including the successful redemption executed AS anon rather than in role-neutral SQL, because a refusal-only test cannot distinguish a working gate from a dead endpoint.\n\nJoins the four endpoints tracked on bsuite#1869; the expiry and rate-limiting review asked for there covers these two as well.\n\nADDED 2026-08-11 — portal_invite_accept(p_token text), applied 2026-08-10 and not allowlisted at the time. It is anon-reachable by necessity: the invitee clicks a link with no session. It refuses immediately when auth.uid() IS NULL, checked BEFORE the token is read so an anonymous caller cannot use it to discover which tokens exist, and it returns NULL for every refusal rather than raising.",
-      "added": "2026-07-06",
-      "objects": [
-        "get_charge_rate_quote_signing_context(p_token text)",
-        "get_host_agreement_signing_context(p_token text)",
-        "portal_invite_accept(p_token text)",
-        "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
-        "redeem_host_agreement_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)"
-      ],
-      "review": "Re-justify if either signature changes — these are matched by full signature, so an added parameter creates a new unallowlisted finding and correctly re-fails the sweep."
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "Charge-rate-quote signing workflow — authenticated users (applicants, coordinators) redeem signing tokens and apply quotes to placements. Token-gated: validates p_token, enforces signing context, cross-tenant operations required for GTO workflow. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
-      "added": "2026-07-06",
-      "objects": [
-        "get_charge_rate_quote_signing_context(p_token text)",
-        "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
-        "apply_charge_rate_quote_to_placement(p_quote_id uuid, p_placement_id uuid)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "Session validation helper — checks if a session UUID is still valid. SECURITY DEFINER required to read auth.sessions across tenant boundaries for RLS policy evaluation. Intentional: session validation is a core auth primitive. Applied 2026-07-06.",
-      "added": "2026-07-06",
-      "objects": [
-        "is_session_valid(session_uuid uuid)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "crm7#1123 tenant-switch authority. set_current_tenant(p_tenant_id) is membership-gated — it raises 'Unauthorized: not an active member of the target tenant' unless the caller has an active public.user_tenants row for p_tenant_id, then persists profiles.current_tenant_id. log_tenant_switch(...) is its audit-write companion (the tenant_switch_audit direct-INSERT forgery fix routes all audit writes through this SECDEF fn rather than allowing direct client INSERT). Both MUST be EXECUTE-grantable to authenticated (they are the client RPCs for switching tenant context); both are SECURITY DEFINER (write profiles / read user_tenants / write audit under RLS) with search_path pinned to 'public, pg_temp'. Live-verified body 2026-07-20 via pg_get_functiondef. Accepted-by-design; not a category waiver.",
-      "added": "2026-07-20",
-      "objects": [
-        "set_current_tenant(p_tenant_id uuid)",
-        "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
-      ]
-    },
-    {
-      "lint": "multiple_permissive_policies",
-      "object_type": "table",
-      "mode": "tracked",
-      "tracked_in": "bsuite#1542",
-      "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) — never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542. WIDENED to '*' 2026-08-06, same reason as auth_rls_initplan: the list held only 'timesheets' (the self-test anchor) so it matched no real table, and Supabase now returns this lint on the SECURITY endpoint where anything unmatched fails. Live occurrences (boot_assessments, document_metadata, field_officers, funding_sources, organisation_audit_events, organization_members, pages, pay_periods, pay_period_streams and more) continue to file to bsuite#1542. Decision unchanged: tracked, not accepted.",
-      "added": "2026-07-20",
-      "objects": [
-        "*"
-      ]
-    },
-    {
-      "lint": "auth_rls_initplan",
-      "object_type": "table",
-      "mode": "tracked",
-      "tracked_in": "bsuite#1542",
-      "reason": "auth_rls_initplan is a PERFORMANCE-only WARN (RLS policy uses an init plan that re-evaluates per row) — never security-blocking, but can cause table scans on large tables. Tracked (not accepted) so live occurrences surface in the perf sweep issue rather than silently passing. 'some_new_table' is the checker self-test's filed-perf-finding anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); removing this rule would make the self-test's newPerf assertion fail. Live occurrences across tables are auto-filed to bsuite#1542. WIDENED to '*' on 2026-08-06: the rule matched the lint but enumerated only 'some_new_table' (a self-test anchor), so it matched NO real table and this class resurfaced as blocking across ~16 of them (audit_events, custom_fields, invoice_runs, org_documents, pages, rcti_invoices, tenant_features, tenant_locations, tenant_schema_layout, db_console_migration_exports and more). Supabase now returns this lint on the SECURITY endpoint, where anything unmatched fails — so a per-table list was always going to go stale on the next new table. The decision here is unchanged from 2026-07-28: tracked, not accepted; occurrences still file to bsuite#1542. Self-test is unaffected — its 'new perf' anchor is unused_rls_index, not this lint.",
-      "added": "2026-07-28",
-      "objects": [
-        "*"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "Developer-portal Feature Builder apply/rollback pair (north-star chain, 2026-07-22; rollback added 2026-08-12). Both execute author-supplied or derived DDL, so they are arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations, verified live 2026-08-12 against tuybltdrdefjblnplpqo for BOTH functions: (1) hard internal gate — each raises 'Permission denied: developer or platform_admin role required' unless the caller's profiles.platform_role IN ('developer','platform_admin'), checked by a direct query on id = auth.uid() rather than via is_platform_developer(), which is why a grep for the named predicates reports no gate; (2) rollback escapes its identifier with quote_ident() before EXECUTE and refuses when no prior successful apply exists; (3) full audit trail to feature_migration_log (actor, SQL, status, error); (4) search_path pinned to public,pg_temp on both; (5) EXECUTE revoked from public/anon — authenticated-only (proacl: postgres=X, service_role=X, authenticated=X; has_function_privilege('anon',...) = false), same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog). rollback_feature_migration was omitted when its sibling was allowlisted, which turned the advisor sweep red on every parent PR — a permanently-red gate teaches everyone to ignore it, which is the actual damage.",
-      "added": "2026-07-22",
-      "expires": null,
-      "objects": [
-        "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)",
-        "rollback_feature_migration(p_entity_name text, p_force boolean)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "conduit STA email confirm atomic RPC (excellence P1 / go-loop 2026-07-25). confirm_sta_email replaces 3 non-transactional client writes (offer lodgement flip + training_contract_status_confirmations audit insert + sta_inbound_emails status) with a single SECURITY DEFINER transaction. Authz is internal: auth.uid() required; caller must be owner/admin on the email's tenant via user_tenants; offer update scoped to that tenant_id. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC/anon, granted authenticated only (server action supabase.rpc). Same intentional client-RPC class as set_current_tenant / redeem_charge_rate_quote_signature. Not a category waiver.",
-      "added": "2026-07-25",
-      "objects": [
-        "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "W3 excellence atomic sub-org create (2026-07-25). create_sub_organization requires auth.uid(); caller must be owner/admin of p_parent_id via user_tenants; inserts child with parent_tenant_id + owner membership in one transaction. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC. Jodie + BSU Admin call via authenticated JWT only. Not a category waiver.",
-      "added": "2026-07-25",
-      "objects": [
-        "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "Email integration vault token read (crm7 emailService + BSU oauth edge fns). 2026-07-27 authz hardening: ownership check (auth.uid()/tenant) added inside fn; EXECUTE authenticated (browser client) + service_role (edge fns); revoked from PUBLIC/anon; search_path pinned. Not a category waiver.",
-      "added": "2026-07-27",
-      "objects": [
-        "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "X1 money-integrity batch (2026-07-27). Atomic funding claim lifecycle (budget decrement+restore with role check inside), overpay-safe payment (row-lock + amount_due check + DB-computed return). All search_path pinned public,pg_temp; EXECUTE authenticated-only; PUBLIC+anon revoked. Not a category waiver.",
-      "added": "2026-07-27",
-      "objects": [
-        "approve_funding_claim(p_claim_id uuid)",
-        "reject_funding_claim(p_claim_id uuid, p_reason text)",
-        "record_payment_atomic(p_invoice_id uuid, p_amount numeric, p_method text, p_reference text, p_tenant_id uuid)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "TGA training-provider / qualifications-catalog RPCs (crm7 20260802184000, 20260805210000). Both are called from the browser by an ordinary tenant user and BOTH re-enforce authorisation inside the function rather than relying on the grant. import_qualification_from_catalog(p_tenant_id, p_catalog_code): needs SECURITY DEFINER only to read catalog.qualifications, a schema authenticated cannot select. It raises 42501 unless the caller is a member of p_tenant_id (auth_tenant_id()), and for the CREATE branch additionally requires owner/admin/manager (auth_tenant_id_with_role) — re-implementing tenant_insert_qualifications' WITH CHECK verbatim, so a bare member cannot insert a row their own table policy would reject. Reuse is checked first, so a member who may only read still gets an existing row. link_training_provider_to_organisation(p_training_provider_id, p_tenant_id): needs SECURITY DEFINER to write across the clients boundary; raises 42501 unless the caller is a member of p_tenant_id. NOTE, stated plainly rather than buried: this one is membership-gated ONLY — any tenant member may link a provider within their own tenant, with no owner/admin/manager requirement. That is deliberate per the function's own COMMENT, and the blast radius is confined to the caller's own tenant, but it is a weaker gate than its sibling and should be revisited if provider linkage ever becomes billable or externally visible. Both REVOKE EXECUTE FROM PUBLIC and anon, GRANT only to authenticated, and pin search_path = public, pg_temp. Not a category waiver — reviewed function-by-function 2026-08-05 during the development->main promotion these two first reached.",
-      "added": "2026-08-05",
-      "review": "Revisit link_training_provider_to_organisation's membership-only gate if provider linkage becomes billable or cross-tenant visible.",
-      "objects": [
-        "import_qualification_from_catalog(p_tenant_id uuid, p_catalog_code text)",
-        "link_training_provider_to_organisation(p_training_provider_id uuid, p_tenant_id uuid)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "Pay-run builder (crm7 20260806043000/053000/060000). Called from the browser by a payroll operator, so an EXECUTE grant to authenticated is the point of it, not an oversight. SECURITY DEFINER is required to write pay_runs and payroll_records atomically across their RLS policies. Authorisation does NOT rest on the grant: the function raises 42501 unless the caller holds owner/admin/manager on p_tenant_id via auth_tenant_id_with_role — a stricter tier than membership, because creating a pay run is a money event. REVOKE EXECUTE FROM PUBLIC, anon; search_path pinned public, pg_temp. It also cannot silently over-pay: it excludes any timesheet already carried by an existing payroll_records row, so a re-run produces an empty run rather than paying twice, and it REFUSES (with a per-person reason) rather than pricing untiered overtime or an ambiguous rate. Every write it makes lands in a DRAFT run with paye_tax and net_pay at 0. Not a category waiver — reviewed against the function body 2026-08-06.",
-      "added": "2026-08-06",
-      "objects": [
-        "build_pay_run_from_timesheets(p_tenant_id uuid, p_period_start date, p_period_end date, p_payment_date date)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "Financial-reports summary card (crm7 20260806050000, corrected 20260806065000). READ-ONLY and takes no parameters — it aggregates the CALLER'S OWN invoices and returns four scalars (invoiced, paid, outstanding, overdue count). SECURITY DEFINER is used so the aggregate is computed server-side in one pass rather than shipping every invoice row to the browser to be summed. Tenant scoping is enforced INSIDE the function — `where i.tenant_id in (select auth_tenant_id())` — so a caller can only ever aggregate tenants they belong to, and there is no argument through which another tenant could be named. REVOKE EXECUTE FROM PUBLIC, anon; search_path pinned public, pg_temp. It writes nothing. Not a category waiver — reviewed against the function body 2026-08-06.",
-      "added": "2026-08-06",
-      "objects": [
-        "invoice_summary()"
-      ]
-    },
-    {
-      "lint": "duplicate_index",
-      "object_type": "table",
-      "mode": "tracked",
-      "tracked_in": "bsuite#1542",
-      "reason": "duplicate_index is a PERFORMANCE finding — two indexes covering identical columns, which wastes storage and slows writes. It is not a data-exposure class and had no rule at all, so it failed as 'new unallowlisted SECURITY' the moment Supabase started returning it on the security endpoint. Tracked (not accepted) so live occurrences (leave_balances, timesheets) keep filing to bsuite#1542 rather than silently passing. Wildcard for the same reason as the two rules above: a per-table list in this file has now gone stale three times.",
-      "added": "2026-08-06",
-      "objects": [
-        "*"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "objects": [
-        "data_create_restricted_user(p_tenant_id uuid, p_grantee_user_id uuid, p_entity_key text, p_field_keys text[], p_editable_field_keys text[], p_row_filter_field_key text, p_row_filter_op text, p_row_filter_values jsonb, p_row_filter_date_field_key text, p_row_filter_date_from timestamp with time zone, p_row_filter_date_to timestamp with time zone)",
-        "data_grant_create(p_tenant_id uuid, p_grantee_user_id uuid, p_entity_key text, p_field_keys text[], p_editable_field_keys text[], p_row_filter_field_key text, p_row_filter_op text, p_row_filter_values jsonb, p_row_filter_date_field_key text, p_row_filter_date_from timestamp with time zone, p_row_filter_date_to timestamp with time zone)",
-        "data_grant_entity_permitted(p_tenant_id uuid, p_entity_id uuid)",
-        "data_grant_field_permitted(p_tenant_id uuid, p_entity_id uuid, p_field_id uuid)",
-        "data_grant_revoke(p_grant_id uuid)",
-        "data_grant_row_permit(p_tenant_id uuid, p_entity_id uuid, p_row jsonb)",
-        "data_grant_table_row_permit(p_tenant_id uuid, p_table_schema text, p_table_name text, p_row jsonb)",
-        "data_grant_widest(p_tenant_id uuid, p_entity_id uuid)",
-        "data_grantor_accessible_field_ids(p_tenant_id uuid, p_entity_id uuid)",
-        "data_grantor_is_tier_holder(p_tenant_id uuid)",
-        "data_is_grant_restricted(p_tenant_id uuid)",
-        "person_bank_accounts_for_payment(p_person_ids uuid[], p_purpose text)",
-        "person_ids_for_current_user()",
-        "record_onboarding_block_override(p_person_id uuid, p_consequence text, p_reason text, p_expires_on date)",
-        "record_payroll_remittance_stamp(p_tenant_id uuid, p_scheme text, p_artefact_kind text, p_record_count integer, p_total_cents bigint, p_file_name text, p_as_of date)",
-        "save_person_bank_account(p_person_id uuid, p_account_name text, p_bsb text, p_account_number text, p_allocation_type text, p_allocation_value numeric, p_bank_account_id uuid)",
-        "save_person_tax_declaration(p_person_id uuid, p_tfn text, p_no_tfn_reason text, p_residency_status text, p_claims_tax_free_threshold boolean, p_has_study_loan boolean, p_declaration_signed_at timestamp with time zone)"
-      ],
-      "mode": "accepted",
-      "reason": "The seventeen SECURITY DEFINER functions that arrived with the 2026-08-09 promotion (bsuite#1845): the T4 data-grant machinery (crm7#1481, migrations 20260809030000 / 20260809060000), the payroll vault RPCs (20260808160000), the remittance stamp (20260808190000) and the onboarding block override. Enumerated function-by-function per the standing rule that this list is exhaustive, not a category waiver.\n\nVERIFIED LIVE 2026-08-10 against the production catalog, for all seventeen:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp' — all 17.\n  * has_function_privilege('anon', ...) = FALSE — all 17. None is reachable unauthenticated.\n\nThey fall into two classes.\n\n(1) RLS PREDICATES, the established accepted class. data_grant_entity_permitted, data_grant_field_permitted, data_grant_row_permit, data_grant_table_row_permit, data_grant_widest, data_grantor_accessible_field_ids, data_grantor_is_tier_holder, data_is_grant_restricted, person_ids_for_current_user. These are evaluated INSIDE RLS policies, so they must be executable by the querying role — that is the same reason auth_tenant_id() and is_gto_admin() are already on this list. They return booleans or id lists and expose no row data. SECURITY DEFINER is required so a policy can consult the grant tables without granting the caller read access to them.\n\n(2) INTENTIONAL PRIVILEGED WRITE/READ PATHS, where SECURITY DEFINER IS the mechanism and an explicit check inside the function IS the authorization — the same shape as update_platform_entity_label and the bulk_data_* entry points already accepted. Each was read and its gate confirmed, not assumed:\n  - data_grant_create / data_create_restricted_user: thin wrappers over _data_grant_insert, which is NOT executable by authenticated or anon (verified) and whose FIRST statement raises 42501 unless data_grantor_is_tier_holder(p_tenant_id). It further refuses an unknown entity, an entity absent from data_grant_enabled_entities, and a NULL/empty field list — 'all fields' as a wildcard is rejected outright.\n  - data_grant_revoke: checks auth.uid() and raises.\n  - save_person_bank_account / save_person_tax_declaration: gate on check_user_portal_role(auth.uid(), tenant, ['owner','admin']) OR the person themselves. The function carries its own comment saying authorization is checked there precisely BECAUSE SECURITY DEFINER bypasses the RLS that would otherwise do it.\n  - person_bank_accounts_for_payment: requires owner/admin on the tenant of EVERY person id passed, and refuses the whole call if any one is outside — deliberately, because a partial payment file is worse than a refused one.\n  - record_onboarding_block_override: owner/admin/manager on the person's tenant, and validates the consequence enum.\n  - record_payroll_remittance_stamp: checks auth.uid() and raises.\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: the sweep was RED from 2026-08-09 21:09 because these seventeen were new and unallowlisted. That is the gate working exactly as designed — a new SECURITY DEFINER function exposed to authenticated MUST fail until a human has justified it. This is that justification.",
-      "tracked_in": null,
-      "added": "2026-08-10",
-      "review": "Re-justify if any signature changes — the objects are matched by full signature, so an added parameter creates a NEW unallowlisted finding and correctly re-fails the sweep. Revisit the two payroll writers when the runtime defects noted on bsuite#1845 are fixed (editing a bank account erases the prior verification event; re-saving a tax declaration supersedes a signed one with an unsigned one).",
-      "notes": {
-        "data_grant_create(...)": "Not a helper — the privileged creation path for a restricted-guest grant. Safe because the real work sits in _data_grant_insert, which authenticated cannot call, and which refuses anyone who is not a tier-holder (platform developer, tenant gto_admin, or tenant owner) with 42501.",
-        "person_bank_accounts_for_payment(p_person_ids uuid[], p_purpose text)": "Reads bank details for a payment run and triggers account-number decryption, so it is the highest-value function in this set. All-or-nothing tenant check: owner/admin on every person's tenant, else the entire call is refused. Every decryption is written to payroll_secret_access_log.",
-        "save_person_tax_declaration(...)": "Writes a tax file number. Gated on owner/admin of the person's tenant, or the person themselves. Known runtime defect, tracked on bsuite#1845 rather than here: re-saving to correct one field supersedes a signed declaration with an unsigned one because the signature date is not carried forward. That is a procedure defect, not a privilege defect — it does not change who may call this.",
-        "person_ids_for_current_user()": "RLS/self-service helper. Returns only the person rows linked to auth.uid(); no arguments, so it cannot be pointed at anyone else."
-      }
-    },
-    {
-      "added": "2026-08-16",
-      "lint": "authenticated_security_definer_function_executable",
-      "mode": "accepted",
-      "object_type": "function",
-      "objects": [
-        "email_integration_store_credential(p_integration_id uuid, p_token_field text, p_secret text)"
-      ],
-      "reason": "Arrived with the 2026-08-16 P0 sweep (crm7#1749, migration 20260820120000), which moved email integration credentials out of PLAINTEXT `imap_password`/`smtp_password` columns and into Vault, then DROPPED those columns. This RPC is the write half of that move, and `authenticated` EXECUTE is the mechanism, not an oversight: a tenant user connecting their own mailbox must be able to store the credential, and SECURITY DEFINER is required because the caller must NOT be able to read or write `vault.secrets` directly.\n\nVERIFIED LIVE 2026-08-16 against the production catalog, not assumed:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp'.\n  * has_function_privilege('anon', ...) = FALSE. Not reachable unauthenticated.\n  * ACL is exactly postgres=X | service_role=X | authenticated=X — the same shape every other RLS/vault helper in this estate carries.\n\nIts gate was read line by line rather than presumed. Four checks, in order, each raising rather than returning:\n  1. `p_token_field` must be one of access_token / refresh_token / smtp_password / imap_password. This is checked BEFORE the value is used to build the target column name via format('%I'), so the identifier is never attacker-controlled — the validation is what makes the dynamic UPDATE safe, and it is first for that reason.\n  2. auth.uid() must be non-null.\n  3. The secret must be non-empty.\n  4. The caller must hold owner/admin/manager/staff in the INTEGRATION'S OWN tenant, via auth_tenant_id_with_role — the same role list as the table's own tenant_insert/update/delete_email_integrations policies (20260706120000). A missing row and a wrong-tenant row raise the SAME message, so the function cannot be used to probe which integration ids exist.\n\nIt writes ONLY the `*_vault_id` pointer column back onto the row and returns the vault id. It never returns the secret, and there is no read counterpart here — decryption stays behind the pre-existing `email_integration_get_decrypted_token`, whose grants this change left untouched (asserted as a control in the migration's dry-run).\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: the sweep passed on `development` at 10:33 and failed at 11:35 once the applier had run this migration. That is the gate working exactly as designed — a new SECURITY DEFINER function exposed to authenticated MUST fail until a human has justified it. This is that justification.",
-      "review": "Re-justify if the signature changes — objects are matched by full signature, so an added parameter creates a NEW unallowlisted finding and correctly re-fails the sweep. Also re-justify if the p_token_field allow-list is ever widened: that list is what makes the dynamic format('%I') UPDATE safe.",
-      "tracked_in": null
-    },
-    {
-      "added": "2026-09-03",
-      "lint": "authenticated_security_definer_function_executable",
-      "mode": "accepted",
-      "object_type": "function",
-      "objects": [
-        "email_integration_confirm_ownership(p_integration_id uuid)",
-        "email_integration_disconnect(p_integration_id uuid)"
-      ],
-      "reason": "Mailbox P0 (BSU#1105/#1108/#1110). Both are browser-called SECURITY DEFINER RPCs because the row's own RLS cannot reach vault.secrets, and a PostgREST DELETE that matches zero rows returns success. authenticated EXECUTE is the mechanism: a person confirming or disconnecting THEIR mailbox must be able to call them; anon is revoked.\n\nAuthorisation is inside the function, not the grant:\n  * confirm_ownership: only the row's user_id = auth.uid() may flip pending_confirmation to active.\n  * disconnect: auth.uid() = row owner, OR tenant owner/admin via auth_tenant_id_with_role, OR JWT role service_role (JWKS-verified at PostgREST; never HS256). Anyone else gets not-found (P0002), not a distinct forbidden, so the id is not a probe.\n  * search_path pinned public, pg_temp. REVOKE ALL FROM PUBLIC, anon.\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: advancing the parent gitlink to BSU main a126ab8 made the live catalog's two new RPCs visible to the advisor. That is the gate working — a new SECURITY DEFINER function exposed to authenticated MUST fail until justified. This is that justification.",
-      "review": "Re-justify if either signature changes. Re-justify if disconnect's tenant-admin limb is ever widened to staff/manager (that is BSU#1107, register-only).",
-      "tracked_in": null
-    },
-    {
-      "added": "2026-08-16",
-      "lint": "authenticated_security_definer_function_executable",
-      "mode": "accepted",
-      "object_type": "function",
-      "objects": [
-        "get_host_employer_id_for_tenant(p_tenant_id uuid)",
-        "is_host_supervisor_of_tenant(p_tenant_id uuid)"
-      ],
-      "reason": "The two RLS helpers introduced by crm7#1751 (migration 20260820130000), which gave contacts_select a host-employer limb and closed the confirmed cross-tenant enumeration exposure in crm7#1729 / #1675.\n\nThese are the ESTABLISHED ACCEPTED CLASS already described on the 2026-08-10 entry above: RLS PREDICATES. They are evaluated INSIDE a policy, so they must be executable by the querying role — the identical reason auth_tenant_id(), is_gto_admin() and the nine data_grant_* predicates are already on this list. Revoking EXECUTE from authenticated would not narrow contacts reads; it would fail every one of them. SECURITY DEFINER is required so a policy can consult org_members without granting the caller read access to it.\n\nVERIFIED LIVE 2026-08-16 against the production catalog, both functions:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp'.\n  * has_function_privilege('anon', ...) = FALSE. Neither is reachable unauthenticated.\n  * Each is referenced by exactly ONE policy (contacts_select) — no wider blast radius.\n\nNeither exposes row data. is_host_supervisor_of_tenant returns a BOOLEAN — whether the caller holds gto_role='host_supervisor' in the tenant passed. get_host_employer_id_for_tenant returns a single UUID — the caller's OWN host employer for that tenant, and only for a caller who is a host supervisor there. Neither takes a user id, so neither can be pointed at anyone else: both key off auth.uid() internally.\n\nWHY THE SECOND ONE EXISTS AT ALL, since it duplicates get_user_host_employer_id(): that older helper takes no tenant and ends in a bare LIMIT 1. Harmless in the six ADDITIVE policies already using it, because they only widen. In contacts_select it became the SOLE clause deciding a host supervisor's reads, so the arbitrary pick became an authorization decision — measured, it reached 4 rows of a tenant the caller had no membership in. The tenant-scoped, ORDER BY-deterministic replacement is what closed that.",
-      "review": "Re-justify if either signature changes — objects match by full signature. Also re-justify if either is ever called from a policy other than contacts_select: the 'one policy, no wider blast radius' claim above is part of why they are accepted rather than tracked.",
-      "tracked_in": null
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "reason": "The 2026-08-19 migration dispatch applied a 25-migration backlog in one go and the advisor went 0 new -> 22 new. Two of those were real and are fixed by crm7 migration 20260828010000 (tenant_hierarchy_check is a TRIGGER function with no meaningful RPC form, and _record_merge_authority is an internal helper used by zero policies) — they are NOT in this list. These seventeen are the intended surface, in two groups. (1) RLS PREDICATES, which MUST keep EXECUTE: a policy expression is evaluated with the privileges of the querying role, so revoking EXECUTE does not tighten the policy, it makes every query against the table error. Measured policy reference counts on 2026-08-19: consented_parent_child_tenant_ids 6, is_field_officer 5, is_caseload_apprentice 4, is_caseload_person 1, is_caseload_field_officer 1. This is the same trap the rule above records a prior revoke pass falling into. (2) CLIENT RPCs the UI calls directly — the tenant_link_* link lifecycle (mint/propose/respond/withdraw/set-visibility/force-dissolve/reaffirm/directory), acting_scope_tenant_id, and assess_security_signal. Each does its own authorisation inside the function body; being callable is the point. ADDED AFTER A FAILED REVOKE, which is the most useful line here: _record_merge_authority(uuid) has a leading underscore and is referenced by ZERO policies, so it read as a pure internal helper and crm7#1856 first revoked it. pgTAP 81_merge_dedupe_foundation.sql died mid-plan on 'permission denied for function _record_merge_authority' from inside merge_find_candidates line 16 — an intended authenticated RPC that is SECURITY INVOKER, so its inner call is checked against THE CALLER's privileges. Counting policy references does not find function-to-function calls; scanning pg_proc.prosrc does, and afterwards reported exactly one caller.",
-      "added": "2026-08-19",
-      "review": "2026-11-19",
-      "notes": "ADDED 2026-09-08 — accept_team_invite(p_token text) and org_roster_for_tenant(p_tenant uuid) (BSU#1197, BSU#1198, BSU#1206; applied to production 2026-09-08). accept_team_invite is the invitee-scoped acceptor: it takes only a token, binds every read and write to auth.uid()/auth.email() (no caller-supplied user id), refuses a token whose email differs from the caller's, and writes user_tenants/team_members for the CALLER only; SECURITY DEFINER because the invitation tables have no SELECT policy for the invitee and user_tenants INSERT is membership-shaped. org_roster_for_tenant is SELECT-only, raises 42501 unless the caller is an active owner/admin of p_tenant, and walks descendants_of(p_tenant) only; SECURITY DEFINER because user_tenants RLS hides child-tenant rows from a parent-only caller. Measured live under Caris' claims: 4 rows for mbawa. Both REVOKE from PUBLIC and anon by name. Raised by the promotion gate on bsuite#2133 after the dispatch. If any tenant_link_* RPC is later replaced by an edge function, drop its line here in the same PR rather than leaving an accepted finding for a function nobody calls.",
-      "objects": [
-        "_record_merge_authority(p_tenant_id uuid)",
-        "acting_scope_tenant_id()",
-        "assess_security_signal(p_signal_id uuid, p_status text, p_notes text, p_notify_oaic boolean, p_notify_individuals boolean)",
-        "consented_parent_child_tenant_ids(p_min_visibility text)",
-        "is_caseload_apprentice(p_apprentice_id uuid)",
-        "is_caseload_field_officer(p_field_officer_id uuid)",
-        "is_caseload_person(p_person_id uuid)",
-        "is_field_officer(p_tenant_id uuid)",
-        "tenant_link_directory()",
-        "tenant_link_force_dissolve(p_link_id uuid, p_reason text)",
-        "tenant_link_mint_code(p_tenant_id uuid, p_counterparty_side text, p_max_visibility text, p_note text)",
-        "tenant_link_propose(p_code text, p_my_tenant_id uuid, p_requested_visibility text, p_message text)",
-        "tenant_link_propose_unlink(p_link_id uuid, p_reason text)",
-        "tenant_link_propose_visibility(p_link_id uuid, p_visibility text)",
-        "tenant_link_reaffirm_roster(p_link_id uuid)",
-        "tenant_link_respond(p_proposal_id uuid, p_decision text, p_agreed_visibility text, p_reason text)",
-        "tenant_link_set_visibility(p_link_id uuid, p_visibility text)",
-        "tenant_link_withdraw(p_proposal_id uuid, p_reason text)"
-      ]
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "objects": [
-        "mint_r8_quote_return_ticket(p_placement_id uuid)",
-        "redeem_r8_quote_return_ticket(p_token text)"
-      ],
-      "why": "The R8 quote-return handoff. Both write r8_quote_return_tickets, which has RLS enabled and zero policies by design, so an INVOKER function could not touch the row at all. Read in full on 2026-08-26 rather than accepted on their annotations. mint() takes a caller-supplied placement id -- the IDOR shape -- and closes it: the tenant is read off the placement ROW after proving membership via auth_tenant_id_with_role, using IN (SELECT ...) because that helper RETURNS SETOF and a scalar would silently compare whichever membership came back first; the not-found reply is constant and reveals nothing the caller did not supply. redeem() takes only an opaque token, rate-limits with an atomic upsert where the increment IS the check, refuses by RETURNING rather than RAISING so the counter survives the refusal, locks the ticket FOR UPDATE against a concurrent double-redeem, and treats the tenant as a property of the TICKET -- a wrong-tenant holder gets the identical 'invalid_or_expired' message, so trying is not a tenant oracle.",
-      "audited": "2026-08-26"
-    },
-    {
-      "lint": "anon_security_definer_function_executable",
-      "object_type": "function",
-      "objects": [
-        "is_developer_admin()"
-      ],
-      "mode": "accepted",
-      "reason": "is_developer_admin() is an RLS helper of exactly the class the first rule in this file exists for, and it is here because the advisor sweep went red on it and the sweep was right to: it was not allowlisted. WHY EXECUTE CANNOT SIMPLY BE REVOKED. Four policies call it -- \"Admins manage applications\", \"Admins manage page_sections\", \"Admins manage services\", \"Admins manage site_metadata\", all FOR ALL to authenticated on the braden CMS tables. A policy expression is evaluated as the CALLING role, so revoking EXECUTE from authenticated would not harden anything; it would break every admin write to those four tables. That is not a prediction: this estate already did it once, and the first rule in this file records the hotfix history (crm7 20260521024707 / 20260527022039). Operator directive 2026-06-11 stands -- do not blanket-fail this class. WHY ANON REACHABILITY IS SAFE. The function answers only about the CALLER: its limbs are auth.email() and auth.uid(), both NULL for anon, so an anonymous call can only return NULL, which a policy treats as false. It takes no parameters, so it cannot be aimed at another account, and it returns a bare boolean -- no row data, no enumeration surface. A signed-in user can learn whether THEY are an admin, which they can already establish by attempting a write. MEASURED 2026-08-29, and the measurement found a real defect rather than confirming an assumption: the function queried public.admin_users, a table that did not exist in this database, so it raised 42P01 for every role including anon. braden's 2025-era migrations were never applied here (the ledger has no 20250101_create_admin_users_table but does have 20260828120000_restrict_cms_writes_to_admins) -- the policy landed without its table. Fixed by braden#545/#546, which creates the table with RLS enabled, NO permissive policy and an explicit REVOKE, deliberately tighter than the 2025 definition whose USING (true) read policy would have disclosed the admin roster to every authenticated user of every app in this shared database. Rehearsed against production and rolled back before shipping. Also corrects docs/20260826-the-seven-anon-security-definer-functions: production has EIGHT anon-executable SECURITY DEFINER functions, not seven. The survey that produced that list was framed around functions taking a p_token, so a tokenless one did not look like a member of the set.",
-      "added": "2026-08-29",
-      "audited": "2026-08-29"
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "objects": [
-        "is_developer_admin()"
-      ],
-      "mode": "accepted",
-      "reason": "is_developer_admin() is an RLS helper of exactly the class the first rule in this file exists for, and it is here because the advisor sweep went red on it and the sweep was right to: it was not allowlisted. WHY EXECUTE CANNOT SIMPLY BE REVOKED. Four policies call it -- \"Admins manage applications\", \"Admins manage page_sections\", \"Admins manage services\", \"Admins manage site_metadata\", all FOR ALL to authenticated on the braden CMS tables. A policy expression is evaluated as the CALLING role, so revoking EXECUTE from authenticated would not harden anything; it would break every admin write to those four tables. That is not a prediction: this estate already did it once, and the first rule in this file records the hotfix history (crm7 20260521024707 / 20260527022039). Operator directive 2026-06-11 stands -- do not blanket-fail this class. WHY ANON REACHABILITY IS SAFE. The function answers only about the CALLER: its limbs are auth.email() and auth.uid(), both NULL for anon, so an anonymous call can only return NULL, which a policy treats as false. It takes no parameters, so it cannot be aimed at another account, and it returns a bare boolean -- no row data, no enumeration surface. A signed-in user can learn whether THEY are an admin, which they can already establish by attempting a write. MEASURED 2026-08-29, and the measurement found a real defect rather than confirming an assumption: the function queried public.admin_users, a table that did not exist in this database, so it raised 42P01 for every role including anon. braden's 2025-era migrations were never applied here (the ledger has no 20250101_create_admin_users_table but does have 20260828120000_restrict_cms_writes_to_admins) -- the policy landed without its table. Fixed by braden#545/#546, which creates the table with RLS enabled, NO permissive policy and an explicit REVOKE, deliberately tighter than the 2025 definition whose USING (true) read policy would have disclosed the admin roster to every authenticated user of every app in this shared database. Rehearsed against production and rolled back before shipping. Also corrects docs/20260826-the-seven-anon-security-definer-functions: production has EIGHT anon-executable SECURITY DEFINER functions, not seven. The survey that produced that list was framed around functions taking a p_token, so a tokenless one did not look like a member of the set.",
-      "added": "2026-08-29",
-      "audited": "2026-08-29"
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "objects": [
-        "workflow_run_step_complete(p_step_id uuid, p_outcome text, p_error text)"
-      ],
-      "reason": "Phase 3 workflow execution bridge (20261104000000). This is the ONE function of the eight the bridge adds that authenticated may execute, and that is the design rather than an oversight: workflow_run_advance, workflow_run_activate_node, workflow_emit_event and workflow_advance_on_queue_settled are all SECURITY DEFINER with NO execute grant to authenticated or anon (verified against production 2026-09-02), and the two graph helpers are SECURITY INVOKER so RLS applies to them normally. anon holds zero execute on every one of these. A person completing a step they are looking at is the only client-reachable door into the engine, and it is guarded from inside. CORRECTED 2026-09-09: this reason originally also named workflow_run_start as ungranted-to-authenticated. That was accurate for the 6-arg internal bridge overload (workflow_run_start(uuid,uuid,text,text,uuid,jsonb), still postgres/service_role only) but a separate 3-arg overload — workflow_run_start(p_definition_id uuid, p_subject_type text, p_subject_id uuid) — was added afterward as the deliberate browser entry point (\"Start a run\") and IS granted to authenticated. It is allowlisted in its own rule below rather than folded in here, because its own SECURITY DEFINER body carries its own tenant/activation checks and deserves its own justification.",
-      "notes": {
-        "workflow_run_step_complete(p_step_id uuid, p_outcome text, p_error text)": "SECURITY DEFINER because settling a step advances the run, and the branch rule and loop bounds must be applied in exactly one place (workflow_run_advance) which the caller may not execute directly. It does its own tenant check, written to FAIL CLOSED: `NOT EXISTS (SELECT 1 FROM (SELECT auth_tenant_id() AS t) q WHERE q.t = v_tenant)` rather than `v_tenant NOT IN (...)`, because NOT IN yields NULL when the subquery yields NULL, an IF on NULL takes the ELSE branch, and the guard silently never fires — the exact shape this estate has shipped open before. is_platform_developer() is wrapped in coalesce(...,false) for the same reason: it returns NULL rather than false for a caller with no profile row. auth.uid() IS NULL means a server-side caller (service_role, trigger, or definer chain) already trusted upstream. The row is locked FOR UPDATE before the check, so the tenant cannot be changed under it, and completing an already-settled step is idempotent rather than an error."
-      },
-      "added": "2026-09-02",
-      "review": "Re-justify if any further function in this bridge is granted to authenticated. The security property here is that there is exactly one guarded entry point; a second grant would move the guarantee from 'checked in one place' to 'checked in each place', which is the state this pattern exists to avoid.",
-      "tracked_in": null
-    },
-    {
-      "lint": "authenticated_security_definer_function_executable",
-      "object_type": "function",
-      "mode": "accepted",
-      "objects": [
-        "workflow_run_start(p_definition_id uuid, p_subject_type text, p_subject_id uuid)"
-      ],
-      "reason": "Two overloads of workflow_run_start exist live, and only one is this finding. workflow_run_start(uuid,uuid,text,text,uuid,jsonb) (6-arg internal bridge) is postgres=EXECUTE, service_role=EXECUTE only — not this finding, not touched by this rule. workflow_run_start(uuid,text,uuid) (this 3-arg overload) is postgres, service_role, authenticated=EXECUTE, SECURITY DEFINER, search_path=public, pg_temp, and is the validated BROWSER entry point: crm7 src/lib/workflows/runService.ts:131 (supabase.rpc('workflow_run_start', {p_definition_id, p_subject_type, p_subject_id})), the 'Start a run' action on /workflows. Its body (read from the live pg_get_functiondef, 2026-09-09): a required-args check, then acting_scope_tenant_id() (raises 42501 when the caller has none), then the definition must be is_enabled in workflow_definition_activations for that tenant (42501 otherwise), then the placements subject must belong to the tenant (42501 otherwise), then it delegates to the 6-arg overload with started_via='manual'. A negative caller was proven 2026-09-09: an outsider account gets 42501, not a run. Per bsuite-rls-authz-red-team, a validated SECURITY DEFINER entry point with a pinned search_path and tenant/activation checks before it does anything is the sanctioned pattern for a client-reachable definer function, not a gap — revoking authenticated here would not harden anything, it would break the visual 'Start a run' journey the function exists to serve. RESIDUAL, hardening tracked, not this lane: the 3-arg overload's subject-ownership check is written only for the placements table today; a forward BSU migration will generalise it to a tenant_id ownership check for any subject table referenced by workflow_definition_activations, and fail closed for a subject type it does not recognise rather than silently passing.",
-      "added": "2026-09-09",
-      "review": "Re-justify if the generic subject-ownership hardening migration lands without this rule being re-read against its new body, or if a third overload of workflow_run_start appears.",
-      "tracked_in": null
-    }
-  ],
-  "entries": [
-    {}
-  ]
+ "schema_version": "1.0",
+ "_doc": "Accepted-by-design / tracked Supabase advisor findings. Consumed by scripts/check-supabase-advisors.mjs (workflow: supabase-advisor-sweep.yml). Matching: lint name + object identity (functions: name(arguments); tables: table name). INFO-level findings never fail regardless of this file. mode=accepted -> finding is expected, never fails, never files; mode=tracked -> finding is known and owned by tracked_in, never fails, not re-filed; removing a rule makes its findings live again.",
+ "rules": [
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "objects": [
+    "accept_team_invite(p_token text)",
+    "acting_tenant_id()",
+    "add_document_kind(p_label text, p_reach text)",
+    "ancestors_of(leaf_id uuid)",
+    "apply_document_signatory(p_record_id uuid, p_action text, p_payload jsonb)",
+    "auth_parent_tenant_id()",
+    "auth_tenant_id()",
+    "auth_tenant_id_with_role(allowed_roles text[])",
+    "bulk_data_import(p_entity_key text, p_tenant_id uuid, p_rows jsonb, p_update_existing boolean, p_dry_run boolean, p_import_job_id uuid)",
+    "bulk_data_undo(p_change_set_id uuid)",
+    "bulk_data_update(p_entity_key text, p_tenant_id uuid, p_row_ids uuid[], p_field_updates jsonb, p_dry_run boolean)",
+    "caller_org_ids()",
+    "can_act_on_colleague_calendar(p_user_id uuid, p_tenant_id uuid, p_write boolean)",
+    "can_read_document_record(p_id uuid)",
+    "can_write_role_capability(p_tenant_id uuid, p_capability text)",
+    "check_archive_recovery_needed(p_source_table text, p_tenant_id uuid, p_from timestamp with time zone, p_to timestamp with time zone)",
+    "check_module_access(p_user_id uuid, p_tenant_id uuid, p_module text)",
+    "check_user_portal_role(p_user_id uuid, p_tenant_id uuid, p_required_roles text[])",
+    "check_user_tenant_access(p_user_id uuid, p_tenant_id uuid)",
+    "cleanup_quote_handoff_tokens()",
+    "clone_tenant_role(p_source_role_id uuid, p_new_key text, p_new_label text, p_tenant_id uuid)",
+    "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb)",
+    "create_organization_with_owner(p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text, p_allowed_domains text[], p_settings jsonb, p_owner_email text)",
+    "create_person_with_contact(payload jsonb, p_tenant_id uuid)",
+    "current_user_has_capability(p_tenant_id uuid, p_capability text)",
+    "delete_organization(p_tenant_id uuid, p_confirm_name text)",
+    "descendants_of(root_id uuid)",
+    "document_kinds_available()",
+    "effective_user_capabilities(p_user_id uuid, p_tenant_id uuid)",
+    "employers_set_enterprise_root_id()",
+    "find_orphan_owned_tenants_for_caller()",
+    "fn_publish_page(p_draft_id uuid)",
+    "fn_rollback_page(p_page_id uuid)",
+    "get_apprentice_person_id_for_current_user()",
+    "get_descendant_tenant_ids(p_tenant_id uuid)",
+    "get_host_agreement_signing_context(p_token text)",
+    "get_org_deletion_preview(p_tenant_id uuid)",
+    "get_sharing_level(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
+    "get_user_apprentice_id()",
+    "get_user_gto_role()",
+    "get_user_host_employer_id()",
+    "get_user_tenant_context(p_user_id uuid)",
+    "get_visible_fields(p_source_tenant_id uuid, p_target_tenant_id uuid, p_data_category text)",
+    "get_visible_tenant_ids(p_user_id uuid)",
+    "gto_assessment_history(p_tenant_id uuid, p_clause_id uuid, p_limit integer, p_offset integer)",
+    "gto_assessment_summary(p_tenant_id uuid, p_year smallint)",
+    "gto_self_assessment_log_history()",
+    "has_parent_admin_access(target_tenant_id uuid)",
+    "has_tenant_role(p_tenant_id uuid, required_roles text[])",
+    "invite_team_member_guarded(p_team_id uuid, p_email text, p_role text, p_invited_by uuid)",
+    "is_archive_recovery_authorized(p_tenant_id uuid)",
+    "is_demo_write_blocked()",
+    "is_dev_mode()",
+    "is_enterprise_admin()",
+    "is_field_manager(p_tenant_id uuid)",
+    "is_gto_admin()",
+    "is_gto_admin(p_tenant_id uuid)",
+    "is_gto_staff()",
+    "is_gto_staff(p_tenant_id uuid)",
+    "is_platform_admin(uid uuid)",
+    "is_platform_developer()",
+    "is_platform_super_admin()",
+    "is_team_admin(p_team_id uuid, p_user_id uuid)",
+    "mark_recurring_error_fingerprint_closed(p_fingerprint text)",
+    "migration_high_water_mark()",
+    "mint_quote_handoff_token(p_payload jsonb)",
+    "org_roster_for_tenant(p_tenant uuid)",
+    "platform_admin_act_as(target_tenant_id uuid)",
+    "platform_admin_stop_acting()",
+    "platform_is_developer_or_admin()",
+    "platform_oauth_clients()",
+    "portal_invite_accept(p_token text)",
+    "portal_invite_mint(p_person_id uuid)",
+    "r7_candidate_id_for_auth_user()",
+    "rearchive_restored_rows(p_source_table text, p_tenant_id uuid, p_source_ids uuid[], p_reason text)",
+    "redeem_host_agreement_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
+    "redeem_quote_handoff_token(p_token text)",
+    "rename_physical_column(p_entity_id uuid, p_field_id uuid, p_new_name text, p_dry_run boolean)",
+    "reorder_entity_fields(p_entity_id uuid, p_field_ids uuid[])",
+    "report_catalog_approve_entity(p_key text)",
+    "resolve_enterprise_root_id(p_tenant_id uuid)",
+    "restore_archived_rows(p_source_table text, p_tenant_id uuid, p_reason text, p_archive_ids uuid[], p_from timestamp with time zone, p_to timestamp with time zone)",
+    "save_document_template(p_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone, p_patch jsonb)",
+    "save_tenant_navigation(p_app_scope text, p_sections jsonb)",
+    "schema_authority_tenant_ids()",
+    "show_demo_data()",
+    "tenant_branding_is_force_overridden(p_tenant_id uuid)",
+    "tenant_subtree_ids(root_tenant_id uuid)",
+    "tenants_recompute_employer_roots_on_reparent()",
+    "training_plan_belongs_to_current_apprentice(p_training_plan_id uuid)",
+    "update_person_with_contact(p_person_id uuid, payload jsonb, p_tenant_id uuid)",
+    "update_platform_entity_label(p_entity_id uuid, p_label text, p_description text)",
+    "user_has_capability(p_user_id uuid, p_tenant_id uuid, p_capability text)",
+    "user_has_org_access(p_user_id uuid, p_tenant_id uuid)"
+   ],
+   "mode": "accepted",
+   "reason": "RLS helper + intentional client-RPC class. These MUST stay executable by authenticated: RLS policies evaluate the helpers in the caller's context, and a prior revoke pass broke production RLS (see crm7 20260521024707/20260527022039 hotfix_restore_rls_helper_grants history). Operator directive 2026-06-11: do NOT blanket-fail this class until replaced by a proven alternative. A SECURITY DEFINER function NOT on this list IS a failure - the list is exhaustive, not a category waiver. Added 2026-08-06: the three bulk_data_* entry points and is_gto_admin(p_tenant_id uuid). The bulk RPCs are the /settings/data API and MUST stay client-callable; what makes them safe is their own gates — a membership guard against auth_tenant_id() before any table is touched, an is_pii/min_role field gate at every admission point, and RLS on every base table underneath. Their seven INTERNAL _bulk_data_* helpers are NOT here: crm7 migration 20260806350000 revokes EXECUTE from anon/authenticated on those, so only the entry points remain reachable. is_gto_admin(p_tenant_id uuid) is an RLS helper of the same class as is_gto_staff(uuid) and auth_tenant_id() already in this list.\n\nADDED 2026-08-11 — the R8 quote handoff (crm7#1604, crm7#1570). The operator ruled that R8 must have a real transport rather than a paste-a-JSON box: 'well it should have the transport.'\n\nNOTE WHAT IS DIFFERENT ABOUT THESE THREE: they are NOT anon-reachable, unlike every other token pair in this estate. R8 mints from the browser using its own already-authenticated Supabase session against the same project, so both RPCs require `authenticated` and anon is revoked by name. There is no shared secret for a SPA to leak in a bundle, and no anonymous surface at all. That is why they sit in this rule and not the anon one.\n\nSECURITY DEFINER is the mechanism: the token table has no SELECT policy for anyone, so the hash is unreadable from the client by construction. Tokens are stored hashed, are single-use, expire in 15 minutes, and minting is rate-limited to 20/hour/user.\n\nVerified by pgTAP suite 74, plan(30), 30/30 — positively controlled, including a valid token redeemed by a DIFFERENT authenticated user than the minter with the payload round-tripping byte-for-byte, and the 21st mint in an hour refused. The anon-revocation assertion is catalog-based rather than a live probe: a runtime probe of the revoked function crashed local Postgres outright, reproducing the hazard documented in crm7#773.\n\nADDED 2026-08-11 — five functions that were APPLIED TO PRODUCTION on 2026-08-10 and never allowlisted. My omission: both authoring lanes reported the exact signatures and were correctly told not to edit this file themselves, and I did not add them. The sweep has been red since the promotion, and the sweep was right.\n\n  portal_invite_mint / portal_invite_accept (crm7#1558) — the portal invite. mint is staff-only, gated on check_user_portal_role(auth.uid(), tenant, owner|admin), returns the raw token once and stores only a hash. accept requires an authenticated caller and returns NULL for every refusal rather than raising, deliberately: it records a rate-limit attempt before it knows the outcome, and a RAISE would roll back that same counter. Also non-enumerating. 37 pgTAP assertions.\n\n  resolve_enterprise_root_id / employers_set_enterprise_root_id / tenants_recompute_employer_roots_on_reparent (crm7#1554) — the enterprise-root machinery behind the ABN uniqueness scope. Two are trigger functions, not client-callable surfaces; resolve_enterprise_root_id walks tenants.parent_tenant_id using tenant_subtree_ids(), the only cycle-safe walker of the four. All three pin search_path and revoke anon by name.\n\nADDED 2026-08-18 — can_write_role_capability(p_tenant_id uuid, p_capability text). It is an RLS helper of exactly the class this rule exists for: the three role_capabilities_admin_{insert,update,delete} policies call it in their USING/WITH CHECK clauses, and a policy expression is evaluated as the CALLING role — so revoking EXECUTE from authenticated would not harden anything, it would break every admin write to role_capabilities. SECURITY DEFINER is load-bearing for the reason the function's own header states: an INVOKER version recurses through user_tenants' RLS.\nWhat makes a direct RPC call safe is that the function answers only about the CALLER — its membership limb is pinned to auth.uid(), so a signed-in user can learn whether THEY may write a capability, which they can already establish by attempting the write. It returns no row data and takes no user_id parameter, so it cannot be aimed at another account.\nVerified live 2026-08-18: capability_catalogue, the only table it reads, has RLS enabled with one policy; anon holds no SELECT/INSERT/UPDATE/DELETE and authenticated is read-only.",
+   "tracked_in": null,
+   "added": "2026-06-11",
+   "review": "Re-justify before adding any new function; shrink the list as helpers migrate to SECURITY INVOKER or out of the exposed schema. 2026-08-24: sync_people_assigned_field_officer() was REMOVED rather than added — a trigger function needs no EXECUTE grant, proven by firing it with the grant revoked. 2026-08-31: rename_physical_column and reorder_entity_fields ADDED, each with the deployed function's own gating measured rather than asserted — see their notes. rename_physical_column ships with an EMPTY allowlist, so it is inert on arrival.",
+   "notes": {
+    "is_platform_developer()": "RLS/authorization helper. SECURITY DEFINER so a policy can evaluate it without the caller holding read access to profiles. Returns a boolean only; leaks nothing about other users. Deliberately narrower than is_platform_super_admin() (developer ONLY, excludes tester).",
+    "schema_authority_tenant_ids()": "RLS helper on tenant_schema_layout. SECURITY DEFINER so the policy can read user_tenants/tenants without granting the caller access to them. Returns only tenant ids the caller already has authority over; while acting-as it NARROWS to that subtree rather than widening.",
+    "tenant_subtree_ids(root_tenant_id uuid)": "Recursive parent_tenant_id walk used by the above. Depth-capped at 10. Takes a tenant id the caller must already be authorized for; returns ids only, no row data.",
+    "update_platform_entity_label(p_entity_id uuid, p_label text, p_description text)": "INTENTIONAL privileged write path, not a helper. It is the ONLY app-level route to a platform-owned tenant_entities row (RLS denies those rows to every user by design). SECURITY DEFINER IS the mechanism; the is_platform_developer() check inside it is the authorization. Restricted to label/description, refuses tenant-owned rows so it cannot become an RLS bypass, and every call is written to platform_schema_audit. Verified live 2026-08-06: a tester and a plain user both get 42501.",
+    "acting_tenant_id()": "RLS helper. Returns the tenant a platform super admin is currently acting as, or nothing. SECURITY DEFINER so policies can read platform_admin_acting_as without granting callers access to it. Gated on is_platform_super_admin() AND expires_at > now(), so a lapsed or unauthorized session yields no rows.",
+    "is_platform_super_admin()": "RLS helper. Boolean only. SECURITY DEFINER so a policy can read profiles without the caller holding access. Admits developer | platform_admin | is_super_admin — the act-as set. Deliberately WIDER than is_platform_developer(), which alone gates platform schema writes.",
+    "platform_admin_act_as(target_tenant_id uuid)": "INTENTIONAL privileged write, not a helper. Starts an acting-as session; SECURITY DEFINER IS the mechanism because platform_admin_acting_as has no write policies at all. Authorization is the is_platform_super_admin() check inside it, the target tenant must exist, and every start is written to platform_admin_act_as_audit. Sessions carry a hard 12h expires_at.",
+    "platform_admin_stop_acting()": "Counterpart to the above; clears the caller's own acting-as row and audits the stop. SECURITY DEFINER for the same reason. Acts only on auth.uid()'s own row.",
+    "report_catalog_approve_entity(p_key text)": "INTENTIONAL privileged write path, not a helper — same class as update_platform_entity_label. It is the developer-approval step of the D3 promotion path (schema-builder entity -> DRAFT catalog row -> developer approves -> active), so it MUST be client-callable: an RPC has to be reachable in order to return its denial. SECURITY DEFINER is the mechanism; the is_platform_developer() check inside it is the authorization. anon is already REVOKED (verified live: has_function_privilege('anon',...) = false). Verified live 2026-08-07 inside a guaranteed rollback: a non-developer (owner of Lookn, platform_role='user') calling it is DENIED with 'only a platform developer may approve a proposed entity into the catalog'. Added by the supervisor lane while unblocking bsuite#1796; the implementing lane owns the function.",
+    "migration_high_water_mark()": "INTENTIONAL client-readable surface, and the authenticated grant IS the feature. It exposes the APPLIED-migration high-water mark to the Settings -> System Information panel so a signed-in user can tell 'merged but not applied' apart from a defect. There is ONE Supabase project: d.crm.crm7.app serves `development` CODE against a `main`-STATE database, and the applier runs on main only, so a merged, correct, migration-dependent feature renders EMPTY on dev with nothing in the app distinguishing that from a bug. The CODE half of the comparison (__BUILD_COMMIT__) was already in the browser; this is the DATABASE half. Revoking it does not harden anything, it deletes the feature.\n\nSECURITY DEFINER is the only route, verified live rather than assumed: supabase_migrations has nspacl = NULL and the ledger table relacl = NULL, so NO PostgREST role reaches it -- service_role included. A SECURITY INVOKER function would return nothing, and granting direct SELECT would hand callers statements[] and rollback[], i.e. the full DDL of every migration.\n\nWHAT LEAVES THE SCHEMA IS THE WHOLE ARGUMENT, and it is narrow by construction: the return type is TABLE(high_water_mark text, applied_count bigint) and the body selects only max(version) and count(*). Verified live 2026-08-17: returns ('20260821010000', 703). No statements[] or rollback[] is reachable through it.\n\nanon is already revoked BY NAME -- confirmed live, has_function_privilege('anon', ...) = false, ACL {postgres=X, service_role=X, authenticated=X}. Both revoke routes matter here: a postgres-created function arrives with a built-in EXECUTE TO PUBLIC that ALTER DEFAULT PRIVILEGES does not remove, so REVOKE FROM PUBLIC and REVOKE FROM anon are not substitutes for one another.",
+    "platform_oauth_clients()": "INTENTIONAL privileged READ path, and the authenticated grant IS the feature. It is the only route to the OAuth client registry for the Developer Portal, replacing a HARDCODED list of five clients that was duplicated across two pages and had already drifted from reality (real names 'R8' vs the literal's 'R8 Calculator'/'R80.4'; real hosts www.crm7.app and r8-c.vercel.app vs the literal's crm.crm7.app and r8.crm7.app). All five hardcoded ids were real and none soft-deleted, so the defect was asserted status and drift, not invented rows.\n\nSECURITY DEFINER is the mechanism: auth.oauth_clients is not readable by any PostgREST role, so a SECURITY INVOKER function would return nothing. The authorization is the gate INSIDE the function, which mirrors canUsePlatformKit exactly — platform_role IN ('platform_admin','developer'). Deliberately NOT is_platform_developer(), which is developer-only and would lock out platform_admin, making the page gate and the data source disagree; that mismatch is exactly the RC2 class this estate has already been bitten by.\n\nWHAT LEAVES THE FUNCTION IS THE ARGUMENT: identity metadata only. It never returns client_secret_hash, grant_types or token_endpoint_auth_method. And it RAISES SQLSTATE 42501 on refusal rather than filtering to zero rows — a refusal that returns an empty set is indistinguishable from an empty registry, which would read as 'no OAuth clients exist' to an unauthorised viewer.\n\nanon is revoked BY NAME and via PUBLIC, then the ACL is asserted back in a DO block that RAISEs. Both revoke routes are needed and neither covers the other.",
+    "clone_tenant_role(p_source_role_id uuid, p_new_key text, p_new_label text, p_tenant_id uuid)": "Writes tenant_roles + role_capabilities. SECURITY DEFINER because INVOKER cannot read a PLATFORM source role's grants through RLS. It checks its own authority against schema_authority_tenant_ids() before writing, so the grant does not decide who may call it — the body does.",
+    "current_user_has_capability(p_tenant_id uuid, p_capability text)": "Self-scoped: it passes auth.uid() and cannot be asked about anyone else. The subject is not a parameter, so there is nothing for a caller to point elsewhere.",
+    "is_field_manager(p_tenant_id uuid)": "Takes only a tenant and answers about the CALLER. Returns a boolean; reveals nothing about any other user.",
+    "effective_user_capabilities(p_user_id uuid, p_tenant_id uuid)": "Arbitrary subject, so the grant alone was NOT sufficient — until 20260906000000 any signed-in user could resolve any user's capabilities in any tenant, which is cross-tenant disclosure of who can do what. The right to ASK is now checked by caller_may_read_capabilities_of() (self, tenant owner/admin, or platform developer), which is SECURITY INVOKER so it answers for the caller. Fails closed as zero rows. Stays executable because BSU's permissions editor (src/lib/admin/userCapabilityOverrides.ts) legitimately resolves ANOTHER user for a tenant admin; revoking would close the hole by breaking the feature.",
+    "user_has_capability(p_user_id uuid, p_tenant_id uuid, p_capability text)": "Thin wrapper over effective_user_capabilities() and inherits its caller check, so the same reasoning applies. Kept SECURITY DEFINER so 20260905000000's fail-closed boolean contract holds: it answers a boolean question with a boolean rather than a NOT FOUND callers must interpret.",
+    "reorder_entity_fields(p_entity_id uuid, p_field_ids uuid[])": "Schema Builder client RPC. SECURITY DEFINER so one caller can rewrite every tenant_field_definitions.sort_order for an entity atomically — INVOKER cannot hold that row set stable under RLS, and a partial reorder leaves duplicate or gapped sort_order the UI reads as lost fields. Measured on the deployed function 2026-08-31: reads auth.uid(), checks user_tenants membership, raises on failure. anon is NOT granted. Called by SchemaCanvas, which crm7 (1 site) and BSU (3 sites) render, so authenticated EXECUTE is the intended reach.",
+    "rename_physical_column(p_entity_id uuid, p_field_id uuid, p_new_name text, p_dry_run boolean)": "Schema Builder client RPC. SECURITY DEFINER because it runs ALTER TABLE ... RENAME COLUMN, which INVOKER cannot do under RLS-scoped roles. This is the hardened replacement for the privilege-escalation shape: the previous version took its ALTER target from caller-controlled tenant_entities.name, so any tenant admin could rename a column on any public table including user_tenants.role. Measured on the deployed function 2026-08-31: constrained by the schema_builder_physical_tables allowlist (which ships EMPTY, so the RPC is inert until a table is explicitly opted in), reads auth.uid(), checks user_tenants membership, raises on failure, and writes every attempt to schema_mutations_audit. anon is NOT granted."
+   }
+  },
+  {
+   "lint": "auth_db_connections_absolute",
+   "object_type": "any",
+   "objects": [
+    "*"
+   ],
+   "mode": "accepted",
+   "reason": "INFO-level operator-side Auth pool sizing; relevant only at instance scale-up.",
+   "added": "2026-06-11"
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "conduit#229 talent-community consent RPCs. r7_issue_talent_pool_consent_token mints a single-use token (re-checks caller tenant membership when auth.uid() is non-null); r7_redeem_talent_pool_consent validates a SHA-256-hashed single-use 30-day token and sets consent. SECURITY DEFINER is required to write across tenant RLS with token-gated authz inside the function. Intentional, live-verified on prod 2026-06-24.",
+   "added": "2026-06-24",
+   "objects": [
+    "r7_issue_talent_pool_consent_token(p_candidate_id uuid)",
+    "r7_redeem_talent_pool_consent(p_token text)"
+   ]
+  },
+  {
+   "lint": "anon_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "conduit#229 public talent-community opt-in. r7_redeem_talent_pool_consent is the ONLY anon-reachable write in conduit by design: it is token-gated (32-byte raw token, SHA-256 hash compare), single-use, 30-day expiry, non-enumerating, returns no PII. Equivalent to a magic-link. Live-verified on prod 2026-06-24 (consent flip + token consumed).",
+   "added": "2026-06-24",
+   "objects": [
+    "r7_redeem_talent_pool_consent(p_token text)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "2026-07-02 Qodo-fix RPCs. search_profiles_by_name: throughput team-member selector — profiles RLS is self-only, so a narrow SECDEF search returning ONLY (id, full_name, company), auth-required, pinned search_path (throughput PR#232 finding 1). r7_submit_public_application: conduit public apply handler — replaced four unsafe anon INSERT policies with one fail-closed SECDEF entrypoint (rate-limited 3/hr rolling window per IP/job, consent-gated sensitive demographics, tenant derived from the job row); authenticated grant is transitive via anon->authenticated inheritance of the public apply path (conduit PR#348 findings 2-4). SIGNATURE CHANGED 2026-08-12 (conduit#433 / conduit#434, applied to production the same day): p_ip_hash moved from position 2 to LAST and gained a DEFAULT — the expand step of Expand->Migrate->Contract, so the old and new browser call shapes both resolve. The function no longer reads x-forwarded-for at all; the throttle keys on cf-connecting-ip, which Cloudflare rejects when a client supplies it (verified empirically, not from documentation: a spoofed header returns Cloudflare error code 1000 before reaching PostgREST). Entries are REPLACED, not added alongside — the pre-fix signature no longer exists in production (one overload, confirmed via to_regprocedure), and carrying a dead entry is exactly the stale-waiver problem this file's own tooling now self-reports. Contraction tracked at conduit#435. CONTRACTION APPLIED: conduit migration 20261203000000 (conduit#435 contract step) drops p_ip_hash; entry updated to the post-contract 25-arg signature. Old signature replaced, not kept alongside, per this file's stale-waiver rule. NOTE: both the 26-arg (live, pre-contract) and 25-arg (post-contract) signatures are carried while conduit 20261203000000 remains pending; drop the 26-arg entry once it applies.",
+   "added": "2026-07-02",
+   "objects": [
+    "search_profiles_by_name(p_query text)",
+    "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text, p_ip_hash text)",
+    "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text)"
+   ]
+  },
+  {
+   "lint": "anon_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "conduit#348 public careers apply form — anon-reachable BY DESIGN (job applicants have no account). Fail-closed SECDEF: verifies job is open+published, rolling-window rate limit (3/hr per IP-hash/job), dedupes candidates, consent-gates sensitive demographics at the DB layer, derives tenant from the job row (no caller-supplied tenant). Strictly safer than the four direct anon INSERT policies it replaced (dropped same migration). Applied+catalog-verified 2026-07-02. SIGNATURE CHANGED 2026-08-12 (conduit#433 / conduit#434, applied to production the same day): p_ip_hash moved from position 2 to LAST and gained a DEFAULT — the expand step of Expand->Migrate->Contract, so the old and new browser call shapes both resolve. The function no longer reads x-forwarded-for at all; the throttle keys on cf-connecting-ip, which Cloudflare rejects when a client supplies it (verified empirically, not from documentation: a spoofed header returns Cloudflare error code 1000 before reaching PostgREST). Entries are REPLACED, not added alongside — the pre-fix signature no longer exists in production (one overload, confirmed via to_regprocedure), and carrying a dead entry is exactly the stale-waiver problem this file's own tooling now self-reports. Contraction tracked at conduit#435. CONTRACTION APPLIED: conduit migration 20261203000000 (conduit#435 contract step) drops p_ip_hash; entry updated to the post-contract 25-arg signature. Old signature replaced, not kept alongside, per this file's stale-waiver rule. NOTE: both the 26-arg (live, pre-contract) and 25-arg (post-contract) signatures are carried while conduit 20261203000000 remains pending; drop the 26-arg entry once it applies.",
+   "added": "2026-07-02",
+   "objects": [
+    "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text, p_ip_hash text)",
+    "r7_submit_public_application(p_job_id uuid, p_first_name text, p_last_name text, p_email text, p_phone text, p_date_of_birth text, p_address_line1 text, p_suburb text, p_state text, p_postcode text, p_working_rights text, p_visa_subclass text, p_visa_expires_at text, p_consent_to_sensitive_demographics boolean, p_aboriginal_or_torres_strait_islander boolean, p_disability_status text, p_regional_zone text, p_year_12_completed boolean, p_school_leaver boolean, p_privacy_notice_version text, p_consent_to_marketing boolean, p_consent_to_talent_pool_app boolean, p_consent_to_share_with_hosts boolean, p_cover_letter text, p_resume_url text, p_source text)"
+   ]
+  },
+  {
+   "lint": "anon_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Charge-rate-quote signing workflow — anon-reachable BY DESIGN for external signers (host employers, site contacts) who may not have authenticated sessions. Token-gated: validates p_token is a valid signing token, enforces signing context, logs audit trail. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.\n\nADDED 2026-08-11 — the host agreement signing pair, crm7#1594. Same shape and same justification as the charge-rate quote pair above, because it is deliberately the same mechanism generalised rather than a second one: the operator ruled that host agreements are generated by the GTO in CRM7 and issued for e-signing (bsuite#1885), and the quote path was already doing exactly that job for an external party with no login.\n\nANON-REACHABLE BY NECESSITY. The signer is a host employer representative who has no account and never will — requiring one would mean asking every host to register before they can sign an agreement. get_host_agreement_signing_context reads only what the signing page must render; redeem_host_agreement_signature is the only write path.\n\nFAIL-CLOSED REGARDLESS OF THE GRANT: the token is stored as a HASH and never in the clear, is single-use, expires, and is rate-limited. anon cannot read the hash table at all. Verified by pgTAP suite 69 with plan(47), 47/47 passing — and positively controlled in both directions, including the successful redemption executed AS anon rather than in role-neutral SQL, because a refusal-only test cannot distinguish a working gate from a dead endpoint.\n\nJoins the four endpoints tracked on bsuite#1869; the expiry and rate-limiting review asked for there covers these two as well.\n\nADDED 2026-08-11 — portal_invite_accept(p_token text), applied 2026-08-10 and not allowlisted at the time. It is anon-reachable by necessity: the invitee clicks a link with no session. It refuses immediately when auth.uid() IS NULL, checked BEFORE the token is read so an anonymous caller cannot use it to discover which tokens exist, and it returns NULL for every refusal rather than raising.",
+   "added": "2026-07-06",
+   "objects": [
+    "get_charge_rate_quote_signing_context(p_token text)",
+    "get_host_agreement_signing_context(p_token text)",
+    "portal_invite_accept(p_token text)",
+    "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
+    "redeem_host_agreement_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)"
+   ],
+   "review": "Re-justify if either signature changes — these are matched by full signature, so an added parameter creates a new unallowlisted finding and correctly re-fails the sweep."
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Charge-rate-quote signing workflow — authenticated users (applicants, coordinators) redeem signing tokens and apply quotes to placements. Token-gated: validates p_token, enforces signing context, cross-tenant operations required for GTO workflow. Fail-closed SECDEF ensures signing operations work across tenant boundaries. Applied 2026-07-06.",
+   "added": "2026-07-06",
+   "objects": [
+    "get_charge_rate_quote_signing_context(p_token text)",
+    "redeem_charge_rate_quote_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
+    "apply_charge_rate_quote_to_placement(p_quote_id uuid, p_placement_id uuid)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Session validation helper — checks if a session UUID is still valid. SECURITY DEFINER required to read auth.sessions across tenant boundaries for RLS policy evaluation. Intentional: session validation is a core auth primitive. Applied 2026-07-06.",
+   "added": "2026-07-06",
+   "objects": [
+    "is_session_valid(session_uuid uuid)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "crm7#1123 tenant-switch authority. set_current_tenant(p_tenant_id) is membership-gated — it raises 'Unauthorized: not an active member of the target tenant' unless the caller has an active public.user_tenants row for p_tenant_id, then persists profiles.current_tenant_id. log_tenant_switch(...) is its audit-write companion (the tenant_switch_audit direct-INSERT forgery fix routes all audit writes through this SECDEF fn rather than allowing direct client INSERT). Both MUST be EXECUTE-grantable to authenticated (they are the client RPCs for switching tenant context); both are SECURITY DEFINER (write profiles / read user_tenants / write audit under RLS) with search_path pinned to 'public, pg_temp'. Live-verified body 2026-07-20 via pg_get_functiondef. Accepted-by-design; not a category waiver.",
+   "added": "2026-07-20",
+   "objects": [
+    "set_current_tenant(p_tenant_id uuid)",
+    "log_tenant_switch(p_from_tenant_id uuid, p_to_tenant_id uuid, p_reason text, p_ip_address text, p_user_agent text)"
+   ]
+  },
+  {
+   "lint": "multiple_permissive_policies",
+   "object_type": "table",
+   "mode": "tracked",
+   "tracked_in": "bsuite#1542",
+   "reason": "multiple_permissive_policies is a PERFORMANCE-only WARN (two+ permissive RLS policies that could be merged) — never security-blocking. Tracked (not accepted) so it surfaces in the perf sweep issue rather than silently passing. 'timesheets' is the checker self-test's tracked-path anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); this rule restores the mode:tracked path the fixture asserts. Live occurrences across tables are auto-filed to bsuite#1542. WIDENED to '*' 2026-08-06, same reason as auth_rls_initplan: the list held only 'timesheets' (the self-test anchor) so it matched no real table, and Supabase now returns this lint on the SECURITY endpoint where anything unmatched fails. Live occurrences (boot_assessments, document_metadata, field_officers, funding_sources, organisation_audit_events, organization_members, pages, pay_periods, pay_period_streams and more) continue to file to bsuite#1542. Decision unchanged: tracked, not accepted.",
+   "added": "2026-07-20",
+   "objects": [
+    "*"
+   ]
+  },
+  {
+   "lint": "auth_rls_initplan",
+   "object_type": "table",
+   "mode": "tracked",
+   "tracked_in": "bsuite#1542",
+   "reason": "auth_rls_initplan is a PERFORMANCE-only WARN (RLS policy uses an init plan that re-evaluates per row) — never security-blocking, but can cause table scans on large tables. Tracked (not accepted) so live occurrences surface in the perf sweep issue rather than silently passing. 'some_new_table' is the checker self-test's filed-perf-finding anchor (scripts/check-supabase-advisors.mjs selfTestFixtures); removing this rule would make the self-test's newPerf assertion fail. Live occurrences across tables are auto-filed to bsuite#1542. WIDENED to '*' on 2026-08-06: the rule matched the lint but enumerated only 'some_new_table' (a self-test anchor), so it matched NO real table and this class resurfaced as blocking across ~16 of them (audit_events, custom_fields, invoice_runs, org_documents, pages, rcti_invoices, tenant_features, tenant_locations, tenant_schema_layout, db_console_migration_exports and more). Supabase now returns this lint on the SECURITY endpoint, where anything unmatched fails — so a per-table list was always going to go stale on the next new table. The decision here is unchanged from 2026-07-28: tracked, not accepted; occurrences still file to bsuite#1542. Self-test is unaffected — its 'new perf' anchor is unused_rls_index, not this lint.",
+   "added": "2026-07-28",
+   "objects": [
+    "*"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Developer-portal Feature Builder apply/rollback pair (north-star chain, 2026-07-22; rollback added 2026-08-12). Both execute author-supplied or derived DDL, so they are arbitrary-DDL by design and MUST be SECURITY DEFINER. Mitigations, verified live 2026-08-12 against tuybltdrdefjblnplpqo for BOTH functions: (1) hard internal gate — each raises 'Permission denied: developer or platform_admin role required' unless the caller's profiles.platform_role IN ('developer','platform_admin'), checked by a direct query on id = auth.uid() rather than via is_platform_developer(), which is why a grep for the named predicates reports no gate; (2) rollback escapes its identifier with quote_ident() before EXECUTE and refuses when no prior successful apply exists; (3) full audit trail to feature_migration_log (actor, SQL, status, error); (4) search_path pinned to public,pg_temp on both; (5) EXECUTE revoked from public/anon — authenticated-only (proacl: postgres=X, service_role=X, authenticated=X; has_function_privilege('anon',...) = false), same class as delete_organization / set_current_tenant precedents. Browser calls via supabase.rpc are required until a service-role edge-function proxy exists (tracked: developer-portal hardening backlog). rollback_feature_migration was omitted when its sibling was allowlisted, which turned the advisor sweep red on every parent PR — a permanently-red gate teaches everyone to ignore it, which is the actual damage.",
+   "added": "2026-07-22",
+   "expires": null,
+   "objects": [
+    "apply_feature_migration(p_sql text, p_feature_name text, p_entity_name text)",
+    "rollback_feature_migration(p_entity_name text, p_force boolean)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "conduit STA email confirm atomic RPC (excellence P1 / go-loop 2026-07-25). confirm_sta_email replaces 3 non-transactional client writes (offer lodgement flip + training_contract_status_confirmations audit insert + sta_inbound_emails status) with a single SECURITY DEFINER transaction. Authz is internal: auth.uid() required; caller must be owner/admin on the email's tenant via user_tenants; offer update scoped to that tenant_id. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC/anon, granted authenticated only (server action supabase.rpc). Same intentional client-RPC class as set_current_tenant / redeem_charge_rate_quote_signature. Not a category waiver.",
+   "added": "2026-07-25",
+   "objects": [
+    "confirm_sta_email(p_email_id uuid, p_offer_id uuid, p_outcome text, p_lodgement_outcome text)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "W3 excellence atomic sub-org create (2026-07-25). create_sub_organization requires auth.uid(); caller must be owner/admin of p_parent_id via user_tenants; inserts child with parent_tenant_id + owner membership in one transaction. search_path pinned public,pg_temp; EXECUTE revoked from PUBLIC. Jodie + BSU Admin call via authenticated JWT only. Not a category waiver.",
+   "added": "2026-07-25",
+   "objects": [
+    "create_sub_organization(p_parent_id uuid, p_name text, p_slug text, p_tier text, p_tenant_type text, p_industry text, p_abn text)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Email integration vault token read (crm7 emailService + BSU oauth edge fns). 2026-07-27 authz hardening: ownership check (auth.uid()/tenant) added inside fn; EXECUTE authenticated (browser client) + service_role (edge fns); revoked from PUBLIC/anon; search_path pinned. Not a category waiver.",
+   "added": "2026-07-27",
+   "objects": [
+    "email_integration_get_decrypted_token(p_integration_id uuid, p_token_field text)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "X1 money-integrity batch (2026-07-27). Atomic funding claim lifecycle (budget decrement+restore with role check inside), overpay-safe payment (row-lock + amount_due check + DB-computed return). All search_path pinned public,pg_temp; EXECUTE authenticated-only; PUBLIC+anon revoked. Not a category waiver.",
+   "added": "2026-07-27",
+   "objects": [
+    "approve_funding_claim(p_claim_id uuid)",
+    "reject_funding_claim(p_claim_id uuid, p_reason text)",
+    "record_payment_atomic(p_invoice_id uuid, p_amount numeric, p_method text, p_reference text, p_tenant_id uuid)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "TGA training-provider / qualifications-catalog RPCs (crm7 20260802184000, 20260805210000). Both are called from the browser by an ordinary tenant user and BOTH re-enforce authorisation inside the function rather than relying on the grant. import_qualification_from_catalog(p_tenant_id, p_catalog_code): needs SECURITY DEFINER only to read catalog.qualifications, a schema authenticated cannot select. It raises 42501 unless the caller is a member of p_tenant_id (auth_tenant_id()), and for the CREATE branch additionally requires owner/admin/manager (auth_tenant_id_with_role) — re-implementing tenant_insert_qualifications' WITH CHECK verbatim, so a bare member cannot insert a row their own table policy would reject. Reuse is checked first, so a member who may only read still gets an existing row. link_training_provider_to_organisation(p_training_provider_id, p_tenant_id): needs SECURITY DEFINER to write across the clients boundary; raises 42501 unless the caller is a member of p_tenant_id. NOTE, stated plainly rather than buried: this one is membership-gated ONLY — any tenant member may link a provider within their own tenant, with no owner/admin/manager requirement. That is deliberate per the function's own COMMENT, and the blast radius is confined to the caller's own tenant, but it is a weaker gate than its sibling and should be revisited if provider linkage ever becomes billable or externally visible. Both REVOKE EXECUTE FROM PUBLIC and anon, GRANT only to authenticated, and pin search_path = public, pg_temp. Not a category waiver — reviewed function-by-function 2026-08-05 during the development->main promotion these two first reached.",
+   "added": "2026-08-05",
+   "review": "Revisit link_training_provider_to_organisation's membership-only gate if provider linkage becomes billable or cross-tenant visible.",
+   "objects": [
+    "import_qualification_from_catalog(p_tenant_id uuid, p_catalog_code text)",
+    "link_training_provider_to_organisation(p_training_provider_id uuid, p_tenant_id uuid)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Pay-run builder (crm7 20260806043000/053000/060000). Called from the browser by a payroll operator, so an EXECUTE grant to authenticated is the point of it, not an oversight. SECURITY DEFINER is required to write pay_runs and payroll_records atomically across their RLS policies. Authorisation does NOT rest on the grant: the function raises 42501 unless the caller holds owner/admin/manager on p_tenant_id via auth_tenant_id_with_role — a stricter tier than membership, because creating a pay run is a money event. REVOKE EXECUTE FROM PUBLIC, anon; search_path pinned public, pg_temp. It also cannot silently over-pay: it excludes any timesheet already carried by an existing payroll_records row, so a re-run produces an empty run rather than paying twice, and it REFUSES (with a per-person reason) rather than pricing untiered overtime or an ambiguous rate. Every write it makes lands in a DRAFT run with paye_tax and net_pay at 0. Not a category waiver — reviewed against the function body 2026-08-06.",
+   "added": "2026-08-06",
+   "objects": [
+    "build_pay_run_from_timesheets(p_tenant_id uuid, p_period_start date, p_period_end date, p_payment_date date)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Financial-reports summary card (crm7 20260806050000, corrected 20260806065000). READ-ONLY and takes no parameters — it aggregates the CALLER'S OWN invoices and returns four scalars (invoiced, paid, outstanding, overdue count). SECURITY DEFINER is used so the aggregate is computed server-side in one pass rather than shipping every invoice row to the browser to be summed. Tenant scoping is enforced INSIDE the function — `where i.tenant_id in (select auth_tenant_id())` — so a caller can only ever aggregate tenants they belong to, and there is no argument through which another tenant could be named. REVOKE EXECUTE FROM PUBLIC, anon; search_path pinned public, pg_temp. It writes nothing. Not a category waiver — reviewed against the function body 2026-08-06.",
+   "added": "2026-08-06",
+   "objects": [
+    "invoice_summary()"
+   ]
+  },
+  {
+   "lint": "duplicate_index",
+   "object_type": "table",
+   "mode": "tracked",
+   "tracked_in": "bsuite#1542",
+   "reason": "duplicate_index is a PERFORMANCE finding — two indexes covering identical columns, which wastes storage and slows writes. It is not a data-exposure class and had no rule at all, so it failed as 'new unallowlisted SECURITY' the moment Supabase started returning it on the security endpoint. Tracked (not accepted) so live occurrences (leave_balances, timesheets) keep filing to bsuite#1542 rather than silently passing. Wildcard for the same reason as the two rules above: a per-table list in this file has now gone stale three times.",
+   "added": "2026-08-06",
+   "objects": [
+    "*"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "objects": [
+    "data_create_restricted_user(p_tenant_id uuid, p_grantee_user_id uuid, p_entity_key text, p_field_keys text[], p_editable_field_keys text[], p_row_filter_field_key text, p_row_filter_op text, p_row_filter_values jsonb, p_row_filter_date_field_key text, p_row_filter_date_from timestamp with time zone, p_row_filter_date_to timestamp with time zone)",
+    "data_grant_create(p_tenant_id uuid, p_grantee_user_id uuid, p_entity_key text, p_field_keys text[], p_editable_field_keys text[], p_row_filter_field_key text, p_row_filter_op text, p_row_filter_values jsonb, p_row_filter_date_field_key text, p_row_filter_date_from timestamp with time zone, p_row_filter_date_to timestamp with time zone)",
+    "data_grant_entity_permitted(p_tenant_id uuid, p_entity_id uuid)",
+    "data_grant_field_permitted(p_tenant_id uuid, p_entity_id uuid, p_field_id uuid)",
+    "data_grant_revoke(p_grant_id uuid)",
+    "data_grant_row_permit(p_tenant_id uuid, p_entity_id uuid, p_row jsonb)",
+    "data_grant_table_row_permit(p_tenant_id uuid, p_table_schema text, p_table_name text, p_row jsonb)",
+    "data_grant_widest(p_tenant_id uuid, p_entity_id uuid)",
+    "data_grantor_accessible_field_ids(p_tenant_id uuid, p_entity_id uuid)",
+    "data_grantor_is_tier_holder(p_tenant_id uuid)",
+    "data_is_grant_restricted(p_tenant_id uuid)",
+    "person_bank_accounts_for_payment(p_person_ids uuid[], p_purpose text)",
+    "person_ids_for_current_user()",
+    "record_onboarding_block_override(p_person_id uuid, p_consequence text, p_reason text, p_expires_on date)",
+    "record_payroll_remittance_stamp(p_tenant_id uuid, p_scheme text, p_artefact_kind text, p_record_count integer, p_total_cents bigint, p_file_name text, p_as_of date)",
+    "save_person_bank_account(p_person_id uuid, p_account_name text, p_bsb text, p_account_number text, p_allocation_type text, p_allocation_value numeric, p_bank_account_id uuid)",
+    "save_person_tax_declaration(p_person_id uuid, p_tfn text, p_no_tfn_reason text, p_residency_status text, p_claims_tax_free_threshold boolean, p_has_study_loan boolean, p_declaration_signed_at timestamp with time zone)"
+   ],
+   "mode": "accepted",
+   "reason": "The seventeen SECURITY DEFINER functions that arrived with the 2026-08-09 promotion (bsuite#1845): the T4 data-grant machinery (crm7#1481, migrations 20260809030000 / 20260809060000), the payroll vault RPCs (20260808160000), the remittance stamp (20260808190000) and the onboarding block override. Enumerated function-by-function per the standing rule that this list is exhaustive, not a category waiver.\n\nVERIFIED LIVE 2026-08-10 against the production catalog, for all seventeen:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp' — all 17.\n  * has_function_privilege('anon', ...) = FALSE — all 17. None is reachable unauthenticated.\n\nThey fall into two classes.\n\n(1) RLS PREDICATES, the established accepted class. data_grant_entity_permitted, data_grant_field_permitted, data_grant_row_permit, data_grant_table_row_permit, data_grant_widest, data_grantor_accessible_field_ids, data_grantor_is_tier_holder, data_is_grant_restricted, person_ids_for_current_user. These are evaluated INSIDE RLS policies, so they must be executable by the querying role — that is the same reason auth_tenant_id() and is_gto_admin() are already on this list. They return booleans or id lists and expose no row data. SECURITY DEFINER is required so a policy can consult the grant tables without granting the caller read access to them.\n\n(2) INTENTIONAL PRIVILEGED WRITE/READ PATHS, where SECURITY DEFINER IS the mechanism and an explicit check inside the function IS the authorization — the same shape as update_platform_entity_label and the bulk_data_* entry points already accepted. Each was read and its gate confirmed, not assumed:\n  - data_grant_create / data_create_restricted_user: thin wrappers over _data_grant_insert, which is NOT executable by authenticated or anon (verified) and whose FIRST statement raises 42501 unless data_grantor_is_tier_holder(p_tenant_id). It further refuses an unknown entity, an entity absent from data_grant_enabled_entities, and a NULL/empty field list — 'all fields' as a wildcard is rejected outright.\n  - data_grant_revoke: checks auth.uid() and raises.\n  - save_person_bank_account / save_person_tax_declaration: gate on check_user_portal_role(auth.uid(), tenant, ['owner','admin']) OR the person themselves. The function carries its own comment saying authorization is checked there precisely BECAUSE SECURITY DEFINER bypasses the RLS that would otherwise do it.\n  - person_bank_accounts_for_payment: requires owner/admin on the tenant of EVERY person id passed, and refuses the whole call if any one is outside — deliberately, because a partial payment file is worse than a refused one.\n  - record_onboarding_block_override: owner/admin/manager on the person's tenant, and validates the consequence enum.\n  - record_payroll_remittance_stamp: checks auth.uid() and raises.\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: the sweep was RED from 2026-08-09 21:09 because these seventeen were new and unallowlisted. That is the gate working exactly as designed — a new SECURITY DEFINER function exposed to authenticated MUST fail until a human has justified it. This is that justification.",
+   "tracked_in": null,
+   "added": "2026-08-10",
+   "review": "Re-justify if any signature changes — the objects are matched by full signature, so an added parameter creates a NEW unallowlisted finding and correctly re-fails the sweep. Revisit the two payroll writers when the runtime defects noted on bsuite#1845 are fixed (editing a bank account erases the prior verification event; re-saving a tax declaration supersedes a signed one with an unsigned one).",
+   "notes": {
+    "data_grant_create(...)": "Not a helper — the privileged creation path for a restricted-guest grant. Safe because the real work sits in _data_grant_insert, which authenticated cannot call, and which refuses anyone who is not a tier-holder (platform developer, tenant gto_admin, or tenant owner) with 42501.",
+    "person_bank_accounts_for_payment(p_person_ids uuid[], p_purpose text)": "Reads bank details for a payment run and triggers account-number decryption, so it is the highest-value function in this set. All-or-nothing tenant check: owner/admin on every person's tenant, else the entire call is refused. Every decryption is written to payroll_secret_access_log.",
+    "save_person_tax_declaration(...)": "Writes a tax file number. Gated on owner/admin of the person's tenant, or the person themselves. Known runtime defect, tracked on bsuite#1845 rather than here: re-saving to correct one field supersedes a signed declaration with an unsigned one because the signature date is not carried forward. That is a procedure defect, not a privilege defect — it does not change who may call this.",
+    "person_ids_for_current_user()": "RLS/self-service helper. Returns only the person rows linked to auth.uid(); no arguments, so it cannot be pointed at anyone else."
+   }
+  },
+  {
+   "added": "2026-08-16",
+   "lint": "authenticated_security_definer_function_executable",
+   "mode": "accepted",
+   "object_type": "function",
+   "objects": [
+    "email_integration_store_credential(p_integration_id uuid, p_token_field text, p_secret text)"
+   ],
+   "reason": "Arrived with the 2026-08-16 P0 sweep (crm7#1749, migration 20260820120000), which moved email integration credentials out of PLAINTEXT `imap_password`/`smtp_password` columns and into Vault, then DROPPED those columns. This RPC is the write half of that move, and `authenticated` EXECUTE is the mechanism, not an oversight: a tenant user connecting their own mailbox must be able to store the credential, and SECURITY DEFINER is required because the caller must NOT be able to read or write `vault.secrets` directly.\n\nVERIFIED LIVE 2026-08-16 against the production catalog, not assumed:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp'.\n  * has_function_privilege('anon', ...) = FALSE. Not reachable unauthenticated.\n  * ACL is exactly postgres=X | service_role=X | authenticated=X — the same shape every other RLS/vault helper in this estate carries.\n\nIts gate was read line by line rather than presumed. Four checks, in order, each raising rather than returning:\n  1. `p_token_field` must be one of access_token / refresh_token / smtp_password / imap_password. This is checked BEFORE the value is used to build the target column name via format('%I'), so the identifier is never attacker-controlled — the validation is what makes the dynamic UPDATE safe, and it is first for that reason.\n  2. auth.uid() must be non-null.\n  3. The secret must be non-empty.\n  4. The caller must hold owner/admin/manager/staff in the INTEGRATION'S OWN tenant, via auth_tenant_id_with_role — the same role list as the table's own tenant_insert/update/delete_email_integrations policies (20260706120000). A missing row and a wrong-tenant row raise the SAME message, so the function cannot be used to probe which integration ids exist.\n\nIt writes ONLY the `*_vault_id` pointer column back onto the row and returns the vault id. It never returns the secret, and there is no read counterpart here — decryption stays behind the pre-existing `email_integration_get_decrypted_token`, whose grants this change left untouched (asserted as a control in the migration's dry-run).\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: the sweep passed on `development` at 10:33 and failed at 11:35 once the applier had run this migration. That is the gate working exactly as designed — a new SECURITY DEFINER function exposed to authenticated MUST fail until a human has justified it. This is that justification.",
+   "review": "Re-justify if the signature changes — objects are matched by full signature, so an added parameter creates a NEW unallowlisted finding and correctly re-fails the sweep. Also re-justify if the p_token_field allow-list is ever widened: that list is what makes the dynamic format('%I') UPDATE safe.",
+   "tracked_in": null
+  },
+  {
+   "added": "2026-09-03",
+   "lint": "authenticated_security_definer_function_executable",
+   "mode": "accepted",
+   "object_type": "function",
+   "objects": [
+    "email_integration_confirm_ownership(p_integration_id uuid)",
+    "email_integration_disconnect(p_integration_id uuid)"
+   ],
+   "reason": "Mailbox P0 (BSU#1105/#1108/#1110). Both are browser-called SECURITY DEFINER RPCs because the row's own RLS cannot reach vault.secrets, and a PostgREST DELETE that matches zero rows returns success. authenticated EXECUTE is the mechanism: a person confirming or disconnecting THEIR mailbox must be able to call them; anon is revoked.\n\nAuthorisation is inside the function, not the grant:\n  * confirm_ownership: only the row's user_id = auth.uid() may flip pending_confirmation to active.\n  * disconnect: auth.uid() = row owner, OR tenant owner/admin via auth_tenant_id_with_role, OR JWT role service_role (JWKS-verified at PostgREST; never HS256). Anyone else gets not-found (P0002), not a distinct forbidden, so the id is not a probe.\n  * search_path pinned public, pg_temp. REVOKE ALL FROM PUBLIC, anon.\n\nWHY THIS ENTRY EXISTS RATHER THAN A GREEN JOB: advancing the parent gitlink to BSU main a126ab8 made the live catalog's two new RPCs visible to the advisor. That is the gate working — a new SECURITY DEFINER function exposed to authenticated MUST fail until justified. This is that justification.",
+   "review": "Re-justify if either signature changes. Re-justify if disconnect's tenant-admin limb is ever widened to staff/manager (that is BSU#1107, register-only).",
+   "tracked_in": null
+  },
+  {
+   "added": "2026-08-16",
+   "lint": "authenticated_security_definer_function_executable",
+   "mode": "accepted",
+   "object_type": "function",
+   "objects": [
+    "get_host_employer_id_for_tenant(p_tenant_id uuid)",
+    "is_host_supervisor_of_tenant(p_tenant_id uuid)"
+   ],
+   "reason": "The two RLS helpers introduced by crm7#1751 (migration 20260820130000), which gave contacts_select a host-employer limb and closed the confirmed cross-tenant enumeration exposure in crm7#1729 / #1675.\n\nThese are the ESTABLISHED ACCEPTED CLASS already described on the 2026-08-10 entry above: RLS PREDICATES. They are evaluated INSIDE a policy, so they must be executable by the querying role — the identical reason auth_tenant_id(), is_gto_admin() and the nine data_grant_* predicates are already on this list. Revoking EXECUTE from authenticated would not narrow contacts reads; it would fail every one of them. SECURITY DEFINER is required so a policy can consult org_members without granting the caller read access to it.\n\nVERIFIED LIVE 2026-08-16 against the production catalog, both functions:\n  * SECURITY DEFINER with search_path pinned to 'public, pg_temp'.\n  * has_function_privilege('anon', ...) = FALSE. Neither is reachable unauthenticated.\n  * Each is referenced by exactly ONE policy (contacts_select) — no wider blast radius.\n\nNeither exposes row data. is_host_supervisor_of_tenant returns a BOOLEAN — whether the caller holds gto_role='host_supervisor' in the tenant passed. get_host_employer_id_for_tenant returns a single UUID — the caller's OWN host employer for that tenant, and only for a caller who is a host supervisor there. Neither takes a user id, so neither can be pointed at anyone else: both key off auth.uid() internally.\n\nWHY THE SECOND ONE EXISTS AT ALL, since it duplicates get_user_host_employer_id(): that older helper takes no tenant and ends in a bare LIMIT 1. Harmless in the six ADDITIVE policies already using it, because they only widen. In contacts_select it became the SOLE clause deciding a host supervisor's reads, so the arbitrary pick became an authorization decision — measured, it reached 4 rows of a tenant the caller had no membership in. The tenant-scoped, ORDER BY-deterministic replacement is what closed that.",
+   "review": "Re-justify if either signature changes — objects match by full signature. Also re-justify if either is ever called from a policy other than contacts_select: the 'one policy, no wider blast radius' claim above is part of why they are accepted rather than tracked.",
+   "tracked_in": null
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "The 2026-08-19 migration dispatch applied a 25-migration backlog in one go and the advisor went 0 new -> 22 new. Two of those were real and are fixed by crm7 migration 20260828010000 (tenant_hierarchy_check is a TRIGGER function with no meaningful RPC form, and _record_merge_authority is an internal helper used by zero policies) — they are NOT in this list. These seventeen are the intended surface, in two groups. (1) RLS PREDICATES, which MUST keep EXECUTE: a policy expression is evaluated with the privileges of the querying role, so revoking EXECUTE does not tighten the policy, it makes every query against the table error. Measured policy reference counts on 2026-08-19: consented_parent_child_tenant_ids 6, is_field_officer 5, is_caseload_apprentice 4, is_caseload_person 1, is_caseload_field_officer 1. This is the same trap the rule above records a prior revoke pass falling into. (2) CLIENT RPCs the UI calls directly — the tenant_link_* link lifecycle (mint/propose/respond/withdraw/set-visibility/force-dissolve/reaffirm/directory), acting_scope_tenant_id, and assess_security_signal. Each does its own authorisation inside the function body; being callable is the point. ADDED AFTER A FAILED REVOKE, which is the most useful line here: _record_merge_authority(uuid) has a leading underscore and is referenced by ZERO policies, so it read as a pure internal helper and crm7#1856 first revoked it. pgTAP 81_merge_dedupe_foundation.sql died mid-plan on 'permission denied for function _record_merge_authority' from inside merge_find_candidates line 16 — an intended authenticated RPC that is SECURITY INVOKER, so its inner call is checked against THE CALLER's privileges. Counting policy references does not find function-to-function calls; scanning pg_proc.prosrc does, and afterwards reported exactly one caller.",
+   "added": "2026-08-19",
+   "review": "2026-11-19",
+   "notes": "ADDED 2026-09-08 — accept_team_invite(p_token text) and org_roster_for_tenant(p_tenant uuid) (BSU#1197, BSU#1198, BSU#1206; applied to production 2026-09-08). accept_team_invite is the invitee-scoped acceptor: it takes only a token, binds every read and write to auth.uid()/auth.email() (no caller-supplied user id), refuses a token whose email differs from the caller's, and writes user_tenants/team_members for the CALLER only; SECURITY DEFINER because the invitation tables have no SELECT policy for the invitee and user_tenants INSERT is membership-shaped. org_roster_for_tenant is SELECT-only, raises 42501 unless the caller is an active owner/admin of p_tenant, and walks descendants_of(p_tenant) only; SECURITY DEFINER because user_tenants RLS hides child-tenant rows from a parent-only caller. Measured live under Caris' claims: 4 rows for mbawa. Both REVOKE from PUBLIC and anon by name. Raised by the promotion gate on bsuite#2133 after the dispatch. If any tenant_link_* RPC is later replaced by an edge function, drop its line here in the same PR rather than leaving an accepted finding for a function nobody calls.",
+   "objects": [
+    "_record_merge_authority(p_tenant_id uuid)",
+    "acting_scope_tenant_id()",
+    "assess_security_signal(p_signal_id uuid, p_status text, p_notes text, p_notify_oaic boolean, p_notify_individuals boolean)",
+    "consented_parent_child_tenant_ids(p_min_visibility text)",
+    "is_caseload_apprentice(p_apprentice_id uuid)",
+    "is_caseload_field_officer(p_field_officer_id uuid)",
+    "is_caseload_person(p_person_id uuid)",
+    "is_field_officer(p_tenant_id uuid)",
+    "tenant_link_directory()",
+    "tenant_link_force_dissolve(p_link_id uuid, p_reason text)",
+    "tenant_link_mint_code(p_tenant_id uuid, p_counterparty_side text, p_max_visibility text, p_note text)",
+    "tenant_link_propose(p_code text, p_my_tenant_id uuid, p_requested_visibility text, p_message text)",
+    "tenant_link_propose_unlink(p_link_id uuid, p_reason text)",
+    "tenant_link_propose_visibility(p_link_id uuid, p_visibility text)",
+    "tenant_link_reaffirm_roster(p_link_id uuid)",
+    "tenant_link_respond(p_proposal_id uuid, p_decision text, p_agreed_visibility text, p_reason text)",
+    "tenant_link_set_visibility(p_link_id uuid, p_visibility text)",
+    "tenant_link_withdraw(p_proposal_id uuid, p_reason text)"
+   ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "objects": [
+    "mint_r8_quote_return_ticket(p_placement_id uuid)",
+    "redeem_r8_quote_return_ticket(p_token text)"
+   ],
+   "why": "The R8 quote-return handoff. Both write r8_quote_return_tickets, which has RLS enabled and zero policies by design, so an INVOKER function could not touch the row at all. Read in full on 2026-08-26 rather than accepted on their annotations. mint() takes a caller-supplied placement id -- the IDOR shape -- and closes it: the tenant is read off the placement ROW after proving membership via auth_tenant_id_with_role, using IN (SELECT ...) because that helper RETURNS SETOF and a scalar would silently compare whichever membership came back first; the not-found reply is constant and reveals nothing the caller did not supply. redeem() takes only an opaque token, rate-limits with an atomic upsert where the increment IS the check, refuses by RETURNING rather than RAISING so the counter survives the refusal, locks the ticket FOR UPDATE against a concurrent double-redeem, and treats the tenant as a property of the TICKET -- a wrong-tenant holder gets the identical 'invalid_or_expired' message, so trying is not a tenant oracle.",
+   "audited": "2026-08-26"
+  },
+  {
+   "lint": "anon_security_definer_function_executable",
+   "object_type": "function",
+   "objects": [
+    "is_developer_admin()"
+   ],
+   "mode": "accepted",
+   "reason": "is_developer_admin() is an RLS helper of exactly the class the first rule in this file exists for, and it is here because the advisor sweep went red on it and the sweep was right to: it was not allowlisted. WHY EXECUTE CANNOT SIMPLY BE REVOKED. Four policies call it -- \"Admins manage applications\", \"Admins manage page_sections\", \"Admins manage services\", \"Admins manage site_metadata\", all FOR ALL to authenticated on the braden CMS tables. A policy expression is evaluated as the CALLING role, so revoking EXECUTE from authenticated would not harden anything; it would break every admin write to those four tables. That is not a prediction: this estate already did it once, and the first rule in this file records the hotfix history (crm7 20260521024707 / 20260527022039). Operator directive 2026-06-11 stands -- do not blanket-fail this class. WHY ANON REACHABILITY IS SAFE. The function answers only about the CALLER: its limbs are auth.email() and auth.uid(), both NULL for anon, so an anonymous call can only return NULL, which a policy treats as false. It takes no parameters, so it cannot be aimed at another account, and it returns a bare boolean -- no row data, no enumeration surface. A signed-in user can learn whether THEY are an admin, which they can already establish by attempting a write. MEASURED 2026-08-29, and the measurement found a real defect rather than confirming an assumption: the function queried public.admin_users, a table that did not exist in this database, so it raised 42P01 for every role including anon. braden's 2025-era migrations were never applied here (the ledger has no 20250101_create_admin_users_table but does have 20260828120000_restrict_cms_writes_to_admins) -- the policy landed without its table. Fixed by braden#545/#546, which creates the table with RLS enabled, NO permissive policy and an explicit REVOKE, deliberately tighter than the 2025 definition whose USING (true) read policy would have disclosed the admin roster to every authenticated user of every app in this shared database. Rehearsed against production and rolled back before shipping. Also corrects docs/20260826-the-seven-anon-security-definer-functions: production has EIGHT anon-executable SECURITY DEFINER functions, not seven. The survey that produced that list was framed around functions taking a p_token, so a tokenless one did not look like a member of the set.",
+   "added": "2026-08-29",
+   "audited": "2026-08-29"
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "objects": [
+    "is_developer_admin()"
+   ],
+   "mode": "accepted",
+   "reason": "is_developer_admin() is an RLS helper of exactly the class the first rule in this file exists for, and it is here because the advisor sweep went red on it and the sweep was right to: it was not allowlisted. WHY EXECUTE CANNOT SIMPLY BE REVOKED. Four policies call it -- \"Admins manage applications\", \"Admins manage page_sections\", \"Admins manage services\", \"Admins manage site_metadata\", all FOR ALL to authenticated on the braden CMS tables. A policy expression is evaluated as the CALLING role, so revoking EXECUTE from authenticated would not harden anything; it would break every admin write to those four tables. That is not a prediction: this estate already did it once, and the first rule in this file records the hotfix history (crm7 20260521024707 / 20260527022039). Operator directive 2026-06-11 stands -- do not blanket-fail this class. WHY ANON REACHABILITY IS SAFE. The function answers only about the CALLER: its limbs are auth.email() and auth.uid(), both NULL for anon, so an anonymous call can only return NULL, which a policy treats as false. It takes no parameters, so it cannot be aimed at another account, and it returns a bare boolean -- no row data, no enumeration surface. A signed-in user can learn whether THEY are an admin, which they can already establish by attempting a write. MEASURED 2026-08-29, and the measurement found a real defect rather than confirming an assumption: the function queried public.admin_users, a table that did not exist in this database, so it raised 42P01 for every role including anon. braden's 2025-era migrations were never applied here (the ledger has no 20250101_create_admin_users_table but does have 20260828120000_restrict_cms_writes_to_admins) -- the policy landed without its table. Fixed by braden#545/#546, which creates the table with RLS enabled, NO permissive policy and an explicit REVOKE, deliberately tighter than the 2025 definition whose USING (true) read policy would have disclosed the admin roster to every authenticated user of every app in this shared database. Rehearsed against production and rolled back before shipping. Also corrects docs/20260826-the-seven-anon-security-definer-functions: production has EIGHT anon-executable SECURITY DEFINER functions, not seven. The survey that produced that list was framed around functions taking a p_token, so a tokenless one did not look like a member of the set.",
+   "added": "2026-08-29",
+   "audited": "2026-08-29"
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "objects": [
+    "workflow_run_step_complete(p_step_id uuid, p_outcome text, p_error text)"
+   ],
+   "reason": "Phase 3 workflow execution bridge (20261104000000). This is the ONE function of the eight the bridge adds that authenticated may execute, and that is the design rather than an oversight: workflow_run_advance, workflow_run_activate_node, workflow_emit_event and workflow_advance_on_queue_settled are all SECURITY DEFINER with NO execute grant to authenticated or anon (verified against production 2026-09-02), and the two graph helpers are SECURITY INVOKER so RLS applies to them normally. anon holds zero execute on every one of these. A person completing a step they are looking at is the only client-reachable door into the engine, and it is guarded from inside. CORRECTED 2026-09-09: this reason originally also named workflow_run_start as ungranted-to-authenticated. That was accurate for the 6-arg internal bridge overload (workflow_run_start(uuid,uuid,text,text,uuid,jsonb), still postgres/service_role only) but a separate 3-arg overload — workflow_run_start(p_definition_id uuid, p_subject_type text, p_subject_id uuid) — was added afterward as the deliberate browser entry point (\"Start a run\") and IS granted to authenticated. It is allowlisted in its own rule below rather than folded in here, because its own SECURITY DEFINER body carries its own tenant/activation checks and deserves its own justification.",
+   "notes": {
+    "workflow_run_step_complete(p_step_id uuid, p_outcome text, p_error text)": "SECURITY DEFINER because settling a step advances the run, and the branch rule and loop bounds must be applied in exactly one place (workflow_run_advance) which the caller may not execute directly. It does its own tenant check, written to FAIL CLOSED: `NOT EXISTS (SELECT 1 FROM (SELECT auth_tenant_id() AS t) q WHERE q.t = v_tenant)` rather than `v_tenant NOT IN (...)`, because NOT IN yields NULL when the subquery yields NULL, an IF on NULL takes the ELSE branch, and the guard silently never fires — the exact shape this estate has shipped open before. is_platform_developer() is wrapped in coalesce(...,false) for the same reason: it returns NULL rather than false for a caller with no profile row. auth.uid() IS NULL means a server-side caller (service_role, trigger, or definer chain) already trusted upstream. The row is locked FOR UPDATE before the check, so the tenant cannot be changed under it, and completing an already-settled step is idempotent rather than an error."
+   },
+   "added": "2026-09-02",
+   "review": "Re-justify if any further function in this bridge is granted to authenticated. The security property here is that there is exactly one guarded entry point; a second grant would move the guarantee from 'checked in one place' to 'checked in each place', which is the state this pattern exists to avoid.",
+   "tracked_in": null
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "objects": [
+    "workflow_run_start(p_definition_id uuid, p_subject_type text, p_subject_id uuid)"
+   ],
+   "reason": "Two overloads of workflow_run_start exist live, and only one is this finding. workflow_run_start(uuid,uuid,text,text,uuid,jsonb) (6-arg internal bridge) is postgres=EXECUTE, service_role=EXECUTE only — not this finding, not touched by this rule. workflow_run_start(uuid,text,uuid) (this 3-arg overload) is postgres, service_role, authenticated=EXECUTE, SECURITY DEFINER, search_path=public, pg_temp, and is the validated BROWSER entry point: crm7 src/lib/workflows/runService.ts:131 (supabase.rpc('workflow_run_start', {p_definition_id, p_subject_type, p_subject_id})), the 'Start a run' action on /workflows. Its body (read from the live pg_get_functiondef, 2026-09-09): a required-args check, then acting_scope_tenant_id() (raises 42501 when the caller has none), then the definition must be is_enabled in workflow_definition_activations for that tenant (42501 otherwise), then the placements subject must belong to the tenant (42501 otherwise), then it delegates to the 6-arg overload with started_via='manual'. A negative caller was proven 2026-09-09: an outsider account gets 42501, not a run. Per bsuite-rls-authz-red-team, a validated SECURITY DEFINER entry point with a pinned search_path and tenant/activation checks before it does anything is the sanctioned pattern for a client-reachable definer function, not a gap — revoking authenticated here would not harden anything, it would break the visual 'Start a run' journey the function exists to serve. RESIDUAL, hardening tracked, not this lane: the 3-arg overload's subject-ownership check is written only for the placements table today; a forward BSU migration will generalise it to a tenant_id ownership check for any subject table referenced by workflow_definition_activations, and fail closed for a subject type it does not recognise rather than silently passing.",
+   "added": "2026-09-09",
+   "review": "Re-justify if the generic subject-ownership hardening migration lands without this rule being re-read against its new body, or if a third overload of workflow_run_start appears.",
+   "tracked_in": null
+  },
+  {
+   "added": "2026-09-16",
+   "lint": "authenticated_security_definer_function_executable",
+   "mode": "accepted",
+   "object_type": "function",
+   "objects": [
+    "team_invitation_seat_available(p_team_id uuid, p_tenant_id uuid, p_user_id uuid)"
+   ],
+   "reason": "The RLS predicate added by business-suite-unified migration 20261201010300_recover_team_invitation_capacity_lock (applied to production), which replaced a team_invitations INSERT policy that queried team_invitations from inside its own WITH CHECK and so recursed under RLS.\n\nThis is the ESTABLISHED ACCEPTED CLASS on this list: RLS PREDICATES. team_invitations_admin_insert (FOR INSERT TO authenticated) calls it in WITH CHECK, and a policy expression is evaluated as the querying role, so revoking EXECUTE from authenticated would not narrow who can invite; it would fail every direct invitation insert. SECURITY DEFINER is what lets the predicate count team_invitations without re-entering that table's own policies.\n\nVERIFIED LIVE 2026-09-16 against the production catalog (SELECT only):\n  * SECURITY DEFINER, VOLATILE, search_path pinned to 'public, pg_temp'.\n  * proacl {postgres, service_role, authenticated}=X; has_function_privilege('anon', ...) = FALSE.\n  * The live body is the migration's body exactly (908 bytes; whitespace-normalised md5 identical to the file).\n  * Referenced by exactly ONE policy (public.team_invitations team_invitations_admin_insert) and by no other function.\n\nIt cannot be pointed at anyone else. It returns FALSE, before taking any lock or reading any row, unless p_user_id IS auth.uid(), the caller is_team_admin of p_team_id, and p_tenant_id is one of the caller's own auth_tenant_id() tenants. Only then does it take the per-tenant advisory transaction lock (lock_team_seat_capacity, which authenticated cannot execute) and return one BOOLEAN: whether members plus live pending invitations are below the tenant's latest subscription seat_count. No row data leaves the function.",
+   "review": "Re-justify if the signature changes (objects match by full signature), if any policy other than team_invitations_admin_insert or any function starts calling it, or if the early-return checks on auth.uid(), is_team_admin and auth_tenant_id() are ever loosened."
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "Applied 2026-09-19 by supabase-migrate dispatch 35446935771; the functions were designed in the migrations that landed on the app mains and sit in the same classes this file already carries. auth_staff_tenant_id() is the RLS helper crm7#2641 portal guest policies evaluate in the caller's context (20261207010000) — revoking EXECUTE from authenticated breaks every policy that calls it. tenant_link_directory(p_tenant_id) is the crm7#2618 JODIE tool RPC: SECURITY DEFINER is load-bearing (indirect reads need the catalog the caller cannot see), and the p_tenant_id overload binds the tool read to the chat tenant and 42501s on mismatch. r7_user_has_tenant_role + data_grant_explicit_table_row_permit are the conduit#229 write-predicate helpers (20260910010000) — the authority contract is operator-approved 2026-09-11 and the predicates ARE the authorization, callable so an RPC can return its denial. r7_enqueue_rejection_optin_email(p_candidate_id) is deliberately the ONLY authenticated write onto r7_automation_queue (20260909230000): it takes no subject/body/link params so the tenant gate cannot become an arbitrary send. anon is not granted on any of these.",
+   "added": "2026-09-19",
+   "objects": [
+    "auth_staff_tenant_id()",
+    "tenant_link_directory(p_tenant_id uuid)",
+    "r7_user_has_tenant_role(p_tenant_id uuid, p_required_portal_roles text[])",
+    "data_grant_explicit_table_row_permit(p_tenant_id uuid, p_table_schema text, p_table_name text, p_row jsonb)",
+    "r7_enqueue_rejection_optin_email(p_candidate_id uuid)"
+   ]
+  },
+  {
+   "lint": "security_definer_view",
+   "object_type": "view",
+   "mode": "accepted",
+   "reason": "report_templates_portal_ref is the portal-facing projection of report templates behind the crm7#2641 guest RLS work: the view exists so portal sessions see only the shared/portal-safe template rows through a pinned definition — the underlying table's grants stay closed to portal roles. SECURITY DEFINER is the mechanism, same class as the portal SECDEF helpers already in this file. Applied via the 2026120702 portal migration set (dispatch 35446935771).",
+   "added": "2026-09-19",
+   "objects": [
+    "report_templates_portal_ref"
+   ]
+  }
+ ],
+ "entries": [
+  {}
+ ]
 }

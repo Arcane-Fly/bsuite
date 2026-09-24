@@ -58,22 +58,50 @@ jobs:
     name: Forms say which fields are required
     runs-on: ubuntu-latest
     steps:
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - name: Checkout (with submodules — the apps being checked ARE the submodules)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
+          token: ${{ steps.app-token.outputs.token }}
           # The default GITHUB_TOKEN cannot clone sibling PRIVATE repos, so a bare
           # `submodules: recursive` fails at checkout. Same fallback chain every
           # other submodule-consuming workflow here uses.
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # A gate whose pass and no-op states are indistinguishable hides defects, and
       # THIS checker has already shipped two bugs that did exactly that: an
@@ -91,12 +119,14 @@ jobs:
         run: node scripts/check-required-field-markers.mjs --self-test
 
       # --require-fields is the positive control against a silently unscanned tree.
-      # The scan currently matches 177 fields to a schema across the estate; if it
-      # finds far fewer, the submodule checkout did not populate and a "clean"
-      # result would be meaningless rather than clean. A scan that examines nothing
-      # also reports zero findings, and that has read as a pass here before.
+      # The current, fully populated tree matches 139 fields to a schema: this was
+      # re-measured after crm7 moved from 34ebcfb3 (150) to 04891bce (139), while
+      # every app tree was present and the marker scan reported zero findings. Keep
+      # a nine-field margin for legitimate form consolidation, but fail well above
+      # the count an incomplete checkout could produce. A scan that examines
+      # nothing also reports zero findings, and that has read as a pass here before.
       - name: Check every schema-backed form marks its fields consistently
         run: |
           node scripts/check-required-field-markers.mjs \
             crm7/src business-suite-unified/src conduit/src braden/src \
-            --require-fields=150
+            --require-fields=130

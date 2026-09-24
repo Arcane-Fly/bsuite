@@ -47,6 +47,14 @@ const PLATFORM_TEMPLATE: WorkflowDefinitionRow = {
   updated_at: '2026-09-01T00:00:00Z',
 };
 
+/** A template nobody has published yet — `sourceVersion` resolves to `null`. */
+const UNPUBLISHED_TEMPLATE: WorkflowDefinitionRow = {
+  ...PLATFORM_TEMPLATE,
+  id: 'def-unpublished',
+  key: 'never-published',
+  current_published_version_id: null,
+};
+
 const PUBLISHED_GRAPH: WorkflowGraph = {
   nodes: [
     { id: 'start', type: 'terminator', position: { x: 0, y: 0 }, data: { label: 'Start' } },
@@ -104,14 +112,40 @@ interface Recorded {
  * up asserting that a query it never understood "succeeded". This fake answers
  * each terminal by the table and the filters it actually received.
  */
-function makeClient(options: { existingKeys?: Set<string>; insertError?: unknown } = {}) {
+interface Deleted {
+  table: string;
+  id: unknown;
+}
+
+function makeClient(
+  options: {
+    existingKeys?: Set<string>;
+    insertError?: unknown;
+    /** Fails only the `workflow_definition_versions` insert, not the definition. */
+    versionInsertError?: unknown;
+    /** Fails the compensating `.delete()` this fake records into `deletes`. */
+    deleteError?: unknown;
+  } = {},
+) {
   const existingKeys = options.existingKeys ?? new Set<string>();
   const inserts: Recorded[] = [];
+  const deletes: Deleted[] = [];
   let versionInsertCount = 0;
 
   const client = {
     from(table: string) {
       return {
+        delete() {
+          return {
+            eq(column: string, value: unknown) {
+              deletes.push({ table, id: column === 'id' ? value : undefined });
+              if (options.deleteError) {
+                return Promise.resolve({ data: null, error: options.deleteError });
+              }
+              return Promise.resolve({ data: null, error: null });
+            },
+          };
+        },
         select() {
           const filters: Record<string, unknown> = {};
           const chain = {
@@ -129,6 +163,9 @@ function makeClient(options: { existingKeys?: Set<string>; insertError?: unknown
             maybeSingle() {
               if (table === 'workflow_definitions' && filters.id === 'def-template') {
                 return Promise.resolve({ data: PLATFORM_TEMPLATE, error: null });
+              }
+              if (table === 'workflow_definitions' && filters.id === 'def-unpublished') {
+                return Promise.resolve({ data: UNPUBLISHED_TEMPLATE, error: null });
               }
               if (table === 'workflow_definition_versions') {
                 if (filters.id === 'ver-published') {
@@ -173,6 +210,9 @@ function makeClient(options: { existingKeys?: Set<string>; insertError?: unknown
                       error: null,
                     });
                   }
+                  if (options.versionInsertError) {
+                    return Promise.resolve({ data: null, error: options.versionInsertError });
+                  }
                   versionInsertCount += 1;
                   return Promise.resolve({
                     data: {
@@ -196,7 +236,7 @@ function makeClient(options: { existingKeys?: Set<string>; insertError?: unknown
     },
   };
 
-  return { client, inserts };
+  return { client, inserts, deletes };
 }
 
 const TENANT = 'aaaaaaaa-0000-0000-0000-000000000001';
@@ -290,5 +330,67 @@ describe('duplicateWorkflowDefinition', () => {
     // parsing the message for it.
     expect((error as WorkflowSourceMissingError).definitionId).toBe('def-missing');
     expect(inserts).toHaveLength(0);
+  });
+
+  // bsuite-3205: `workflow_definition_versions.ai_context` is `NOT NULL
+  // DEFAULT '{}'::jsonb`. A column default only fires when the insert OMITS
+  // the key — an explicit `null` in the payload overrides it and violates
+  // the constraint. These assert the VALUE actually sent to the insert, not
+  // merely that the call resolved.
+  it('sends {} for ai_context when the source has no published version, never a literal null', async () => {
+    const { client, inserts } = makeClient();
+    await duplicateWorkflowDefinition(client, {
+      sourceDefinitionId: 'def-unpublished',
+      tenantId: TENANT,
+    });
+
+    const versionInsert = inserts.find((i) => i.table === 'workflow_definition_versions');
+    expect(versionInsert?.payload.ai_context).toEqual({});
+    expect(versionInsert?.payload.ai_context).not.toBeNull();
+  });
+
+  // bsuite-3205: neither insert here is transactional (two separate
+  // supabase-js REST calls, no RPC), so a failed draft insert used to leave
+  // the just-created definition behind forever — a workflow the user never
+  // asked for, with zero versions, that nothing could reopen.
+  it('deletes the orphaned definition when the draft insert fails', async () => {
+    const { client, deletes } = makeClient({
+      versionInsertError: { code: '23514', message: 'null value in column "ai_context"' },
+    });
+
+    const error = await duplicateWorkflowDefinition(client, {
+      sourceDefinitionId: 'def-template',
+      tenantId: TENANT,
+    }).catch((err: unknown) => err);
+
+    // The caller sees why the DRAFT insert failed, not a generic wrapper —
+    // cleanup succeeded, so nothing about the delete should shadow it.
+    expect(error).toBeInstanceOf(WorkflowServiceError);
+    expect((error as WorkflowServiceError).code).toBe('23514');
+
+    // Exactly the definition this attempt created gets deleted, by id.
+    expect(deletes).toEqual([{ table: 'workflow_definitions', id: 'def-copy-apprentice-placement' }]);
+  });
+
+  it('names the orphaned definition id when the compensating delete ALSO fails', async () => {
+    const { client, deletes } = makeClient({
+      versionInsertError: { code: '23514', message: 'null value in column "ai_context"' },
+      deleteError: { code: '42501', message: 'permission denied' },
+    });
+
+    const error = await duplicateWorkflowDefinition(client, {
+      sourceDefinitionId: 'def-template',
+      tenantId: TENANT,
+    }).catch((err: unknown) => err);
+
+    expect(deletes).toHaveLength(1);
+    const orphanId = deletes[0]?.id as string;
+    expect(error).toBeInstanceOf(Error);
+    const message = (error as Error).message;
+    expect(message).toContain('draft insert failed');
+    expect(message).toContain('cleanup failed');
+    expect(message).toContain(orphanId);
+    // The original failure travels as `cause`, not just folded into the text.
+    expect((error as Error & { cause?: unknown }).cause).toBeInstanceOf(WorkflowServiceError);
   });
 });

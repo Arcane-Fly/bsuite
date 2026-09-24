@@ -149,11 +149,38 @@ jobs:
       # clone them — it fails with a bare "Repository not found", which reads
       # like a typo rather than a permissions problem. The house pattern is the
       # cross-repo PAT with a GITHUB_TOKEN fallback; see oauth-provider-check.yml.
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - name: Checkout (with submodules — the apps live there)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 1
 
       # Without the PAT the submodules are absent, and the scanner would report
@@ -650,7 +677,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with: { fetch-depth: 1 }
 
       # `--require-authenticated N` is a FLOOR, not a measurement. The measured
@@ -784,11 +811,38 @@ jobs:
     permissions:
       contents: read
     steps:
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - name: Checkout (with submodules — five apps carry an auth helper)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 1
 
       # An uninitialised submodule is an EMPTY DIRECTORY and an empty directory
@@ -892,10 +946,12 @@ jobs:
           echo "all four credentials resolved and well-formed"
 
       - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         # Explicit major. actions/setup-node with node-version-file was observed
         # resolving '24' to Node 22.22.2 on ubuntu-latest in this estate.
-        with: { node-version: '24.14.0' }
+        with:
+          node-version: '24.14.0'
+          package-manager-cache: false
 
       # R80.4 ADDED 2026-08-24, TO ALL THREE LISTS IN THIS FILE. It joined the
       # sweep on 2026-08-22 (R80.4#187) via scripts/theme-session.sh, and this
@@ -1007,14 +1063,15 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           fetch-depth: 1
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # NOT --frozen-lockfile, deliberately. pnpm no longer reads the `pnpm`
       # field from package.json ("The following keys were ignored:
@@ -1108,16 +1165,44 @@ jobs:
       contents: read
 
     steps:
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - name: Checkout (with submodules — the six inline copies live there)
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           fetch-depth: 1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24.14.0'
+          package-manager-cache: false
 
       # The probe imports eslint and typescript-eslint to actually EXECUTE each
       # rule file. Non-frozen for the same reason the esm-imports job below

@@ -42,10 +42,37 @@ jobs:
     name: schema-builder fixtures match BSU canonical
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
@@ -63,17 +90,45 @@ jobs:
     name: every @bsuite/auth consumer keeps its session wiring
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       - name: Self-test the checker
         run: node scripts/check-oauth-boot-wiring.mjs --self-test
@@ -88,19 +143,47 @@ jobs:
     name: no mutation reports an RLS denial as "not found"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
+      - uses: actions/checkout@v5
         with:
           submodules: recursive
+          token: ${{ steps.app-token.outputs.token }}
           # The default GITHUB_TOKEN cannot clone the sibling PRIVATE repos, and
           # a failed clone leaves an EMPTY DIRECTORY, not an error the scan sees.
-          token: ${{ secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN }}
 
       - name: Refuse to scan an empty tree
         run: scripts/assert-app-trees-present.sh
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # The checker must prove it can tell the shapes apart before its count is
       # trusted — a scanner blind to a construct reports ABSENCE, which reads as
@@ -118,15 +201,17 @@ jobs:
       # No submodules needed — this scans packages/ in THIS repo, which is where
       # the shared components live. Keeping the checkout shallow keeps the job in
       # seconds, which is the reason estate-invariants can afford no paths filter.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
-          # NOTE: no `package-manager-cache: false` here. That input exists on
-          # setup-node@v5, not @v4, and this file is on v4 like its sibling jobs.
-          # v4 does not resolve a package manager unless `cache:` is set, so there
-          # is nothing to turn off. actionlint catches the mismatch; GitHub does not.
+          # setup-node@v5 defaults package-manager-cache: true, which resolves
+          # the packageManager field's pnpm BEFORE corepack runs and kills the
+          # step (see scripts/check-setup-node-pnpm-guard.mjs). On v4 that
+          # resolution never happened unless `cache:` was set, so the input did
+          # not exist here; on v5 the guard requires it on every step.
+          package-manager-cache: false
 
       # A rule that scans the wrong thing reports a clean tree over nothing. This
       # one has a specific way of going wrong: it deliberately ignores COMMENTS,
@@ -149,11 +234,12 @@ jobs:
       # No submodules needed — this scans packages/ in THIS repo, which is where
       # the shared components live. Keeping the checkout shallow keeps the job in
       # seconds, which is the reason estate-invariants can afford no paths filter.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version-file: .node-version
+          package-manager-cache: false
 
       # bsuite#3009's own completion-enforcer gate sent that PR back for exactly
       # this shape of claim: "the remaining border-border uses are dividers,"

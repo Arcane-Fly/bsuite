@@ -1,0 +1,123 @@
+{
+  "prompt_count": 332,
+  "unique_issue_count": 332,
+  "new_issues": 11,
+  "enriched_issues": 5,
+  "readback": [
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3204",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "1af0c2771d1e1c985df958a21b146a38cf5e916998dc386fabfa4b48ce79e754"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3205",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "7854ec63c6cd0e0febff20754b1fe7f6f9cfe2ccf29c5f4cd39da94a81b78797"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3206",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "6c33ce967f110edef995a388c007e5aad3132e28049d45054cebaed333e75c01"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3207",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "56add90a29625f0a2166d237ba0bb60baac6d2f3a88e9d2f97269ac6c4195e71"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3208",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "f4eb39ed272e29090f4800dba0b5f0f0595a03ee717cf8b37ddb4b2288783146"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3209",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "829fd0dfff95ba1bf97d6b28419c83a8929ac261ed25696dff05a2c36c2e38b9"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/crm7/issues/2586",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "734464ce5271cdaf97258b0edd70d752f2e64307ff6cccd34831429ada7e6efe"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/crm7/issues/2587",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "3796add9abd5e01097f7f7987be65ac38a09816657aa4ce18a2091501c16a969"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3210",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "1f733cb8a69291efe681f722c6dc134965e673921a4b53a168386cd3e64dacdb"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3211",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "12a2479bcba672e88036c297f027752a14a6e362d663cc7c47663874dc338335"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3212",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "c6b015c6a50f59ca02b6908c108d17df1202510d8550a4359d532710a10321f1"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/crm7/issues/2063",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "80dc24b67a6ab080f3e00dd34a81e8299e634dcd307aacecbfea3e090a4294cd"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/crm7/issues/2581",
+      "state": "CLOSED",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "ba8e9cc33c37d89305397aa8c94bea4318a885eb4d33719a458bf81942661272"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3111",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "41e71e37a71f6522b5fc17b52fbc87f2d362ce0bd66d9919628304878b883a37"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/3198",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "b1ce82ba06d2dfc323970f68505e886210f4ed7be07bae3d2e17e42e0f29eb36"
+    },
+    {
+      "url": "https://github.com/GaryOcean428/bsuite/issues/1966",
+      "state": "OPEN",
+      "title_matches": true,
+      "body_matches": true,
+      "body_sha256": "33ab75c7006b2a224dd7c03ad2cc71b1f7a03a969ec2e8ea849d38bca7c85e33"
+    }
+  ],
+  "local_navigation_links_checked": 413,
+  "errors": [],
+  "scope": "Only audit artifacts/issues; no product runtime completion claimed."
+}

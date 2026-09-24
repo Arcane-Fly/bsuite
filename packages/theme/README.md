@@ -8,6 +8,7 @@ Universal theme package for the BSuite monorepo. Ships the D2C Neon Electric bas
 - **Dual brand baselines** — D2C via `@bsuite/theme/css`; Braden via `@bsuite/theme/braden-css`
 - **Native scrollbars** — both baselines use semantic thumb/track colours and follow the resolved root `.dark` class. Coarse pointers keep the platform width; forced-colour mode keeps platform colours and width. Consumers should not duplicate these rules locally.
 - **Tailwind v4+ `@theme` block** — `@import '@bsuite/theme/preset-v4.css'`
+- **Runtime elevation** — `--shadow-elev-0` through `--shadow-elev-4` are always emitted, including depths selected only by saved page appearance. Card defaults retain their elevation; zero is an explicit user choice.
 - **`<ThemeProvider>`** + **`useTheme()`** with localStorage persistence + system preference
 - **`<BrandingProvider>`** — enterprise runtime white-labelling for D2C apps; Braden short-circuits to static corporate tokens
 - **`getThemeInitScript()`** — stringified JS for inline `<script>` tags to prevent FOUC

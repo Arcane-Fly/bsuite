@@ -112,11 +112,38 @@ jobs:
       # it is absent (a fork) the submodule simply does not check out and the
       # step below falls back to the fixture and SAYS SO. It never silently
       # proves less than it claims.
+      - name: Mint a read-only GitHub App token for private submodules
+        id: app-token
+        if: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID != '' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.BSUITE_GITHUB_APP_CLIENT_ID }}
+          private-key: ${{ secrets.BSUITE_GITHUB_APP_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: |
+            bsuite
+            crm7
+            business-suite-unified
+            conduit
+            braden
+            throughput
+            R80.4
+          permission-contents: read
+          permission-metadata: read
+      - name: Refuse an incomplete private-submodule checkout
+        if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+        env:
+          APP_TOKEN: ${{ steps.app-token.outputs.token }}
+        run: test -n "$APP_TOKEN" || { echo '::error::GitHub App token is required for private submodules.'; exit 1; }
+      - name: Refuse a recursive private-submodule scan from a non-canonical PR origin
+        if: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository }}
+        run: echo '::error::Private recursive submodule checks do not run for non-canonical pull-request origins.' && exit 1
+
       - name: Checkout
         uses: actions/checkout@v5
         with:
           submodules: recursive
-          token: ${{ (github.event.pull_request.head.repo.fork == false) && (secrets.BSUITE_CROSS_REPO_PAT || secrets.GITHUB_TOKEN) || secrets.GITHUB_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
           persist-credentials: false
 
       # REFUSE AN EMPTY TREE. Without this, a checkout that failed to fetch the
@@ -129,9 +156,10 @@ jobs:
       # crm7 because that is the only tree this job reads.
       - run: scripts/assert-app-trees-present.sh crm7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       # THE CI STEP NAME IS FIXED BY THE ESTATE'S OWN RULE. It runs the SAME
       # entry point the observe job runs, over fixtures carrying planted
@@ -284,9 +312,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v5
         with:
           node-version: '24'
+          package-manager-cache: false
 
       - name: Guard — require project ref
         env:

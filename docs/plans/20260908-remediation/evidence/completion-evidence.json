@@ -1,0 +1,184 @@
+{
+  "task_id": "bsuite-remediation-audit-20260908",
+  "parent_task_id": null,
+  "silo": "bsuite",
+  "index_key": "bsuite_project_truth_index",
+  "objective_lock": "Audit evidence, published remediation issues, discrete prompts and linked improved docs; product implementation remains open.",
+  "waivers": [],
+  "children_gates": [],
+  "D1_wired_current": {
+    "ok": true,
+    "notes": "332 unique issue/prompt pairs linked from plan/register/docs indexes; 16 created/enriched issue bodies reread; 413 local navigation links valid."
+  },
+  "D2_evidence_pack": {
+    "ok": true,
+    "commands": [
+      {
+        "cmd": "verify_pack.py (task-local generator/validator, disposed after results retained)",
+        "exit": 0,
+        "snippet": "332 prompts;332 unique issues;11 created;5 enriched;413 local links;errors []"
+      },
+      {
+        "cmd": "node scripts/check-review-citations.mjs docs/audits/20260908-estate-remediation-audit-v1.00W.md",
+        "exit": 0,
+        "snippet": "3 citations resolved;0 unresolved"
+      },
+      {
+        "cmd": "git diff --check (six explicitly edited existing documentation files)",
+        "exit": 0,
+        "snippet": "no whitespace errors"
+      },
+      {
+        "cmd": "agent-definition-of-done, bsuite-false-complete-gates, agent-skl-find scripts/verify.sh",
+        "exit": 0,
+        "snippet": "all three universal contracts PASS"
+      }
+    ]
+  },
+  "D3_context_complete": {
+    "ok": true,
+    "authority_files_read": [
+      "/home/braden/Desktop/Dev/bsuite/AGENTS.md",
+      "/home/braden/.agents/skills/agent-run-master/SKILL.md",
+      "/home/braden/.agents/skills/agent-definition-of-done/SKILL.md",
+      "/home/braden/.agents/skills/bsuite-false-complete-gates/SKILL.md"
+    ],
+    "brief_has_index_key": true,
+    "brief_has_objective_lock": true,
+    "reask_violations": []
+  },
+  "D4_memory": {
+    "ok": true,
+    "keys_read": [
+      "bsuite_project_truth_index",
+      "bsuite_skill_mcp_pairings"
+    ],
+    "keys_written": [
+      "bsuite_correction_20260908_visual_authoring_discussion",
+      "bsuite_objective_lock_20260908_remediation_audit",
+      "bsuite_session_20260908_codex_remediation_audit",
+      "bsuite_sleep_packet_20260908_codex_remediation_audit"
+    ],
+    "skipped": false,
+    "notes": "All four writes read back successfully."
+  },
+  "D5_correction_absorb": {
+    "ok": true,
+    "corrections": [
+      "disciplinary discussion is not variation",
+      "code-equivalent visual customization all linked through workflows",
+      "docs and docs/plans canonical documentation",
+      "discrete prompts with skills/agents and Astra/Grok routes"
+    ],
+    "promoted": [
+      "memory correction key",
+      "capability register",
+      "11 new issue bodies",
+      "332 prompts"
+    ]
+  },
+  "D6_children": {
+    "ok": true,
+    "notes": "history_audit child errored on usage limit; its incomplete task was taken back and re-performed by parent (widened 25 Claude sessions, 139 Hermes sessions and recovered 2 VS Code Copilot conversations). No unfinished child contribution is relied upon; no child or Grok approval is claimed."
+  },
+  "D7_no_false_complete": {
+    "ok": true,
+    "integration_points_checked": [
+      "docs indexes\u2192register\u2192plan\u2192332 prompts\u2192live GitHub issues",
+      "source caller\u2192local/shared workflow service\u2192live ai_context contract",
+      "document identities\u2192separate disciplinary scope",
+      "history census\u2192targeted records\u2192issue requirements"
+    ],
+    "notes": "No product runtime or app completion asserted. Targeted source/read-only live schema and history audit only. Historical/user reports distinguished. Local documentation uncommitted."
+  },
+  "ui_touched": false,
+  "D9_used_once": {
+    "ok": true,
+    "kind": "none",
+    "why_not_applicable": "Audit documentation, issue records and reusable launch prompts; no application UI, package or engine changed. Artifact navigation/readback validated."
+  },
+  "ephemera": {
+    "created": [
+      "/tmp/bsuite-audit-20260908",
+      "/tmp/bsuite-history-audit-evidence.json",
+      "/tmp/bsuite-week-history-audit.md",
+      "/tmp/bsuite-notes-cycle-audit.json",
+      "/tmp/bsuite-open-audit.json",
+      "/tmp/bsuite-open-audit-current.json",
+      "/tmp/bsuite-open-audit-final.json",
+      "/tmp/crm7-open-audit.json",
+      "/tmp/crm7-open-audit-current.json",
+      "/tmp/crm7-open-audit-final.json",
+      "/tmp/business-suite-unified-open-audit.json",
+      "/tmp/business-suite-unified-open-audit-current.json",
+      "/tmp/business-suite-unified-open-audit-final.json",
+      "/tmp/conduit-open-audit.json",
+      "/tmp/conduit-open-audit-current.json",
+      "/tmp/conduit-open-audit-final.json",
+      "/tmp/braden-open-audit.json",
+      "/tmp/braden-open-audit-current.json",
+      "/tmp/braden-open-audit-final.json",
+      "/tmp/R80.4-open-audit.json",
+      "/tmp/R80.4-open-audit-current.json",
+      "/tmp/R80.4-open-audit-final.json",
+      "/tmp/throughput-open-audit.json",
+      "/tmp/throughput-open-audit-current.json",
+      "/tmp/throughput-open-audit-final.json",
+      "/home/braden/Desktop/Dev/bsuite/docs/plans/20260908-remediation",
+      "/home/braden/Desktop/Dev/bsuite/docs/20260908-customization-capability-register-v1.00W.md",
+      "/home/braden/Desktop/Dev/bsuite/docs/plans/20260908-estate-remediation-plan-v1.00W.md",
+      "/home/braden/Desktop/Dev/bsuite/docs/audits/20260908-estate-remediation-audit-v1.00W.md",
+      "/home/braden/.codex/visualizations/2026/09/08/01a07f58-73a6-71f2-a57d-5cf3b6b148dc/bsuite-remediation"
+    ],
+    "disposed": [
+      "/tmp/bsuite-audit-20260908",
+      "/tmp/bsuite-history-audit-evidence.json",
+      "/tmp/bsuite-week-history-audit.md",
+      "/tmp/bsuite-notes-cycle-audit.json",
+      "/tmp/bsuite-open-audit.json",
+      "/tmp/bsuite-open-audit-current.json",
+      "/tmp/bsuite-open-audit-final.json",
+      "/tmp/crm7-open-audit.json",
+      "/tmp/crm7-open-audit-current.json",
+      "/tmp/crm7-open-audit-final.json",
+      "/tmp/business-suite-unified-open-audit.json",
+      "/tmp/business-suite-unified-open-audit-current.json",
+      "/tmp/business-suite-unified-open-audit-final.json",
+      "/tmp/conduit-open-audit.json",
+      "/tmp/conduit-open-audit-current.json",
+      "/tmp/conduit-open-audit-final.json",
+      "/tmp/braden-open-audit.json",
+      "/tmp/braden-open-audit-current.json",
+      "/tmp/braden-open-audit-final.json",
+      "/tmp/R80.4-open-audit.json",
+      "/tmp/R80.4-open-audit-current.json",
+      "/tmp/R80.4-open-audit-final.json",
+      "/tmp/throughput-open-audit.json",
+      "/tmp/throughput-open-audit-current.json",
+      "/tmp/throughput-open-audit-final.json"
+    ],
+    "disposed_by": "Python explicit task-owned path list: shutil.rmtree(directory) or Path.unlink(file); asserted all absent. Full record evidence/disposal.json.",
+    "retained": [
+      {
+        "path": "/home/braden/Desktop/Dev/bsuite/docs/plans/20260908-remediation",
+        "why": "User-requested indexed reusable launch prompts, issue snapshots and audit evidence in project docs/plans."
+      },
+      {
+        "path": "/home/braden/Desktop/Dev/bsuite/docs/20260908-customization-capability-register-v1.00W.md",
+        "why": "User-requested customization capability documentation linked to existing specifications."
+      },
+      {
+        "path": "/home/braden/Desktop/Dev/bsuite/docs/plans/20260908-estate-remediation-plan-v1.00W.md",
+        "why": "User-requested implementation sequence linked to issues/prompts."
+      },
+      {
+        "path": "/home/braden/Desktop/Dev/bsuite/docs/audits/20260908-estate-remediation-audit-v1.00W.md",
+        "why": "User-requested failure audit with evidence boundaries and remediation."
+      },
+      {
+        "path": "/home/braden/.codex/visualizations/2026/09/08/01a07f58-73a6-71f2-a57d-5cf3b6b148dc/bsuite-remediation",
+        "why": "Durable second copy of the requested deliverables protected from concurrent primary checkout cleanup."
+      }
+    ]
+  }
+}

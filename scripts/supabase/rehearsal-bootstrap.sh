@@ -33,11 +33,36 @@
 #
 # WHAT IT DELIBERATELY DOES NOT DO
 #
-#   It does not populate supabase_migrations.schema_migrations. The rehearsal
-#   decides what to replay by VERSION ARITHMETIC against the baseline high-water
-#   mark, and proves outcomes from the CATALOG. The ledger is never read as
-#   evidence and never written as a side effect, so it cannot make a no-op
-#   migration look like work.
+#   (Superseded 2026-09-19 by bsuite#3147 — see "THE LEDGER IS SEEDED" below
+#   for what changed and why the old rationale no longer holds.)
+#
+#   It still does not populate supabase_migrations.schema_migrations with
+#   anything a replay produces, and the ledger is still never READ as
+#   evidence — outcomes are proven from the CATALOG, exactly as before.
+#
+# THE LEDGER IS SEEDED FROM THE SAME ARTEFACT THE SELECTION READS
+#
+#   bsuite#3147 changed the rehearsal's in-baseline rule from MAGNITUDE
+#   (`version <= BASELINE_MAX`) to MEMBERSHIP in the applied-versions
+#   artefact (`applied-versions-*.txt`, same directory, same
+#   newest-by-name/exactly-one resolution as the dump). For the substrate and
+#   the skip-set to describe the same posture, the ledger is seeded from that
+#   artefact after the dump: every recorded-applied version's objects are
+#   inside the dump, so replaying it would fail on "already exists" — an
+#   instrument failure that reads exactly like a migration defect. This is
+#   crm7/scripts/replay-schema-diff.sh's recipe (:173-191), which has seeded
+#   its ledger this way since before this script existed.
+#
+#   The seeding is INSERT ... ON CONFLICT DO NOTHING and keys on `version
+#   text` — the production ledger predates the 14-digit convention, so the
+#   artefact's four 8-digit legacy versions go in as-is. It is NOT evidence
+#   of anything: the rehearsal never reads this table, and the census
+#   excludes the schema. A migration that genuinely moves catalog still has
+#   to move it.
+#
+#   What is still deliberately NOT done here: a migration's OWN application
+#   never writes the ledger (that remains replay-schema-diff.sh's behaviour
+#   for crm7's full replay, not this partial substrate).
 #
 # Usage: rehearsal-bootstrap.sh <db-url> <repo-root>
 
@@ -130,6 +155,76 @@ echo "→ Applying production baseline"
 # against whatever survived.
 set -o pipefail
 psql "$DB_URL" -v ON_ERROR_STOP=1 -f "$BASELINE" 2>&1 | tail -5
+
+echo "→ Resolving the applied-versions artefact (bsuite#3147)"
+# Same resolution contract as the dump above and as
+# rehearse-migrations.mjs's loadAppliedVersions(): newest
+# `applied-versions-*.txt` by name under the same baseline directory,
+# exactly one candidate required. The selection rule is MEMBERSHIP in this
+# artefact, so a missing, duplicated or malformed one fails the run rather
+# than silently degrading the skip-set to "everything" or "nothing".
+APPLIED_DIR="$BASELINE_DIR"
+mapfile -t APPLIED_CANDIDATES < <(find "$APPLIED_DIR" -maxdepth 1 -name 'applied-versions-*.txt' 2>/dev/null | sort)
+
+case "${#APPLIED_CANDIDATES[@]}" in
+  0)
+    echo "::error::no applied-versions-*.txt found under $APPLIED_DIR — the in-baseline rule is membership (bsuite#3147) and the substrate cannot be built without the artefact it reads"
+    exit 1
+    ;;
+  1)
+    APPLIED_ARTEFACT="${APPLIED_CANDIDATES[0]}"
+    ;;
+  *)
+    echo "::error::${#APPLIED_CANDIDATES[@]} applied-versions artefacts found under $APPLIED_DIR — refusing to guess which is production's:"
+    printf '  %s\n' "${APPLIED_CANDIDATES[@]}"
+    echo "Remove the stale one(s) or resolve the collision before rehearsing."
+    exit 1
+    ;;
+esac
+echo "  artefact: $(basename "$APPLIED_ARTEFACT") ($(grep -c -v -E '^\s*$' "$APPLIED_ARTEFACT") versions)"
+
+echo "→ Seeding supabase_migrations.schema_migrations from the same artefact"
+# replay-schema-diff.sh :173-191 is the recipe. The substrate must carry the
+# production ledger's MEMBERSHIP so a recorded-applied migration's replay is
+# recognised as already-substrate rather than attempted and failed on
+# "already exists". ON CONFLICT DO NOTHING: the table may already hold rows.
+# The INSERTs are GENERATED ON THE HOST from the artefact — pg_read_file
+# reads the SERVER's filesystem, and the server runs in Docker where the
+# host's checkout path does not exist. Keys on `version text`, so the
+# artefact's four legacy 8-digit versions go in as-is; lines that are not
+# bare digit versions are skipped here and are the malformed case
+# rehearse-migrations.mjs fails closed on.
+ARTEFACT_VERSIONS="$(grep -E '^[0-9]+$' "$APPLIED_ARTEFACT" | sort -u | wc -l | tr -d ' ')"
+if [ "$ARTEFACT_VERSIONS" -eq 0 ]; then
+  echo "::error::applied-versions artefact $(basename "$APPLIED_ARTEFACT") holds no digit version lines — refusing to seed an empty ledger (bsuite#3147)"
+  exit 1
+fi
+APPLIED_COUNT="$(
+  {
+    echo "CREATE SCHEMA IF NOT EXISTS supabase_migrations;"
+    echo "CREATE TABLE IF NOT EXISTS supabase_migrations.schema_migrations ("
+    echo "  version text PRIMARY KEY, statements text[], name text);"
+    awk '/^[0-9]+$/ { printf "INSERT INTO supabase_migrations.schema_migrations (version) VALUES ('"'"'%s'"'"') ON CONFLICT DO NOTHING;\n", $1 }' "$APPLIED_ARTEFACT"
+    echo "SELECT count(*) FROM supabase_migrations.schema_migrations;"
+  } | psql "$DB_URL" -Atq -v ON_ERROR_STOP=1
+)"
+echo "  ledger now holds ${APPLIED_COUNT:-<no count>} version(s); artefact contributed ${ARTEFACT_VERSIONS} distinct version line(s)"
+# The count must be a BARE NUMBER. psql without -q prints command tags
+# ("CREATE SCHEMA", "INSERT 0 1") into the same stream, and a non-numeric
+# capture then sails through the numeric comparison below as a false
+# condition — the guard passes while checking nothing. Validate first.
+if ! printf '%s' "$APPLIED_COUNT" | grep -Eq '^[0-9]+$'; then
+  echo "::error::ledger seed did not return a numeric row count (got: ${APPLIED_COUNT:-<empty>}) — the seed failed or its output was not captured; refusing to continue (bsuite#3147)"
+  exit 1
+fi
+# A seed that produced fewer rows than the artefact's distinct versions means
+# the INSERTs failed or the pipe was truncated — exactly the silent
+# degradation bsuite#3147 exists to prevent. Fail instead of continuing with
+# a half-seeded ledger.
+if [ "$APPLIED_COUNT" -lt "$ARTEFACT_VERSIONS" ]; then
+  echo "::error::ledger seed produced ${APPLIED_COUNT:-0} row(s) but the artefact holds ${ARTEFACT_VERSIONS} distinct version line(s) — refusing to continue with a half-seeded ledger (bsuite#3147)"
+  exit 1
+fi
 
 echo "→ Substrate built. Catalog proof:"
 psql "$DB_URL" -At -v ON_ERROR_STOP=1 <<'SQL'
