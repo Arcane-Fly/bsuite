@@ -1,10 +1,10 @@
 {
-  "measured_at": "2026-08-25T08:40Z",
+  "measured_at": "2026-09-24T04:17Z",
   "measured_against": "production tuybltdrdefjblnplpqo",
-  "escalations": 24,
-  "divergence": 79,
-  "comparable_cells": 196,
-  "note": "escalations is the ratchet. It counts write-shaped capabilities the table grants and the hardcoded checks deny. The ratchet only shrinks: a rise fails the gate, and a fall fails it too until re-banked, because a ratchet nobody re-banks stops ratcheting.\n\n2026-08-25 RE-BANK, 28 -> 24. It went 28 -> 34 first, and that rise was NOT data drift: the rows were unchanged and 6bbdae50 (the field-officer caseload UI) rewrote crm7's src/hooks/usePermissions.ts after the previous bank, tightening the hardcoded model so six previously-matched grants became denied. crm7 migration 20260912000000 then revoked the ten capabilities that were not a question — every '.write' held by the role literally named 'viewer', 20 rows across both tenants — which took it to 24, below the old bank.\n\nCOMPARABLE CELLS ROSE 168 -> 196 in the same window, because the same commit added roles to the shared set. So the ratio improved more than the raw number suggests: 28/168 to 24/196.",
+  "escalations": 40,
+  "divergence": 108,
+  "comparable_cells": 303,
+  "note": "escalations is the ratchet. It counts write-shaped capabilities the table grants and the hardcoded checks deny. The ratchet only shrinks: a rise fails the gate, and a fall fails it too until re-banked, because a ratchet nobody re-banks stops ratcheting.\n\n2026-08-25 RE-BANK, 28 -> 24. It went 28 -> 34 first, and that rise was NOT data drift: the rows were unchanged and 6bbdae50 (the field-officer caseload UI) rewrote crm7's src/hooks/usePermissions.ts after the previous bank, tightening the hardcoded model so six previously-matched grants became denied. crm7 migration 20260912000000 then revoked the ten capabilities that were not a question — every '.write' held by the role literally named 'viewer', 20 rows across both tenants — which took it to 24, below the old bank.\n\nCOMPARABLE CELLS ROSE 168 -> 196 in the same window, because the same commit added roles to the shared set. So the ratio improved more than the raw number suggests: 28/168 to 24/196.\n\n2026-09-24 RE-BANK, 24 -> 40 (bsuite#3318 measure run 35954673711, estate promotion). This rise IS data, not code: the new rows were seeded by the BSU Permissions work that limited the grid to holdable portal roles (BSU #1281) — `manager` write rows created 2026-09-23 (Braden Group) and 2026-09-22 (FutureBuild Academy); FutureBuild `field_officer` / `field_manager` rows created 2026-09-22. Those are selected BSU defaults, which by standing ruling persist until an owner/developer overrides them in the BSU Permissions Manager; crm7's hardcoded usePermissions map is the second vocabulary (queued: crm7-usepermissions-second-vocabulary). COMPARABLE CELLS rose 196 -> 303 in the same window, so the ratio is 40/303 = 13.2% against 24/196 = 12.2% before.\n\nNONE OF THE 40 IS ENFORCED BY THE DATABASE, measured rather than asserted: no public/private function body and no pg_policies expression references crm.contacts.write, crm.placements.write, training.assessments.write, training.qualifications.write, conduit.pipeline.write or payroll.timesheets.write (0 hits), with a positive control — the same probe finds 6 references to the capabilities that ARE enforced through current_user_has_capability (view_billing, manage_financial, confidential and forms capabilities). Each becomes live only when a crm7 function or policy starts calling current_user_has_capability for that id; that change must reconcile this list first.",
   "not_a_defect_count": "A divergence is a question, not a defect. Either the table is wrong or the hardcoded check is, and deciding that is reconciliation work. This number sizes the work; it does not accuse either side.",
   "what_the_24_are": {
     "member": "10 — arguable. A member writing contacts is a product question, not a defect.",
@@ -13,5 +13,12 @@
     "field_officer": "5 — same shape as field_manager.",
     "viewer": "0 — settled 2026-08-25. A role named 'viewer' holding a write was indefensible under any model, so it was the only group revoked without asking."
   },
-  "deliberately_not_reconciled": "The remaining 24 are Braden's authorisation model. Clearing a red check is not a reason to change it, and this file exists to SIZE that work rather than to license doing it unilaterally."
+  "deliberately_not_reconciled": "The remaining 24 are Braden's authorisation model. Clearing a red check is not a reason to change it, and this file exists to SIZE that work rather than to license doing it unilaterally.",
+  "what_the_40_are": {
+    "member": "14 (Braden Group 5, FutureBuild Academy 4, Lookn 5) — unchanged question from the 24: a member writing contacts is a product call, not a defect. member is not a holdable portal_role, so effective_user_capabilities never reads these rows today.",
+    "field_officer": "9 (Braden Group 5, FutureBuild Academy 4) — BSU defaults grant writes the hardcoded map denies. A reconciliation question for the BSU Permissions Manager, not a verdict on either side.",
+    "field_manager": "9 (Braden Group 5, FutureBuild Academy 4) — same shape as field_officer; the role edits caseloads across field officers.",
+    "gto_staff": "4 (Braden Group 2, Lookn 2) — unchanged; gto_staff is not a holdable portal_role, so these rows are stored and never read.",
+    "manager": "4 (Braden Group 2, FutureBuild Academy 2) — NEW: training.assessments/qualifications.write, seeded 2026-09-22/23. A reconciliation question of the same kind."
+  }
 }

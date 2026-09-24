@@ -63,11 +63,13 @@
 # inverse — PUBLIC grant, no named anon grant — and is being revoked.
 
 get_charge_rate_quote_signing_context(text)  # crm7 chargeRateQuoteSigning.ts: renders the quote a client is about to sign, keyed on the signing token alone
+get_form_signing_context(text)  # crm7 formSigning.ts: renders the form an emailed signer is about to sign, keyed on the signing token alone; hidden and signature fields removed (crm7 20261207290000, bsuite#3208 C3)
 get_host_agreement_signing_context(text)  # crm7 hostAgreementSigning.ts: renders the host agreement a host employer is about to sign, keyed on the signing token alone
 portal_invite_accept(text)  # crm7 portalInvite.ts: redeems a single-use portal invite token and provisions the account; the token IS the authorisation
 r7_redeem_talent_pool_consent(text)  # conduit redeemConsent.ts: records a candidate's talent-pool consent from an emailed consent link
 r7_submit_public_application(uuid,text,text,text,text,text,text,text,text,text,text,text,text,boolean,boolean,text,text,boolean,boolean,text,boolean,boolean,boolean,text,text,text)  # conduit submitApplication.ts: the public job-application form; unauthenticated by definition. Post-conduit#435 contract signature (20261203000000 drops p_ip_hash)
 redeem_charge_rate_quote_signature(text,text,text,text,text,text)  # crm7 chargeRateQuoteSigning.ts: writes the counter-signature, keyed on the same one-time token
+redeem_form_signature(text,text,text,text,text,text)  # crm7 formSigning.ts: writes or declines that one signature slot, keyed on the same one-time token; slot and signer never read from the payload (C7)
 redeem_host_agreement_signature(text,text,text,text,text,text)  # crm7 hostAgreementSigning.ts: writes the host's signature, keyed on the same one-time token
 
 # SECTION: PENDING-PUBLIC-EXECUTE

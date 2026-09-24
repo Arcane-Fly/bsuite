@@ -1,6 +1,6 @@
 {
   "generated_from": "docs/nav/route-inventory.json schema 3",
-  "routes": 564,
+  "routes": 566,
   "rows": [
     {
       "route": "/",
@@ -20714,6 +20714,146 @@
       "files_walked": 0,
       "verdict": "REDIRECT",
       "note": "route is a redirect, no data path of its own"
+    },
+    {
+      "route": "/forms/sign/:token",
+      "app": "crm7",
+      "auth": "public",
+      "status": "live",
+      "component": "FormSignPage",
+      "component_file": "crm7/src/pages/forms/sign/[token].tsx",
+      "hooks": [],
+      "tables": [
+        "clients",
+        "contacts",
+        "employers",
+        "funding_sources",
+        "people",
+        "picklist_options",
+        "qualifications",
+        "tenant_field_definitions",
+        "training_providers"
+      ],
+      "rpcs": [
+        "get_form_signing_context",
+        "redeem_form_signature"
+      ],
+      "edge_fns": [
+        "form-signature-dispatch"
+      ],
+      "rls": {
+        "clients": "RLS_ON_TENANT_SCOPED",
+        "contacts": "RLS_ON_TENANT_SCOPED",
+        "employers": "RLS_ON_TENANT_SCOPED",
+        "funding_sources": "RLS_ON_TENANT_SCOPED",
+        "people": "RLS_ON_TENANT_SCOPED",
+        "picklist_options": "RLS_ON_TENANT_SCOPED",
+        "qualifications": "RLS_ON_TENANT_SCOPED",
+        "tenant_field_definitions": "RLS_ON_TENANT_SCOPED",
+        "training_providers": "RLS_ON_TENANT_SCOPED"
+      },
+      "tenant_scoped": "yes",
+      "edge_fn_deployed": {
+        "form-signature-dispatch": true
+      },
+      "unresolved_from": 8,
+      "files_walked": 28,
+      "verdict": "OK",
+      "note": null,
+      "tables_via_shared": [
+        "entity_relationships",
+        "user_preferences"
+      ],
+      "unknown_tables": [],
+      "rpcs_via_shared": [],
+      "edge_fns_via_shared": [],
+      "rls_shared": {
+        "entity_relationships": "RLS_ON_TENANT_SCOPED",
+        "user_preferences": "RLS_ON_OWNER_SCOPED"
+      }
+    },
+    {
+      "route": "/forms/submissions/:id",
+      "app": "crm7",
+      "auth": "authenticated",
+      "status": "live",
+      "component": "FormSubmissionPage",
+      "component_file": "crm7/src/pages/forms/submission.tsx",
+      "hooks": [
+        "useAuth",
+        "useMutation",
+        "useQuery",
+        "useQueryClient",
+        "useRegisterDirtyAfterLoad"
+      ],
+      "tables": [
+        "employers",
+        "people",
+        "signature_requests",
+        "site_visits",
+        "user_tenants"
+      ],
+      "rpcs": [
+        "apply_form_submission_signatory",
+        "current_user_has_capability",
+        "get_form_signing_context",
+        "redeem_form_signature"
+      ],
+      "edge_fns": [
+        "form-signature-dispatch"
+      ],
+      "rls": {
+        "employers": "RLS_ON_TENANT_SCOPED",
+        "people": "RLS_ON_TENANT_SCOPED",
+        "signature_requests": "RLS_ON_TENANT_SCOPED",
+        "site_visits": "RLS_ON_TENANT_SCOPED",
+        "user_tenants": "RLS_ON_MIXED"
+      },
+      "tenant_scoped": "yes",
+      "edge_fn_deployed": {
+        "form-signature-dispatch": true
+      },
+      "unresolved_from": 8,
+      "files_walked": 43,
+      "verdict": "OK",
+      "note": null,
+      "tables_via_shared": [
+        "audit_logs",
+        "clients",
+        "contacts",
+        "entity_relationships",
+        "funding_sources",
+        "picklist_options",
+        "profiles",
+        "qualifications",
+        "tenant_field_definitions",
+        "tenants",
+        "training_providers",
+        "user_preferences"
+      ],
+      "unknown_tables": [
+        "form_layouts_published",
+        "form_submissions"
+      ],
+      "rpcs_via_shared": [
+        "acting_scope_tenant_id",
+        "set_current_tenant"
+      ],
+      "edge_fns_via_shared": [],
+      "rls_shared": {
+        "audit_logs": "RLS_ON_OWNER_SCOPED",
+        "clients": "RLS_ON_TENANT_SCOPED",
+        "contacts": "RLS_ON_TENANT_SCOPED",
+        "entity_relationships": "RLS_ON_TENANT_SCOPED",
+        "funding_sources": "RLS_ON_TENANT_SCOPED",
+        "picklist_options": "RLS_ON_TENANT_SCOPED",
+        "profiles": "RLS_ON_MIXED",
+        "qualifications": "RLS_ON_TENANT_SCOPED",
+        "tenant_field_definitions": "RLS_ON_TENANT_SCOPED",
+        "tenants": "RLS_ON_TENANT_SCOPED",
+        "training_providers": "RLS_ON_TENANT_SCOPED",
+        "user_preferences": "RLS_ON_OWNER_SCOPED"
+      }
     },
     {
       "route": "/funding-sources",

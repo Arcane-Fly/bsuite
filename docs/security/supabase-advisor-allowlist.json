@@ -543,6 +543,21 @@
    "objects": [
     "report_templates_portal_ref"
    ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "reason": "RLS helpers for the Field Officer caseload boundary (crm7 20261207170000, crm7#2587). The restrictive site_visits policies (site_visits_field_officer_caseload_insert/_update/_only, site_visits_reference_tenant_insert/_update) call all five in USING/WITH CHECK, and a policy expression runs as the CALLING role, so revoking EXECUTE from authenticated would break every site-visit write rather than harden anything. Same class as the single-argument is_caseload_* helpers already accepted above.\n\nWhy a direct RPC call is safe, read from the deployed bodies on 2026-09-24 rather than asserted: the four is_caseload_* functions answer only about the CALLER - each joins field_officers on officer.user_id = auth.uid() - so a signed-in user learns only whether THEY are the assigned officer for an id, which their own caseload screens already show. They return a boolean and no row data.\n\nsite_visit_references_match_tenant was NOT safe as first deployed: it did not scope to the caller, so any signed-in user could ask over /rest/v1/rpc whether an employer, field officer or person id belongs to any tenant. crm7 20261207310000 (Arcane-Fly/crm7#2719) adds p_tenant_id IN (SELECT auth_staff_tenant_id()), the same limb every site_visits write already passes through the permissive site_visits_tenant_isolation policy, so no legitimate write narrows. pgTAP 104 fails assertion 2 without that migration and passes 3/3 with it (local stack, 2026-09-24); pgTAP 99 still passes 24/24. This entry is correct only once 20261207310000 is applied; until then the advisor finding for this one function describes a real oracle.",
+   "added": "2026-09-24",
+   "tracked_in": "Arcane-Fly/crm7#2719",
+   "objects": [
+    "is_caseload_apprentice(p_tenant_id uuid, p_apprentice_id uuid)",
+    "is_caseload_field_officer(p_tenant_id uuid, p_field_officer_id uuid)",
+    "is_caseload_host_employer(p_tenant_id uuid, p_host_employer_id uuid)",
+    "is_caseload_person(p_tenant_id uuid, p_person_id uuid)",
+    "site_visit_references_match_tenant(p_tenant_id uuid, p_host_employer_id uuid, p_field_officer_id uuid, p_apprentice_id uuid)"
+   ]
   }
  ],
  "entries": [

@@ -212,14 +212,24 @@ jobs:
 
       - name: Prove the app-scope checker can fail before trusting what it says
         shell: bash
-        # Planted-omission positive control, app form: strip the explicit
-        # `cache: 'pnpm'` line from crm7/ci.yml (present at BOTH the pinned
-        # main and development shapes of that file), which leaves an
-        # install-bearing job with no explicit cache and must fail the guard.
+        # Planted-omission positive control, app form: strip EVERY guard from
+        # crm7/ci.yml — the explicit `cache: 'pnpm'` key line AND the
+        # `package-manager-cache: false` flag — which leaves install-bearing
+        # setup-node@v5 steps with no guard in either form and must fail.
+        # Stripping only one form stopped biting on 2026-09-24 when crm7#2727
+        # gave its first step BOTH forms: the step stayed guarded, the checker
+        # rightly passed, and the control reported the checker broken. The
+        # cmp below refuses a plant that changed nothing, so a control that no
+        # longer applies fails as a control, not as a verdict on the checker.
         run: |
           set -euo pipefail
           cp crm7/.github/workflows/ci.yml /tmp/ci-backup.yml
-          sed -i "/^[[:space:]]*cache:[[:space:]]*'pnpm'/d" crm7/.github/workflows/ci.yml
+          sed -i -e "/^[[:space:]]*cache:[[:space:]]*'pnpm'/d" \
+                 -e "/^[[:space:]]*package-manager-cache:[[:space:]]*false/d" crm7/.github/workflows/ci.yml
+          if cmp -s /tmp/ci-backup.yml crm7/.github/workflows/ci.yml; then
+            echo "::error::APP-SCOPE POSITIVE CONTROL DID NOT PLANT — crm7/ci.yml has neither guard line any more. Re-point the plant at a file that still carries a guard."
+            exit 1
+          fi
           if node scripts/check-setup-node-pnpm-guard.mjs \
               --scope crm7 --scope conduit --scope business-suite-unified \
               --scope throughput --scope braden --scope R80.4; then
