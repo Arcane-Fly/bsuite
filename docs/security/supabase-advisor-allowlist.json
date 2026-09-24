@@ -558,6 +558,82 @@
     "is_caseload_person(p_tenant_id uuid, p_person_id uuid)",
     "site_visit_references_match_tenant(p_tenant_id uuid, p_host_employer_id uuid, p_field_officer_id uuid, p_apprentice_id uuid)"
    ]
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "tracked_in": null,
+   "added": "2026-09-25",
+   "reason": "bsuite#3208 form, signature and workflow-run class (crm7 20261207190000-350000). Six RLS predicates that policies evaluate as the caller, and eleven client RPC doors whose own bodies carry the authorisation. Every entry measured on the deployed function 2026-09-25 (prosecdef, proconfig search_path=public, pg_temp, anon EXECUTE=false, gate in body); per-object notes below. form_layout_fill_status is NOT here: crm7 20261207360000 revoked it from clients (it was a cross-tenant oracle).",
+   "objects": [
+    "apply_form_submission_signatory(p_submission uuid, p_action text, p_payload jsonb)",
+    "archive_form_layout(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone, p_archived boolean)",
+    "can_read_form_submission(p_id uuid)",
+    "discard_form_layout_draft(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone)",
+    "form_submissions_raise_confidential(p_id uuid)",
+    "get_form_signing_context(p_token text)",
+    "is_field_officer_caseload_communication_target(p_tenant_id uuid, p_recipient_type text, p_recipient_id uuid)",
+    "is_field_officer_caseload_email_link(p_tenant_id uuid, p_email_id uuid, p_entity_type text, p_entity_id uuid)",
+    "is_field_officer_own_active_mail_message(p_tenant_id uuid, p_email_id uuid)",
+    "is_form_submission_signer(p_id uuid)",
+    "publish_form_layout(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone, p_change_summary text)",
+    "redeem_form_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
+    "restore_form_layout_revision(p_revision_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone)",
+    "set_tenant_form_reference_format(p_tenant_id uuid, p_format text)",
+    "task_is_own_confidential_follow_up(p_task_tenant uuid, p_assigned_to uuid, p_related_type text, p_related_id uuid)",
+    "workflow_run_cancel(p_run_id uuid, p_reason text)",
+    "workflow_run_retry(p_run_id uuid)"
+   ],
+   "notes": {
+    "can_read_form_submission(p_id uuid)": "RLS predicate, policy-only (form_submissions and signatory policies, 20261207230000/240000). Answers only about the CALLER (auth.uid()); boolean. DEFINER so the policy can read the submission, signatory and confidential-grant rows without the caller holding them. Revoking EXECUTE would break the policy that calls it.",
+    "is_form_submission_signer(p_id uuid)": "RLS predicate, policy-only (20261207230000). True only when auth.uid() is a live nominated signer of that submission; boolean, no row data. DEFINER so a nominated guest signer, who has no tenant membership, can be recognised.",
+    "task_is_own_confidential_follow_up(p_task_tenant uuid, p_assigned_to uuid, p_related_type text, p_related_id uuid)": "RLS predicate, policy-only: the limb added to tasks_select/tasks_update by 20261207350000. True only when the task is assigned to auth.uid() AND auth.uid() authored the linked form submission, so a field officer keeps their own confidential follow-up. DEFINER so it can read form_submissions without widening that table's policy. Boolean only; pgTAP 105 test 10 fails without it.",
+    "is_field_officer_caseload_communication_target(p_tenant_id uuid, p_recipient_type text, p_recipient_id uuid)": "RLS predicate, policy-only (20261207200000). Delegates to is_caseload_person / is_caseload_host_employer, which answer for the calling field officer; validates a polymorphic communication link. Boolean only.",
+    "is_field_officer_caseload_email_link(p_tenant_id uuid, p_email_id uuid, p_entity_type text, p_entity_id uuid)": "RLS predicate, policy-only (20261207200000), same caseload class as the one above. Boolean only.",
+    "is_field_officer_own_active_mail_message(p_tenant_id uuid, p_email_id uuid)": "RLS predicate, policy-only (20261207200000). True only for a message owned by auth.uid(); boolean.",
+    "apply_form_submission_signatory(p_submission uuid, p_action text, p_payload jsonb)": "Client RPC (src/services/formSubmissionService.ts:488): nominate/cancel a signer. Body reads auth.uid(), checks membership through user_tenants and the forms.own.signers capability, raises 42501; locks the parent submission FOR UPDATE; signer identity, name and email come from the server, never the payload. anon revoked. pgTAP 99 signatories (196) incl. cross-tenant nomination refusal and the C7 substitution refusal.",
+    "archive_form_layout(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone, p_archived boolean)": "Client RPC (src/services/formLayoutService.ts). Form lifecycle door: the only write path to archived_* (column grants revoked). Body reads auth.uid(), refuses non-designers with 42501, optimistic concurrency on version/updated_at. anon revoked.",
+    "discard_form_layout_draft(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone)": "Client RPC (src/services/formLayoutService.ts). Lifecycle door as above; gate raises 42501 through the shared designer check; optimistic concurrency. anon revoked.",
+    "publish_form_layout(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone, p_change_summary text)": "Client RPC (src/services/formLayoutService.ts). The only path that sets published_revision_id (column grant revoked); reads auth.uid(), refuses non-designers with 42501, freezes the draft into an immutable revision. anon revoked.",
+    "restore_form_layout_revision(p_revision_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone)": "Client RPC (src/services/formLayoutService.ts). Copies an earlier immutable revision into the draft; designer gate raises 42501; optimistic concurrency. anon revoked.",
+    "set_tenant_form_reference_format(p_tenant_id uuid, p_format text)": "Client RPC (src/pages/settings/form-reference-settings.tsx:106). Reads auth.uid(), checks the caller is owner/admin of p_tenant_id via auth_tenant_id, raises 42501. anon revoked.",
+    "form_submissions_raise_confidential(p_id uuid)": "ZERO CALLERS today (no src, edge function or BSU call site): the bsuite#3208 confidential-escalation control is unbuilt work. Gate measured: reads auth.uid(), auth_tenant_id, raises 42501 (proven by pgTAP 98). Kept executable so the control can be built without a grant change. REVIEW: remove from this list, or wire the control, before bsuite#3208 closes.",
+    "workflow_run_cancel(p_run_id uuid, p_reason text)": "Client RPC (src/lib/workflows/runService.ts:110). Gated by workflow_run_gate_for_caller (20261207340000:28-62, itself not client-callable): raises 42501 on no acting organisation, a role outside workflow_run_caller_can_act, or a run not visible under the caller's RLS, one message for nonexistent/foreign/hidden. Returns NULL (trusted) only when auth.uid() IS NULL, i.e. a server caller. anon revoked. pgTAP 104.",
+    "workflow_run_retry(p_run_id uuid)": "Client RPC (src/lib/workflows/runService.ts:123). Same gate as workflow_run_cancel. Refuses limit failures (run_expired, step_budget_exhausted, advance_hard_stop, node_visit_cap). anon revoked. pgTAP 104.",
+    "get_form_signing_context(p_token text)": "Emailed signing link (src/lib/formSigning.ts:117). Token-gated: the raw token is hashed and compared, expires_at enforced, consumed_at makes it single-use, row locked FOR UPDATE, returns a status rather than raising, so it does not enumerate tokens. Executable by authenticated because a signed-in recipient opens the same link.",
+    "redeem_form_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)": "Emailed signing link (src/lib/formSigning.ts:175): sign or refuse. Same token mechanics as get_form_signing_context (hash compare, expiry, consumed_at single-use, FOR UPDATE). Writes only signature_requests, never form_submissions."
+   },
+   "review": "Re-measure an entry when its function is redefined. form_submissions_raise_confidential has zero callers: remove it or wire the confidential-escalation control before bsuite#3208 closes."
+  },
+  {
+   "lint": "anon_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "tracked_in": null,
+   "added": "2026-09-25",
+   "reason": "bsuite#3208 emailed form-signing link. An external signer has no account, so the pair must be anon-reachable; the token is the authority. Measured 2026-09-25 on the deployed bodies.",
+   "objects": [
+    "get_form_signing_context(p_token text)",
+    "redeem_form_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)"
+   ],
+   "notes": {
+    "get_form_signing_context(p_token text)": "The emailed-signer path: an external signer has no account. Token hashed and compared, expires_at, consumed_at single-use, FOR UPDATE, non-enumerating status response. Same class as r7_redeem_talent_pool_consent (accepted 2026-06-24).",
+    "redeem_form_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)": "As above: records sign/refuse for the token's own slot only; writes signature_requests only."
+   },
+   "review": "Re-verify hash compare, expiry and single-use if either function is redefined."
+  },
+  {
+   "lint": "security_definer_view",
+   "object_type": "view",
+   "mode": "accepted",
+   "tracked_in": null,
+   "added": "2026-09-25",
+   "reason": "form_layouts_published is the FILLER read path. form_layouts SELECT is designer-only (form_layout_caller_can_design), so a person filling in a form cannot read the base table; the view is how they see published forms. It carries its own tenant predicate (tenant_id IS NULL OR tenant_id IN auth_tenant_id()), returns only published, unarchived rows, projects no draft column (no layout), and anon has no SELECT. Converting it to security_invoker would hide every published form from fillers. Measured 2026-09-25 (pg_get_viewdef, reloptions security_invoker=false, grants).",
+   "objects": [
+    "form_layouts_published"
+   ],
+   "review": "If form_layouts gains a filler-readable policy, switch the view to security_invoker and drop this rule."
   }
  ],
  "entries": [
