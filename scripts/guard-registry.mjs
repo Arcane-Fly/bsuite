@@ -1836,8 +1836,9 @@ export const GUARDS = [
       'item 1; this gate fails if it reappears live on any banked ruleset — even ' +
       'when a stale dump agrees, because a dump that banks it is itself stale. ' +
       'Same asymmetry as the classic gate: weakening fails, strengthening warns. ' +
-      'Dumps live in docs/security/branch-protection/rulesets/ (one per repo ' +
-      'default-branch ruleset; throughput has none — verified absence), and the ' +
+      'Dumps live in docs/security/branch-protection/rulesets/ (every repo-level ' +
+      'ruleset: 6 default, 5 development; throughput has no default and R80.4 no ' +
+      'development ruleset — verified absences), and the ' +
       'directory is invisible to the classic gate scan, which reads one level.',
     evidence:
       '"[ruleset-drift] self-test: 15/15 pass — 15 case(s) exercised (13 comparison ' +
@@ -1848,12 +1849,17 @@ export const GUARDS = [
       'must only warn, a deleted ruleset, an unreadable API, enforcement weakened, ' +
       'a lost ref pattern, a re-created ruleset id, newest-dump-wins over an older ' +
       'banked linear-history dump — plus 2 structural cases: both fail-closed dump ' +
-      'shapes and an absent dumps directory)". Against live rulesets the same day: ' +
-      '"[ruleset-drift] compared live rulesets against 6 committed dump(s): ' +
-      'GaryOcean428/braden :: default@20260919, GaryOcean428/bsuite :: default@20260919, ' +
-      'GaryOcean428/business-suite-unified :: default@20260919, GaryOcean428/conduit :: ' +
-      'default@20260919, GaryOcean428/crm7 :: default@20260919, GaryOcean428/R80.4 :: ' +
-      'default@20260919 / no drift." exit 0.',
+      'shapes and an absent dumps directory)". Against live rulesets 2026-09-24, after ' +
+      're-dumping every repo ruleset under Arcane-Fly: "[ruleset-drift] compared live ' +
+      'rulesets against 11 committed dump(s) … no drift." exit 0.',
+    id: 'pointer-refresh-dedup',
+    label: 'Unchanged signed pointer PRs retain their head and check runs',
+    repo: '.',
+    command: ['node', 'scripts/check-pointer-refresh.mjs', '--self-test'],
+    ciWorkflow: '.github/workflows/advance-submodule-pointers.yml',
+    mode: 'run',
+    notes: 'Preserves an open same-repository development PR when its verified head already contains the desired tree. API failures fail closed; missing, closed, changed or unsigned candidates retain the existing refresh path and full-rollup gate.',
+    evidence: 'Local 2026-09-20: check-pointer-refresh --self-test: OK (23 cases), including actual workflow guard execution under bash -e -o pipefail. Hosted rollout and cost savings are not yet verified.',
   },
 
   {
