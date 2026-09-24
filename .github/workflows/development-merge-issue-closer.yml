@@ -4,11 +4,10 @@ name: Development-merge issue closer
 #
 # GitHub auto-closes a referenced issue ONLY on a merge into the repository's
 # DEFAULT branch. All seven repositories in this estate default to `main`, and
-# every pull request targets `development`. So every `Closes #N` ever written
-# here has been inert, while its author believed it worked. Fifteen
-# fixed-and-open issues were closed by hand on 2026-08-17 — that cleared the
-# backlog and changed nothing about the mechanism, so it would have rebuilt at
-# exactly the same rate.
+# every pull request targets `development`. The original closer honoured any
+# keyword. Under the Linear work-tracking contract a merge proves implementation
+# only, so automatic closure now requires an exact trusted receipt on an issue
+# explicitly scoped to bounded implementation.
 #
 # WHY NOT CHANGE THE DEFAULT BRANCH INSTEAD
 #
@@ -18,11 +17,11 @@ name: Development-merge issue closer
 # default `development` would hand the word "default" to the branch that is not
 # production, in the one setting with the widest blast radius in the estate.
 #
-# WHY NOT FAIL THE PR FOR USING A CLOSING KEYWORD
+# WHY NOT CLOSE ALL ISSUES NAMED BY THE PR
 #
-# It punishes the author for writing the correct, universally-understood thing,
-# and still leaves a human to close the issue by hand afterwards — which is the
-# manual step that produced the backlog. This honours the keyword instead.
+# A full product outcome still needs deployed UX, permissions, persistence and
+# release acceptance. The ordinary PR reference is `Refs #N`; a closing keyword
+# is a candidate for bounded implementation closure, not an acceptance verdict.
 #
 # TWO TRIGGERS, ONE CODE PATH
 #
@@ -37,8 +36,9 @@ name: Development-merge issue closer
 #
 # The scheduled sweep is also the backstop for the event path: if a
 # pull_request run is cancelled, rate-limited, or races a reopen, the next
-# sweep picks it up. The script is idempotent — it only ever acts on issues
-# that are currently OPEN and carry no prior marker comment for that PR.
+# sweep picks it up. The script acts only on open issues with a current scoped
+# receipt. A prior closer marker blocks a human reopen, while a failed PATCH
+# can retry without duplicating the audit comment.
 
 on:
   pull_request:
@@ -93,7 +93,7 @@ concurrency:
 
 jobs:
   close:
-    name: Honour closing keywords from development merges
+    name: Close accepted implementation scope from development merges
     runs-on: ubuntu-latest
     # RULE 1 — ONLY A GENUINE MERGE. A pull request closes without merging all
     # the time (superseded, abandoned, split). `closed` alone must never close
@@ -124,7 +124,10 @@ jobs:
       - name: Prove the parser still discriminates
         run: node scripts/parse-closing-keywords.mjs --self-test
 
-      - name: Close issues named by merged development pull requests
+      - name: Prove the acceptance boundary
+        run: node --test scripts/issue-closure-eligibility.test.mjs
+
+      - name: Close accepted bounded issues named by merged development pull requests
         env:
           # Event path: this repository only, with the built-in token.
           # Sweep path: the whole estate, which needs the cross-repo PAT.
