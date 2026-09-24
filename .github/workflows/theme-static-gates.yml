@@ -112,3 +112,20 @@ jobs:
       # reaches zero it becomes a ban like G12.
       - name: G13 — fill-token-as-text does not grow
         run: bash scripts/check-fill-token-as-text.sh
+
+      # G14 exists because bumping a package pin can LOOK like it worked and
+      # change nothing. Cascade layers rank UNLAYERED styles above every layered
+      # one, so crm7's own `src/index.css:388-426` and BSU's `:1077-1108` beat
+      # @bsuite/theme's `@layer base` scrollbars.css no matter which version was
+      # resolved — and BSU's unlayered `color-scheme: light dark` handed the
+      # native widget's light/dark choice back to the OS on top of that.
+      #
+      # `--require-apps=6` is not decoration: this is a static scan, and over an
+      # absent submodule tree it would find nothing and exit 0. The self-test
+      # runs first for the same reason — a checker that can no longer fail
+      # cannot be trusted when it passes.
+      - name: G14 — the scrollbar gate can still fail
+        run: node scripts/check-no-unlayered-scrollbar-rules.mjs --self-test
+
+      - name: G14 — no scrollbar rule outside a cascade layer, and none hidden
+        run: node scripts/check-no-unlayered-scrollbar-rules.mjs --require-apps=6
