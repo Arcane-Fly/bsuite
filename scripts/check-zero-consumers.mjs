@@ -169,16 +169,90 @@ export function persistenceExports(sources) {
 }
 
 /**
+ * The store ACTION whose body calls `fnName`, per call site in a store file:
+ * the nearest property key declared before the call (`publish: async (…) =>`,
+ * `publish(…) {`). Returns [] when the call sits outside any action.
+ */
+export function storeActionsCalling(storeText, fnName) {
+  const actions = new Set();
+  const call = new RegExp(`\\b${fnName}\\s*\\(`, 'g');
+  const key = /^\s{2,6}([A-Za-z_$][\w$]*)\s*(?::\s*(?:async\s*)?(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>|\([^)]*\)\s*\{)/gm;
+  let m;
+  while ((m = call.exec(storeText)) !== null) {
+    let owner = null;
+    let k;
+    key.lastIndex = 0;
+    while ((k = key.exec(storeText)) !== null && k.index < m.index) owner = k[1];
+    if (owner) actions.add(owner);
+  }
+  return [...actions];
+}
+
+/** Tests exercise code; they do not put it in front of a user. */
+export function isTestFile(path) {
+  return /(^|\/)__tests__\//.test(path) || /\.(test|spec)\.[cm]?[jt]sx?$/.test(path);
+}
+
+/** Line and block comments removed, so prose never counts as a use. */
+export function stripComments(text) {
+  return text.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:])\/\/.*$/gm, '$1');
+}
+
+/**
+ * True only for real store usage of `action`: a member access (`s.publish`,
+ * `getState().publish`) or destructuring straight from a `use…Store(…)` call.
+ * A bare word is not enough — actions have names like `resolve` and `remove`,
+ * which also name Promise callbacks and unrelated locals.
+ */
+export function usesStoreAction(code, action) {
+  if (new RegExp(`\\.${action}\\b`).test(code)) return true;
+  const destructure = new RegExp(
+    `\\{[^{}]*\\b${action}\\b[^{}]*\\}\\s*=\\s*use[A-Z][\\w$]*Store\\s*\\(`,
+  );
+  return destructure.test(code);
+}
+
+/**
  * Consumers OUTSIDE the service layer. Its own file never counts, and neither
- * does another service or store — see the docblock above for why.
+ * does another service or store BY ITSELF — see the docblock above for why.
+ *
+ * ONE HOP THROUGH A STORE, added 2026-09-24. crm7's form-layout lifecycle
+ * (publish / archive / discard / revisions / restore) is page → store action →
+ * service, and the page calls every one of those actions. Counting only direct
+ * callers reported all five as zero-consumer. A store call now counts when a
+ * SCREEN imports that store module AND names the specific action wrapping the
+ * call. A store whose action no screen names still reaches nobody, so the
+ * measured `resolveFormLayout` trap still reports zero.
  */
 export function persistenceConsumers(exports_, sources) {
   const counts = new Map(exports_.map((e) => [`${e.definedIn}::${e.name}`, []]));
-  for (const { path, text } of sources) {
-    if (isServiceLayer(path)) continue;
-    for (const e of exports_) {
-      if (path === e.definedIn) continue;
-      if (new RegExp(`\\b${e.name}\\b`).test(text)) counts.get(`${e.definedIn}::${e.name}`).push(path);
+  // A consumer is a screen in the SAME app. A test file exercises a function
+  // without reaching a user, and a same-named identifier in another app is a
+  // different function — measured 2026-09-24: braden's `createPage` was
+  // "consumed" by a crm7 route test holding a local named createPage.
+  const screens = sources.filter(({ path }) => !isServiceLayer(path) && !isTestFile(path));
+  const appOf = (path) => path.split('/')[0];
+  const stores = sources.filter(({ path }) => /\/stores\//.test(path) || /Store\.tsx?$/.test(path));
+  for (const e of exports_) {
+    const key = `${e.definedIn}::${e.name}`;
+    const direct = new RegExp(`\\b${e.name}\\b`);
+    for (const { path, text } of screens) {
+      if (path !== e.definedIn && appOf(path) === appOf(e.definedIn) && direct.test(text)) {
+        counts.get(key).push(path);
+      }
+    }
+    for (const store of stores) {
+      if (store.path === e.definedIn || !direct.test(store.text)) continue;
+      const actions = storeActionsCalling(store.text, e.name);
+      if (actions.length === 0) continue;
+      const module = store.path.split('/').pop().replace(/\.tsx?$/, '');
+      const importsStore = new RegExp(`from\\s+['"][^'"]*\\b${module}['"]`);
+      for (const { path, text } of screens) {
+        if (counts.get(key).includes(path) || appOf(path) !== appOf(e.definedIn)) continue;
+        if (!importsStore.test(text)) continue;
+        const code = stripComments(text);
+        if (actions.some((action) => usesStoreAction(code, action))) counts.get(key).push(path);
+      }
     }
   }
   return counts;
@@ -287,6 +361,83 @@ function selfTest() {
     if (viaStore.get('crm7/src/services/formLayoutService.ts::resolveFormLayout').length !== 0)
       fail('a call from the STORE layer was counted as reaching a user')
 
+    // One hop through a store: counted only when a screen imports the store AND
+    // names the action that wraps the call.
+    const lifecycle = [{ name: 'publishFormLayout', definedIn: 'crm7/src/services/formLayoutService.ts' }]
+    const store = {
+      path: 'crm7/src/stores/formLayoutStore.ts',
+      text: [
+        'import { publishFormLayout } from "@/services/formLayoutService"',
+        'export const useFormLayoutStore = create((set, get) => ({',
+        '  publish: async (id) => {',
+        '    const current = get().layouts[id]',
+        '    await publishFormLayout(id, current)',
+        '  },',
+        '  unrelated: () => null,',
+        '}))',
+      ].join('\n'),
+    }
+    const usesAction = persistenceConsumers(lifecycle, [
+      store,
+      {
+        path: 'crm7/src/pages/settings/form-layout-detail.tsx',
+        text: 'import { useFormLayoutStore } from "@/stores/formLayoutStore"; const { publish } = useFormLayoutStore(); publish(id)',
+      },
+    ])
+    if (usesAction.get('crm7/src/services/formLayoutService.ts::publishFormLayout').length !== 1)
+      fail('a screen calling the store action that wraps a service call was not counted')
+    const importsOnly = persistenceConsumers(lifecycle, [
+      store,
+      {
+        path: 'crm7/src/pages/settings/form-layouts.tsx',
+        text: 'import { useFormLayoutStore } from "@/stores/formLayoutStore"; const { unrelated } = useFormLayoutStore()',
+      },
+    ])
+    if (importsOnly.get('crm7/src/services/formLayoutService.ts::publishFormLayout').length !== 0)
+      fail('a screen that imports the store but never names the wrapping action was counted')
+    const namesWithoutImport = persistenceConsumers(lifecycle, [
+      store,
+      { path: 'crm7/src/pages/other.tsx', text: 'const publish = () => 1; publish()' },
+    ])
+    if (namesWithoutImport.get('crm7/src/services/formLayoutService.ts::publishFormLayout').length !== 0)
+      fail('a screen naming the action without importing the store was counted')
+    const generic = [{ name: 'resolveFormLayout', definedIn: 'crm7/src/services/formLayoutService.ts' }]
+    const genericStore = {
+      path: 'crm7/src/stores/formLayoutStore.ts',
+      text: 'export const useFormLayoutStore = create(() => ({\n  resolve: async (k) => {\n    return resolveFormLayout(k)\n  },\n}))',
+    }
+    const proseOnly = persistenceConsumers(generic, [
+      genericStore,
+      {
+        path: 'crm7/src/components/FormLayoutRenderer.tsx',
+        text: 'import { useFormLayoutStore } from "@/stores/formLayoutStore"\n// rules resolve against the row\nnew Promise((resolve) => resolve(1))\nconst { layouts } = useFormLayoutStore()',
+      },
+    ])
+    if (proseOnly.get('crm7/src/services/formLayoutService.ts::resolveFormLayout').length !== 0)
+      fail('a generic action name in a comment or a Promise callback was counted as a store use')
+    const selectorUse = persistenceConsumers(generic, [
+      genericStore,
+      {
+        path: 'crm7/src/components/Form.tsx',
+        text: 'import { useFormLayoutStore } from "@/stores/formLayoutStore"\nconst resolveLayout = useFormLayoutStore((s) => s.resolve)',
+      },
+    ])
+    if (selectorUse.get('crm7/src/services/formLayoutService.ts::resolveFormLayout').length !== 1)
+      fail('a selector reading the wrapping action (s.resolve) was not counted')
+    const bradenCreate = [{ name: 'createPage', definedIn: 'braden/src/services/pagesService.ts' }]
+    const elsewhere = persistenceConsumers(bradenCreate, [
+      { path: 'crm7/src/pages/x.tsx', text: 'const createPage = 1; createPage' },
+      { path: 'braden/src/__tests__/pages.test.tsx', text: 'createPage()' },
+      { path: 'braden/src/pages/Edit.spec.tsx', text: 'createPage()' },
+    ])
+    if (elsewhere.get('braden/src/services/pagesService.ts::createPage').length !== 0)
+      fail('a test file or a same-named identifier in ANOTHER app was counted as a consumer')
+    const sameApp = persistenceConsumers(bradenCreate, [
+      { path: 'braden/src/pages/admin/Pages.tsx', text: 'await createPage(draft)' },
+    ])
+    if (sameApp.get('braden/src/services/pagesService.ts::createPage').length !== 1)
+      fail('a screen in the same app calling the function was not counted')
+
     if (!isServiceLayer('crm7/src/services/x.ts')) fail('services/ not recognised as the layer')
     if (!isServiceLayer('crm7/src/stores/x.ts')) fail('stores/ not recognised as the layer')
     if (isServiceLayer('crm7/src/pages/x.tsx')) fail('a page was classed as the service layer')
@@ -319,13 +470,15 @@ function selfTest() {
   }
 
   console.log(
-    'check-zero-consumers --self-test: 22 assertions across five detectors — package ' +
+    'check-zero-consumers --self-test: 29 assertions across five detectors — package ' +
       'consumer counting including the self-reference trap, hook counting including the ' +
       'definition-is-not-a-use and substring traps, and token classification including ' +
       'the Tailwind @theme case that must never be called unused, and minted-token diff ' +
       'parsing including the removed-token and var()-reference-on-an-added-line traps, and\n' +
         'persistence-function reach including the two traps that let the real defects ship: a\n' +
-        '`.from()` BELOW the declaration line, and a caller that is itself a store rather than a screen.',
+        '`.from()` BELOW the declaration line, and a caller that is itself a store rather than a screen;\n' +
+        'plus the one-hop store rule (screen must import the store AND use the wrapping action, never a\n' +
+        'bare word in prose or a Promise callback) and the same-app, non-test consumer rule.',
   )
   return bad
 }
