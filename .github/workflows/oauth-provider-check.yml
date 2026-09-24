@@ -74,10 +74,14 @@ jobs:
             echo "::warning::BSUITE_CROSS_REPO_PAT secret is empty or not set."
             TEST="missing"
           else
-            TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+            # Probe REPO access, not a file: a moved file must fail its own spec
+            # below, never masquerade as "no access" and skip the whole job.
+            # -L: after the org transfer an old path answers 301, which read as
+            # "no access" and skipped every check (bsuite#3331).
+            TEST=$(curl -sSL -o /dev/null -w "%{http_code}" \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/Arcane-Fly/crm7/contents/src/components/LoginModal.tsx?ref=main")
+              "https://api.github.com/repos/Arcane-Fly/crm7")
             echo "Preflight HTTP status: $TEST"
           fi
 
@@ -108,30 +112,46 @@ jobs:
           # ── Configuration ──────────────────────────────────────────────────────
           # Format: "repo:branch:path:description"
           AUTH_FILE_SPECS=(
-            "Arcane-Fly/business-suite-unified:main:src/components/AuthForm.tsx:BSU canonical auth entry point"
-            "Arcane-Fly/crm7:main:src/components/LoginModal.tsx:CRM7 sign-in modal"
-            "Arcane-Fly/crm7:main:src/components/SignupModal.tsx:CRM7 register modal"
+            "Arcane-Fly/business-suite-unified:main:src/components/auth/OAuthProviderButtons.tsx:BSU provider buttons (mounted by AuthForm)"
           )
+          # The buttons file declares the providers; AuthForm is the entry point
+          # that must mount it. Assert that wiring too, so moving the providers
+          # again cannot leave the entry point checked for nothing.
+          ENTRY_FILE=$(curl -sSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github.raw+json" \
+            "https://api.github.com/repos/Arcane-Fly/business-suite-unified/contents/src/components/AuthForm.tsx?ref=main")
+          if ! echo "$ENTRY_FILE" | grep -q "<OAuthProviderButtons"; then
+            echo "::error::business-suite-unified/src/components/AuthForm.tsx no longer mounts <OAuthProviderButtons> — the provider check below would pass on a file nobody renders"
+            ENTRY_UNWIRED=1
+          fi
+          # crm7's LoginModal/SignupModal were deleted when OAuth UI was
+          # centralised to BSU (crm7#241); every crm7 sign-in goes through the
+          # BSU AuthForm above, so it is the single entry point to check.
 
           declare -A PROVIDERS=(
             ["google"]="Google Workspace"
             ["azure"]="Microsoft Azure AD / M365"
           )
 
-          FAILED=0
+          FAILED=${ENTRY_UNWIRED:-0}
           SUMMARY=""
 
           for spec in "${AUTH_FILE_SPECS[@]}"; do
             IFS=':' read -r repo branch filepath desc <<< "$spec"
 
-            RESPONSE=$(curl -sS \
+            RESPONSE=$(curl -sSL \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
               "https://api.github.com/repos/${repo}/contents/${filepath}?ref=${branch}")
 
             if echo "$RESPONSE" | grep -q '"message".*"Not Found"'; then
-              echo "::warning::${repo}/${filepath} — not found on branch ${branch}, skipping"
-              SUMMARY+="⚠️  **\`${repo}/${filepath}\`** ($desc) — not found (skipped)\n"
+              # A listed auth entry point that no longer exists FAILS: skipping it
+              # is how this gate checked nothing for crm7 after its modals moved
+              # to BSU (crm7#241) — remove or repoint the spec deliberately.
+              echo "::error::${repo}/${filepath} — not found on branch ${branch}; update AUTH_FILE_SPECS"
+              SUMMARY+="❌ **\`${repo}/${filepath}\`** ($desc) — not found\n"
+              FAILED=1
               continue
             fi
 
@@ -179,7 +199,7 @@ jobs:
               echo "### ❌ One or more providers are missing — see errors above"
               echo ""
               echo "**How to fix:** Add the missing provider button to the flagged file."
-              echo "Reference: \`Arcane-Fly/crm7:src/components/LoginModal.tsx\`"
+              echo "Reference: \`Arcane-Fly/business-suite-unified:src/components/AuthForm.tsx\`"
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -216,7 +236,7 @@ jobs:
 
             Check the [workflow run](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) for which files and providers failed.
 
-            **Reference implementation:** \`Arcane-Fly/crm7:src/components/LoginModal.tsx\``
+            **Reference implementation:** \`Arcane-Fly/business-suite-unified:src/components/AuthForm.tsx\``
             })
 
   # ─────────────────────────────────────────────────────────────────────────────
@@ -256,10 +276,10 @@ jobs:
           if [ -z "$GH_TOKEN" ]; then
             TEST="missing"
           else
-            TEST=$(curl -sS -o /dev/null -w "%{http_code}" \
+            TEST=$(curl -sSL -o /dev/null -w "%{http_code}" \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/Arcane-Fly/crm7/contents/src/lib/supabase.ts?ref=main")
+              "https://api.github.com/repos/Arcane-Fly/crm7")
           fi
 
           if [ "$TEST" != "200" ]; then
@@ -293,7 +313,7 @@ jobs:
           fetch_file() {
             local repo="$1" branch="$2" path="$3"
             local response
-            response=$(curl -sS \
+            response=$(curl -sSL \
               -H "Authorization: Bearer $GH_TOKEN" \
               -H "Accept: application/vnd.github.v3+json" \
               "https://api.github.com/repos/${repo}/contents/${path}?ref=${branch}")
@@ -313,8 +333,9 @@ jobs:
             CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
 
             if [ "$CONTENT" = "__NOT_FOUND__" ]; then
-              echo "::warning::${repo}/${filepath} — not found, skipping"
-              PKCE_SUMMARY+="⚠️  **\`${repo}/${filepath}\`** — not found (skipped)\n"
+              echo "::error::${repo}/${filepath} — not found; update CLIENT_FILE_SPECS"
+              PKCE_SUMMARY+="❌ **\`${repo}/${filepath}\`** — not found\n"
+              FAILED=1
               continue
             fi
 
@@ -357,7 +378,9 @@ jobs:
             CONTENT=$(fetch_file "$repo" "$branch" "$filepath")
 
             if [ "$CONTENT" = "__NOT_FOUND__" ]; then
-              PKCE_SUMMARY+="  ⚠️  \`${repo}/${filepath}\` — not found (skipped)\n"
+              echo "::error::${repo}/${filepath} — not found; update CALLBACK_FILE_SPECS"
+              PKCE_SUMMARY+="  ❌ \`${repo}/${filepath}\` — not found\n"
+              FAILED=1
               continue
             fi
 
@@ -472,10 +495,10 @@ jobs:
         run: |
           # Verify the PAT is set AND can actually read the private repos
           if [ -n "$BSUITE_PAT" ]; then
-            STATUS=$(curl -sS -o /dev/null -w "%{http_code}" \
+            STATUS=$(curl -sSL -o /dev/null -w "%{http_code}" \
               -H "Authorization: Bearer $BSUITE_PAT" \
               -H "Accept: application/vnd.github.v3+json" \
-              "https://api.github.com/repos/Arcane-Fly/crm7/contents/src/components/LoginModal.tsx?ref=main")
+              "https://api.github.com/repos/Arcane-Fly/crm7")
           else
             STATUS="missing"
           fi
