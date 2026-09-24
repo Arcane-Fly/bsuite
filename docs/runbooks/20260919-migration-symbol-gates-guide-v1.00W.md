@@ -1,6 +1,10 @@
 ---
 kind: standard
 authority: engineering
+evidence:
+  - scripts/check-migration-symbol-gaps.mjs
+  - .github/workflows/migration-symbol-gates.yml
+  - scripts/guard-registry.mjs
 owner: bsuite
 status: W
 related_issues: [3136, 3143, 3147, 3119]
