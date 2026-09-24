@@ -488,7 +488,7 @@ function main(argv) {
     console.error('  This gate reads the COMMITTED dump, never the live API — with no dump it has');
     console.error('  checked nothing, which is not the same as having found nothing. Dump both');
     console.error('  branches before requiring anything:');
-    console.error('    gh api repos/GaryOcean428/bsuite/branches/development/protection > docs/security/branch-protection/bsuite/development-$(date +%Y%m%d).json');
+    console.error('    gh api repos/Arcane-Fly/bsuite/branches/development/protection > docs/security/branch-protection/bsuite/development-$(date +%Y%m%d).json');
     return 1;
   }
 
