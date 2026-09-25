@@ -317,9 +317,38 @@ function warnOnceAboutCollapsedContent(el: HTMLElement): void {
   );
 }
 
-/** Inset for a chrome-on surface whose content declares no surface of its own. */
-const CHROME_BARE_CONTENT_INSET =
-  '[&:not(:has([data-slot=card])):not(:has([data-slot=page-header]))]:p-6 md:[&:not(:has([data-slot=card])):not(:has([data-slot=page-header]))]:p-7';
+/** Content elements that declare a surface, and therefore an inset, of their own. */
+const SELF_SURFACED = '[data-slot="card"], [data-slot="page-header"]';
+
+/**
+ * True when a chrome-on surface's content brings no inset of its own.
+ *
+ * Walk down pure wrappers (no padding, exactly one element child) to the
+ * first element that does layout work, then call it bare only if it has no
+ * left and no top padding. A slot is never bare while anything inside it is a
+ * Card or a PageHeader. The in-edit label strip is skipped, not measured.
+ */
+export function hasBareContent(surface: HTMLElement): boolean {
+  if (surface.querySelector(SELF_SURFACED)) return false;
+  const root = surface.querySelector<HTMLElement>('[data-slot="grid-item-body"]') ?? surface;
+  const firstContent = (el: Element): Element | null => {
+    for (const child of Array.from(el.children)) {
+      if (child.getAttribute('data-slot') === 'grid-item-editor-chrome') continue;
+      // The autoHeight measure wrapper is structure, not content.
+      if (child.classList.contains('flow-root') && el === root) return firstContent(child);
+      return child;
+    }
+    return null;
+  };
+  let el = firstContent(root);
+  if (!el) return false;
+  const padded = (node: Element) => {
+    const cs = getComputedStyle(node);
+    return (Number.parseFloat(cs.paddingLeft) || 0) > 0 || (Number.parseFloat(cs.paddingTop) || 0) > 0;
+  };
+  while (!padded(el) && el.children.length === 1) el = el.children[0];
+  return !padded(el);
+}
 
 const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(function GridItem({
   id,
@@ -369,6 +398,41 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
 
     const measureRef = useRef<HTMLDivElement | null>(null);
     const surfaceRef = useRef<HTMLDivElement | null>(null);
+
+    /**
+     * Does this chrome-on slot hold content that brings no inset of its own?
+     * (crm7#2734). The chrome surface paints a border and no padding, so a bare
+     * filter bar or hand-rolled header sat on the border. A blanket inset is
+     * wrong twice over: most slots nest their own Card, and many widgets pad
+     * themselves (`p-6`) without declaring any marker. The first release used
+     * a CSS `:has()` guard and double-padded exactly those widgets, which CSS
+     * cannot see. So the decision is MEASURED: see `hasBareContent`.
+     */
+    const [bareContent, setBareContent] = useState(false);
+    useLayoutEffect(() => {
+      const surface = surfaceRef.current;
+      if (!chrome || !surface) {
+        setBareContent(false);
+        return;
+      }
+      const detect = () => setBareContent(hasBareContent(surface));
+      detect();
+      if (typeof MutationObserver === 'undefined') return;
+      let frame: number | null = null;
+      const schedule =
+        typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function'
+          ? window.requestAnimationFrame.bind(window)
+          : (cb: () => void) => setTimeout(cb, 0) as unknown as number;
+      const mo = new MutationObserver(() => {
+        if (frame !== null) return;
+        frame = schedule(() => {
+          frame = null;
+          detect();
+        });
+      });
+      mo.observe(surface, { childList: true, subtree: true, attributes: true, attributeFilter: ['class', 'data-slot', 'style'] });
+      return () => mo.disconnect();
+    }, [chrome]);
     const lastReportedRowsRef = useRef<number | null>(null);
     const measureRafRef = useRef<number | null>(null);
     /**
@@ -446,7 +510,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
       else warnOnceAboutCollapsedContent(el);
       // Re-measure when edit chrome mounts/unmounts so the strip is in the
       // row count in edit mode and gone again on lossless return.
-    }, [autoHeight, onAutoHeightChange, reportRows, isEditing, cardStyleVars]);
+    }, [autoHeight, onAutoHeightChange, reportRows, isEditing, cardStyleVars, bareContent]);
 
     useEffect(() => {
       if (!autoHeight || !onAutoHeightChange) return;
@@ -511,6 +575,7 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
           <div
             data-slot="grid-item-surface"
             data-chrome={chrome ? 'on' : 'off'}
+            data-bare-content={chrome && bareContent ? '' : undefined}
             /*
              * WHICH SLOT IS THIS? The grid item carried no answer until now, and
              * that absence has cost this estate two voided measurement datasets.
@@ -606,18 +671,9 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                     // manually-resized slot h-full is still right: the user chose that
                     // height and the chrome should fill it.
                     autoHeight ? 'h-fit' : 'h-full',
-                    // THE INSET, ONLY FOR CONTENT THAT BRINGS NONE (crm7#2734).
-                    // The surface painted no padding, so content that is not
-                    // itself a card sat on the border: hand-rolled headers,
-                    // filter bars, plain sections, 182 slots in crm7 alone. A
-                    // blanket inset is wrong, because most slots nest their own
-                    // Card and would gain a gutter. So the surface pads only
-                    // when nothing inside it declares its own surface or inset:
-                    // `data-slot="card"` (shadcn's convention) or
-                    // `data-slot="page-header"`. The value is PageHeader's own
-                    // p-6 md:p-7, so a bare slot and a header line up. An
-                    // operator-set --card-padding is inline style and still wins.
-                    CHROME_BARE_CONTENT_INSET,
+                    // PageHeader's own inset, so a bare slot and a header line up.
+                    // An operator --card-padding is inline style and still wins.
+                    bareContent && 'p-6 md:p-7',
                   )
                 : // Chrome OFF: layout only. Identical box, no paint.
                   cn('w-full transition-all flex flex-col', autoHeight ? 'h-fit' : 'h-full')
