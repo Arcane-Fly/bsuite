@@ -6,6 +6,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [0.3.1] — 2026-09-25 — an edit before the draft loads can no longer overwrite it
+
+### Fixed
+
+- **Reopening a workflow and clicking the palette at once overwrote the saved
+  draft.** Measured on crm7 production: a 4-node, 1-edge draft, reopened and
+  clicked as soon as the palette rendered, was saved as 1 node and 0 edges.
+  The draft read was correct. The palette accepted the click while the local
+  graph was still the empty placeholder, `scheduleSave` queued that graph with
+  no target version, the draft then seeded, and the timer's `flush` read the
+  newly seeded version at fire time and wrote the pre-load graph into it.
+  - A pending save now carries the version it was made against, taken when it
+    is scheduled; `flush` and the unmount flush refuse a save whose version is
+    missing or no longer the one on screen. Both seed effects drop any pending
+    save, which by definition predates the graph just read.
+  - The controller is not editable until the saved graph is on screen:
+    `isGraphReady` (new) is false until the draft — or, with no draft, the
+    published version, or neither exists — has seeded, and `isReadOnly` is
+    true meanwhile, so the palette renders nothing. `commit`, the drag-start
+    path, undo and redo refuse; `addNode` and "Create draft" throw rather than
+    act on the placeholder. A published version that fails to load does not
+    lock the editor for ever.
+
 ## [0.3.0-rc.4] — 2026-09-10 — ai_context NOT NULL, orphan-safe duplicate (bsuite-3205)
 
 **Version choice.** Bugfix on top of `0.3.0-rc.3`. Not published to npm as part of
