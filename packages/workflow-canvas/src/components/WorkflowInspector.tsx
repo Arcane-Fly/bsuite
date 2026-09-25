@@ -669,7 +669,9 @@ export function WorkflowInspector({
 
       {readOnly ? (
         <p className="mt-3 text-xs text-muted-foreground">
-          This workflow belongs to another organisation, so it cannot be edited here.
+          {controller.needsDraft
+            ? 'This workflow is published. Create a draft to change it.'
+            : 'This workflow belongs to another organisation, so it cannot be edited here.'}
         </p>
       ) : (
         <button
