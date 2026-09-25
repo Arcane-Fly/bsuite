@@ -317,6 +317,10 @@ function warnOnceAboutCollapsedContent(el: HTMLElement): void {
   );
 }
 
+/** Inset for a chrome-on surface whose content declares no surface of its own. */
+const CHROME_BARE_CONTENT_INSET =
+  '[&:not(:has([data-slot=card])):not(:has([data-slot=page-header]))]:p-6 md:[&:not(:has([data-slot=card])):not(:has([data-slot=page-header]))]:p-7';
+
 const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(function GridItem({
   id,
   content,
@@ -602,6 +606,18 @@ const GridItem = React.memo(React.forwardRef<HTMLDivElement, GridItemProps>(func
                     // manually-resized slot h-full is still right: the user chose that
                     // height and the chrome should fill it.
                     autoHeight ? 'h-fit' : 'h-full',
+                    // THE INSET, ONLY FOR CONTENT THAT BRINGS NONE (crm7#2734).
+                    // The surface painted no padding, so content that is not
+                    // itself a card sat on the border: hand-rolled headers,
+                    // filter bars, plain sections, 182 slots in crm7 alone. A
+                    // blanket inset is wrong, because most slots nest their own
+                    // Card and would gain a gutter. So the surface pads only
+                    // when nothing inside it declares its own surface or inset:
+                    // `data-slot="card"` (shadcn's convention) or
+                    // `data-slot="page-header"`. The value is PageHeader's own
+                    // p-6 md:p-7, so a bare slot and a header line up. An
+                    // operator-set --card-padding is inline style and still wins.
+                    CHROME_BARE_CONTENT_INSET,
                   )
                 : // Chrome OFF: layout only. Identical box, no paint.
                   cn('w-full transition-all flex flex-col', autoHeight ? 'h-fit' : 'h-full')
