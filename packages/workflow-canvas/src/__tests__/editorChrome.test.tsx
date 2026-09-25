@@ -156,6 +156,7 @@ function makeController(overrides: Partial<WorkflowController> = {}): WorkflowCo
     duplicateToTenant: vi.fn(),
     isPlatformTemplate: false,
     isReadOnly: false,
+    isGraphReady: true,
     ...overrides,
   } as unknown as WorkflowController;
 }
