@@ -632,6 +632,21 @@
     "form_layouts_published"
    ],
    "review": "If form_layouts gains a filler-readable policy, switch the view to security_invoker and drop this rule."
+  },
+  {
+   "lint": "authenticated_security_definer_function_executable",
+   "object_type": "function",
+   "mode": "accepted",
+   "tracked_in": null,
+   "added": "2026-09-25",
+   "reason": "crm7#2752 (bsuite#3208 C9, crm7 20261207400000): the Share card's 'One organisation' copy. A client RPC door whose body carries the authorisation: signed in, then platform developer OR active owner/admin of BOTH the source record's organisation and the target (42501 otherwise). Measured on the deployed function 2026-09-25: prosecdef, search_path=public, pg_temp, anon EXECUTE=false, body md5 452f8716 equals the migration file.",
+   "objects": [
+    "copy_ui_record_to_organisation(p_table text, p_record_id uuid, p_target_tenant_id uuid)"
+   ],
+   "notes": {
+    "copy_ui_record_to_organisation(p_table text, p_record_id uuid, p_target_tenant_id uuid)": "INVOKER cannot: custom_pages_insert admits only the acting tenant, so a developer could never place a copy in another organisation. The source row is only read; the new row is built from a fixed column allowlist (no published_revision_id, archived_* or is_e2e_fixture) and arrives unpublished and off the navigation. Only form_layouts and custom_pages are accepted (22023 otherwise)."
+   },
+   "review": "Re-measure when the function is redefined."
   }
  ],
  "entries": [
