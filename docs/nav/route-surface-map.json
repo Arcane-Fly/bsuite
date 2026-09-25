@@ -22012,6 +22012,25 @@
       }
     },
     {
+      "route": "/gto-compliance/evidence-dashboard",
+      "app": "crm7",
+      "auth": "authenticated",
+      "status": "redirect",
+      "component": "Redirect",
+      "component_file": null,
+      "hooks": [],
+      "tables": [],
+      "rpcs": [],
+      "edge_fns": [],
+      "rls": {},
+      "tenant_scoped": null,
+      "edge_fn_deployed": {},
+      "unresolved_from": 0,
+      "files_walked": 0,
+      "verdict": "REDIRECT",
+      "note": "route is a redirect, no data path of its own"
+    },
+    {
       "route": "/gto-compliance/evidence/create",
       "app": "crm7",
       "auth": "authenticated",
