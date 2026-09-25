@@ -15,12 +15,14 @@
  * the version the plan reserved is no longer free.
  */
 
+import { findUnreachableNodes } from './graphChecks.js';
 import { deserialiseGraph, serialiseGraph } from './schemas.js';
 import { emptyWorkflowGraph } from './types.js';
 import type {
   WorkflowDefinitionRow,
   WorkflowDefinitionVersionRow,
   WorkflowGraph,
+  WorkflowNode,
 } from './types.js';
 
 // See `packages/schema-builder/src/service.ts` for the full rationale: the real
@@ -403,6 +405,19 @@ export async function updateVersionAiContext(
   return hydrateVersion(assertNoError<WorkflowDefinitionVersionRow>(res));
 }
 
+function stepName(node: WorkflowNode): string {
+  const label = node.data.label;
+  return typeof label === 'string' && label.length > 0 ? label : 'an unnamed step';
+}
+
+function unreachableStepsMessage(nodes: WorkflowNode[]): string {
+  const names = nodes.map(stepName).join(', ');
+  const singular = nodes.length === 1;
+  const subject = singular ? 'it' : 'they';
+  const object = singular ? 'it' : 'them';
+  return `Nothing leads to ${names}, so ${subject} would never run. Connect ${object} from Start or remove ${object}, then publish.`;
+}
+
 /**
  * Publish a draft: flip its status, then move the definition's pointer.
  *
@@ -419,12 +434,26 @@ export async function updateVersionAiContext(
  *                                 row still marked draft, which the editor may
  *                                 then keep writing to. Live traffic reading a
  *                                 graph someone is mid-edit on.
+ *
+ * THE GRAPH IS READ BEFORE EITHER WRITE. A run that has a Start terminator
+ * begins there and follows edges; a step off that path never runs, and
+ * publishing it anyway is how an action disappears with no error. Refusing
+ * after the status flip would leave that graph published. A refusal writes
+ * nothing.
  */
 export async function publishVersion(
   client: LooseSupabaseClient,
   definitionId: string,
   versionId: string,
 ): Promise<WorkflowDefinitionRow> {
+  const version = await getWorkflowVersion(client, versionId);
+  if (version && version.workflow_definition_id === definitionId) {
+    const unreachable = findUnreachableNodes(version.graph);
+    if (unreachable.length > 0) {
+      throw new Error(unreachableStepsMessage(unreachable));
+    }
+  }
+
   const now = new Date().toISOString();
 
   const versionRes = await client

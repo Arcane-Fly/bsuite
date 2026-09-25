@@ -19,6 +19,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `updateNodeData` / `scheduleSave` until `createDraft()` creates a draft to
   write to. The inspector says to create a draft instead of claiming the
   workflow belongs to another organisation.
+- **Publishing accepted a step that nothing leads to.** A run starts at the
+  Start terminator when the graph has one, and otherwise at every node with
+  nothing coming in. A step off to the side was still published, and its
+  action never ran. Publish now refuses that graph, names the step, and
+  writes nothing until it is connected from Start or removed. A workflow
+  that is a single step, with no Start or End, still publishes. A swimlane
+  is a container and is never treated as a step that failed to connect.
 
 ## [0.3.1] — 2026-09-25 — an edit before the draft loads can no longer overwrite it
 

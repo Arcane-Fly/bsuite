@@ -150,6 +150,9 @@ export type {
   WorkflowVersionStatus,
 } from './types.js';
 
+// Reachability — the nodes a run would never visit. Publish refuses these.
+export { findUnreachableNodes } from './graphChecks.js';
+
 // Service — for consumers doing CRUD outside the controller hook.
 export {
   createDraftVersion,
