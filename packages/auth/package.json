@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "url": "https://github.com/Arcane-Fly/bsuite.git",
     "directory": "packages/auth"
   },
   "description": "BSuite OAuth 2.1 PKCE client \u2014 shared across CRM7, R80.4, Braden, Conduit, and Throughput. Uses JWKS for token verification via jose.",

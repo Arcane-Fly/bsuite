@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/GaryOcean428/bsuite.git",
+    "url": "https://github.com/Arcane-Fly/bsuite.git",
     "directory": "packages/theme"
   },
   "description": "BSuite Universal theme \u2014 D2C Neon Electric + Braden Corporate baselines. Tailwind v4 preset, CSS vars (5-layer), role aliases, colourblind-safe tokens, eye-strain-safe text scale, BrandingProvider (runtime white-label). Used by BSU, CRM7, conduit, R80.3, throughput (D2C) and braden.com.au (Corporate).",
