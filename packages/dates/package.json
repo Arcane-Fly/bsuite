@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GaryOcean428/bsuite.git",
+    "url": "git+https://github.com/Arcane-Fly/bsuite.git",
     "directory": "packages/dates"
   },
   "files": [

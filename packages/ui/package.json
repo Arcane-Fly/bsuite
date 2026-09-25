@@ -9,7 +9,7 @@
   "description": "Shared UI primitives for the BSuite apps (D2C Neon Electric + Corporate brands).",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/GaryOcean428/bsuite.git",
+    "url": "git+https://github.com/Arcane-Fly/bsuite.git",
     "directory": "packages/ui"
   },
   "files": [
