@@ -162,6 +162,10 @@ export interface WorkflowController {
    */
   isReadOnly: boolean;
   /**
+   * A published workflow with no draft: nothing can be saved until a draft is created with createDraft().
+   */
+  needsDraft: boolean;
+  /**
    * The graph on screen is the saved one. Until then every edit is refused and
    * isReadOnly is true; this says why, apart from "another organisation's".
    */
@@ -410,6 +414,28 @@ export function useWorkflowController({
   const graphReadyRef = useRef(graphReady);
   graphReadyRef.current = graphReady;
 
+  // A platform template has no owning tenant; a workflow owned by ANOTHER
+  // tenant is visible only if the session is a platform developer, and RLS
+  // would refuse every write to it. Both are computed from the row rather than
+  // passed in, so a consumer cannot forget to pass them.
+  const definitionRow = definitionQuery.data ?? null;
+  const isPlatformTemplate = definitionRow !== null && definitionRow.tenant_id === null;
+  const isOtherTenant =
+    definitionRow !== null &&
+    definitionRow.tenant_id !== null &&
+    tenantId !== null &&
+    definitionRow.tenant_id !== tenantId;
+  const needsDraft =
+    graphReady &&
+    !draftRow &&
+    Boolean(publishedVersionId) &&
+    definitionRow?.tenant_id === tenantId;
+  const isReadOnly = readOnly || !graphReady || isOtherTenant || needsDraft;
+  const readOnlyRef = useRef(isReadOnly);
+  readOnlyRef.current = isReadOnly;
+  const needsDraftRef = useRef(needsDraft);
+  needsDraftRef.current = needsDraft;
+
   // --- save -----------------------------------------------------------------
   const saveMutation = useMutation({
     mutationFn: ({ versionId, next }: SaveWrite) =>
@@ -549,7 +575,7 @@ export function useWorkflowController({
 
   const scheduleSave = useCallback(
     (next: WorkflowGraph) => {
-      if (readOnly || !graphReadyRef.current) return;
+      if (readOnlyRef.current) return;
       saveSeqRef.current += 1;
       pendingRef.current = { graph: next, versionId: seededVersionRef.current };
       setIsDirty(true);
@@ -566,7 +592,7 @@ export function useWorkflowController({
     // Keys live in refs so this callback stays stable. A new queryKey tuple
     // every render would re-fire the persist effect and write the live graph
     // over a lastSaved restore.
-    [flush, qc, readOnly, saveDebounceMs],
+    [flush, qc, saveDebounceMs],
   );
 
   // Same hook instance, new definition (CRM inner is unkeyed). Bind leftover
@@ -655,7 +681,9 @@ export function useWorkflowController({
     (next: WorkflowGraph, checkpoint: boolean) => {
       // Nothing edits a graph that has not loaded (see seededFrom). Every
       // mutator — add, move, connect, delete, layout, pan — comes through here.
-      if (!graphReadyRef.current) return;
+      // readOnlyRef also covers a published-only graph (needsDraft) and another
+      // organisation's workflow: those have a graph on screen but nowhere to save.
+      if (readOnlyRef.current) return;
       // Same-tick readers (palette add then select) must see this graph.
       // Waiting for the next render left onNodesChange on the pre-add list,
       // and replaceGraph then dropped the node.
@@ -674,7 +702,7 @@ export function useWorkflowController({
   // redo, an auto-layout. Keyed on identity: `useUndoRedo` only ever hands back
   // a new object when the graph actually changed.
   useEffect(() => {
-    if (readOnly || !graphReady) return;
+    if (readOnlyRef.current) return;
     if (skipPersistRef.current) {
       skipPersistRef.current = false;
       return;
@@ -688,7 +716,7 @@ export function useWorkflowController({
     if (lastScheduledRef.current === graph) return;
     lastScheduledRef.current = graph;
     scheduleSave(graph);
-  }, [graph, graphReady, readOnly, scheduleSave]);
+  }, [graph, graphReady, scheduleSave]);
 
   // --- xyflow change handlers ----------------------------------------------
   // Whether a drag gesture is currently in progress, so its FIRST frame can be
@@ -701,7 +729,7 @@ export function useWorkflowController({
       const nodes = applyNodeChanges(changes, current.nodes) as WorkflowNode[];
       const next = { ...current, nodes };
 
-      if (!graphReadyRef.current) return;
+      if (readOnlyRef.current) return;
       if (isDragStart(changes) && !draggingRef.current) {
         draggingRef.current = true;
         // Bank where the node WAS before the gesture moved it, then let the
@@ -777,6 +805,9 @@ export function useWorkflowController({
       }
       // Returning a node that was never added would have callers select a
       // phantom. The palette is hidden until ready, so this is a caller bug.
+      if (needsDraftRef.current) {
+        throw new Error('This workflow is published. Create a draft to edit it.');
+      }
       if (!graphReadyRef.current) {
         throw new Error('The workflow has not finished loading; nothing can be added yet.');
       }
@@ -817,6 +848,7 @@ export function useWorkflowController({
 
   const updateNodeData = useCallback(
     (id: string, patch: Record<string, unknown>) => {
+      if (readOnlyRef.current) return;
       const current = graphRef.current;
       commit(
         {
@@ -928,20 +960,6 @@ export function useWorkflowController({
     onSuccess: (row) => qc.setQueryData(definitionKey, row),
   });
 
-  // A platform template has no owning tenant; a workflow owned by ANOTHER
-  // tenant is visible only if the session is a platform developer, and RLS
-  // would refuse every write to it. Both are computed from the row rather than
-  // passed in, so a consumer cannot forget to pass them.
-  const definitionRow = definitionQuery.data ?? null;
-  const isPlatformTemplate = definitionRow !== null && definitionRow.tenant_id === null;
-  const isReadOnly =
-    readOnly ||
-    !graphReady ||
-    (definitionRow !== null &&
-      definitionRow.tenant_id !== null &&
-      tenantId !== null &&
-      definitionRow.tenant_id !== tenantId);
-
   const duplicateMutation = useMutation({
     mutationFn: (name?: string) => {
       if (!definitionId) throw new Error('Cannot duplicate without a workflow.');
@@ -1024,6 +1042,7 @@ export function useWorkflowController({
     duplicateToTenant: duplicateMutation.mutateAsync,
     isPlatformTemplate,
     isReadOnly,
+    needsDraft,
     isGraphReady: graphReady,
   };
 }

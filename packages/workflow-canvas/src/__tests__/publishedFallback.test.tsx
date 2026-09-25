@@ -21,7 +21,7 @@
  * flag a future edit could forget to check.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import type { ReactNode } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -143,11 +143,19 @@ describe('published-graph fallback', () => {
     await waitFor(() => {
       expect(result.current.nodes.length).toBeGreaterThan(0);
     });
+    const stepBefore = result.current.nodes.find((n) => n.id === 'step');
+    const positionBefore = stepBefore?.position;
+    expect(result.current.isDirty).toBe(false);
     // Move a node, then force the flush path that a real edit would take.
-    result.current.onNodesChange([
-      { id: 'step', type: 'position', position: { x: 999, y: 999 }, dragging: false } as never,
-    ]);
+    act(() => {
+      result.current.onNodesChange([
+        { id: 'step', type: 'position', position: { x: 999, y: 999 }, dragging: false } as never,
+      ]);
+    });
+    expect(result.current.nodes.find((n) => n.id === 'step')?.position).toEqual(positionBefore);
+    expect(result.current.isDirty).toBe(false);
     await result.current.saveNow();
+    expect(result.current.isDirty).toBe(false);
     unmount();
     // Nothing may have been written to a version row.
     expect((supabase as unknown as { writes: string[] }).writes).toHaveLength(0);
