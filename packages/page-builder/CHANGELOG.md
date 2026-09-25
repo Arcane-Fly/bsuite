@@ -5,6 +5,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [2.8.0-next.0] — 2026-09-25 — A chrome-on surface insets content that brings no surface (crm7#2734)
+
+A prerelease for the `d.*` preview hosts. Its version was derived with
+`node scripts/next-prerelease-version.mjs --package @bsuite/page-builder --base 2.8.0 --write`.
+
+**The defect.** The chrome-on surface paints a border and no padding. Padding arrived only when
+an operator set `--card-padding`. Any content that is not itself a card therefore sat on the
+border: hand-rolled headers, filter bars and plain sections. In crm7 that is 182 slots whose first
+child is an unpadded `<div>`, including the filter bar on all four Field Officer list pages.
+
+**The fix.** The chrome-on surface now carries `p-6 md:p-7`, the same inset `PageHeader` uses,
+under a variant that applies only while nothing inside it matches `[data-slot=card]` or
+`[data-slot=page-header]`. A blanket inset was rejected: most slots nest their own Card, and every
+one of those would gain a gutter. An operator-set `--card-padding` is inline style and still wins.
+Chrome-off slots are untouched.
+
+**Consumer contract.** An app's card component must carry `data-slot="card"` (shadcn's
+convention), and its page header must carry `data-slot="page-header"`. Without them the app gains
+an inset inside its own cards. Add the markers in the same bump.
+
 ## [2.7.1-next.0] — 2026-09-10 — Edit-mode label and hide sit in a measured strip, not on the card
 
 A prerelease, not a release. The in-force standard
