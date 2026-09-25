@@ -565,13 +565,12 @@
    "mode": "accepted",
    "tracked_in": null,
    "added": "2026-09-25",
-   "reason": "bsuite#3208 form, signature and workflow-run class (crm7 20261207190000-350000). Six RLS predicates that policies evaluate as the caller, and eleven client RPC doors whose own bodies carry the authorisation. Every entry measured on the deployed function 2026-09-25 (prosecdef, proconfig search_path=public, pg_temp, anon EXECUTE=false, gate in body); per-object notes below. form_layout_fill_status is NOT here: crm7 20261207360000 revoked it from clients (it was a cross-tenant oracle).",
+   "reason": "bsuite#3208 form, signature and workflow-run class (crm7 20261207190000-350000). Six RLS predicates that policies evaluate as the caller, and ten client RPC doors whose own bodies carry the authorisation. Every entry measured on the deployed function 2026-09-25 (prosecdef, proconfig search_path=public, pg_temp, anon EXECUTE=false, gate in body); per-object notes below. form_layout_fill_status is NOT here: crm7 20261207360000 revoked it from clients (it was a cross-tenant oracle).",
    "objects": [
     "apply_form_submission_signatory(p_submission uuid, p_action text, p_payload jsonb)",
     "archive_form_layout(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone, p_archived boolean)",
     "can_read_form_submission(p_id uuid)",
     "discard_form_layout_draft(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone)",
-    "form_submissions_raise_confidential(p_id uuid)",
     "get_form_signing_context(p_token text)",
     "is_field_officer_caseload_communication_target(p_tenant_id uuid, p_recipient_type text, p_recipient_id uuid)",
     "is_field_officer_caseload_email_link(p_tenant_id uuid, p_email_id uuid, p_entity_type text, p_entity_id uuid)",
@@ -598,13 +597,12 @@
     "publish_form_layout(p_layout_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone, p_change_summary text)": "Client RPC (src/services/formLayoutService.ts). The only path that sets published_revision_id (column grant revoked); reads auth.uid(), refuses non-designers with 42501, freezes the draft into an immutable revision. anon revoked.",
     "restore_form_layout_revision(p_revision_id uuid, p_expected_version integer, p_expected_updated_at timestamp with time zone)": "Client RPC (src/services/formLayoutService.ts). Copies an earlier immutable revision into the draft; designer gate raises 42501; optimistic concurrency. anon revoked.",
     "set_tenant_form_reference_format(p_tenant_id uuid, p_format text)": "Client RPC (src/pages/settings/form-reference-settings.tsx:106). Reads auth.uid(), checks the caller is owner/admin of p_tenant_id via auth_tenant_id, raises 42501. anon revoked.",
-    "form_submissions_raise_confidential(p_id uuid)": "ZERO CALLERS today (no src, edge function or BSU call site): the bsuite#3208 confidential-escalation control is unbuilt work. Gate measured: reads auth.uid(), auth_tenant_id, raises 42501 (proven by pgTAP 98). Kept executable so the control can be built without a grant change. REVIEW: remove from this list, or wire the control, before bsuite#3208 closes.",
     "workflow_run_cancel(p_run_id uuid, p_reason text)": "Client RPC (src/lib/workflows/runService.ts:110). Gated by workflow_run_gate_for_caller (20261207340000:28-62, itself not client-callable): raises 42501 on no acting organisation, a role outside workflow_run_caller_can_act, or a run not visible under the caller's RLS, one message for nonexistent/foreign/hidden. Returns NULL (trusted) only when auth.uid() IS NULL, i.e. a server caller. anon revoked. pgTAP 104.",
     "workflow_run_retry(p_run_id uuid)": "Client RPC (src/lib/workflows/runService.ts:123). Same gate as workflow_run_cancel. Refuses limit failures (run_expired, step_budget_exhausted, advance_hard_stop, node_visit_cap). anon revoked. pgTAP 104.",
     "get_form_signing_context(p_token text)": "Emailed signing link (src/lib/formSigning.ts:117). Token-gated: the raw token is hashed and compared, expires_at enforced, consumed_at makes it single-use, row locked FOR UPDATE, returns a status rather than raising, so it does not enumerate tokens. Executable by authenticated because a signed-in recipient opens the same link.",
     "redeem_form_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)": "Emailed signing link (src/lib/formSigning.ts:175): sign or refuse. Same token mechanics as get_form_signing_context (hash compare, expiry, consumed_at single-use, FOR UPDATE). Writes only signature_requests, never form_submissions."
    },
-   "review": "Re-measure an entry when its function is redefined. form_submissions_raise_confidential has zero callers: remove it or wire the confidential-escalation control before bsuite#3208 closes."
+   "review": "Re-measure an entry when its function is redefined. form_submissions_raise_confidential was removed (crm7 20261207370000, bsuite#3208 C5): the confidential-escalation control writes through the version-guarded direct UPDATE instead."
   },
   {
    "lint": "anon_security_definer_function_executable",
