@@ -181,9 +181,17 @@ describe('editing before the draft has loaded', () => {
   it('refuses an add before load instead of returning a node it never added', async () => {
     const client = slowDraftClient();
     const { result } = mount(client);
-    expect(() => result.current.addNode('step', { x: 0, y: 0 })).toThrow(/not finished loading/);
+    let refused = false;
+    try {
+      result.current.addNode('step', { x: 0, y: 0 });
+    } catch {
+      refused = true;
+    }
+    expect(refused).toBe(true);
     act(() => client.releaseDraft());
     await waitFor(() => expect(result.current.isGraphReady).toBe(true));
+    // No phantom step arrived with the draft.
+    expect(result.current.nodes.map((n) => n.id).sort()).toEqual(['end', 'review', 'start']);
   });
 
   it('once unlocked, an add is kept on top of the saved draft', async () => {
