@@ -255,6 +255,51 @@ export function persistenceConsumers(exports_, sources) {
       }
     }
   }
+  // THROUGH ANOTHER SERVICE EXPORT, added 2026-09-25. A shared query helper
+  // (`profilesById`, called by `listSignerCandidates` and `listTenantMembers`) and
+  // a private step of a public operation (`copyToOrganisation`, called by
+  // `deployConfig`) reach a user through the export that calls them, not
+  // directly; both were reported as zero-consumer while their callers were on
+  // screen. A call inside another export's BODY counts only when that export has
+  // a screen consumer itself, to a fixed point — so a chain that never reaches a
+  // screen still reports zero, and a mere import or a prose mention never counts.
+  // Stores are excluded: they have the precise action rule above, and a store's
+  // exported `use…Store` would otherwise count for any screen that imports it.
+  const services = sources.filter(
+    ({ path }) =>
+      isServiceLayer(path) && !isTestFile(path) && !/\/stores\//.test(path) && !/Store\.tsx?$/.test(path),
+  );
+  const decl = /^export\s+(?:async\s+)?(?:function\s+([A-Za-z_$][\w$]*)|const\s+([A-Za-z_$][\w$]*)\s*[=:])/gm;
+  const bodies = [];
+  for (const { path, text } of services) {
+    const found = [];
+    let m;
+    decl.lastIndex = 0;
+    while ((m = decl.exec(text)) !== null) found.push({ name: m[1] || m[2], at: m.index });
+    for (let i = 0; i < found.length; i++) {
+      const body = text.slice(found[i].at, i + 1 < found.length ? found[i + 1].at : text.length);
+      bodies.push({ key: `${path}::${found[i].name}`, name: found[i].name, path, code: stripComments(body) });
+    }
+  }
+  const screenUsers = (b) =>
+    screens.some(({ path, text }) => path !== b.path && appOf(path) === appOf(b.path) && new RegExp(`\\b${b.name}\\b`).test(text));
+  const reached = (b) => (counts.get(b.key)?.length ?? 0) > 0 || screenUsers(b);
+  let changed = true;
+  while (changed) {
+    changed = false;
+    for (const e of exports_) {
+      const key = `${e.definedIn}::${e.name}`;
+      if (counts.get(key).length > 0) continue;
+      const call = new RegExp(`\\b${e.name}\\s*\\(`);
+      const via = bodies.find(
+        (b) => b.key !== key && appOf(b.path) === appOf(e.definedIn) && call.test(b.code) && reached(b),
+      );
+      if (via) {
+        counts.get(key).push(via.key);
+        changed = true;
+      }
+    }
+  }
   return counts;
 }
 
@@ -437,6 +482,31 @@ function selfTest() {
     ])
     if (sameApp.get('braden/src/services/pagesService.ts::createPage').length !== 1)
       fail('a screen in the same app calling the function was not counted')
+
+    // Through another service export: counted only when that export reaches a screen.
+    const helper = [
+      { name: 'profilesById', definedIn: 'crm7/src/services/memberProfiles.ts' },
+      { name: 'orphanHelper', definedIn: 'crm7/src/services/memberProfiles.ts' },
+      { name: 'mentionedOnly', definedIn: 'crm7/src/services/memberProfiles.ts' },
+    ]
+    const hop = persistenceConsumers(helper, [
+      { path: 'crm7/src/services/memberProfiles.ts', text:
+        'export async function profilesById(ids) { return supabase.from("profiles") }\n' +
+        'export async function orphanHelper() { return supabase.from("x") }\n' +
+        'export async function mentionedOnly() { return supabase.from("y") }\n' },
+      { path: 'crm7/src/services/formSubmissionService.ts', text:
+        'import { profilesById, mentionedOnly } from "@/services/memberProfiles"\n' +
+        'export async function listSignerCandidates(t) { const p = await profilesById(ids); return p }\n' +
+        '// mentionedOnly() is not called here\n' +
+        'export async function unusedCaller() { return orphanHelper() }\n' },
+      { path: 'crm7/src/components/forms/FormSubmissionEditor.tsx', text: 'listSignerCandidates(tenantId)' },
+    ])
+    if (hop.get('crm7/src/services/memberProfiles.ts::profilesById').length !== 1)
+      fail('a helper called by an export that a screen uses was not counted')
+    if (hop.get('crm7/src/services/memberProfiles.ts::orphanHelper').length !== 0)
+      fail('a helper called only by an export NO screen uses was counted')
+    if (hop.get('crm7/src/services/memberProfiles.ts::mentionedOnly').length !== 0)
+      fail('an import or a comment mention was counted as a call through a service')
 
     if (!isServiceLayer('crm7/src/services/x.ts')) fail('services/ not recognised as the layer')
     if (!isServiceLayer('crm7/src/stores/x.ts')) fail('stores/ not recognised as the layer')
