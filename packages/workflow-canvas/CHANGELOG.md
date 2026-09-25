@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [0.3.2] — 2026-09-25 — a published workflow with no draft is no longer silently editable
+
+### Fixed
+
+- **Editing a published workflow that had no draft looked saved and then vanished.**
+  The canvas seeded the published graph, reported the editor as writable, and
+  accepted local changes. Flush then dropped them because the published seed
+  never sets a save target, `isDirty` flipped back to false, and the toolbar
+  said "All changes saved". The controller now exposes `needsDraft` for that
+  state, treats it as read-only, and refuses `commit` / `addNode` /
+  `updateNodeData` / `scheduleSave` until `createDraft()` creates a draft to
+  write to. The inspector says to create a draft instead of claiming the
+  workflow belongs to another organisation.
+- **Publishing accepted a step that nothing leads to.** A run starts at the
+  Start terminator when the graph has one, and otherwise at every node with
+  nothing coming in. A step off to the side was still published, and its
+  action never ran. Publish now refuses that graph, names the step, and
+  writes nothing until it is connected from Start or removed. A workflow
+  that is a single step, with no Start or End, still publishes. A swimlane
+  is a container and is never treated as a step that failed to connect.
+
 ## [0.3.1] — 2026-09-25 — an edit before the draft loads can no longer overwrite it
 
 ### Fixed
