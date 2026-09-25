@@ -161,6 +161,11 @@ export interface WorkflowController {
    * one that says so.
    */
   isReadOnly: boolean;
+  /**
+   * The graph on screen is the saved one. Until then every edit is refused and
+   * isReadOnly is true; this says why, apart from "another organisation's".
+   */
+  isGraphReady: boolean;
 }
 
 /**
@@ -310,12 +315,36 @@ export function useWorkflowController({
   const graphApi = useUndoRedo<WorkflowGraph>(emptyWorkflowGraph());
   const { state: graph, set: setGraph, replace: replaceGraph, reset: resetGraph } = graphApi;
 
+  /*
+   * A pending save carries the version it is FOR, taken when it is scheduled.
+   * It used to carry only the graph, and flush read the target version when
+   * the timer fired: an edit made before the draft loaded was scheduled with
+   * no target, the draft then seeded, and the timer wrote that pre-load graph
+   * into the draft just seeded (production, 25 Sep 2026: 4 nodes -> 1).
+   */
+  const pendingRef = useRef<{ graph: WorkflowGraph; versionId: string | null } | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Which draft the local graph was seeded from. Guards against re-seeding on
   // every refetch, which would discard unsaved edits.
   const seededVersionRef = useRef<string | null>(null);
   /* Separate from seededVersionRef ON PURPOSE — see the published seeding effect. */
   const seededPublishedRef = useRef<string | null>(null);
   const draftRow = draftQuery.data ?? null;
+
+  /*
+   * WHICH GRAPH THE LOCAL STATE HOLDS, as state rather than a ref, so it is set
+   * in the same render batch as the seeded graph.
+   *
+   * Until the saved graph has been seeded, the local graph is the empty
+   * placeholder. An edit made then — a palette click the moment the palette
+   * rendered — landed on that placeholder, and the next save wrote "empty plus
+   * one step" over the saved draft: measured on production 25 Sep 2026, a
+   * 4-node, 1-edge draft reopened and clicked at once became 1 node, 0 edges.
+   * So the editor is locked, and every edit refused, until this says the graph
+   * on screen is the graph that was saved.
+   */
+  const [seededFrom, setSeededFrom] = useState<string | null>(null);
 
   // Declared before the seeding effect so that effect can mark the seeded graph
   // as already-synced; see the persistence effect further down.
@@ -325,8 +354,16 @@ export function useWorkflowController({
     if (!draftRow) return;
     if (seededVersionRef.current === draftRow.id) return;
     seededVersionRef.current = draftRow.id;
+    // Anything pending was made before this graph loaded, against a graph that
+    // was never saved. It is dropped, never written over the one just read.
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    pendingRef.current = null;
     const seeded = draftRow.graph ?? emptyWorkflowGraph();
     resetGraph(seeded);
+    setSeededFrom(`draft:${draftRow.id}`);
     // What we just read from the server is by definition already saved.
     lastScheduledRef.current = seeded;
     lastSavedDraftRef.current = draftRow;
@@ -345,11 +382,33 @@ export function useWorkflowController({
     if (!publishedRow) return;
     if (seededPublishedRef.current === publishedRow.id) return;
     seededPublishedRef.current = publishedRow.id;
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+    pendingRef.current = null;
     const seeded = publishedRow.graph ?? emptyWorkflowGraph();
     resetGraph(seeded);
+    setSeededFrom(`published:${publishedRow.id}`);
     lastScheduledRef.current = seeded;
     skipPersistRef.current = true;
   }, [draftRow, publishedRow, resetGraph]);
+
+  // Ready once the graph that will be edited is the one on screen: the draft,
+  // or with no draft the published version, or — a workflow with neither —
+  // the empty graph, once both reads have answered.
+  const graphReady =
+    definitionQuery.isSuccess &&
+    draftQuery.isSuccess &&
+    (draftRow
+      ? seededFrom === `draft:${draftRow.id}`
+      : publishedVersionId
+        ? // A published version that failed to load must not lock the editor
+          // for ever; loadError says why the canvas is empty.
+          seededFrom === `published:${publishedVersionId}` || publishedQuery.isError
+        : true);
+  const graphReadyRef = useRef(graphReady);
+  graphReadyRef.current = graphReady;
 
   // --- save -----------------------------------------------------------------
   const saveMutation = useMutation({
@@ -413,8 +472,6 @@ export function useWorkflowController({
   // The graph the debounce will write. A ref, not state: the timer must read
   // the LATEST graph when it fires, and re-arming the timer on every keystroke
   // is what a state dependency would cause.
-  const pendingRef = useRef<WorkflowGraph | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveMutateRef = useRef(saveMutation.mutateAsync);
   saveMutateRef.current = saveMutation.mutateAsync;
 
@@ -470,8 +527,14 @@ export function useWorkflowController({
       clearTimeout(timerRef.current);
       timerRef.current = null;
     }
-    const next = pendingRef.current;
-    const versionId = seededVersionRef.current;
+    const pending = pendingRef.current;
+    const next = pending?.graph ?? null;
+    // Only the version this edit was made against, and only while it is still
+    // the one on screen.
+    const versionId =
+      pending && pending.versionId !== null && pending.versionId === seededVersionRef.current
+        ? pending.versionId
+        : null;
     const seq = saveSeqRef.current;
     const generation = generationRef.current;
     pendingRef.current = null;
@@ -486,9 +549,9 @@ export function useWorkflowController({
 
   const scheduleSave = useCallback(
     (next: WorkflowGraph) => {
-      if (readOnly) return;
+      if (readOnly || !graphReadyRef.current) return;
       saveSeqRef.current += 1;
-      pendingRef.current = next;
+      pendingRef.current = { graph: next, versionId: seededVersionRef.current };
       setIsDirty(true);
       // The step table (and any other reader of the draft/versions caches)
       // follows this write. Waiting for the 900 ms debounce left the table
@@ -517,8 +580,8 @@ export function useWorkflowController({
       timerRef.current = null;
     }
 
-    const leftover = pendingRef.current;
-    const leftoverVersionId = seededVersionRef.current;
+    const leftover = pendingRef.current?.graph ?? null;
+    const leftoverVersionId = pendingRef.current?.versionId ?? null;
     const leftoverSeq = saveSeqRef.current;
     const leftoverGeneration = generationRef.current;
     const leftoverDefinitionId = definitionIdRef.current;
@@ -556,6 +619,7 @@ export function useWorkflowController({
     lastScheduledRef.current = null;
     skipPersistRef.current = true;
     definitionIdRef.current = definitionId;
+    setSeededFrom(null);
     draftKeyRef.current = draftKey;
     versionsKeyRef.current = versionsKey;
     setIsDirty(false);
@@ -569,9 +633,13 @@ export function useWorkflowController({
   useEffect(
     () => () => {
       if (timerRef.current) clearTimeout(timerRef.current);
-      const next = pendingRef.current;
-      const versionId = seededVersionRef.current;
+      const pending = pendingRef.current;
       pendingRef.current = null;
+      const next = pending?.graph ?? null;
+      const versionId =
+        pending && pending.versionId !== null && pending.versionId === seededVersionRef.current
+          ? pending.versionId
+          : null;
       if (!next || !versionId) return;
       void enqueueSave(
         captureSaveWrite(next, versionId, saveSeqRef.current),
@@ -585,6 +653,9 @@ export function useWorkflowController({
 
   const commit = useCallback(
     (next: WorkflowGraph, checkpoint: boolean) => {
+      // Nothing edits a graph that has not loaded (see seededFrom). Every
+      // mutator — add, move, connect, delete, layout, pan — comes through here.
+      if (!graphReadyRef.current) return;
       // Same-tick readers (palette add then select) must see this graph.
       // Waiting for the next render left onNodesChange on the pre-add list,
       // and replaceGraph then dropped the node.
@@ -603,7 +674,7 @@ export function useWorkflowController({
   // redo, an auto-layout. Keyed on identity: `useUndoRedo` only ever hands back
   // a new object when the graph actually changed.
   useEffect(() => {
-    if (readOnly) return;
+    if (readOnly || !graphReady) return;
     if (skipPersistRef.current) {
       skipPersistRef.current = false;
       return;
@@ -617,7 +688,7 @@ export function useWorkflowController({
     if (lastScheduledRef.current === graph) return;
     lastScheduledRef.current = graph;
     scheduleSave(graph);
-  }, [graph, readOnly, scheduleSave]);
+  }, [graph, graphReady, readOnly, scheduleSave]);
 
   // --- xyflow change handlers ----------------------------------------------
   // Whether a drag gesture is currently in progress, so its FIRST frame can be
@@ -630,6 +701,7 @@ export function useWorkflowController({
       const nodes = applyNodeChanges(changes, current.nodes) as WorkflowNode[];
       const next = { ...current, nodes };
 
+      if (!graphReadyRef.current) return;
       if (isDragStart(changes) && !draggingRef.current) {
         draggingRef.current = true;
         // Bank where the node WAS before the gesture moved it, then let the
@@ -702,6 +774,11 @@ export function useWorkflowController({
       const descriptor = registry.get(kind);
       if (!descriptor) {
         throw new Error(`Unknown node kind '${kind}' — not in this registry.`);
+      }
+      // Returning a node that was never added would have callers select a
+      // phantom. The palette is hidden until ready, so this is a caller bug.
+      if (!graphReadyRef.current) {
+        throw new Error('The workflow has not finished loading; nothing can be added yet.');
       }
       const current = graphRef.current;
       const lane = laneId
@@ -792,6 +869,11 @@ export function useWorkflowController({
       if (!definitionId || !tenantId) {
         throw new Error('Cannot open a draft without a workflow and a tenant.');
       }
+      // A draft copies the graph on screen; before it loads that is the empty
+      // placeholder, not the workflow.
+      if (!graphReadyRef.current) {
+        throw new Error('The workflow has not finished loading yet.');
+      }
       return createDraftVersion(supabase, {
         definitionId,
         tenantId,
@@ -854,6 +936,7 @@ export function useWorkflowController({
   const isPlatformTemplate = definitionRow !== null && definitionRow.tenant_id === null;
   const isReadOnly =
     readOnly ||
+    !graphReady ||
     (definitionRow !== null &&
       definitionRow.tenant_id !== null &&
       tenantId !== null &&
@@ -925,8 +1008,12 @@ export function useWorkflowController({
     deleteNode,
     autoLayout,
 
-    undo: graphApi.undo,
-    redo: graphApi.redo,
+    undo: () => {
+      if (graphReadyRef.current) graphApi.undo();
+    },
+    redo: () => {
+      if (graphReadyRef.current) graphApi.redo();
+    },
     canUndo: graphApi.canUndo,
     canRedo: graphApi.canRedo,
 
@@ -937,5 +1024,6 @@ export function useWorkflowController({
     duplicateToTenant: duplicateMutation.mutateAsync,
     isPlatformTemplate,
     isReadOnly,
+    isGraphReady: graphReady,
   };
 }
