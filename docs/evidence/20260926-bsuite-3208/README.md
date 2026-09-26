@@ -22,6 +22,12 @@ bsuite Platform was also used, as the receiving organisation for the C9 share. N
 
 **Database tests** were rolled-back transactions. Nothing they did was committed.
 
+**Where the screenshots are.** This repository ignores `*.png`, so the 29 screenshots named below are not
+committed. They are attached to [BRA-47](https://linear.app/braden-pty-ltd/issue/BRA-47) as
+`bsuite-3208-screenshots-20260926.tar.gz`: attachment `85e49c0b-42ac-4a20-b64c-2a2b6ab9ad39`, sha256
+`bca5253bd25ec68726ab82178aa7ca0ab56d6e2b93b78620fbf78aa3c18dd4fe`. The file names in the tables match the archive.
+Everything else here (walk logs, criterion evidence and review verdicts) is committed as text.
+
 ## Independent reviews
 
 | Round | Verdict | File |
@@ -62,8 +68,8 @@ All four rounds used claude-fable-5-1 as a read-only completion-enforcer. Round 
     - `c10-canary-preview-2828.txt`
     - `dcrm-theme-1.5.4-go.txt` and `dcrm-8a7d13d5-go.txt`: peer d.crm walks
     - `resync-2829.txt`
-    - `prod-final4-walk-55ff6d6.log`: production after the fix
-    - `before-1.5.4/s147-before.log`: production control on b3f55e2
+    - `prod-final4-walk-55ff6d6.txt`: production after the fix
+    - `before-1.5.4/s147-before.txt`: production control on b3f55e2
     - `c10-gitlink-55ff6d60.txt`: C10 `crm7: 7 == baseline 7`
   - Production screenshots of the fix: `prod-final4-editor-table-{light,dark}.png`,
     `prod-final4-template-controls-{light,dark}.png`.
@@ -79,6 +85,7 @@ submissions (C4/C8), or because the product has no delete control for them.
 
 ## Not in this pack
 
+- **Screenshots.** They are in the BRA-47 attachment described above.
 - **Walk scripts and the session scratchpad.** They were disposed of after this copy was made.
 - **Credentials.** None appear here: every text file was scanned for tokens, keys and passwords before
   being committed.
