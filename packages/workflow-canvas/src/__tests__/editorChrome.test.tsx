@@ -745,6 +745,50 @@ describe('WorkflowToolbar', () => {
     expect(screen.getByTestId('workflow-save-state')).toHaveTextContent('Unsaved changes');
   });
 
+  it('leaves a refused publish to the error toast instead of throwing it at the page', async () => {
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    try {
+      // A plain function, not vi.fn: vitest's spy attaches its own handler to a
+      // returned promise to record the result, which would hide the very
+      // unhandled rejection this test exists to catch.
+      let calls = 0;
+      const publish = () => {
+        calls += 1;
+        return Promise.reject(new Error('Nothing leads to New step'));
+      };
+      render(<WorkflowToolbar controller={makeController({ draft, publish })} />);
+      fireEvent.click(screen.getByTestId('workflow-publish'));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(calls).toBe(1);
+      expect(unhandled).not.toHaveBeenCalled();
+    } finally {
+      process.off('unhandledRejection', unhandled);
+    }
+  });
+
+  it('leaves a failed copy to the error toast instead of throwing it at the page', async () => {
+    const unhandled = vi.fn();
+    process.on('unhandledRejection', unhandled);
+    try {
+      const duplicateToTenant = vi.fn(() => Promise.reject(new Error('copy refused')));
+      const onDuplicated = vi.fn();
+      render(
+        <WorkflowToolbar
+          controller={makeController({ draft, isPlatformTemplate: true, duplicateToTenant })}
+          onDuplicated={onDuplicated}
+        />,
+      );
+      fireEvent.click(screen.getByTestId('workflow-duplicate'));
+      await new Promise((resolve) => setTimeout(resolve, 20));
+      expect(duplicateToTenant).toHaveBeenCalledTimes(1);
+      expect(onDuplicated).not.toHaveBeenCalled();
+      expect(unhandled).not.toHaveBeenCalled();
+    } finally {
+      process.off('unhandledRejection', unhandled);
+    }
+  });
+
   it('offers "copy" rather than "publish" on a platform template', () => {
     const controller = makeController({ draft, isPlatformTemplate: true });
     render(<WorkflowToolbar controller={controller} />);
