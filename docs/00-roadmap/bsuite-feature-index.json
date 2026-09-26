@@ -53138,7 +53138,7 @@
  },
  {
   "id": "crm7.core.offline-sync-engine",
-  "name": "Offline-first local data engine with background sync",
+  "name": "Local Jodie conversation store with background sync",
   "module": "crm7",
   "capability_area": "Platform / app shell",
   "surface_type": "chrome",
@@ -53147,16 +53147,10 @@
   "code_anchors": [
    "crm7/src/lib/sync-service.ts",
    "crm7/src/lib/sqlite-db.ts",
-   "crm7/src/hooks/useOfflineData.ts",
+   "crm7/src/lib/ai-chat-service.ts",
    "crm7/src/App.tsx"
   ],
   "db_objects": [
-   "contacts",
-   "opportunities",
-   "tasks",
-   "apprentices",
-   "employers",
-   "profiles",
    "ai_sessions",
    "ai_messages"
   ],
