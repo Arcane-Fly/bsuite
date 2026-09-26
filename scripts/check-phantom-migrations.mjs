@@ -162,6 +162,19 @@ export function claimedObjects(sql) {
 }
 
 /**
+ * A column is gone when it was dropped itself, or when its TABLE was dropped
+ * (by this migration or a later one): DROP TABLE takes every column with it.
+ * Without this, retiring a table (crm7 20261207510000 drops
+ * document_signatories) reported each column an earlier migration added to it
+ * as a phantom, on the very apply that retired it.
+ */
+export function columnIsGone(column, gone) {
+  if (gone.columns.has(column)) return true;
+  const dot = column.lastIndexOf('.');
+  return dot > 0 && gone.tables.has(column.slice(0, dot));
+}
+
+/**
  * Objects a migration DROPS. Three false-positive classes made this necessary,
  * all found by running the gate against production before shipping it:
  *
@@ -271,6 +284,15 @@ const SELF_TESTS = [
     name: 'a scratch helper created AND dropped in the same file is not a phantom',
     sql: 'CREATE OR REPLACE FUNCTION public.__scratch(t text) RETURNS void AS $$ BEGIN END $$;\nDROP FUNCTION IF EXISTS public.__scratch(text);',
     expect: (o, d) => o.functions.includes('public.__scratch') && d.functions.includes('public.__scratch'),
+  },
+  {
+    name: 'a column of a DROPPED TABLE is gone with it (crm7 20261207510000)',
+    sql: 'DROP TABLE IF EXISTS public.document_signatories;',
+    expect: (o, d) => {
+      const gone = { tables: new Set(d.tables), functions: new Set(d.functions), columns: new Set(d.columns) };
+      return columnIsGone('public.document_signatories.signer_user_id', gone)
+        && !columnIsGone('public.document_records.signer_user_id', gone);
+    },
   },
   {
     name: 'DROP COLUMN is recorded as dropped',
@@ -614,7 +636,7 @@ for (const root of roots) {
       const gone = droppedAtOrAfter(version);
       for (const t of o.tables) if (!have.tables.has(t) && !gone.tables.has(t)) stranded.push({ version, file: f, kind: 'table', name: t });
       for (const fn of o.functions) if (!have.functions.has(fn) && !gone.functions.has(fn)) stranded.push({ version, file: f, kind: 'function', name: fn });
-      for (const c of o.columns) if (!have.columns.has(c) && !gone.columns.has(c)) stranded.push({ version, file: f, kind: 'column', name: c });
+      for (const c of o.columns) if (!have.columns.has(c) && !columnIsGone(c, gone)) stranded.push({ version, file: f, kind: 'column', name: c });
       continue;
     }
 
@@ -629,7 +651,7 @@ for (const root of roots) {
       (has ? null : (willBeMade ? pending : findings).push({ version, file: f, kind, name }));
     for (const t of o.tables) if (!gone.tables.has(t)) bucket('table', t, have.tables.has(t), fix.tables.has(t));
     for (const fn of o.functions) if (!gone.functions.has(fn)) bucket('function', fn, have.functions.has(fn), fix.functions.has(fn));
-    for (const c of o.columns) if (!gone.columns.has(c)) bucket('column', c, have.columns.has(c), fix.columns.has(c));
+    for (const c of o.columns) if (!columnIsGone(c, gone)) bucket('column', c, have.columns.has(c), fix.columns.has(c));
     for (const t of (o.indexedTables || [])) if (!gone.tables.has(t)) bucket('indexed table', t, have.tables.has(t), fix.tables.has(t));
   }
 }
