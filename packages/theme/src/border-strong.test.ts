@@ -15,6 +15,18 @@ describe('border-strong utility', () => {
     expect(css).toContain('.border-border-strong');
     // @theme inline: the utility reads the role token directly.
     expect(css).toContain('var(--role-border-strong)');
-    expect(preset).toMatch(/--color-border-strong:\s*var\(--role-border-strong\);/);
+    // Normalise whitespace (not an assertion), then a plain substring check.
+    expect(preset.replace(/\s+/g, ' ')).toContain('--color-border-strong: var(--role-border-strong);');
+  });
+});
+
+describe('the --color-* token set', () => {
+  it('keeps every token the last published preset declared', async () => {
+    const { tokens } = JSON.parse(
+      readFileSync(new URL('./color-token-set.json', import.meta.url), 'utf8'),
+    ) as { tokens: string[] };
+    const declared = new Set(preset.match(/--color-[a-z0-9-]+(?=\s*:)/g) ?? []);
+    expect(tokens.length).toBeGreaterThan(80);
+    expect(tokens.filter((t) => !declared.has(t))).toEqual([]);
   });
 });
