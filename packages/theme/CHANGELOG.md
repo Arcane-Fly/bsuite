@@ -1,5 +1,17 @@
 # @bsuite/theme
 
+## 1.5.4 — 2026-09-26
+
+**`border-border-strong` exists again** (bsuite#3208 close-out).
+
+bsuite#3301 reformatted the `--color-bg-sunken` line in `preset-v4.css` and
+dropped `--color-border-strong: var(--role-border-strong);` with it. 1.5.3 was
+the first release after that commit, so consumers on it emit no
+`border-border-strong` / `hover:border-border-strong` utility: in crm7 the
+document-editor table borders and the onboarding step's hover borders lost their
+colour, and C10 ("every used class token has an emitted rule") rose 7 -> 16. The
+line is restored; `border-strong.test.ts` fails without it.
+
 ## 1.5.3 — 2026-09-26
 
 **A centred gradient title stays centred** (bsuite#3365).
