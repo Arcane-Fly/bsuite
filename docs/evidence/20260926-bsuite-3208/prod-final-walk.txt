@@ -1,0 +1,16 @@
+FINAL production walk — crm7 main b3f55e2f4a64 (crm7#2824, second promotion), 2026-09-26 ~18:25 AWST
+Deploy: dpl_5uNzcHqcBi1jvccVLZx5yk3o8LA8 READY target production (crm.crm7.app), bundle index-BASeXs40.js; warm-up load first.
+Merge: #2824 --merge → b3f55e2f after 38 pass / 1 skipping, CLEAN, head = development 175807dfe (after resync #2825
+175807df), visual-dod-passed; 0 migration files; no reviewer bot on crm7 (DOM-lint + drift-scan clean).
+Contents: #2822 (Jodie messages uuid row ids + re-key backlog), #2821 (theme ^1.5.3), #2823 (enrichment DataGrid; bsuite-9b
+d.crm GO at 1440/390).
+Walk s142 (Demo Organisation, Braden Lang):
+ - Jodie: new message "Walk check mui8u0qf…" → POST ai_messages 201 ×2 + PATCH ai_sessions 204; persists after reload.
+ - Server ai_messages visible to the owner (the sync's own GET): 8 rows — mui8u0qf, mui6c2p7, mui13zlr and mui4lrz2.
+   mui4lrz2 was production's own local message from the 16:30 walk (stuck with a non-uuid id); it uploaded on the first
+   load of b3f55e2f (the warm-up). Before #2822 the server had 0 messages ever.
+ - Enrichment programs: DataGrid rendered (1 grid on the list), 0 hand-rolled <table>.
+ - Regression (#2820 items): 10 runs listed; forms list = Demo's 2 forms; retired-table writes 0; 403/5xx 0.
+The earlier full walk of the #2820 build (every final_walk_must_show item) is evidence/prod-walk-d2d60eaa.txt; #2824 changed
+none of those surfaces except the theme (bsuite-9b walked the theme on d.crm and closes bsuite#3365 on production).
+Screenshots prod-final2-jodie.png, prod-final2-enrichment-grid.png.

@@ -1,0 +1,35 @@
+{
+ "round": 4,
+ "reviewer_model": "claude-fable-5-1",
+ "route": "Claude Code Agent subagent completion-enforcer, read-only",
+ "time_utc": "2026-09-26T13:08:06Z",
+ "verdict": "APPROVE",
+ "criteria": {
+  "C1": "verified",
+  "C2": "verified",
+  "C3": "verified",
+  "C4": "verified",
+  "C5": "verified",
+  "C6": "verified",
+  "C7": "verified",
+  "C8": "verified",
+  "C9": "verified"
+ },
+ "round3_items": {
+  "1": "closed: production version.json 55ff6d6; index-DmucbSwF.css contains .border-border-strong{border-color:var(--role-border-strong)}; crm7#2828/#2829/#2831 merged (--merge, 2 parents); bsuite#3372 main 9cf3880d and #3373 development 5f3109fe merged, gitlink 55ff6d60; C10 job 108407182551 'OK crm7: 7 == baseline 7'; baseline last changed 05:27Z (not bumped); @bsuite/theme 1.5.4 declares --color-border-strong, 1.5.3 control does not; walk light+dark table==token",
+  "2": "closed: crm7#2459 CLOSED COMPLETED 2026-09-26T10:44:27Z with the production-evidence comment",
+  "3": "closed: 30cb0f72 renamed via UI; walk workflows named; seven merged branches absent; no bsuite-gitlink-crm7-b3f worktrees; crm7/.walk-harness.mjs absent; cleanup.txt records each command",
+  "4": "closed: prod-final4 inspector-greyed, refused-toast (page errors []), failed-run-tryagain, template-controls light/dark, editor-table light/dark each show the claimed state; walk logs kept"
+ },
+ "unresolved": [],
+ "gate_report": "gate_report.py --self-test 17/17; round-4 evidence -> APPROVE with a recorded D9 waiver (Demo-only production use), scores verify_pass 1.0 wire_integrity 1.0 false_complete_incidents 0.0 ux_integrity 1.0",
+ "closeout_draft_corrections_summary": [
+  "record the D9 waiver explicitly (id D9, reason: no fabricated HR/disciplinary records in a paying client tenant; basis the FutureBuild data-preservation ruling)",
+  "land the evidence durably before disposing of the /tmp scratchpad; label the pre-1.5.4 control shots as control",
+  "resync crm7 main 55ff6d60 into development",
+  "do not close bsuite#3208 or move BRA-47 to Done: BRA-47 groups 8 obligations; the September-8 documentation requirement (register + remediation plan) is not yet met",
+  "record the DOM-lint INVARIANT-4 warning on crm7#2831 as answered with evidence; crm7 has no reviewer bot",
+  "say 'GitHub merge commit, 2 parents' for 55ff6d60 rather than a locally verified GPG signature"
+ ],
+ "note": "Condensed from the reviewer's JSON (verdict, criteria and item statuses verbatim; long evidence strings shortened). Full output is in Claude session ef2aae85's transcript. Written by the maker from the reviewer's output; the maker did not author the verdict."
+}

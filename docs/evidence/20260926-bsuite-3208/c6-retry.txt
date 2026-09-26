@@ -1,0 +1,12 @@
+C6 RETRY — production (tuybltdrdefjblnplpqo), 26 Sep 2026 11:32 AWST. Rolled-back transactions only (a DO block that ends in RAISE, so nothing persisted).
+
+VERIFIED at the database boundary, as real signed-in users (request.jwt.claims + SET LOCAL ROLE authenticated):
+- Demo user (braden@braden.com.au, cdd2af47) on run 6e433f40 (workflow A, one person step), after marking run+step failed as the processor's retry cap does:
+  workflow_run_retry -> run=waiting, failure_reason=null; step=waiting, awaiting=human, error cleared. The person step reopened.
+- A second retry on the now-waiting run: no-op, returns the id (no duplicate step).
+- A completed run (6494a00b): refused, "only a failed run can be retried (this one is completed)".
+- Another organisation's user (braden.lang@lookn.com.au, tenant B): refused, 42501 "run not found in this organisation"; the run is invisible to them.
+Cancel + persist through reload: verified earlier via the UI (c6.txt, c6-cancel.png).
+
+NOT WALKED in the production UI: the "Try again" button. No failed run exists in the Demo tenant; production has never had a workflow-sourced failed action (every failed r7_automation_queue row has no workflow_run_step_id), and no ordinary UI path produces one. Seeding a failed run on production is prohibited (operator security constraint), so this leg is blocked by design, not skipped.
+The button's wiring (shown only for status=failed, calls workflow_run_retry, invalidates the list) is unit-tested in crm7 src/pages/workflows/runs.test.tsx.

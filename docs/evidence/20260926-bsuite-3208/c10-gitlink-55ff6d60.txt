@@ -1,0 +1,4 @@
+2026-09-26T12:51:18Z C10 on bsuite#3372 (main gitlink crm7 55ff6d60): pass — job https://github.com/Arcane-Fly/bsuite/actions/runs/36243094552/job/108407182551
+  crm7: 7 finding(s), 1756 file(s) scanned, 2406 class(es) emitted; OK crm7: 7 == baseline 7 (was 16 on b3f55e2f with theme 1.5.3)
+C10 on bsuite#3373 (development gitlink 55ff6d60): pass
+Non-required reds on both PRs: check-inventory, Lockfile pin vs repo-declared version, own-package-freshness (not in main's 34 required contexts; main HEAD e2fe2772 also fails Lockfile pin)

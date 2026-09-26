@@ -1,0 +1,26 @@
+C8 — response to independent review round 1, item 5 (2026-09-26 ~03:55Z, production tuybltdrdefjblnplpqo)
+
+(a) Plain-staff denial — REPRODUCED, rolled-back DO block (nothing committed):
+  Subject: a non-developer account (profiles.platform_role='user', id 53c80630-…), given a TEMPORARY
+  active staff membership of Demo Organisation inside the transaction; a non-confidential control note
+  inserted in the same transaction. JWT sub set to that user, SET LOCAL ROLE authenticated.
+  Result: ROLLBACK-RESULT: staff_member_of_demo=t confidential_visible=0 control_visible=1
+          confidential_updated=0 dev=f cap=f
+  Reading: same-tenant staff with no BSU confidential permission, not the author, not the caseload FO,
+  sees the ordinary note (control has bite) and neither sees nor can update the confidential one.
+  Why a temporary membership: Demo's only live members are the two developer-owners, so no real plain-staff
+  row exists to test with; the membership and control note were rolled back with the transaction.
+
+(b) Developer cross-tenant read — RULED BEHAVIOUR, not a defect. No change made.
+  Operator ruling 2026-08-08 (crm7 migration 20260808174500_t1b_developer_reads_all.sql, header):
+    "developer reads all. edits all. elects which what and scope."
+  Estate invariant pgTAP 50_t1b_developer_reads_all.sql A4: every RESTRICTIVE SELECT policy on a
+  catalogued entity must name is_platform_developer(), so the developer grant cannot be AND-ed away.
+  The C8 migration (20261207390000_case_notes_confidential_enforced.sql) states this deliberately.
+  The confidential-HR ruling (bsuite#3208 ruling 1) enumerates TENANT readers (signers, author, org admins,
+  delegable-permission holders) and does not revoke the platform-developer ruling; the platform-vs-tenant
+  ruling concerns which SURFACES are gated to developers vs org admins.
+  Blast radius: is_platform_developer() = profiles.platform_role='developer' — 3 accounts live, all
+  platform staff; no tenant can grant it.
+  Live policies checked (pg_policies, not the dump): case_notes_confidential_{select,insert,update,delete}
+  RESTRICTIVE = (NOT is_confidential) OR is_platform_developer() OR case_note_confidential_access(...).

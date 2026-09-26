@@ -1,0 +1,14 @@
+C9 — share a PAGE with one organisation as a COPY, never a move. PRODUCTION crm.crm7.app, crm7 main 0fa210b35,
+2026-09-26 ~12:35 AWST. Demo user, acting in Demo Organisation. Walks s113-s115. (Form limb: c9.txt, 25 Sep.)
+
+1. Settings > Custom Pages > New Page: title "Walk check: weekly site visits (bsuite#3208 C9)", slug walk-check-weekly-site-visits
+   -> Create Page -> /settings/custom-pages/16ca4543… (Status Draft, Scope Tenant).
+   Row md5 (read-only query) before sharing: b2174c6f24796297caf1cdc1dde27906, updated_at 04:35:24.349105Z.
+2. "Share with other organisations" card -> "One organisation": help "Gives one organisation its own unpublished copy.
+   This one stays here, unchanged." Organisation list offered; chose bsuite Platform (not a client organisation).
+   Confirm dialog: "Share this page? bsuite Platform gets its own unpublished copy of this page. This page stays here, unchanged."
+   Toast: "Copied to bsuite Platform. It arrives unpublished for them to publish." (c9-page-share.png)
+3. Database after (read-only):
+   original 16ca4543  Demo Organisation  is_published=false  updated_at 04:35:24.349105Z  md5 b2174c6f… — IDENTICAL
+   copy     d2a1ffc1  bsuite Platform    is_published=false  same title/slug, its own row
+Both rows are walk artefacts listed for D10 cleanup (delete through the UI).

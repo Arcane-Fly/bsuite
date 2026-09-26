@@ -288,3 +288,141 @@ It adds the 12:03 contract and a pointer to this section.
 **Standing rule for every C row's write paths:** whoever may start their own core work can save, reload,
 edit and finish it (Braden, 23 September). A create-but-cannot-save path is a defect, not a decision. The
 five-table sibling class is [crm7#2702](https://github.com/Arcane-Fly/crm7/issues/2702).
+
+## 26 September — #3208 C1–C9 deployed-tested on production
+
+Written by the #3208 lane (Claude `ef2aae85`) after the round-4 independent review returned APPROVE. The review was
+claude-fable-5-1, read-only, at 2026-09-26T13:08:06Z. The evidence pack is committed at
+[docs/evidence/20260926-bsuite-3208/](evidence/20260926-bsuite-3208/README.md).
+
+**Supersession.** This section supersedes the status in "Status of the #3208 rows" in the 23 September section
+above, for C05, C12 and C13. It also adds the C11 slice this lane changed. The 23 September contract, store
+ruling and recommendation stay as the historical record of what was required and decided.
+
+### Status in this register's vocabulary
+
+- **C05, C12, C13: deployed-tested.** Criteria C1–C9 of bsuite#3208 were walked through the deployed UI on
+  production `crm.crm7.app`:
+  - builds: crm7 main d2d60eaa, then b3f55e2f, then 55ff6d60
+  - tenancy: Demo Organisation (see D9 below)
+  - all four independent review rounds are in the evidence pack
+- **Accepted** means operator acceptance. That remains the operator's to record.
+- **C11: deployed-tested for the form-started slice only.** That covers:
+  - publish keeps triggers
+  - a completed form starts a run with the form as its subject
+  - runs are listed
+  - the Notify step creates a linked task
+  - Try again and Stop persist
+
+  The wider C11 capability stays with bsuite#3209.
+- **C14** (FRM_010 Field Officer journey, crm7#2587) and **C16** (bsuite#3205) keep their owners. FRM_010 was used
+  here as the site-visit form, but C14's own journey is not claimed.
+
+### What exists, by the register's documentation contract
+
+**User purpose and nouns.** An organisation designs its own forms: a formal Record of Discussion (disciplinary, not
+a contract variation) and a Site Visit Report. It publishes them, and staff fill them in against a person or a site
+visit. Named people sign or decline. HR-confidential records stay restricted. Completed forms can start workflows.
+A form or page can be given to one other organisation as its own copy.
+
+**Visual entry routes.** Menu routes:
+- Settings > Forms (`/settings/form-layouts`: list, create, `/:id`, `/:id/edit`). The list is scoped to the
+  organisation.
+- Settings > Custom Pages (`/settings/custom-pages`).
+- Workflows (`/workflows`, `/workflows/:id`, `/workflows/runs`).
+
+Starting forms:
+- A Record of Discussion is started from the apprentice's record.
+- A Site Visit Report is started from Field Officers > Actions > a scheduled site visit > "Choose a form to start".
+
+**Controls and defaults.**
+- **Builder palette:** it shows the record's fields only, never storage columns such as ids, tenant or timestamps.
+  The side panel asks "Which kind of record" (crm7#2808).
+- **Field settings:** each field has required, a visibility rule ("show when … equals …") and a signature slot.
+- **Confidentiality:** a template can require confidentiality (`requires_confidential`). Otherwise a person marks
+  an individual form confidential explicitly: "Mark as confidential" and a confirmation; this is one-way. The AI
+  never decides it.
+- **Sharing:** "Share with other organisations" > "One organisation" gives that organisation its own unpublished
+  copy, and the original is unchanged.
+- **Workflows:** the canvas has a "Form Completed" trigger and a Notify step. Actions a form-started workflow cannot
+  perform are greyed out with the reason in plain words (for example, Send email needs a candidate). A refused
+  publish explains itself in a toast.
+
+**Worked example.** Taken from the evidence pack:
+1. Site Visit Report layout 98615663 is started from site visit a09c6c9a.
+2. Answering "No" to "apprentice present and engaged" shows the follow-up question; "Yes" hides it.
+3. Completing with the date empty is refused, and the report stays a draft.
+4. Once completed (submission db0dad42), it starts workflow run 497006d9, whose subject is the form. The Notify step
+   creates task 7e4b07b2, which links back to the form.
+
+**Canonical data and owners.** All crm7-owned:
+- Form definitions: `form_layouts`, following the 23 September store ruling.
+- Filled copies: `form_submissions`. Each carries its own `form_layout_snapshot`, and a guard trigger refuses edits
+  to completed rows.
+- Signatures: `signature_requests`, written only through the signatory RPC. The signer is `auth.uid()`, and direct
+  writes are revoked.
+- Workflows: definitions, versions, runs, the queue and tasks. Runs carry `subject_table`/`subject_id`.
+- Pages: `custom_pages`.
+- Migrations: 20261207430000–470000 are live, verified by version, name and objects.
+
+**Permission and tenant boundaries.**
+- **C7:** signatory substitution and signing for another member or another organisation are refused (42501). A
+  direct `UPDATE` on `signature_requests` is denied. The named signer can sign.
+- **C8 (crm7#2751):** confidential case notes are readable only by the author, the caseload Field Officer and
+  holders of the HR-confidential permission. Plain same-tenant staff see neither the confidential note nor an edit
+  path. Developer cross-tenant read is ruled behaviour (2026-08-08).
+- **Lists:** forms lists and reads are tenant-scoped (crm7#2809).
+
+**Save, reload and version behaviour.**
+- A draft can be saved and reloaded.
+- A completed record keeps its snapshot. A later template edit does not reach it, and even an owner cannot rewrite
+  its values (C4, rolled-back test).
+- Publishing a workflow keeps its triggers (migration 440000).
+
+**Workflow inputs and outputs.**
+- `form_submission.completed` starts auto-start workflows with the submission as the subject (450000).
+- Form-started runs appear in Workflow runs (460000).
+- Notify creates a task whose "From" link opens the completed form.
+
+**Failure, retry and cancellation.**
+- A failed run shows "Stopped because a step failed", with Try again.
+- Stop cancels a run.
+- Both persist across reload.
+- A signature request can be pending, declined (the slot re-opens) or cancelled with a reason, each read back
+  after reload.
+
+**Keyboard and responsive use.**
+- Signature-slot buttons fit narrow columns (crm7#2807).
+- Long workflow names stay inside their field (crm7#2796).
+- Control edges meet 4.40:1 light and 5.92:1 dark (crm7#2830, bsuite#1958).
+- A full four-width, keyboard-only pass over both forms is **not** separately evidenced in this pack.
+
+**Consumers.** crm7 production.
+
+**Owning issues:** bsuite#3208; crm7#2751 (C8); crm7#2752 (C9).
+
+**D9 (used once).** Production use was in Demo Organisation only, recorded as a waiver in the round-4 gate. These
+flows create disciplinary records, confidential HR escalations and signatures, which must not be fabricated in a
+paying client's tenant. First use in a client tenant will be the operator's own.
+
+### Defects found while walking and fixed on production
+
+All were shipped in crm7 promotions #2820, #2824 and #2831:
+
+- publish kept triggers, and form-started runs carry the form (#2801)
+- Jodie loads under Vite 8 (#2805)
+- canvas 0.3.3: a refused publish no longer throws and explains itself (#2806/#2811)
+- signature slot fit, "Which kind of record" and forms-list scope (#2807–#2809)
+- the legacy sync narrowed to Jodie (#2810)
+- form-started runs are visible (#2812)
+- Jodie messages reach the server (#2822)
+- the theme 1.5.3 token drop (C10), restored by theme 1.5.4 (#2828)
+
+### Open outside this milestone
+
+- BRA-47 groups other obligations (crm7#2435, #2581, #2587, #2639, #2707, #2708, #2709, form naming). Each needs its
+  own evidence.
+- bsuite#1958 control-edge follow-ups ride the next crm7 promotion (owner bsuite-9b):
+  - EntitySelector via @bsuite/ui 1.3.2
+  - the Claim Period date border
+- crm7 has no control to delete a workflow definition or discard a form draft.

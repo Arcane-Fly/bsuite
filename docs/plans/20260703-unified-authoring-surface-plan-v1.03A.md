@@ -1,3 +1,12 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - docs/20260908-customization-capability-register-v1.00W.md
+  - docs/evidence/20260926-bsuite-3208/README.md
+---
+
 # Unified In-Context Developer Authoring Surface — Implementation Plan
 
 > **Filename corrected 2026-08-17: `v1.00D` → `v1.03A`.** The body declared
@@ -313,3 +322,24 @@ the plan. **BLOCKING** findings gate the Phase-1 build.
     (before Phase 3 retires Page Tools), the "Custom Fields & Entities" /
     "Schema Builder" cards must show a "Try this from Edit Page instead" nudge
     (or be hidden) — added to §7 AC + §9.4, or the UX red-team fails first pass.
+
+## 26 September — forms and signatures delivered through this surface (bsuite#3208)
+
+**Still the plan as of 2026-09-26.** The capability register cites this plan as the live in-context authoring specification (rows C01, C05, C06, C08, C12, C13 and C15).
+
+Recorded by the #3208 lane. It closes the 23 September handoff that the capability register notes: an update was
+due to this plan's owner, and that owner's session is no longer active.
+
+Form authoring, fill, signatures and confidential escalation are **deployed-tested** on production. The
+[capability register's 26 September section](../20260908-customization-capability-register-v1.00W.md#26-september--3208-c1c9-deployed-tested-on-production)
+has the full documentation contract, and the
+[evidence pack](../evidence/20260926-bsuite-3208/README.md) has the evidence.
+
+What that means for this plan:
+
+- The form builder (`/settings/form-layouts`) follows this plan's rule: records, never storage. Its palette offers
+  the record's fields only, and asks "Which kind of record".
+- Form definitions stay in `form_layouts` (the 23 September store ruling cites this plan's lines 56–59).
+- The 23 September Margin-class workspace requirements are not all built. That covers the four publish
+  destinations, comments and Jodie actions. They remain requirements under bsuite#3204 and #3208 in the register.
+  Nothing here claims them.

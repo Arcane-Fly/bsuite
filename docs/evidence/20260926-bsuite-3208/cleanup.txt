@@ -1,0 +1,124 @@
+D10 — nothing left behind (bsuite#3208 / BRA-47). Every disposal below lists the command as run; the verbatim log is appended.
+
+DISPOSED
+ - Local walk ephemera: crm7/.walk-harness.mjs, scratchpad walk/profile-a (browser profile incl. session cookies),
+   walk/out, .walk_email, .tb_email, walk/record-of-discussion.url, the npm pack dir, and every scratch *.bak *.log *.sql
+   and temp list/diff file — rm -rf / rm -f, each path listed in the log below.
+ - Worktrees + branches of every merged PR of this lane (each removed only when clean and 0 commits ahead of its
+   merge target): crm7-sigslot-narrow, crm7-form-kind, crm7-forms-list, crm7-canvas-next1, crm7-sync-narrow,
+   crm7-run-visible, crm7-jodie-msg-ids, crm7-canvas-next, crm7-needs-draft, crm7-publish-triggers, crm7-sqljs-interop,
+   crm7-wf-error-toast, crm7-wf-title-publish, bsuite-canvas-publish-rejection, bsuite-canvas-reasons,
+   bsuite-gitlink-crm7-{main,development} (d2d60eaa) + the 6 detached app worktrees used for the local gate runs;
+   API-created resync branch deleted by GitHub on merge.
+ - Demo walk DB records, through the production UI (walk s141, reload-verified): the 4 "Walk check" workflows switched
+   OFF (Deactivate); task 7e4b07b2 marked Done.
+
+RETAINED ON PURPOSE (labelled walk records; no removal path, or removal would itself be wrong)
+ - Workflow definitions ebb23af0 / 29863f78 / 41c6e373 / f7f116ca and their runs: crm7 has no delete control for a
+   workflow definition; all four are inactive and named "Walk check: … (bsuite#3208 C6)". No ad hoc production DELETE
+   was run outside the product.
+ - Form submissions: completed 278efbc2, 40567f86, 5e7d1761, db0dad42 are immutable by design (C4); drafts 06b62526,
+   c9dd21cf, 402e2d7d have no discard control in the UI. Case note 3ae3e95f is a confidential record (C8). All in Demo
+   Organisation only.
+ - Jodie walk messages ("Walk check …") in the walker's own conversation (owner-only RLS).
+ - The session evidence pack (scratchpad/evidence), walk scripts (method, cited by the evidence), loop contract and
+   cleanup logs: retained as the audit trail; they hold no credentials.
+ - Workflow 30cb0f72 (walker's stray blank draft from 25 Sep; never published, 0 runs): renamed through the UI to
+   "Walk check: blank draft left by the bsuite#3208 walk"; no delete control exists.
+ - Worktrees NOT created by this lane are left untouched (bsuite-9b's): bsuite-route-map, crm7-2756-*, crm7-2766-*,
+   crm7-2782-h1, crm7-award-edit-null, crm7-date-locale, crm7-provision-group-race, crm7-select-trigger-stack,
+   crm7-side-sheet-full-height.
+
+ALSO DISPOSED after round 3: seven merged local branches (crm7 fix/bsuite-3208-builder-walk-findings,
+   -confidential-escalation-control, -palette-loading-state, -signature-field-type, fix/crm7-2751-confidential-case-notes,
+   -confidential-read-predicate; bsuite fix/workflow-canvas-seed-race), the theme-fix worktree, scratch theme tarballs.
+
+PENDING (appended when done): bsuite-gitlink-crm7-b3f-{main,development} worktrees + branches after bsuite#3372/#3373 merge.
+
+---- verbatim cleanup log ----
+crm7-sigslot-narrow worktree + branch fix/signature-slot-fits-narrow-column removed after #2807 merged 2d2d0a0d (0 unmerged commits, clean tree) — git worktree remove + git branch -D
+crm7-form-kind worktree + fix/form-detail-kind-of-record removed after #2808 merged (0 unmerged, clean) — git worktree remove + git branch -D
+crm7-forms-list worktree + fix/forms-list-only-this-organisation removed after #2809 merged (0 unmerged, clean) — git worktree remove + git branch -D
+crm7-canvas-next1 worktree + chore/workflow-canvas-0.3.3-next.1 removed after #2811 merged cf167894 (0 unmerged, clean) — git worktree remove + git branch -D
+crm7-sync-narrow worktree + fix/sync-only-jodie-conversations removed after #2810 merged d1c26567 (0 unmerged, clean) — git worktree remove + git branch -D
+crm7-run-visible worktree + fix/form-started-runs-are-visible removed after #2812 merged 4f3c994f (0 unmerged, clean) — git worktree remove + git branch -D
+crm7-canvas-next + chore/workflow-canvas-0.3.3-next.0 removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+crm7-needs-draft + fix/workflow-needs-draft-toolbar removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+crm7-publish-triggers + fix/workflow-publish-keeps-triggers removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+crm7-sqljs-interop + fix/jodie-conversations-sqljs-interop removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+crm7-wf-error-toast + fix/workflow-error-toast-shows-reason removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+crm7-wf-title-publish + fix/workflow-title-width-and-publish-rejection removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+bsuite-canvas-publish-rejection + fix/workflow-canvas-unhandled-publish-rejection removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+bsuite-canvas-reasons + fix/workflow-canvas-reasons-in-user-words removed (clean, 0 unmerged vs origin/development) — git worktree remove + git branch -D
+app worktree /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-main/crm7 removed (detached, read-only gate run) — git -C bsuite/crm7 worktree remove --force
+app worktree /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-main/braden removed (detached, read-only gate run) — git -C bsuite/braden worktree remove --force
+app worktree /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-main/business-suite-unified removed (detached, read-only gate run) — git -C bsuite/business-suite-unified worktree remove --force
+app worktree /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-main/conduit removed (detached, read-only gate run) — git -C bsuite/conduit worktree remove --force
+app worktree /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-main/throughput removed (detached, read-only gate run) — git -C bsuite/throughput worktree remove --force
+app worktree /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-main/R80.4 removed (detached, read-only gate run) — git -C bsuite/R80.4 worktree remove --force
+bsuite-gitlink-crm7-development worktree + chore/crm7-gitlink-d2d60eaa-development removed after bsuite#3371 merged — git worktree remove + git branch -D
+bsuite-gitlink-crm7-main worktree + chore/crm7-gitlink-d2d60eaa-main removed after bsuite#3370 merged c5ab1b6cf (only submodule-dir deletions from detaching the app worktrees; 0 unmerged) — git worktree remove --force + git branch -D
+crm7-jodie-msg-ids worktree + fix/jodie-messages-reach-the-server removed after #2822 merged a5e35b55 (0 unmerged, clean) — git worktree remove + git branch -D
+DB walk records (production UI, walk s141, 2026-09-26 ~17:25 AWST, reload-verified; d10-workflows-off.png):
+ - workflows ebb23af0, 29863f78, 41c6e373, f7f116ca ("Walk check: …") switched OFF for Demo via Workflows > Deactivate
+   (2 were active; all 4 read "Activate" after reload). No delete control exists for a workflow definition in crm7, so
+   they stay as labelled, inactive walk records.
+ - task 7e4b07b2 marked Done via Task > Mark done (Status Done after reload).
+crm7 branch chore/resync-main-into-development-20260926b (API-created at main d2d60eaa) auto-deleted by GitHub on merge of #2825 (175807df); no local checkout existed
+Local ephemera disposal, 2026-09-26 18:28 AWST (commands as run):
+  rm -rf /home/braden/Desktop/Dev/bsuite/crm7/.walk-harness.mjs
+  rm -rf /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/walk/profile-a
+  rm -rf /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/walk/out
+  rm -rf /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/.walk_email
+  rm -rf /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/.tb_email
+  rm -rf /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/walk/record-of-discussion.url
+  rm -rf /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/pk.iTqA
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/av.bak
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/sigslot.bak
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/sqlite2.bak
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/sqlite-db.bak
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/wac.bak
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/align.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/cov2799.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/e2e2812.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/pin1.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/s130-run2.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/s134-prod-final.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/s142.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/tc-list.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/tc-sync.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/tsc-sqljs.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/zc.log
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/fsfu.sql
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/rehearse460.sql
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/sqlite-chunk.js
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/zc-new.mjs
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/mt.txt
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/devchg.txt
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/prchg.txt
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/oldgen.txt
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/required.txt
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/b2812.md
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/dcrm-bundle-before.txt
+  rm -f /tmp/claude-1000/-home-braden-Desktop-Dev-bsuite/ef2aae85-7ece-4e41-bdce-7cbf966029c8/scratchpad/promotion-body.md
+bsuite-theme-border-strong worktree + fix/theme-restore-border-strong removed after #3374 merged 383e2eeb (0 unmerged, clean) — git worktree remove + git branch -D
+  rm -rf scratchpad/th.nO26 (theme 1.5.2/1.5.3 tarballs) scratchpad/unreach.txt
+crm7 primary checkout moved off fix/bsuite-3208-builder-walk-findings to development (ff to origin) — git checkout development && git merge --ff-only origin/development
+crm7 local branch fix/bsuite-3208-builder-walk-findings deleted (0 commits ahead of origin/development) — git branch -D
+crm7 local branch fix/bsuite-3208-confidential-escalation-control deleted (0 commits ahead of origin/development) — git branch -D
+crm7 local branch fix/bsuite-3208-palette-loading-state deleted (0 commits ahead of origin/development) — git branch -D
+crm7 local branch fix/bsuite-3208-signature-field-type deleted (0 commits ahead of origin/development) — git branch -D
+crm7 local branch fix/crm7-2751-confidential-case-notes deleted (0 commits ahead of origin/development) — git branch -D
+crm7 local branch fix/crm7-2751-confidential-read-predicate deleted (0 commits ahead of origin/development) — git branch -D
+bsuite local branch fix/workflow-canvas-seed-race deleted (0 ahead) — git branch -D
+workflow 30cb0f72 'Untitled workflow 2026-09-25' (walker's stray blank draft, 25 Sep, never published, 0 runs): renamed through the production UI to 'Walk check: blank draft left by the bsuite#3208 walk' (walk s143, reload-verified); retained as a labelled record — no delete control for a workflow definition
+
+== 2026-09-26T12:53:59Z D10 round-4 cleanup (after bsuite#3372/#3373 merged 9cf3880d/5f3109fe)
+git worktree remove /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-b3f-main  -> ok
+git branch -D chore/crm7-gitlink-b3f55e2f-main  -> ok (0 commits beyond origin/main)
+remote chore/crm7-gitlink-b3f55e2f-main already gone
+git worktree remove /home/braden/Desktop/Dev/.worktrees/bsuite-gitlink-crm7-b3f-development  -> ok
+git branch -D chore/crm7-gitlink-b3f55e2f-development  -> ok (0 commits beyond origin/development)
+remote chore/crm7-gitlink-b3f55e2f-development already gone
+find crm7 -maxdepth 1 -name .walk-harness.mjs -delete  -> ok (untracked temporary harness copy)
+crm7 resync branch already gone
