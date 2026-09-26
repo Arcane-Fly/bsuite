@@ -137,7 +137,7 @@ export function OklchColorPicker({
       {/* Color Preview */}
       <div className="flex items-center gap-3">
         <div
-          className="h-12 w-12 rounded-md border-2 border-input shadow-sm"
+          className="h-12 w-12 rounded-md border-2 border-border-interactive shadow-sm"
           style={{ backgroundColor: inputValue }}
           aria-label="Color preview"
         />
@@ -148,7 +148,7 @@ export function OklchColorPicker({
             onChange={handleRawInputChange}
             disabled={disabled}
             className={cn(
-              'w-full rounded-md border border-input bg-background px-3 py-2 text-sm',
+              'w-full rounded-md border border-border-interactive bg-background px-3 py-2 text-sm',
               'focus:outline-none focus:ring-2 focus:ring-ring',
               'disabled:cursor-not-allowed disabled:opacity-50',
               !isValid && 'border-destructive'
@@ -187,7 +187,7 @@ export function OklchColorPicker({
             onChange={(e) => handleComponentChange('l', e.target.value)}
             disabled={disabled}
             className={cn(
-              'w-full rounded border border-input bg-background px-2 py-1 text-sm',
+              'w-full rounded border border-border-interactive bg-background px-2 py-1 text-sm',
               'focus:outline-none focus:ring-1 focus:ring-ring',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
@@ -220,7 +220,7 @@ export function OklchColorPicker({
             onChange={(e) => handleComponentChange('c', e.target.value)}
             disabled={disabled}
             className={cn(
-              'w-full rounded border border-input bg-background px-2 py-1 text-sm',
+              'w-full rounded border border-border-interactive bg-background px-2 py-1 text-sm',
               'focus:outline-none focus:ring-1 focus:ring-ring',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
@@ -253,7 +253,7 @@ export function OklchColorPicker({
             onChange={(e) => handleComponentChange('h', e.target.value)}
             disabled={disabled}
             className={cn(
-              'w-full rounded border border-input bg-background px-2 py-1 text-sm',
+              'w-full rounded border border-border-interactive bg-background px-2 py-1 text-sm',
               'focus:outline-none focus:ring-1 focus:ring-ring',
               'disabled:cursor-not-allowed disabled:opacity-50'
             )}
