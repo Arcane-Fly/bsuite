@@ -18,6 +18,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 - A completed form now starts its workflow with the form as the run's subject
   (crm7 migration 20261207450000), so the inspector names it: "This workflow's
   subject is a completed form", not `a "form_submission" record`. (bsuite#3208 C6)
+- Gate and skip reasons were written for developers: a greyed-out Send email said
+  "the processor reads the recipient off the queue row's candidate_id", Add to
+  talent pool cited "conduit#229", and other notes named "the processor" and "the
+  tenant queue". They now say what happens in the user's words ("it emails the
+  candidate the workflow is about"), and an unlisted subject reads "a placement",
+  never its table name. (bsuite#3208 C6, crm7#2459 ruling) — 0.3.3-next.1
 
 ---
 

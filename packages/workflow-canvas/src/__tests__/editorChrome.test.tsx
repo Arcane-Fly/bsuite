@@ -514,6 +514,28 @@ describe('WorkflowInspector', () => {
         expect(reason).not.toHaveTextContent(/form_submission/);
       });
 
+      it('explains every gate and skip in the user\'s words: no column, table or ticket names', () => {
+        // bsuite#3208 d.crm walk 2026-09-26: the reason read "the processor reads the
+        // recipient off the queue row's candidate_id" and a skip note cited
+        // "conduit#229". crm7#2459's ruling: storage and ticket names never reach a label.
+        const storage = /_id\b|queue row|processor|#\d+|form_submission|pipeline_entries/;
+        for (const entry of WORKFLOW_ACTION_VOCABULARY) {
+          expect(entry.requiresReason ?? '').not.toMatch(storage);
+          expect(entry.notAutomatedReason ?? '').not.toMatch(storage);
+        }
+        const controller = makeController();
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-1"
+            actionContext={{ subjectTable: 'placements', hasCandidate: false }}
+          />,
+        );
+        const reason = screen.getByTestId('workflow-inspector-action-unavailable-send_email');
+        expect(reason).toHaveTextContent(/a placement\./);
+        expect(reason.textContent ?? '').not.toMatch(storage);
+      });
+
       it('does not gate anything when actionContext is absent — current behaviour', () => {
         const controller = makeController();
         render(<WorkflowInspector controller={controller} selectedNodeId="step-1" />);
