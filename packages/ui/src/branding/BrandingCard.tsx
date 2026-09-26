@@ -106,7 +106,7 @@ export function BrandingCard({
     <>
       <div
         className={cn(
-          'rounded-lg border border-input bg-card text-card-foreground shadow-sm',
+          'rounded-lg border border-border bg-card text-card-foreground shadow-sm',
           className
         )}
       >
@@ -124,7 +124,7 @@ export function BrandingCard({
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <div
-                className="h-10 w-10 rounded border border-input shadow-sm"
+                className="h-10 w-10 rounded border border-border-interactive shadow-sm"
                 style={{ backgroundColor: branding.primary || 'oklch(0.546 0.215 262.9)' }}
                 aria-label="Primary color preview"
               />
@@ -146,7 +146,7 @@ export function BrandingCard({
               }
               disabled={disabled}
               className={cn(
-                'rounded-md border border-input bg-background px-4 py-2 text-sm font-medium',
+                'rounded-md border border-border-interactive bg-background px-4 py-2 text-sm font-medium',
                 'hover:bg-accent hover:text-accent-foreground',
                 'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                 'disabled:cursor-not-allowed disabled:opacity-50'
@@ -160,7 +160,7 @@ export function BrandingCard({
           <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-4">
               <div
-                className="h-10 w-10 rounded border border-input shadow-sm"
+                className="h-10 w-10 rounded border border-border-interactive shadow-sm"
                 style={{ backgroundColor: branding.accent || 'oklch(0.769 0.132 191.7)' }}
                 aria-label="Accent color preview"
               />
@@ -182,7 +182,7 @@ export function BrandingCard({
               }
               disabled={disabled}
               className={cn(
-                'rounded-md border border-input bg-background px-4 py-2 text-sm font-medium',
+                'rounded-md border border-border-interactive bg-background px-4 py-2 text-sm font-medium',
                 'hover:bg-accent hover:text-accent-foreground',
                 'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2',
                 'disabled:cursor-not-allowed disabled:opacity-50'
@@ -206,7 +206,7 @@ export function BrandingCard({
                 disabled={disabled}
                 placeholder="Enter company name"
                 className={cn(
-                  'flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'flex-1 rounded-md border border-border-interactive bg-background px-3 py-2 text-sm',
                   'focus:outline-none focus:ring-2 focus:ring-ring',
                   'disabled:cursor-not-allowed disabled:opacity-50'
                 )}
@@ -231,7 +231,7 @@ export function BrandingCard({
                 disabled={disabled}
                 placeholder="https://example.com/logo.svg"
                 className={cn(
-                  'flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'flex-1 rounded-md border border-border-interactive bg-background px-3 py-2 text-sm',
                   'focus:outline-none focus:ring-2 focus:ring-ring',
                   'disabled:cursor-not-allowed disabled:opacity-50'
                 )}
@@ -265,7 +265,7 @@ export function BrandingCard({
                 disabled={disabled}
                 placeholder="https://example.com/logo-light.svg"
                 className={cn(
-                  'flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'flex-1 rounded-md border border-border-interactive bg-background px-3 py-2 text-sm',
                   'focus:outline-none focus:ring-2 focus:ring-ring',
                   'disabled:cursor-not-allowed disabled:opacity-50'
                 )}
@@ -290,7 +290,7 @@ export function BrandingCard({
                 disabled={disabled}
                 placeholder="https://example.com/logo-dark.svg"
                 className={cn(
-                  'flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'flex-1 rounded-md border border-border-interactive bg-background px-3 py-2 text-sm',
                   'focus:outline-none focus:ring-2 focus:ring-ring',
                   'disabled:cursor-not-allowed disabled:opacity-50'
                 )}
@@ -315,7 +315,7 @@ export function BrandingCard({
                 disabled={disabled}
                 placeholder="https://example.com/favicon.ico"
                 className={cn(
-                  'flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm',
+                  'flex-1 rounded-md border border-border-interactive bg-background px-3 py-2 text-sm',
                   'focus:outline-none focus:ring-2 focus:ring-ring',
                   'disabled:cursor-not-allowed disabled:opacity-50'
                 )}
@@ -449,7 +449,7 @@ function ColorEditorSheetWrapper({
             onClick={onCancel}
             className={cn(
               'inline-flex items-center justify-center rounded-md px-4 py-2 text-sm font-medium',
-              'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+              'border border-border-interactive bg-background hover:bg-accent hover:text-accent-foreground',
               'focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
             )}
           >
