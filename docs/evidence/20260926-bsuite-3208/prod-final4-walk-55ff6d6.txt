@@ -1,0 +1,14 @@
+bundle /assets/index-7oeUpQNy.js
+version.json {"commit":"55ff6d6","builtAt":"2026-09-26T12:48:28.838Z"}  | fresh index serves /assets/index-DmucbSwF.css | original theme pref null
+[light] html classes ["light"] data-theme=light sheets ["index-DmucbSwF.css","pageGridLayoutAdapter-C5gNOZ-_.css"] | border-border-strong rules 3 ["index-DmucbSwF.css :: .border-border-strong","index-DmucbSwF.css :: .hover\\:border-border-strong:hover","index-DmucbSwF.css :: .dark\\:hover\\:border-border-strong:is(.dark *):hov"]
+[light] control-edge contrast {"input":"4.40:1 [INPUT \"\" rgb(111,117,126) on rgb(246,249,253)]","textarea":"none on page","selectTrigger":"4.40:1 [BUTTON \"Host employer\" rgb(111,117,126) on rgb(246,249,253)]"}
+[light] editor table {"expect":"lab(86.0735 -0.876457 -2.8578)","table":"lab(86.0735 -0.876457 -2.8578)","cell":"lab(86.0735 -0.876457 -2.8578)"} | table==token: true | cell==token: true
+[dark] html classes ["dark"] data-theme=dark sheets ["index-DmucbSwF.css","pageGridLayoutAdapter-C5gNOZ-_.css"] | border-border-strong rules 3 ["index-DmucbSwF.css :: .border-border-strong","index-DmucbSwF.css :: .hover\\:border-border-strong:hover","index-DmucbSwF.css :: .dark\\:hover\\:border-border-strong:is(.dark *):hov"]
+[dark] control-edge contrast {"input":"5.92:1 [INPUT \"\" rgb(138,147,157) on rgb(15,20,29)]","textarea":"none on page","selectTrigger":"5.92:1 [BUTTON \"Host employer\" rgb(138,147,157) on rgb(15,20,29)]"}
+[dark] editor table {"expect":"lab(47.7836 -1.56406 -5.31685)","table":"lab(47.7836 -1.56406 -5.31685)","cell":"lab(47.7836 -1.56406 -5.31685)"} | table==token: true | cell==token: true
+theme pref restored to null
+table writes on the template editor (must be 0): 0 [] | read RPCs: 8
+greyed Send email option Send email (unavailable here) [disabled]
+reason text Needs a candidate — it emails the candidate the workflow is about. This workflow's subject is a completed form.
+refused toast Nothing leads to New step, so it would never run. Connect it from Start or remove it, then publish. Could not publish the workflow | page errors []
+Try again visible on expanded Failed run 1

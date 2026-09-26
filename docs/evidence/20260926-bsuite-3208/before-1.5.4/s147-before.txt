@@ -1,0 +1,14 @@
+bundle /assets/index-BASeXs40.js
+version.json {"commit":"b3f55e2","builtAt":"2026-09-26T10:22:03.558Z"}  | fresh index serves /assets/index-DjeLIHpg.css | original theme pref null
+[light] html classes ["light"] data-theme=light sheets ["index-DjeLIHpg.css","pageGridLayoutAdapter-C5gNOZ-_.css"] | border-border-strong rules 0 []
+[light] control-edge contrast {"input":"1.41:1 [INPUT \"\" rgb(203,213,225) on rgb(246,249,253)]","textarea":"none on page","selectTrigger":"1.12:1 [BUTTON \"Host employer\" rgb(233,236,239) on rgb(246,249,253)]"}
+[light] editor table {"expect":"lab(86.0735 -0.876457 -2.8578)","table":"lab(93.2707 -0.611454 -1.7648)","cell":"lab(93.2707 -0.611454 -1.7648)"} | table==token: false | cell==token: false
+[dark] html classes ["dark"] data-theme=dark sheets ["index-DjeLIHpg.css","pageGridLayoutAdapter-C5gNOZ-_.css"] | border-border-strong rules 0 []
+[dark] control-edge contrast {"input":"6.95:1 [INPUT \"\" rgb(143,160,186) on rgb(15,20,29)]","textarea":"none on page","selectTrigger":"2.26:1 [BUTTON \"Host employer\" rgb(73,80,87) on rgb(15,20,29)]"}
+[dark] editor table {"expect":"lab(47.7836 -1.56406 -5.31685)","table":"lab(33.6364 -1.68158 -5.2392)","cell":"lab(33.6364 -1.68158 -5.2392)"} | table==token: false | cell==token: false
+theme pref restored to null
+table writes on the template editor (must be 0): 8 ["HEAD https://tuybltdrdefjblnplpqo.supabase.co/rest/v1/contacts?select=id&tenant_id=eq.aaaaaaaa-0000-0000-0000-00000","HEAD https://tuybltdrdefjblnplpqo.supabase.co/rest/v1/leads?select=id&tenant_id=eq.aaaaaaaa-0000-0000-0000-00000000","HEAD https://tuybltdrdefjblnplpqo.supabase.co/rest/v1/tasks?select=id&tenant_id=eq.aaaaaaaa-0000-0000-0000-00000000","HEAD https://tuybltdrdefjblnplpqo.supabase.co/rest/v1/communications?select=id&tenant_id=eq.aaaaaaaa-0000-0000-0000"] | read RPCs: 8
+greyed Send email option Send email (unavailable here) [disabled]
+reason text Needs a candidate — it emails the candidate the workflow is about. This workflow's subject is a completed form.
+refused toast Nothing leads to New step, so it would never run. Connect it from Start or remove it, then publish. Could not publish the workflow | page errors []
+Try again visible on expanded Failed run 1
