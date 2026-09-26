@@ -1,3 +1,12 @@
+---
+kind: plan
+authority: operator
+owner: bsuite
+evidence:
+  - docs/20260908-customization-capability-register-v1.00W.md
+  - docs/evidence/20260926-bsuite-3208/README.md
+---
+
 # Unified In-Context Developer Authoring Surface — Implementation Plan
 
 > **Filename corrected 2026-08-17: `v1.00D` → `v1.03A`.** The body declared
