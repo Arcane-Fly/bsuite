@@ -155,8 +155,8 @@
    Lucide and every inline SVG strokes in currentColor, and the rule above sets
    `color: transparent` so the gradient can show through the glyphs. The
    gradient clips to TEXT only, so an icon inside the heading painted nothing:
-   measured on d.crm /placements/:id, 7 of 7 card-heading icons computed
-   rgba(0,0,0,0), and about 288 CardTitle icons across crm7 carry the pattern.
+   measured on d.crm /placements/:id, 7 of 7 card-heading icons computed a
+   fully transparent colour, and about 288 CardTitle icons across crm7 carry the pattern.
    The icon takes the heading gradient's own start stop, the AA-verified
    --role-primary-text, so it matches the first letter it sits beside. */
 .text-gradient-accent svg {
