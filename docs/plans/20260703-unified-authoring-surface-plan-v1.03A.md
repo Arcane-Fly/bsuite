@@ -316,6 +316,8 @@ the plan. **BLOCKING** findings gate the Phase-1 build.
 
 ## 26 September — forms and signatures delivered through this surface (bsuite#3208)
 
+**Still the plan as of 2026-09-26.** The capability register cites this plan as the live in-context authoring specification (rows C01, C05, C06, C08, C12, C13 and C15).
+
 Recorded by the #3208 lane. It closes the 23 September handoff that the capability register notes: an update was
 due to this plan's owner, and that owner's session is no longer active.
 
