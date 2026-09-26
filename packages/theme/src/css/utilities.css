@@ -151,6 +151,18 @@
      are unaffected — do not reach for an SVG or an image here. */
 }
 
+/* AN ICON IN A GRADIENT HEADING IS DRAWN, NOT CLIPPED AWAY.
+   Lucide and every inline SVG strokes in currentColor, and the rule above sets
+   `color: transparent` so the gradient can show through the glyphs. The
+   gradient clips to TEXT only, so an icon inside the heading painted nothing:
+   measured on d.crm /placements/:id, 7 of 7 card-heading icons computed
+   rgba(0,0,0,0), and about 288 CardTitle icons across crm7 carry the pattern.
+   The icon takes the heading gradient's own start stop, the AA-verified
+   --role-primary-text, so it matches the first letter it sits beside. */
+.text-gradient-accent svg {
+  color: var(--role-primary-text);
+}
+
 /* A CENTRED GRADIENT TITLE STAYS CENTRED (bsuite#3365).
    fit-content above makes a parent's `text-align: center` inert: the text is
    centred inside a box that hugs it, and the box sits at the parent's start

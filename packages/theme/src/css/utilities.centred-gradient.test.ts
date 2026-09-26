@@ -44,3 +44,9 @@ describe('.text-gradient-accent keeps a centred title centred', () => {
     expect(ruleFor('.text-center .text-gradient-accent')).toBeUndefined()
   })
 })
+
+describe('.text-gradient-accent draws the icons in a heading', () => {
+  it('gives an SVG in the heading a real colour, not the transparent the gradient needs', () => {
+    expect(ruleFor('.text-gradient-accent svg')?.color).toBe('var(--role-primary-text)')
+  })
+})
