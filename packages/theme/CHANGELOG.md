@@ -1,5 +1,17 @@
 # @bsuite/theme
 
+## 1.5.6 — 2026-09-27
+
+**An icon in a gradient heading is drawn, not clipped away** (bsuite#3390).
+
+`.text-gradient-accent` sets `color: transparent` so the gradient shows through the
+glyphs, and the gradient clips to text only. Lucide and inline SVG icons stroke in
+currentColor, so an icon inside a gradient heading painted nothing: measured on d.crm
+/placements/:id, 7 of 7 card-heading icons were fully transparent, and about 288
+CardTitle icons across crm7 carry the pattern. The icon now takes the gradient's own
+start stop, `--role-primary-text` (already AA-verified), in both `utilities.css` and
+the Corporate `braden.css` layer. No new colour is introduced.
+
 ## 1.5.5 — 2026-09-26
 
 **The Corporate (braden) stylesheet declares the interactive edge** (bsuite#1958).
