@@ -9,6 +9,8 @@ evidence:
 
 # Unified In-Context Developer Authoring Surface — Implementation Plan
 
+**Still the plan as of 2026-09-26.** See [26 September — forms and signatures delivered through this surface](#26-september--forms-and-signatures-delivered-through-this-surface-bsuite3208) for what the capability register cites it for.
+
 > **Filename corrected 2026-08-17: `v1.00D` → `v1.03A`.** The body declared
 > `A (Approved — operator 2026-07-03 "the word")` and `v1.03A`; the filename said Draft v1.00. A
 > `D` marker on an operator-approved, build-authorised plan is a Draft marker hiding an authorised
