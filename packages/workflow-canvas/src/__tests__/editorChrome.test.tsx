@@ -499,6 +499,21 @@ describe('WorkflowInspector', () => {
         ).toHaveTextContent(/communication/i);
       });
 
+      it('names a completed form in the user\'s words when a form starts the workflow', () => {
+        const controller = makeController();
+        render(
+          <WorkflowInspector
+            controller={controller}
+            selectedNodeId="step-1"
+            actionContext={{ subjectTable: 'form_submission', hasCandidate: false }}
+          />,
+        );
+
+        const reason = screen.getByTestId('workflow-inspector-action-unavailable-send_email');
+        expect(reason).toHaveTextContent(/a completed form/);
+        expect(reason).not.toHaveTextContent(/form_submission/);
+      });
+
       it('does not gate anything when actionContext is absent — current behaviour', () => {
         const controller = makeController();
         render(<WorkflowInspector controller={controller} selectedNodeId="step-1" />);

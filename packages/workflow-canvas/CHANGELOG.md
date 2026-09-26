@@ -15,6 +15,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   `onError` already showed the reason, but the same error also escaped as an
   unhandled page error on every refused publish (seen on d.crm: "Nothing leads to
   New step…"). Both now catch after `onError` has reported it. (bsuite#3208 C6, D6)
+- A completed form now starts its workflow with the form as the run's subject
+  (crm7 migration 20261207450000), so the inspector names it: "This workflow's
+  subject is a completed form", not `a "form_submission" record`. (bsuite#3208 C6)
 
 ---
 
