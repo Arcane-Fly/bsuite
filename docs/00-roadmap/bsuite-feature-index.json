@@ -11196,7 +11196,6 @@
   "route": "/field-officers/incidents",
   "code_anchors": [
    "crm7/src/pages/field-officers/incidents/index",
-   "crm7/src/pages/field-officers/incidents/create",
    "crm7/src/pages/field-officers/incidents/[id]/edit"
   ],
   "db_objects": [
@@ -11330,13 +11329,14 @@
   "module": "crm7",
   "capability_area": "Field officers & mentors",
   "surface_type": "page",
-  "entry_point": "orphan route /field-officers/site-assessment",
+  "entry_point": "redirect /field-officers/site-assessment -> Site Visits schedule, FRM010 create (crm7 42408bba6)",
   "route": "/field-officers/site-assessment",
   "code_anchors": [
-   "crm7/src/pages/field-officers/site-assessment"
+   "crm7/src/lib/fieldOfficerVisitNavigation",
+   "crm7/src/__tests__/field-officer-site-assessment-route-contract.test"
   ],
   "db_objects": [],
-  "build_status": "unwired",
+  "build_status": "live",
   "ui_touched": true,
   "doc_coverage": "documented",
   "docs": [
