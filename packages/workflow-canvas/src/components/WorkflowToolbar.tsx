@@ -52,14 +52,21 @@ export function WorkflowToolbar({
 }: WorkflowToolbarProps) {
   const { draft, definition, isPlatformTemplate, isReadOnly } = controller;
 
+  // Both are React Query `mutateAsync`, which REJECTS on failure. The
+  // controller's `onError` has already told the person why (a refused publish
+  // names the unreachable step), so the rejection is handled by being shown —
+  // left uncaught it also escaped as an unhandled page error on every refusal.
   const publish = useCallback(() => {
-    void controller.publish();
+    controller.publish().catch(() => {});
   }, [controller]);
 
   const duplicate = useCallback(() => {
-    void controller.duplicateToTenant().then((result) => {
-      onDuplicated?.(result.definition.id);
-    });
+    controller
+      .duplicateToTenant()
+      .then((result) => {
+        onDuplicated?.(result.definition.id);
+      })
+      .catch(() => {});
   }, [controller, onDuplicated]);
 
   const publishedVersionId = definition?.current_published_version_id ?? null;

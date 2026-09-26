@@ -73,6 +73,9 @@ function describeSubject(subjectTable: string | null | undefined): string {
       return 'a pipeline entry';
     case 'communications':
       return 'a communication';
+    case 'form_submission':
+    case 'form_submissions':
+      return 'a completed form';
     default:
       return subjectTable ? `a "${subjectTable}" record` : 'not yet known';
   }
