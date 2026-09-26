@@ -173,6 +173,8 @@ export function persistenceExports(sources) {
  * the nearest property key declared before the call (`publish: async (…) =>`,
  * `publish(…) {`). Returns [] when the call sits outside any action.
  */
+const CONTROL_KEYWORDS = new Set(['if', 'for', 'while', 'switch', 'catch', 'with', 'function', 'return']);
+
 export function storeActionsCalling(storeText, fnName) {
   const actions = new Set();
   const call = new RegExp(`\\b${fnName}\\s*\\(`, 'g');
@@ -182,7 +184,14 @@ export function storeActionsCalling(storeText, fnName) {
     let owner = null;
     let k;
     key.lastIndex = 0;
-    while ((k = key.exec(storeText)) !== null && k.index < m.index) owner = k[1];
+    while ((k = key.exec(storeText)) !== null && k.index < m.index) {
+      // `if (…) {` / `for (…) {` inside an action body matches the method-shorthand
+      // shape; a control statement is never an action. Measured 2026-09-26: crm7
+      // fetchLayouts gained `if (!tenantId) {` above its getFormLayouts call, the
+      // owner became "if", no screen names `.if`, and getFormLayouts read as
+      // zero-consumer while Settings > Forms called it through fetchLayouts.
+      if (!CONTROL_KEYWORDS.has(k[1])) owner = k[1];
+    }
     if (owner) actions.add(owner);
   }
   return [...actions];
@@ -431,6 +440,22 @@ function selfTest() {
     ])
     if (usesAction.get('crm7/src/services/formLayoutService.ts::publishFormLayout').length !== 1)
       fail('a screen calling the store action that wraps a service call was not counted')
+    // A control statement above the call inside an action body is not the action.
+    const guarded = {
+      path: 'crm7/src/stores/listStore.ts',
+      text: [
+        'export const useListStore = create(() => ({',
+        '  fetchRows: async (tenantId) => {',
+        '    if (!tenantId) {',
+        '      return',
+        '    }',
+        '    const rows = await getRows(tenantId)',
+        '  },',
+        '}))',
+      ].join('\n'),
+    }
+    if (JSON.stringify(storeActionsCalling(guarded.text, 'getRows')) !== '["fetchRows"]')
+      fail('an if-block inside a store action was taken for the action that calls the service')
     const importsOnly = persistenceConsumers(lifecycle, [
       store,
       {
