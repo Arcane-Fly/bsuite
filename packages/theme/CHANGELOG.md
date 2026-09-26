@@ -1,6 +1,6 @@
 # @bsuite/theme
 
-## 1.5.3 (unreleased; 1.5.3-next.N on development) — 2026-09-26
+## 1.5.3 — 2026-09-26
 
 **A centred gradient title stays centred** (bsuite#3365).
 
