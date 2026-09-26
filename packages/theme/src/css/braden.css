@@ -527,6 +527,13 @@
     background-clip: text;
     color: transparent;
   }
+  /* The gradient clips to text only; an icon in the heading strokes in
+     currentColor and would paint nothing. Draw it in the palette's own
+     primary text colour (see utilities.css). */
+  .text-gradient-accent svg,
+  .text-gradient-accent-on-dark svg {
+    color: var(--role-primary-text);
+  }
   /* Forced-colours mode drops background-image entirely, which would leave
      transparent glyphs on screen. Hand the text back to the system palette. */
   @media (forced-colors: active) {
