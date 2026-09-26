@@ -564,3 +564,21 @@ afternoon of work reaches the team.
    34 `EnhancedDataTable` pages. A context read plus a string build on every one is not free.
 6. **Label-derived refs orphan when a label changes.** The panel must list orphans explicitly
    ("no longer on this page — remove"), never silently drop them.
+
+## 26 September — form-started workflows (bsuite#3208 C6)
+
+Recorded by the #3208 lane. These are additions to the landed engine; the anti-rebuild list above still applies.
+All are deployed-tested on production:
+
+- **Publish keeps triggers.** Migration 20261207440000 stops a publish from resetting `trigger_config`.
+- **Form-started runs.** On `form_submission.completed`, a run starts with the submission as its subject (450000).
+  The run is listed in Workflow runs (460000).
+- **Notify step.** It creates a task linked back to the form.
+- **Run controls.** Try again and Stop persist across reload.
+- **Canvas 0.3.3.** A form-started workflow greys out actions it cannot perform (for example, Send email needs a
+  candidate) and says why in plain words. A refused publish explains itself in a toast instead of throwing.
+
+The full documentation contract is in the
+[capability register's 26 September section](../20260908-customization-capability-register-v1.00W.md#26-september--3208-c1c9-deployed-tested-on-production),
+and the evidence is in the [evidence pack](../evidence/20260926-bsuite-3208/README.md). The broader C10 and C11
+capability stays with bsuite#3209.

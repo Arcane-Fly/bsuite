@@ -1,0 +1,14 @@
+C9 — share a form with ONE organisation as a COPY, never a move — PRODUCTION crm.crm7.app
+Verified: 2026-09-25 ~19:27 AWST. crm7 main b52f61ccd; migration 20261207400000 copy_ui_record_to_organisation live
+(copy_ui_record_to_organisation(text,uuid,uuid) SECURITY DEFINER, see migrations-live.txt).
+Walk s50 (signed in, Demo Organisation — CRM7, form layout 98615663 "Site Visit Report"):
+  Share card -> "One organisation" aria-pressed=true; help "Gives one organisation its own unpublished copy. This one stays here, unchanged."
+  "Organisation to copy it to" lists the other organisations; chose bsuite Platform (not a client organisation).
+  Confirm: "bsuite Platform gets its own unpublished copy of this form. This form stays here, unchanged."
+  Toast: "Copied to bsuite Platform. It arrives unpublished for them to publish."
+Database, before vs after (read-only):
+  original 98615663: tenant aaaaaaaa-...0001 (Demo), published_revision 764a2fef, updated_at 05:30:43 — IDENTICAL after
+  copy 490c8444: tenant 0c514bfc (bsuite Platform), published_revision_id NULL, same entity_type and 5 layout parts
+Cleanup through the UI (walk s51, acting in bsuite Platform): "Delete draft" — "This form has never been published, so no
+  records were made with it." -> copy 490c8444 gone; original 98615663 unchanged (re-queried).
+d.crm pre-promotion read-only probe s57 recorded on crm7#2763.

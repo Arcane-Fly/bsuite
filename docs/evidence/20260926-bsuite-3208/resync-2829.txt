@@ -1,0 +1,3 @@
+2026-09-26T12:05:32Z crm7#2829 merged (--merge): development 6aca102f = merge(c7c9a410, b3f55e2)
+git diff --quiet c7c9a410 6aca102f -> exit 0 (tree identical to the d.crm-walked c7c9a410)
+main...development = 0 5 (development contains main)

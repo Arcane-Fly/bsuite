@@ -1,0 +1,25 @@
+Production walk of crm7#2820 (d2d60eaa6f0a) — 2026-09-26 16:26–16:40 AWST, crm.crm7.app
+Deploy: dpl_HZ12E5F4AK8o5c3JC636JM4PudH4 READY, target production, aliases crm.crm7.app/www.crm7.app, bundle index-CFL-eKbO.js
+(one warm-up load first so the service worker took the new build). Demo Organisation, Braden Lang (developer account).
+Merge: crm7#2820 --merge → main d2d60eaa (2 parents), after 38/38 checks (1 skipped), mergeStateStatus CLEAN, label
+visual-dod-passed; crm7 has no reviewer bot (github-actions DOM-lint + drift-scan clean, vercel); no migrate dispatch
+(0 migration files in main...development; 430000–470000 already live).
+
+Walk s134 + s137 + s138 (per round-2 final_walk_must_show):
+ #2805/#2810  retired-table writes 0; 403/5xx 0; Jodie marker persists across full reload; no load-failure notice. PASS
+              — BUT: only the session synced (PATCH ai_sessions 204). Messages never upload (server: 23 sessions, 0 messages
+              ever): non-uuid row ids skipped by the push guard. Fixed in crm7#2822 (open) → re-walk after it ships.
+ C6 runs      "10 runs"; form-started 497006d9/e24bab9c listed; Try again present only when the Failed run is open
+              (1), 0 on Finished/Cancelled runs (s138). prod-final-runs.png, prod-final-failed-run-tryagain.png          PASS
+ #2809        Demo forms list = Record of Discussion + Site Visit Report; RoD opens 27af6d39 (Demo's), not b54452f7;
+              switch to bsuite Platform → only its RoD; back to Demo → Demo's 2. Custom Pages: Demo sees 0 = DB (Demo/null
+              rows 0; 2 other-tenant pages hidden). Picklists: 7 = DB (7 active, all platform/null).                      PASS
+ #2808        "Which kind of record"; no "Entity" label. prod-final-form-detail.png                                     PASS
+ #2807        signature slot sw=195 cw=195, buttons inside. prod-final-sigslot.png                                       PASS
+ #2801/#2806/#2811 (form-started workflow D, trigger form_submission.completed per DB): greyed Send email "Needs a candidate
+              — it emails the candidate the workflow is about. This workflow's subject is a completed form."; no storage/ticket
+              words. prod-final-canvas-copy.png. (Workflow A is published with no draft, so its inspector is read-only by
+              design (#2785); D carries the same trigger.)                                                              PASS
+ refused publish (workflow C): toast "Nothing leads to New step…"; page errors []                                        PASS
+ #2796        long workflow name fits (scrollWidth <= clientWidth)                                                      PASS
+ 440000 trigger card: workflow A "Form Completed" checked after publish + reload. prod-final-trigger-card.png            PASS

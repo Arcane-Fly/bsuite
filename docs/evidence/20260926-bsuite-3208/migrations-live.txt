@@ -1,0 +1,21 @@
+Migrations live on production (project tuybltdrdefjblnplpqo) — 2026-09-25 ~19:25 AWST
+Dispatch: gh workflow run supabase-migrate.yml --ref main -f submodule=crm7 -> run 36129090055 success
+  "✓ Applied and recorded: 20261207390000" / "✓ Applied and recorded: 20261207400000" / verification passed
+Ledger by VERSION AND NAME (supabase_migrations.schema_migrations):
+  20261207390000 case_notes_confidential_enforced
+  20261207400000 copy_ui_record_to_organisation
+Live catalogue (not the ledger):
+  pg_policies case_notes: case_notes_confidential_{select,insert,update,delete} RESTRICTIVE;
+    case_notes_field_officer_caseload_{only(SELECT),update,delete} RESTRICTIVE
+  pg_trigger case_notes_guard_update tgenabled=A (ALWAYS)
+  pg_proc case_note_confidential_access(uuid,uuid,uuid) secdef=false;
+          copy_ui_record_to_organisation(text,uuid,uuid) secdef=true
+
+2026-09-26 13:42 AWST — verified independently (bsuite-3d), after bsuite-9b's crm7#2797 → main 4d49a4edb, bsuite#3361
+(gitlink e6d4bdba5), supabase-migrate run 36221382857:
+ - schema_migrations by version AND name: 20261207430000 enrichment_programs | 20261207440000 workflow_publish_keeps_triggers |
+   20261207450000 form_completed_runs_carry_the_form
+ - workflow_versions_publish_inherit_triggers: trigger tgenabled='A' (ALWAYS) on workflow_definition_versions;
+   md5(prosrc)=534b71f10528394c60bbbfd3a7a1db34 = md5 of the file body on crm7 main; authenticated cannot EXECUTE it.
+ - form_submissions_create_follow_ups md5(prosrc)=b3dd7cbf342d398bf673a6dc9f10c032 (the 450000 body) and passes
+   'form_submission', NEW.id to workflow_emit_event.

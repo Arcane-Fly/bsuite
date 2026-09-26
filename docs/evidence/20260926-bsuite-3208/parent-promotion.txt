@@ -1,0 +1,16 @@
+Parent promotion — REFRESHED 2026-09-26 12:55 AWST (replaces the 25 Sep text; the reviewer flagged its SHA as stale).
+
+Now: bsuite origin/main records crm7 at dbc897e2a086f9028b19146ebeddd30a301a2034
+  (`git ls-tree origin/main crm7` → 160000 commit dbc897e2a…) = crm7 #2777 (2026-09-25 20:01, the migrations-first
+  promotion; on crm7 main). crm7 main has since moved to 0fa210b35 (#2778, 2026-09-26, deploy READY) which adds NO migrations,
+  so the parent gitlink lagging it changes nothing the migrate workflow would apply. bsuite-9b advances it with #2797.
+History (still true): 25 Sep bsuite#3351 → #3352 put crm7 b52f61ccd on parent main (2c43e8001).
+Pending: crm7#2797 (bsuite-9b) carries migrations 20261207430000/440000/450000 to main; they advance the gitlink and dispatch
+  supabase-migrate --ref main themselves. Verified live by version+name+objects when they report; recorded in migrations-live.txt.
+
+RETRACTION: crm7#2459 was cited on 24 Sep as blocking C1 (the form palette offered storage columns). Its fix, crm7#2733
+  (57258c397), is on crm7 main and HOLDS on production — walked 2026-09-26 (s121, c1-2459-builder.png): Site Visit Report's
+  palette lists 8 record fields and none of Id / Tenant Id / Created At / Updated At / Custom Fields / *_id / Workforceone;
+  "All fields placed", "Entity:", "Context:", "AD-7" absent; Deploy Scope reads "Share with other organisations".
+  #2459 stayed OPEN only because a development→main merge does not fire closing keywords. The last schema word on that screen
+  (side panel "Entity") is fixed in crm7#2808; #2459 closes when that reaches production.

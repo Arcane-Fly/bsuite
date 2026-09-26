@@ -1,0 +1,17 @@
+Migrations 460000 + 470000 LIVE on production — verified independently by bsuite-3d, 2026-09-26 ~15:16 AWST
+Route (bsuite-9b): crm7#2816 → crm7 main bca033c75 (files byte-identical to development: 460000 sha256 7a0833c9a71a383e…,
+pgTAP 110 e90045812862b838…, checked on the PR head 1e5c04698); bsuite#3367 parent gitlink on main 69f9aa57f;
+supabase-migrate run 36226178100 completed success ("Applied and recorded" 460000 then 470000).
+
+Ledger by version AND name (Supabase list_migrations, full 63,521-char result read):
+  20261207460000 form_started_runs_are_visible
+  20261207470000 financial_viability_capability   (bsuite-9b's; their object checks cover it)
+  (440000 workflow_publish_keeps_triggers, 450000 form_completed_runs_carry_the_form still present)
+
+Object/behaviour check — the user-facing effect, on PRODUCTION crm.crm7.app (bundle index-B5vPaR7d.js), Demo Organisation,
+signed in as Braden Lang, walk s133:
+  REST GET /rest/v1/workflow_runs → 10 rows; form-started (subject_table=form_submission): 497006d9, e24bab9c
+  Workflow runs page: "10 runs" (was 8 before 460000; table held 11 incl. another tenant's), both form-started runs listed
+  ("Walk check: waits for a person … Started when a form was completed 26/09/2026, 13:43" etc.); unchanged after reload;
+  no 403/5xx. Screenshot prod-runs-form-started-visible.png.
+bsuite-9b's SQL (as the owner): workflow_subject_table_map() ? 'form_submission' = true; visible form_submission runs = 2.

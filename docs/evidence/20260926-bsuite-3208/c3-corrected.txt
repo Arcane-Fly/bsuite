@@ -1,0 +1,22 @@
+C3 — CORRECTION of c3.txt's screenshot claim, and the replacement evidence. 2026-09-26 ~12:40 AWST.
+
+What was wrong: c3.txt (25 Sep) named s73-a/c/e screenshots as the pending/declined/cancelled states. They were full-page
+shots taken without scrolling to the slot, so all three showed a different slot ("Not signed yet") and were byte-identical.
+The TEXT logged for each state (read from the slot element after a reload) was correct; the images did not show it.
+The independent review (round 1) was right to reject the images.
+
+Replacement, PRODUCTION crm.crm7.app, crm7 main 0fa210b35, Demo Organisation, Record of Discussion draft 06b62526,
+slot organisation_representative_signature, walk s118 (each state read after a full reload; element screenshots of the slot):
+  1 pending   "Waiting — Waiting for Braden Lang to sign. Ask someone else · Cancel request"          c3-a-pending.png   md5 3b2a8b37…
+  2 pending (me) "You have been asked to sign this. Sign now · Decline · Ask someone else · Cancel request"
+  3 declined  "Declined — Braden Lang declined to sign." slot re-opens: Sign it yourself / Ask / Email / Sign here with them
+                                                                                                     c3-c-declined.png  md5 a37ba539…
+  4 pending again
+  5 cancelled "Cancelled — The request to Braden Lang was cancelled: Walk-through check: request withdrawn to test cancelling."
+                                                                                                     c3-e-cancelled.png md5 871207f2…
+Three distinct images. Database agrees (signature_requests on 06b62526: pending -> declined -> pending -> cancelled, superseded chain).
+Refusals (C7 overlap): another member signing or declining for the nominee is refused (c7-substitution.txt).
+
+Found while doing this: in the side sheet the three slots are ~197px wide and "Ask someone in your organisation" overflowed its
+card (c3-slot-in-context.png). Fixed in crm7#2807 (container-relative button rows). Not a C3 failure of state handling; a layout
+defect in the same primitive, fixed the same turn.

@@ -1,0 +1,21 @@
+C6 retry THROUGH THE UI on production — crm.crm7.app, crm7 main 0fa210b35 (bundle index-COGo0wuZ.js), 2026-09-26 ~12:06-12:12 AWST.
+Signed in as the Demo user (braden@braden.com.au), Demo Organisation. Every step below is a real user action; no SQL writes.
+
+1. Workflow A "Walk check: waits for a person (bsuite#3208 C6)" (f7f116ca): Create draft -> step action "Send email"
+   -> Publish version (walk s100). The form-completion trigger leaves Send email ungated (see finding F2 below).
+2. Trigger card: ticked "Form Completed", Save triggers, reloaded -> still ticked (walk s102). [Publishing had dropped it: F1.]
+3. Field Officers > Actions > site visit a09c6c9a > "Choose a form to start" = Site Visit Report > Start a form -> visit date,
+   witnessed apprentice signature -> Complete -> status "Completed" (submission 5e7d1761, walk s102).
+4. Run 77cad390 started ("Started when a form was completed"); its Send email step queued 2901a7e4.
+   The processor failed it 3 times: "send_email: no candidate_id on queue row" (fails before any lookup; nothing sent).
+   Step failed; run failed, failure_reason action_failed.
+5. Workflow runs page (walk s104): row "Failed · Walk check: waits for a person"; expanded: "New step failed. Stopped because a
+   step failed (action failed). Try again". Clicked Try again -> toast "Trying again from the step that failed".
+   Reload -> "8 runs, 1 waiting on someone"; the row now reads "Waiting on someone". Screenshots c6-retry-before.png / c6-retry-after.png.
+6. Database after the click (read-only): run waiting, failure_reason NULL; step running with a NEW queue row
+   22378af7 (queued, 0 attempts) beside the failed 2901a7e4 (failed, 3). The failed attempt's history is kept.
+Earlier evidence still stands: reload (c6.txt), cancel (s92), DB-boundary retry/refusals (c6-retry.txt).
+
+Findings from this walk, both fixed or filed the same turn:
+ F1 Publishing an edit dropped the workflow's triggers (draft trigger_config {} published as is) -> crm7#2801 (DB trigger + pgTAP).
+ F2 A form-completion trigger maps to no subject, so the action picker offers Send email that can never run -> see follow-up.
