@@ -445,7 +445,7 @@ export function WorkflowInspector({
               data-testid="workflow-inspector-action-not-automated"
             >
               Not automated yet — {selectedVocabEntry.notAutomatedReason}. The step will save, but
-              the processor records it as skipped rather than performing it.
+              when the workflow runs it is recorded as skipped, not done.
             </p>
           ) : null}
 
@@ -509,7 +509,7 @@ export function WorkflowInspector({
                     style={{ color: 'var(--color-error, currentColor)' }}
                     data-testid="workflow-inspector-action-message-required"
                   >
-                    Required — the processor refuses an empty message.
+                    Required — a task can&apos;t be created without a message.
                   </p>
                 ) : null}
               </div>
@@ -590,8 +590,8 @@ export function WorkflowInspector({
                       className={FIELD_CLASS}
                     />
                     <p className="mt-1 text-xs text-muted-foreground">
-                      A list of assignees is not available yet — paste a user&apos;s UUID to assign
-                      the task, or leave this blank for the tenant queue.
+                      The list of people hasn&apos;t loaded. Leave this blank and the task goes
+                      to your organisation&apos;s shared task list.
                     </p>
                   </>
                 )}
