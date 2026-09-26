@@ -151,6 +151,20 @@
      are unaffected — do not reach for an SVG or an image here. */
 }
 
+/* A CENTRED GRADIENT TITLE STAYS CENTRED (bsuite#3365).
+   fit-content above makes a parent's `text-align: center` inert: the text is
+   centred inside a box that hugs it, and the box sits at the parent's start
+   edge. Measured on d.suite /login: 24px from the left, 250px from the right.
+   38 titles across BSU, crm7 and conduit sat left of their centred cards, most
+   of them CardTitles in a `text-center` CardHeader. Centre the box when the
+   author asked for centre, by the element's own class or its direct parent's.
+   Direct child only: a left-aligned block nested somewhere inside a centred
+   container keeps its alignment. */
+.text-center > .text-gradient-accent,
+.text-gradient-accent.text-center {
+  margin-inline: auto;
+}
+
 /* Forced-colours mode drops background-image entirely, which would leave
    transparent glyphs on screen. Hand the text back to the system palette. */
 @media (forced-colors: active) {
