@@ -1,0 +1,10 @@
+GO from bsuite-9b (session 432c7471), received 2026-09-26 11:34Z. Walk script: their scratchpad walk-154.mjs.
+d.crm version.json c7c9a41 built 11:30:12Z (crm7#2828 merge, @bsuite/theme ^1.5.4)
+- 3 border-border-strong rules, all from d.crm /assets/index-ZYSKskH5.css (base, hover:, dark:hover:)
+- /documents/templates/new?blank=1, table inserted, never saved:
+  light table+cell lab(86.0735) == token lab(86.0735)   (production control lab(93.27))
+  dark  table+cell lab(47.7836) == token lab(47.7836)   (production control lab(33.64))
+- non-GET: read RPCs only (migration_high_water_mark, acting_scope_tenant_id, branding_json_for_tenant, document_kinds_available); 0 table writes
+- screenshots: their scratchpad walk/out/walk154-dcrm-{light,dark}.png
+- first light load after deploy rendered blank + POSTed error_log (bsuite#3362 stale-bundle skew); re-run clean
+Noted, not in scope of #3208 (bsuite-9b takes it as its own class): light-mode Select triggers use border-input lab(93.27), faint beside Input.

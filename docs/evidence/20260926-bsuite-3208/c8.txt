@@ -1,0 +1,24 @@
+C8 — crm7#2751 confidential case notes readable only by author, caseload field officer, HR-confidential holders — PRODUCTION
+Verified: 2026-09-25 ~19:35 AWST. crm7 main b52f61ccd; migration 20261207390000 case_notes_confidential_enforced live
+(4 RESTRICTIVE confidential policies + caseload update/delete + case_notes_guard_update ALWAYS; see migrations-live.txt).
+
+UI (signed in, Demo Organisation — CRM7):
+  s52 create: Confidential box enabled, help "Only its author, the apprentice's field officer and people with access to
+      confidential HR records can read it. This can't be undone." Saved note 3ae3e95f-ad5e-402e-b482-fc6612f22697
+      (is_confidential=true, created_by recorded). List row shows the Confidential badge.
+  s53 edit: box checked AND disabled, help "This note is confidential and stays that way. ..."; subject edit saved and
+      survives reload ("... — edited").
+  s79 list after settle: "... — edited | Author Braden Lang" (no cell left loading).
+
+RLS matrix — rolled-back transactions (BEGIN ... ROLLBACK; nothing persisted), role authenticated + JWT sub:
+  identity                                   read conf  read control(non-conf)  update conf
+  staff member (no HR, not FO)                   0            1                     0      <- discriminates the confidential guard
+  admin (HR floor: owner/admin)                  1            1                     1
+  field officer, person on caseload              1            1                     1
+  field officer, person NOT on caseload          0            0                     0      (caseload rule also hides control: masked, not claimed)
+  author = platform developer                    1            1                     1      (developer limb masks author limb: not claimed)
+  AUTHOR LIMB ISOLATED: plain staff writes own confidential note -> reads it 1; another staff member -> 0
+  PLANT REFUSED: staff2 inserting a confidential note with created_by = staff1 -> "new row violates row-level security
+      policy case_notes_confi..." (case_notes_confidential_insert)
+One-way + immutable author/tenant: case_notes_guard_update (ENABLE ALWAYS) — per migration; UI box disabled after save.
+Test artefact: note 3ae3e95f in Demo (walk record, "Not about a real person").

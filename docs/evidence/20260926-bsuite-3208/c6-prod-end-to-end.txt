@@ -1,0 +1,23 @@
+C6 on PRODUCTION after migrations 440000 + 450000 went live (bsuite-9b route; verified independently in migrations-live.txt)
+crm.crm7.app, bundle index-qNKahu4u.js, Demo Organisation, signed in as Braden Lang. 2026-09-26 13:40–13:50 AWST.
+
+1 Publish keeps the trigger (440000). Workflow A f7f116ca: Create draft → step = Notify internally (task), message
+  "Walk check: a completed form started this workflow (bsuite#3208 C6)" → Publish → reload: Form Completed still checked
+  (s127). DB: v3 is current, trigger_config {"events":["form_submission.completed"],"auto_start":true}, graph has
+  notify_internal and no send_email. Before 440000 the v3 publish would have carried {}. Screenshot c6-prod-publish-keeps-trigger.png
+2 A completed form starts the workflow with the form as its subject (450000). Site Visit Report started from a field-officer
+  action and completed (s102): submission db0dad42 Completed. Run 497006d9 subject_table=form_submission subject_id=db0dad42.
+  Queue row 0595a9b4 action {kind notify_internal, subject_table form_submission, subject_id db0dad42} → status done,
+  attempts 1, last_error null. Run → completed.
+3 The action's effect persists: task 7e4b07b2 "Walk check: a completed form started this workflow…", related_entity_type
+  form_submission, related_entity_id db0dad42; task page shows "From: Open the completed form" (s128, c6-prod-task.png).
+4 DEFECT FOUND: the run is not listed in Workflow runs (list 8 rows, table 11; network capture s129 shows the REST read
+  returns 8). RLS helper workflow_run_subject_visible has no form subject. Fix: crm7#2812 migration 460000 (rolled-back
+  rehearsal 0→2 visible; pgTAP 109). C6 "runs persist through reload" for FORM-started runs is verified on production only
+  after 460000 is live — re-walk then.
+Earlier C6 legs still standing: cancel (c6-cancel.png, c6.txt) and retry via UI (c6-retry-ui.txt: "Try again" → new queue row).
+
+ANNOTATION (round-2 review, evidence hygiene): c6-prod-run-finished.png is the PRE-460000 runs list (8 runs), not proof the
+form-started run is listed; that proof is prod-runs-form-started-visible.png (10 runs, after 460000). c6-prod-publish-keeps-trigger.png
+is a viewport shot with the trigger card below the fold; the trigger claim stands on the DB read (workflow A v3 trigger_config
+carries form_submission.completed) and is re-shown as an element screenshot in the final production walk (prod-final-trigger-card.png).

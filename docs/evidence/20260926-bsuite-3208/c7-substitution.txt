@@ -1,0 +1,24 @@
+C7 — signatory substitution refused. Production tuybltdrdefjblnplpqo, 2026-09-26 ~04:00Z.
+Rolled-back DO block (ends in RAISE EXCEPTION 'ROLLBACK-RESULT'); nothing committed.
+
+Setup (in the transaction): Demo Organisation owner (cdd2af47…) nominates the other active member
+(ebdb7d74…) for field apprentice_signature on draft submission c9dd21cf… via
+apply_form_submission_signatory(...,'nominate',...) -> signatory 93b05f99… (pending, in_app).
+
+Result line, verbatim:
+ROLLBACK-RESULT: nominated=93b05f99-d3ec-4677-a836-74bbc3c1cf43
+ | (a) other member signs: 42501 Not permitted            <- owner/admin of the org cannot sign for the nominee
+ | (b) other org signs: 42501 Not permitted               <- a user of another organisation
+ | (c) direct UPDATE: 42501 permission denied for table signature_requests  <- writes revoked from authenticated
+ | (d) other member declines: 42501 Not permitted          <- nor decline on their behalf
+ | (e) named signer signs: ok=true | final status=signed  <- positive control: the path works for the right person
+
+Mechanism (pg_get_functiondef, live): signer identity comes from auth.uid(), never the payload;
+sign/decline require v_sig.signer_user_id = auth.uid(); INSERT/UPDATE/DELETE on signature_requests are
+revoked from authenticated so the RPC is the only write path.
+
+C7 negative-role attempts (same day, rolled back). A plain staff member (non-developer, platform_role=user,
+temporary active staff membership of Demo inside the transaction):
+ | nominate a signer: 42501 Not permitted           <- needs admin or forms.signers.manage, or own draft + forms.own.signers
+ | edit template: rows=0                            <- form_layouts write policies do not admit plain staff
+ | mark another's draft confidential: rows=0         <- not theirs, no confidential authority

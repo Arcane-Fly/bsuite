@@ -1,0 +1,13 @@
+C3 — signature blocks: pending, refused (declined), cancelled — PRODUCTION crm.crm7.app
+Verified: 2026-09-25 ~18:58 AWST. crm7 main b52f61ccd (Vercel production status success), bundle /assets/index-XGQbBUgW.js
+Record: Demo Organisation — CRM7, apprentice 90309824-..., Record of Discussion submission 06b62526-94c8-4a74-ac40-28063f66d046, slot organisation_representative_signature
+Walk: scratchpad/walk/s72-c3-states.mjs (step 1: first request) + s73-c3-continue.mjs (all states). Each state read AFTER A FULL RELOAD:
+  A pending(other member): "Waiting Waiting for Braden Lang to sign. Ask someone else Cancel request"
+  B pending(me):          "Waiting You have been asked to sign this. Sign now Decline Ask someone else Cancel request"
+  C declined:             "Declined Braden Lang declined to sign." (slot re-opened: Sign it yourself / Ask / Email / Sign here with them)
+  D pending again:        "Waiting Waiting for Braden Lang to sign."
+  E cancelled:            "Cancelled The request to Braden Lang was cancelled: Walk-through check: request withdrawn to test cancelling."
+Failed Supabase responses during walk: none
+Prior (same session, s43): own signature + witnessed ("Sign here with them" with witness confirmation) and Complete on submission 278efbc2 — completed and read-only.
+Defect found+fixed en route: "Ask someone in your organisation" returned HTTP 400 on production (user_tenants->profiles embed, no FK). Fixed crm7 aaf8dba3e, shipped in promotion #2763 (b52f61ccd); candidate list now shows the 2 active members.
+Screenshots: s73-a-pending-other, s73-c-declined, s73-e-cancelled (walk harness shot dir)

@@ -1,0 +1,13 @@
+Production promotion #1 of this close-out — crm7#2820 (development → main), 2026-09-26
+ - crm7#2820 merged --merge 16:22 AWST → crm7 main d2d60eaa6f0ad5abb45e215c91512e937f98d293 (2 parents), after 38 pass /
+   1 skipping, CLEAN, visual-dod-passed; no reviewer bot on crm7 (github-actions DOM-lint + drift clean, vercel).
+ - Production deploy dpl_HZ12E5F4AK8o5c3JC636JM4PudH4 READY, aliased crm.crm7.app, bundle index-CFL-eKbO.js; walked:
+   evidence/prod-walk-d2d60eaa.txt.
+ - Parent gitlink: bsuite#3370 → main c5ab1b6cf, bsuite#3371 → development e63d4ff67; both record crm7 d2d60eaa6f0a
+   (= production). Required checks green; the non-required reds were own-package-freshness, lockfile-pin, check-inventory
+   (estate reach after the canvas/page-builder/theme releases) and "No new hand-rolled tables" (crm7 141→143, all from
+   src/pages/enrichment/programs/index.tsx, bsuite-9b's #2791; DataGrid conversion requested for the next promotion).
+   Ratchets banked in the gitlink PRs: feature-index anchor for the deleted useOfflineData.ts, component registry,
+   zero-consumer gate parser (if-block taken for a store action; self-test added), hook baseline 78→77.
+ - No migrate dispatch: 0 migration files in main...development; 430000–470000 already live.
+ - Second promotion pending: crm7#2822 (Jodie messages get uuid row ids so they upload) + #2821 (theme ^1.5.3).

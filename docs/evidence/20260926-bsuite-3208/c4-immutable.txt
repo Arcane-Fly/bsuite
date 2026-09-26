@@ -1,0 +1,9 @@
+C4 — completed records stay immutable against later template edits. Production, 2026-09-26 ~04:02Z.
+Rolled-back DO block, as the Demo owner (cdd2af47…) under SET LOCAL ROLE authenticated.
+Completed submission 278efbc2… on layout 27af6d39…
+ROLLBACK-RESULT: owner template edit: template rows=1   <- the template edit itself succeeds (control)
+ | owner rewrites completed values: P0001 form_submissions: cannot edit a completed submission
+ | owner rewrites completed snapshot: P0001 form_submissions: cannot edit a completed submission
+ | snapshot md5 before=380020d330b219ac5b08c26b2822598a after=380020d330b219ac5b08c26b2822598a
+The record carries its own form_layout_snapshot; a later template change does not reach it, and even an
+owner cannot rewrite its values or snapshot (form_submissions guard trigger).
