@@ -12,6 +12,10 @@
 # Dependencies
 node_modules/
 */node_modules/
+# A trailing slash matches only a directory. A worktree's node_modules is
+# often a SYMLINK to the main checkout's, and `node_modules/` let one be
+# committed (bsuite#3358's CI then failed to mkdir it). Match the name.
+node_modules
 
 # Build outputs
 dist/
