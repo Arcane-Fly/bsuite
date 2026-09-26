@@ -1,0 +1,4 @@
+2026-09-26T11:13:33Z crm7#2828 head d6afdb67 (theme ^1.5.4) preview https://crm7-3uod94r7z-braden-pty-ltd.vercel.app
+served /assets/index-ZYSKskH5.css contains: .border-border-strong{border-color:var(--role-border-strong)}
+production today (index-DjeLIHpg.css) lacks it: see before-1.5.4/s144-before.log
+npm @bsuite/theme@1.5.4 gitHead e2fe2772: src/preset-v4.css:69-70 declares --color-bg-sunken and --color-border-strong

@@ -1,0 +1,16 @@
+D9 (used once) — declaration for bsuite#3208 / BRA-47
+
+kind: surface (form authoring, form fill + signatures, confidential escalation, workflow runs)
+status: used on PRODUCTION through the UI in Demo Organisation (aaaaaaaa-0000-0000-0000-000000000001) and bsuite Platform only;
+        NOT in a non-demo client tenant.
+reason: the flows create disciplinary Records of Discussion, confidential HR escalations, signatures and site-visit findings
+        about named apprentices. Creating them in a client tenant would fabricate HR/disciplinary records inside a paying
+        client's data (FutureBuild is a paying client whose data must be preserved; external messages are not authorised).
+        The acceptance criteria (C1–C9) name the capability, not a client record; the operator directed walks in Demo.
+queries (rows written through the UI on production, read back live):
+  form_layouts  27af6d39 (Record of Discussion, Demo, v6, revisions published_by Braden Lang)
+                98615663 (Site Visit Report, Demo, v6)
+  form_submissions  5e7d1761, db0dad42 (completed Site Visit Reports), 278efbc2, 40567f86 (completed), drafts 06b62526 c9dd21cf 402e2d7d
+  workflow_runs  497006d9, e24bab9c (form-started), 77cad390 (failed+retried), 6e433f40 (cancelled)
+  tasks  7e4b07b2 (related_entity form_submission db0dad42)
+follow-up: the first real client use is the operator's to initiate; nothing in the product blocks it (same UI, RLS scoped by tenant).

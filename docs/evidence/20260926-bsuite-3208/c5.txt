@@ -1,0 +1,26 @@
+C5 — confidential HR escalation: explicit, role-restricted, never AI-decided — PRODUCTION crm.crm7.app
+Verified: 2026-09-25 ~19:15 AWST. crm7 main b52f61ccd, bundle /assets/index-XGQbBUgW.js, Demo Organisation — CRM7.
+
+1. CONFIGURED RULE (authorised designer): form_layouts 27af6d39 "Record of Discussion" requires_confidential=true.
+   The apprentice record offers it as "Record of Discussion (confidential)"; drafts 06b62526 and c9dd21cf open with the
+   Confidential badge and no "Mark as confidential" button (s74/s75 logs: button 0, badge 1).
+2. EXPLICIT PERSON MARKING (walk s77 + s78): a Demo site visit a09c6c9a was scheduled through "Schedule Site Visit";
+   its "Site Visit Report" (layout 98615663, requires_confidential=false) was started from the site visit's forms card,
+   submission 40567f86-9d07-497b-8dca-e79741962ce6.
+     before: "Mark as confidential" button 1, badge 0
+     confirm: "Mark this form confidential? Only you, the people asked to sign, your organisation's admins, and people
+               allowed to see confidential HR records will be able to see it. This can't be undone."
+     AFTER RELOAD: badge 1, button 0; "Only you, ... can see this form."
+     failed Supabase responses: none
+3. ONE-WAY (database): rolled-back transaction attempting UPDATE form_submissions SET is_confidential=false on 40567f86 —
+   row re-read inside the same transaction still is_confidential=true; ROLLBACK. Guard: trigger
+   form_submissions_guard_update, tgenabled 'A' (ALWAYS).
+4. ROLE-RESTRICTED (live pg_policies, not a migration file): form_submissions_select =
+   tenant member AND (NOT is_confidential OR submitted_by = auth.uid() OR auth_has_confidential_form_access(tenant_id)
+   OR is_form_submission_signer(id)). The UI's reader list matches these limbs. Wrong-role refusals: C7 (verified).
+   crm7#2760 (in b52f61ccd): the editor's confidentialRead now uses auth_has_confidential_form_access, the same function.
+5. NEVER AI-DECIDED: no AI tool touches form confidentiality (grep src/lib/ai, supabase/functions: no
+   markSubmissionConfidential / form is_confidential writer). The only AI confidential field is the case-note tool
+   (field-officer-tools.ts), which defaults false and is described "True only when the user explicitly asks ... Never
+   infer it from urgency, priority or topic."
+Test artefacts in Demo: site visit a09c6c9a, submissions 40567f86 and c9dd21cf (drafts).

@@ -1,0 +1,17 @@
+C2 — conditional visibility and validation are evaluated at RENDER. PRODUCTION crm.crm7.app, crm7 main 0fa210b35
+(bundle index-COGo0wuZ.js), 2026-09-26 ~12:35 AWST. Demo user, Demo Organisation. Walks s110 (start) + s111 (states).
+
+Form: Site Visit Report (layout 98615663), started through the UI: Field Officers > Actions > site visit a09c6c9a >
+"Choose a form to start" = Site Visit Report > Start a form -> new draft 402e2d7d.
+Configured rule (form_layouts.layout, read-only query): field if_no_apprentice_is_present_and_engaged_in_work has
+visibilityRules [{field: apprentice_is_present_and_engaged_in_work, operator: eq, value: false}]; date_of_visit isRequired.
+
+Render-time results (DOM, [data-field-key] counts):
+ 1 before answering: follow-up shown 0
+ 2 answered No:      follow-up shown 1 — "If no: Apprentice is present and engaged in work"   (c2-no-shows-followup.png)
+ 3 answered Yes:     follow-up shown 0                                                     (c2-yes-hides-followup.png)
+Validation at Complete (date empty on a new report):
+ 5 alert: "Not completed — Fill in: Date of visit. Still to be signed: Apprentice signature."
+ 7 status stays Draft                                                                       (c2-required-refused.png)
+The same visibilityRules drive the renderer (FormLayoutRenderer: evaluateVisibilityRules(field.visibilityRules, values))
+and the completion check; the draft is left in Demo (listed for cleanup).

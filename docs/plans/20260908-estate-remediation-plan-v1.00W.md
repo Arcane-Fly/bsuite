@@ -588,3 +588,17 @@ Required sequence and acceptance:
 
 This is added execution scope for Claude's handover. Inventory/recovery/cleanup itself has
 not yet been performed. The paused Codex schedule must remain paused.
+
+## 26 September — Phase 3 (bsuite#3208) status
+
+Phase 3's bsuite#3208 half is **deployed-tested**. An admin authored the Record of Discussion and the Site Visit
+Report through the builder. Real users then filled, signed, declined, cancelled and completed them on production,
+and workflows started from completed forms with linked tasks. Every step has version, run and action IDs:
+criteria C1–C9 in the round-4 independent review (APPROVE, 2026-09-26T13:08:06Z).
+
+- **Where it is recorded:** the capability register's
+  [26 September section](../20260908-customization-capability-register-v1.00W.md#26-september--3208-c1c9-deployed-tested-on-production),
+  with the committed [evidence pack](../evidence/20260926-bsuite-3208/README.md).
+- **What stays open in Phase 3:** crm7#2587 (FRM_010 Field Officer journey) remains with its owner. So do the
+  obligations BRA-47 groups (listed in that section).
+- **Acceptance:** operator acceptance is not claimed.

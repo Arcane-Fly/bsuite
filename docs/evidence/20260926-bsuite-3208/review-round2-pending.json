@@ -1,0 +1,30 @@
+{
+ "round": 2,
+ "reviewer_model": "claude-fable-5-1",
+ "route": "Claude Code Agent subagent completion-enforcer, read-only",
+ "time_utc": "2026-09-26T08:02:32Z",
+ "verdict": "APPROVE_PENDING_FINAL_WALK",
+ "note": "Saved by the worker as returned (per-gap/per-criterion statuses verbatim; evidence text condensed, full text in the session transcript). NOT the completion receipt: evidence/review-receipt.json is written only after the final walk satisfies final_walk_must_show and the reviewer confirms APPROVE.",
+ "per_gap": {"1": "closed", "2": "closed", "3": "closed", "4": "closed", "5": "closed", "6": "closed", "7": "closed", "8": "closed", "9": "open (D10 cleanup deferred until after the final walk)"},
+ "per_criterion": {"C1": "verified", "C2": "verified", "C3": "verified", "C4": "verified", "C5": "verified", "C6": "verified", "C7": "verified", "C8": "verified", "C9": "verified"},
+ "gaps": [
+  "Client halves of #2801 #2805 #2806/#2811 #2807 #2808 #2809 #2810 #2796 verified on d.crm only until crm7#2820 deploys",
+  "D10 open: demo workflows/runs/task/drafts, walk profile and scratchpad ephemera; no cleanup.txt with delete commands",
+  "Evidence hygiene: c6-prod-publish-keeps-trigger.png and c6-prod-run-finished.png do not show the state their names claim",
+  "D9 not declared in the pack"
+ ],
+ "final_walk_must_show": [
+  "crm7#2820 merged --merge only after all checks green and CLEAN; record no reviewer bot installed on crm7; no migrate dispatch needed",
+  "Production deploy READY on the merge SHA: served index-*.js hash and deployment id; parent gitlink advanced on development then main",
+  "#2809: Settings > Forms lists exactly Demo's 2 forms; Record of Discussion opens 27af6d39, never b54452f7; repeat after switching organisation; same for Custom Pages and picklists",
+  "#2808: 'Which kind of record', no 'Entity'; then close crm7#2459 citing the walk",
+  "#2807: organisation_representative_signature slot scrollWidth == clientWidth, all four buttons inside (element screenshot)",
+  "#2801/#2806/#2811: form-started workflow A inspector greys Send email with the user-words reason, no column/queue/ticket terms; publishing workflow C shows the reason toast with page errors == []",
+  "#2796: long workflow name field scrollWidth <= clientWidth",
+  "#2805/#2810 after update reload: Jodie message persists across reload, no load-failure notice; >=25 s capture shows zero non-GET to retired tables and zero 403/5xx",
+  "C6: Workflow runs still lists the form-started runs (10) unchanged after reload; Try again only on the Failed run",
+  "Replace c6-prod-publish-keeps-trigger.png with an element shot of the trigger card (Form Completed checked after publish + reload); annotate c6-prod-run-finished.png as the pre-460000 8-run list",
+  "Close-out pack declares D9 (kind and reason) and D10 with commands; completed submissions 278efbc2/40567f86/5e7d1761/db0dad42 and case note 3ae3e95f stay (immutable by C4/C8) as labelled walk records",
+  "Only then write evidence/review-receipt.json and post the BRA-47 / BRA-46 close-out comments with final SHAs"
+ ]
+}

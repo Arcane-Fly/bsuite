@@ -1,0 +1,12 @@
+C6 — workflow runs and actions persist through reload, retry and cancel. Production crm.crm7.app, Demo tenant, 25 Sep 2026.
+PERSIST+CANCEL VERIFIED (walk s92, screenshot c6-cancel.png):
+- Completing Site Visit Report 40567f86 through the UI (s89) fired Form Completed; run 6e433f40 (workflow A, one person step) created status=waiting.
+- /workflows/runs listed it "Waiting on someone" before and after a page reload.
+- "Stop this run" -> inline "Stop run": DB workflow_runs.status=cancelled @11:58:57Z, its step=skipped; after reload no waiting run is listed.
+RETRY: UNVERIFIED — no failed run exists. Blocked by defects found while authoring one:
+- D1 published workflow with no draft silently drops edits and offers no Create draft (fix in progress: @bsuite/workflow-canvas 0.3.2, worktree bsuite-canvas-needs-draft; Fable review REFINE incorporated).
+- D2 publish accepts a step unreachable from Start (workflows C 29863f78, D 41c6e373: start->end, step disconnected; run 6494a00b completed without its action).
+- D3 /workflows/runs never names the workflow, and labels a Form Completed run "Started manually".
+D3 FIXED on d.crm (crm7#2784 merged db3c75fb3, Vercel success, bundle index-1qYBGcf-.js): /workflows/runs names every run by workflow and trigger ("Walk check: waits for a person — Started when a form was completed", "Inbound SMS Internal Notification — Started by an incoming text message"). Screenshot d3-runs-dcrm.png. Production promotion pending.
+D1 FIXED on d.crm (crm7#2785 merged 161a90a19, bundle index-B5St4dTJ.js, walk s94): published-only workflow B shows "Create draft" and no palette; after Create draft the palette mounts; an added step persists through reload. Screenshot d1-needsdraft-dcrm.png.
+D2 on d.crm: publish of C (unreachable step) REFUSED, but the toast read "Workflow error" without the reason -> D4 found, fixed in crm7#2790 (with D5 clipped workflow title). Screenshot d2-unreachable-dcrm.png.
