@@ -11,24 +11,32 @@ import { describe, expect, it } from 'vitest'
 
 const css = readFileSync(join(__dirname, 'utilities.css'), 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')
 
-function ruleFor(selector: string): string | undefined {
-  const re = /([^{}]+)\{([^{}]*)\}/g
-  for (let m = re.exec(css); m; m = re.exec(css)) {
-    const selectors = m[1].split(',').map((s) => s.trim())
-    if (selectors.includes(selector)) return m[2]
+/** The declarations of the first top-level rule whose selector list names `selector`. */
+function ruleFor(selector: string): Record<string, string> | undefined {
+  for (const block of css.split('}')) {
+    const [head, body] = block.split('{')
+    if (body === undefined) continue
+    const selectors = head.split(',').map((s) => s.trim())
+    if (!selectors.includes(selector)) continue
+    const decls: Record<string, string> = {}
+    for (const d of body.split(';')) {
+      const i = d.indexOf(':')
+      if (i > 0) decls[d.slice(0, i).trim()] = d.slice(i + 1).trim()
+    }
+    return decls
   }
   return undefined
 }
 
 describe('.text-gradient-accent keeps a centred title centred', () => {
   it('still shrink-wraps, which is why the centring rule is needed', () => {
-    expect(ruleFor('.text-gradient-accent')).toMatch(/width:\s*fit-content/)
+    expect(ruleFor('.text-gradient-accent')?.width).toBe('fit-content')
   })
 
   it.each(['.text-center > .text-gradient-accent', '.text-gradient-accent.text-center'])(
     '%s centres the box',
     (selector) => {
-      expect(ruleFor(selector)).toMatch(/margin-inline:\s*auto/)
+      expect(ruleFor(selector)?.['margin-inline']).toBe('auto')
     },
   )
 
