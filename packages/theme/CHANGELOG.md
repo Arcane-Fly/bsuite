@@ -1,5 +1,27 @@
 # @bsuite/theme
 
+## 1.5.3 (unreleased; 1.5.3-next.N on development) — 2026-09-26
+
+**A centred gradient title stays centred** (bsuite#3365).
+
+`.text-gradient-accent` sets `width: fit-content` so the gradient spans the
+glyphs. That made a parent's `text-align: center` inert: the text was centred
+inside a box that hugged it, and the box sat at the parent's start edge. 38
+titles across BSU, crm7 and conduit were affected, most of them `CardTitle`s in
+a `text-center` `CardHeader`. Measured on d.suite `/login`: 24px from the left,
+250px from the right.
+
+The utility now adds `margin-inline: auto` when the element carries
+`text-center` or its **direct** parent does. A left-aligned block nested
+somewhere inside a centred container is untouched. Real-browser measurement
+(parent 500px wide):
+
+| case | before | after |
+|---|---|---|
+| title in a `text-center` parent | 0 / 315px | 157 / 157px |
+| title with its own `text-center` | 0 / 279px | 139 / 139px |
+| nested left-aligned block | 0 / 378px | 0 / 378px |
+
 ## 1.5.0 — 2026-08-31
 
 **A touch-target floor for coarse pointers.**
