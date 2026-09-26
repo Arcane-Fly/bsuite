@@ -6,7 +6,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [0.3.3] — 2026-09-26 — a refused publish or copy is shown, not thrown at the page
+## [0.3.3] (unreleased; 0.3.3-next.N on development) — 2026-09-26 — a refused publish or copy is shown, not thrown at the page
 
 ### Fixed
 
