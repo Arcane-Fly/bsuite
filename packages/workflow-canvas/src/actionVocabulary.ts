@@ -73,8 +73,15 @@ function describeSubject(subjectTable: string | null | undefined): string {
       return 'a pipeline entry';
     case 'communications':
       return 'a communication';
-    default:
-      return subjectTable ? `a "${subjectTable}" record` : 'not yet known';
+    case 'form_submission':
+    case 'form_submissions':
+      return 'a completed form';
+    default: {
+      if (!subjectTable) return 'not yet known';
+      // Never the raw table name: "placements" reads as "a placement".
+      const noun = subjectTable.replace(/_/g, ' ').replace(/(?<!s)s$/, '');
+      return `${/^[aeiou]/i.test(noun) ? 'an' : 'a'} ${noun}`;
+    }
   }
 }
 
@@ -91,7 +98,10 @@ export interface WorkflowActionVocabularyEntry {
   notAutomatedReason?: string;
   /** Subject shapes this action's queue row must carry to be executable. */
   requires: WorkflowActionRequirement[];
-  /** One-line reason for the FIRST entry in `requires` — shown when unmet. */
+  /**
+   * One-line reason for the FIRST entry in `requires` — shown when unmet, so it
+   * is in the user's words: no column, table or ticket names.
+   */
   requiresReason?: string;
 }
 
@@ -101,7 +111,7 @@ export const WORKFLOW_ACTION_VOCABULARY: readonly WorkflowActionVocabularyEntry[
     label: 'Send email',
     implemented: true,
     requires: ['candidate'],
-    requiresReason: "the processor reads the recipient off the queue row's candidate_id",
+    requiresReason: 'it emails the candidate the workflow is about',
   },
   { kind: 'notify_internal', label: 'Notify internally (task)', implemented: true, requires: [] },
   {
@@ -122,7 +132,7 @@ export const WORKFLOW_ACTION_VOCABULARY: readonly WorkflowActionVocabularyEntry[
     kind: 'auto_add_to_pool',
     label: 'Add to talent pool',
     implemented: false,
-    notAutomatedReason: 'Pending consent model (conduit#229)',
+    notAutomatedReason: 'candidates must first agree to be kept in a talent pool',
     requires: [],
   },
   {
@@ -130,7 +140,7 @@ export const WORKFLOW_ACTION_VOCABULARY: readonly WorkflowActionVocabularyEntry[
     label: 'Auto-assign field officer',
     implemented: true,
     requires: ['pipeline_entry'],
-    requiresReason: "the processor reads who to assign off the queue row's pipeline_entry_id",
+    requiresReason: "it assigns an officer to the candidate's application the workflow is about",
   },
 ];
 

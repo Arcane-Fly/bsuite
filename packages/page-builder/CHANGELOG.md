@@ -5,6 +5,43 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ---
 
+## [2.8.0-next.1] — 2026-09-25 — The bare-content inset is measured, not guessed from markers
+
+**2.8.0-next.0 double-padded self-padding widgets.** Its CSS `:has()` guard excluded only content
+that declares `data-slot="card"` or `"page-header"`. Measured on crm7's PR preview, the
+`/dashboard` widgets pad themselves (`p-6`), declare no marker, and so sat 28 + 24px from the
+border. CSS cannot read computed padding.
+
+**Now.** `GridItem` decides with `hasBareContent(surface)`:
+- It walks down pure wrappers (no padding, exactly one element child) to the first element that
+  does layout work.
+- It calls the slot bare only if that element has no left and no top padding, and nothing inside
+  is a Card or PageHeader.
+- The in-edit label strip is skipped.
+
+A `MutationObserver` re-decides as content loads. autoHeight re-measures when the result flips.
+The surface carries `data-bare-content` for audit. The `:has()` class is removed.
+
+## [2.8.0-next.0] — 2026-09-25 — A chrome-on surface insets content that brings no surface (crm7#2734)
+
+A prerelease for the `d.*` preview hosts. Its version was derived with
+`node scripts/next-prerelease-version.mjs --package @bsuite/page-builder --base 2.8.0 --write`.
+
+**The defect.** The chrome-on surface paints a border and no padding. Padding arrived only when
+an operator set `--card-padding`. Any content that is not itself a card therefore sat on the
+border: hand-rolled headers, filter bars and plain sections. In crm7 that is 182 slots whose first
+child is an unpadded `<div>`, including the filter bar on all four Field Officer list pages.
+
+**The fix.** The chrome-on surface now carries `p-6 md:p-7`, the same inset `PageHeader` uses,
+under a variant that applies only while nothing inside it matches `[data-slot=card]` or
+`[data-slot=page-header]`. A blanket inset was rejected: most slots nest their own Card, and every
+one of those would gain a gutter. An operator-set `--card-padding` is inline style and still wins.
+Chrome-off slots are untouched.
+
+**Consumer contract.** An app's card component must carry `data-slot="card"` (shadcn's
+convention), and its page header must carry `data-slot="page-header"`. Without them the app gains
+an inset inside its own cards. Add the markers in the same bump.
+
 ## [2.7.1-next.0] — 2026-09-10 — Edit-mode label and hide sit in a measured strip, not on the card
 
 A prerelease, not a release. The in-force standard
