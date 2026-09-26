@@ -1,3 +1,5 @@
+import { resolve as pathResolve } from 'node:path'
+
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -8,6 +10,7 @@ import {
   oklchToSrgb,
   resolve_,
   round2,
+  sheet,
 } from './contrast-instrument.js'
 
 /**
@@ -163,4 +166,33 @@ describe('the shadcn bridge points at the interactive role', () => {
     // this one too would put a 4:1 line around every card in the estate.
     expect(ROOT).toMatch(/--border:\s*var\(--role-border\)/)
   })
+})
+
+/**
+ * THE CORPORATE ENTRY POINT DECLARES THE INTERACTIVE ROLE TOO.
+ *
+ * The scope note above leaves Corporate's existing border values to the operator.
+ * This block does not assert on them. It asserts only that `css/braden.css`
+ * DECLARES `--role-border-interactive` and that it clears 3:1 on every Corporate
+ * surface. braden imports `preset-v4.css`, so `border-border-interactive`
+ * compiles there whether or not the role exists. When it did not, the edge fell
+ * back to currentColor: near-black fields (15.77:1 light, 16.26:1 dark) on
+ * d.braden /contact after braden#646 adopted the utility (bsuite#1958).
+ */
+describe('WCAG 1.4.11 — Corporate --role-border-interactive is declared and clears 3:1', () => {
+  const B = sheet(pathResolve(__dirname, 'css/braden.css'))
+  for (const [mode, scope] of [
+    ['light', B.root],
+    ['dark', B.blocks('.dark')],
+  ] as const) {
+    for (const surface of SURFACES) {
+      it(`${mode}: vs --${surface}`, () => {
+        const ratio = contrast(B.resolve('role-border-interactive', scope), B.resolve(surface, scope))
+        expect(
+          ratio,
+          `Corporate --role-border-interactive measures ${round2(ratio)}:1 against --${surface} in ${mode} mode`,
+        ).toBeGreaterThanOrEqual(FLOOR)
+      })
+    }
+  }
 })

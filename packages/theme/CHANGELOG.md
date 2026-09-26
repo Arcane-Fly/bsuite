@@ -1,5 +1,18 @@
 # @bsuite/theme
 
+## 1.5.5 — 2026-09-26
+
+**The Corporate (braden) stylesheet declares the interactive edge** (bsuite#1958).
+
+`css/braden.css` never declared `--role-border-interactive`. braden imports
+`preset-v4.css`, so `border-border-interactive` compiled, pointed at an undefined
+variable, and fell back to currentColor. When braden#646 moved its controls onto
+the interactive edge, d.braden /contact drew near-black field borders (15.77:1
+light, 16.26:1 dark). The role now aliases existing Corporate roles, so no new
+colour is introduced: `--role-text-subtle` in light (worst 3.31:1) and
+`--role-text-muted` in dark (worst 5.22:1). `non-text-contrast.test.ts` measures
+it against every Corporate surface; without the declaration all 10 cases fail.
+
 ## 1.5.4 — 2026-09-26
 
 **`border-border-strong` exists again** (bsuite#3208 close-out).
