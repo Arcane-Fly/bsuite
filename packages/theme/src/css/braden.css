@@ -129,6 +129,13 @@
   --role-bg-sunken:     oklch(0.940 0.005 250);
   --role-border:        oklch(0.900 0.008 248);
   --role-border-strong: oklch(0.840 0.012 248);
+  /* --role-border-interactive: the boundary of an input, select or outline
+     button (WCAG 1.4.11, 3:1; bsuite#1958). This block never declared it, so
+     the preset's `border-border-interactive` resolved to an undefined variable
+     and the edge fell back to currentColor: near-black form fields (15.77:1)
+     on d.braden /contact. Aliased to an existing Corporate role rather than a
+     new colour; text-subtle clears 3:1 on every surface (worst 3.31:1, sunken). */
+  --role-border-interactive: var(--role-text-subtle);
 
 /* ============================================================
    LAYER 3 — HEADING RAMP (six levels, per the contract)
@@ -375,6 +382,9 @@
   --role-bg-sunken:      oklch(0.120 0.010 252);
   --role-border:         oklch(0.320 0.020 250);
   --role-border-strong:  oklch(0.420 0.024 250);
+  /* Dark half of --role-border-interactive: text-muted, worst 5.22:1 (input).
+     The same value D2C's dark interactive edge uses. */
+  --role-border-interactive: var(--role-text-muted);
   --role-h1:             oklch(0.95 0.014 250);
   --role-h2:             oklch(0.92 0.018 250);
   --role-h3:             oklch(0.88 0.024 244);
