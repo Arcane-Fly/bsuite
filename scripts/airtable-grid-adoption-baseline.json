@@ -1,37 +1,42 @@
 {
   "_doc": "Banked counts of hand-rolled <table>/<Table> RENDER SITES per app, and DataGrid adoption. Written by scripts/check-airtable-grid-adoption.mjs --update-baseline. Fails on any RISE (a new hand-rolled table is a page someone must convert later) and on any UNBANKED FALL (so a matcher that goes blind cannot read as progress). Operator ask 2026-08-28: every table should be in the Airtable style.",
-  "_measured": "1504 .tsx files examined across 5 apps",
+  "_measured": "1525 .tsx files examined across 5 apps",
   "_clickThroughDoc": "Files that HAD row-level click-through to a record. Recorded by PATH because a conversion destroys the <TableRow onClick> evidence. Any file here that renders a DataGrid must pass onRowClick, or the conversion turned a working navigation into a dead list. Operator ask 2026-08-28: \"make sure table that currently enable click through to a record still maintain this capability.\" The set is a UNION and only grows.",
   "apps": {
     "crm7": {
-      "handRolled": 145,
-      "dataGrid": 23,
-      "files": 95,
-      "filesScanned": 800
+      "handRolled": 141,
+      "dataGrid": 25,
+      "files": 92,
+      "filesScanned": 815,
+      "handRolledExceptionStale": []
     },
     "business-suite-unified": {
       "handRolled": 27,
-      "dataGrid": 0,
+      "dataGrid": 1,
       "files": 24,
-      "filesScanned": 228
+      "filesScanned": 228,
+      "handRolledExceptionStale": []
     },
     "conduit": {
       "handRolled": 5,
-      "dataGrid": 0,
+      "dataGrid": 2,
       "files": 4,
-      "filesScanned": 162
+      "filesScanned": 166,
+      "handRolledExceptionStale": []
     },
     "braden": {
       "handRolled": 13,
       "dataGrid": 0,
       "files": 13,
-      "filesScanned": 222
+      "filesScanned": 224,
+      "handRolledExceptionStale": []
     },
     "throughput": {
       "handRolled": 1,
       "dataGrid": 0,
       "files": 1,
-      "filesScanned": 92
+      "filesScanned": 92,
+      "handRolledExceptionStale": []
     }
   },
   "clickThrough": {
@@ -65,7 +70,7 @@
   "dataGridOnRowClick": {
     "crm7": {
       "ceiling": 0,
-      "total": 22,
+      "total": 24,
       "exceptions": [
         {
           "path": "crm7/src/components/admin/BrowseDataTab.tsx",
@@ -99,12 +104,12 @@
     },
     "business-suite-unified": {
       "ceiling": 0,
-      "total": 0,
+      "total": 1,
       "exceptions": []
     },
     "conduit": {
       "ceiling": 0,
-      "total": 0,
+      "total": 2,
       "exceptions": [
         {
           "path": "conduit/src/app/(dashboard)/candidates/_gridColumns.tsx",
@@ -127,21 +132,25 @@
       "exceptions": []
     }
   },
-  "_schedule": {
-    "unit": "hand-rolled <table>/<Table> RENDER SITES (sum of apps.*.handRolled), not files; per_week is render sites per week",
-    "origin_count": 192,
-    "origin_date": "2026-09-03",
-    "current_count": 191,
-    "current_date": "2026-09-04",
-    "scanned": 1504,
-    "per_week": 6
-  },
   "handRolledExceptions": {
     "crm7": [
       {
         "path": "crm7/src/components/common/DocumentEditor/TableElements.tsx",
-        "reason": "PlateJS rich-text document-table DOM \u2014 a WYSIWYG editor surface, not a record grid; there is no DataGrid conversion target."
+        "reason": "PlateJS rich-text document-table DOM — a WYSIWYG editor surface, not a record grid; there is no DataGrid conversion target."
       }
-    ]
+    ],
+    "business-suite-unified": [],
+    "conduit": [],
+    "braden": [],
+    "throughput": []
+  },
+  "_schedule": {
+    "unit": "hand-rolled <table>/<Table> RENDER SITES (sum of apps.*.handRolled), not files; per_week is render sites per week",
+    "origin_count": 192,
+    "origin_date": "2026-09-03",
+    "current_count": 187,
+    "current_date": "2026-09-26",
+    "scanned": 1525,
+    "per_week": 6
   }
 }
