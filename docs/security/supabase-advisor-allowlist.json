@@ -69,6 +69,7 @@
     "is_platform_developer()",
     "is_platform_super_admin()",
     "is_team_admin(p_team_id uuid, p_user_id uuid)",
+    "list_starter_forms(p_entity_types text[])",
     "mark_recurring_error_fingerprint_closed(p_fingerprint text)",
     "migration_high_water_mark()",
     "mint_quote_handoff_token(p_payload jsonb)",
@@ -79,6 +80,7 @@
     "platform_oauth_clients()",
     "portal_invite_accept(p_token text)",
     "portal_invite_mint(p_person_id uuid)",
+    "promote_form_to_starter(p_source_id uuid)",
     "r7_candidate_id_for_auth_user()",
     "rearchive_restored_rows(p_source_table text, p_tenant_id uuid, p_source_ids uuid[], p_reason text)",
     "redeem_host_agreement_signature(p_token text, p_action text, p_signature_method text, p_signature_data_url text, p_typed_name text, p_decline_reason text)",
@@ -98,6 +100,7 @@
     "training_plan_belongs_to_current_apprentice(p_training_plan_id uuid)",
     "update_person_with_contact(p_person_id uuid, payload jsonb, p_tenant_id uuid)",
     "update_platform_entity_label(p_entity_id uuid, p_label text, p_description text)",
+    "use_starter_form(p_starter_id uuid)",
     "user_has_capability(p_user_id uuid, p_tenant_id uuid, p_capability text)",
     "user_has_org_access(p_user_id uuid, p_tenant_id uuid)"
    ],
@@ -124,7 +127,10 @@
     "effective_user_capabilities(p_user_id uuid, p_tenant_id uuid)": "Arbitrary subject, so the grant alone was NOT sufficient — until 20260906000000 any signed-in user could resolve any user's capabilities in any tenant, which is cross-tenant disclosure of who can do what. The right to ASK is now checked by caller_may_read_capabilities_of() (self, tenant owner/admin, or platform developer), which is SECURITY INVOKER so it answers for the caller. Fails closed as zero rows. Stays executable because BSU's permissions editor (src/lib/admin/userCapabilityOverrides.ts) legitimately resolves ANOTHER user for a tenant admin; revoking would close the hole by breaking the feature.",
     "user_has_capability(p_user_id uuid, p_tenant_id uuid, p_capability text)": "Thin wrapper over effective_user_capabilities() and inherits its caller check, so the same reasoning applies. Kept SECURITY DEFINER so 20260905000000's fail-closed boolean contract holds: it answers a boolean question with a boolean rather than a NOT FOUND callers must interpret.",
     "reorder_entity_fields(p_entity_id uuid, p_field_ids uuid[])": "Schema Builder client RPC. SECURITY DEFINER so one caller can rewrite every tenant_field_definitions.sort_order for an entity atomically — INVOKER cannot hold that row set stable under RLS, and a partial reorder leaves duplicate or gapped sort_order the UI reads as lost fields. Measured on the deployed function 2026-08-31: reads auth.uid(), checks user_tenants membership, raises on failure. anon is NOT granted. Called by SchemaCanvas, which crm7 (1 site) and BSU (3 sites) render, so authenticated EXECUTE is the intended reach.",
-    "rename_physical_column(p_entity_id uuid, p_field_id uuid, p_new_name text, p_dry_run boolean)": "Schema Builder client RPC. SECURITY DEFINER because it runs ALTER TABLE ... RENAME COLUMN, which INVOKER cannot do under RLS-scoped roles. This is the hardened replacement for the privilege-escalation shape: the previous version took its ALTER target from caller-controlled tenant_entities.name, so any tenant admin could rename a column on any public table including user_tenants.role. Measured on the deployed function 2026-08-31: constrained by the schema_builder_physical_tables allowlist (which ships EMPTY, so the RPC is inert until a table is explicitly opted in), reads auth.uid(), checks user_tenants membership, raises on failure, and writes every attempt to schema_mutations_audit. anon is NOT granted."
+    "rename_physical_column(p_entity_id uuid, p_field_id uuid, p_new_name text, p_dry_run boolean)": "Schema Builder client RPC. SECURITY DEFINER because it runs ALTER TABLE ... RENAME COLUMN, which INVOKER cannot do under RLS-scoped roles. This is the hardened replacement for the privilege-escalation shape: the previous version took its ALTER target from caller-controlled tenant_entities.name, so any tenant admin could rename a column on any public table including user_tenants.role. Measured on the deployed function 2026-08-31: constrained by the schema_builder_physical_tables allowlist (which ships EMPTY, so the RPC is inert until a table is explicitly opted in), reads auth.uid(), checks user_tenants membership, raises on failure, and writes every attempt to schema_mutations_audit. anon is NOT granted.",
+    "list_starter_forms(p_entity_types text[])": "bsuite#3208 starter templates (crm7 20261207500000, applied 2026-09-27). Read-only list of PUBLISHED platform starters (is_starter, published revision only) for any signed-in person (auth.uid() IS NOT NULL); returns name, entity type, context and the confidential flag only, never a draft or a layout. SECURITY DEFINER because platform form_layouts rows are developer-only under RLS, so an INVOKER version would show every organisation an empty list.",
+    "use_starter_form(p_starter_id uuid)": "bsuite#3208. Copies a published platform starter into the caller's acting organisation as an unpublished draft. Refuses a caller who is not signed in and a caller for whom form_layout_caller_can_design(acting tenant) is false (42501); reads only the starter's published revision; builds the copy from a fixed column list; never publishes, never touches another organisation. DEFINER is needed to read the developer-only platform row.",
+    "promote_form_to_starter(p_source_id uuid)": "bsuite#3208. Makes a published form a platform starter. Refuses anyone who is not is_platform_developer() (42501); the source form is untouched; the new starter is published through publish_form_layout. Called from the crm7 form page by platform developers only (crm7#2857)."
    }
   },
   {
